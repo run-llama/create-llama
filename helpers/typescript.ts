@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { bold, cyan } from "picocolors";
-import { version } from "../../core/package.json";
 import { copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
@@ -155,11 +154,6 @@ export const installTSTemplate = async ({
   );
   packageJson.name = appName;
   packageJson.version = "0.1.0";
-
-  packageJson.dependencies = {
-    ...packageJson.dependencies,
-    llamaindex: version,
-  };
 
   if (framework === "nextjs" && customApiPath) {
     console.log(
