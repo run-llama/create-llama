@@ -429,6 +429,28 @@ export const askQuestions = async (
     }
   }
 
+  if (program.framework === "express" || program.framework === "nextjs") {
+    if (!program.observability) {
+      if (ciInfo.isCI) {
+        program.observability = getPrefOrDefault("observability");
+      }
+    } else {
+      const { observability } = await prompts({
+        type: "select",
+        name: "observability",
+        message: "Would you like to set up observability?",
+        choices: [
+          { title: "No", value: "none" },
+          { title: "OpenTelemetry", value: "opentelemetry" },
+        ],
+        initial: 0,
+      });
+
+      program.observability = observability;
+      preferences.observability = observability;
+    }
+  }
+
   if (!program.model) {
     if (ciInfo.isCI) {
       program.model = getPrefOrDefault("model");

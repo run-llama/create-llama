@@ -63,6 +63,7 @@ export const installTSTemplate = async ({
   vectorDb,
   postInstallAction,
   backend,
+  observability,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -81,19 +82,47 @@ export const installTSTemplate = async ({
   });
 
   /**
-   * If next.js is not used as a backend, update next.config.js to use static site generation.
+   * If next.js is used, update its configuration if necessary
    */
-  if (framework === "nextjs" && !backend) {
-    // update next.config.json for static site generation
-    const nextConfigJsonFile = path.join(root, "next.config.json");
-    const nextConfigJson: any = JSON.parse(
-      await fs.readFile(nextConfigJsonFile, "utf8"),
+  if (framework === "nextjs") {
+    if (!backend) {
+      // update next.config.json for static site generation
+      const nextConfigJsonFile = path.join(root, "next.config.json");
+      const nextConfigJson: any = JSON.parse(
+        await fs.readFile(nextConfigJsonFile, "utf8"),
+      );
+      nextConfigJson.output = "export";
+      nextConfigJson.images = { unoptimized: true };
+      await fs.writeFile(
+        nextConfigJsonFile,
+        JSON.stringify(nextConfigJson, null, 2) + os.EOL,
+      );
+    }
+
+    const webpackConfigOtelFile = path.join(root, "webpack.config.o11y.mjs");
+    if (observability === "opentelemetry") {
+      const webpackConfigDefaultFile = path.join(root, "webpack.config.mjs");
+      await fs.rm(webpackConfigDefaultFile);
+      await fs.rename(webpackConfigOtelFile, webpackConfigDefaultFile);
+    } else {
+      await fs.rm(webpackConfigOtelFile);
+    }
+  }
+
+  if (observability && observability !== "none") {
+    const chosenObservabilityPath = path.join(
+      templatesDir,
+      "components",
+      "observability",
+      "typescript",
+      observability,
     );
-    nextConfigJson.output = "export";
-    nextConfigJson.images = { unoptimized: true };
-    await fs.writeFile(
-      nextConfigJsonFile,
-      JSON.stringify(nextConfigJson, null, 2) + os.EOL,
+    const relativeObservabilityPath = framework === "nextjs" ? "app" : "src";
+
+    await copy(
+      "**",
+      path.join(root, relativeObservabilityPath, "observability"),
+      { cwd: chosenObservabilityPath },
     );
   }
 
@@ -199,6 +228,18 @@ export const installTSTemplate = async ({
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       "@types/react-syntax-highlighter": undefined,
+    };
+  }
+
+  if (observability === "opentelemetry") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@traceloop/node-server-sdk": "^0.5.19",
+    };
+
+    packageJson.devDependencies = {
+      ...packageJson.devDependencies,
+      "node-loader": "^2.0.0",
     };
   }
 
