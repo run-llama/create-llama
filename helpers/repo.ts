@@ -47,19 +47,67 @@ export async function downloadAndExtractRepo(
   await promises.unlink(tempFile);
 }
 
-export async function getRepoRootFolders(
-  owner: string,
-  repo: string,
-): Promise<string[]> {
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents`;
-
-  const response = await got(url, {
+const getRepoInfo = async (ownerRepoPath: string) => {
+  const repoInfoRes = await got(`https://api.github.com/repos/${ownerRepoPath}`, {
     responseType: "json",
   });
+  const data = repoInfoRes.body as any;
+  return data;
+}
 
-  const data = response.body as any[];
-  const folders = data.filter((item) => item.type === "dir");
-  return folders.map((item) => item.name);
+export async function getProjectOptions(
+	owner: string,
+	repo: string
+): Promise<
+	{
+		value: string;
+		title: string;
+	}[]
+> {
+	// return community path for projects and submodules
+	const getCommunityProjectPath = async (item: any) => {
+		// if item is a folder, return the path with default owner, repo, and main branch
+		if (item.type === "dir") return `${owner}/${repo}/main/${item.path}`;
+
+		// check if it's a submodule (has size = 0 and different owner & repo)
+		if (item.type === "file") {
+			if (item.size !== 0) return null; // submodules have size = 0
+
+			// get owner and repo from git_url
+			const { git_url } = item;
+			const startIndex = git_url.indexOf("repos/") + 6;
+			const endIndex = git_url.indexOf("/git");
+			const ownerRepo = git_url.substring(startIndex, endIndex);
+
+			// quick fetch repo info to get the default branch
+			const repoInfo = await getRepoInfo(ownerRepo);
+
+			// return the path with default owner, repo, and main branch (path is empty for submodules)
+			return `${ownerRepo}/${repoInfo.default_branch}`;
+		}
+
+		return null;
+	};
+
+	const url = `https://api.github.com/repos/${owner}/${repo}/contents`;
+	const response = await got(url, {
+		responseType: "json",
+	});
+	const data = response.body as any[];
+
+	const paths: string[] = [];
+	for (const item of data) {
+		const communityProjectPath = await getCommunityProjectPath(item);
+		if (communityProjectPath) paths.push(communityProjectPath);
+	}
+	return paths.map((path) => {
+    const pathArr = path.split("/");
+    const title = pathArr[3] || pathArr[1]; // use repo name if no folder path
+    return {
+      value: path,
+      title
+    }
+  });
 }
 
 export async function getRepoRawContent(repoFilePath: string) {

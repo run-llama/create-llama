@@ -5,7 +5,6 @@ import fs from "fs/promises";
 import path from "path";
 import { cyan } from "picocolors";
 
-import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./constant";
 import { templatesDir } from "./dir";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
@@ -120,11 +119,12 @@ const installCommunityProject = async ({
   communityProjectPath,
 }: Pick<InstallTemplateArgs, "root" | "communityProjectPath">) => {
   console.log("\nInstalling community project:", communityProjectPath!);
+  const [owner, repo, branch, filePath] = communityProjectPath!.split("/");
   await downloadAndExtractRepo(root, {
-    username: COMMUNITY_OWNER,
-    name: COMMUNITY_REPO,
-    branch: "main",
-    filePath: communityProjectPath!,
+    username: owner,
+    name: repo,
+    branch,
+    filePath: filePath || "",
   });
 };
 

@@ -13,7 +13,7 @@ import {
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { getRepoRootFolders } from "./helpers/repo";
+import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
 export type QuestionArgs = Omit<
@@ -299,7 +299,7 @@ export const askQuestions = async (
   }
 
   if (program.template === "community") {
-    const rootFolderNames = await getRepoRootFolders(
+    const projectOptions = await getProjectOptions(
       COMMUNITY_OWNER,
       COMMUNITY_REPO,
     );
@@ -308,10 +308,7 @@ export const askQuestions = async (
         type: "select",
         name: "communityProjectPath",
         message: "Select community template",
-        choices: rootFolderNames.map((name) => ({
-          title: name,
-          value: name,
-        })),
+        choices: projectOptions,
         initial: 0,
       },
       handlers,
