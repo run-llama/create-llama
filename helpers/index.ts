@@ -13,6 +13,7 @@ import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
 import {
+  CommunityProjectConfig,
   FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
@@ -116,10 +117,12 @@ const copyContextData = async (
 
 const installCommunityProject = async ({
   root,
-  communityProjectPath,
-}: Pick<InstallTemplateArgs, "root" | "communityProjectPath">) => {
-  console.log("\nInstalling community project:", communityProjectPath!);
-  const [owner, repo, branch, filePath] = communityProjectPath!.split("/");
+  communityProjectConfig,
+}: Pick<InstallTemplateArgs, "root" | "communityProjectConfig">) => {
+  const { owner, repo, branch, filePath } = JSON.parse(
+    communityProjectConfig!,
+  ) as CommunityProjectConfig;
+  console.log("\nInstalling community project:", filePath || repo);
   await downloadAndExtractRepo(root, {
     username: owner,
     name: repo,
@@ -133,7 +136,7 @@ export const installTemplate = async (
 ) => {
   process.chdir(props.root);
 
-  if (props.template === "community" && props.communityProjectPath) {
+  if (props.template === "community" && props.communityProjectConfig) {
     await installCommunityProject(props);
     return;
   }

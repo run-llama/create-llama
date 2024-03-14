@@ -6,6 +6,7 @@ import { Stream } from "stream";
 import tar from "tar";
 import { promisify } from "util";
 import { makeDir } from "./make-dir";
+import { CommunityProjectConfig } from "./types";
 
 export type RepoInfo = {
   username: string;
@@ -47,66 +48,81 @@ export async function downloadAndExtractRepo(
   await promises.unlink(tempFile);
 }
 
-const getRepoInfo = async (ownerRepoPath: string) => {
-  const repoInfoRes = await got(`https://api.github.com/repos/${ownerRepoPath}`, {
-    responseType: "json",
-  });
+const getRepoInfo = async (owner: string, repo: string) => {
+  const repoInfoRes = await got(
+    `https://api.github.com/repos/${owner}/${repo}`,
+    {
+      responseType: "json",
+    },
+  );
   const data = repoInfoRes.body as any;
   return data;
-}
+};
 
 export async function getProjectOptions(
-	owner: string,
-	repo: string
+  owner: string,
+  repo: string,
 ): Promise<
-	{
-		value: string;
-		title: string;
-	}[]
+  {
+    value: CommunityProjectConfig;
+    title: string;
+  }[]
 > {
-	// return community path for projects and submodules
-	const getCommunityProjectPath = async (item: any) => {
-		// if item is a folder, return the path with default owner, repo, and main branch
-		if (item.type === "dir") return `${owner}/${repo}/main/${item.path}`;
+  // return community path for projects and submodules
+  const getCommunityProjectConfig = async (
+    item: any,
+  ): Promise<CommunityProjectConfig | null> => {
+    // if item is a folder, return the path with default owner, repo, and main branch
+    if (item.type === "dir")
+      return {
+        owner,
+        repo,
+        branch: "main",
+        filePath: item.path,
+      };
 
-		// check if it's a submodule (has size = 0 and different owner & repo)
-		if (item.type === "file") {
-			if (item.size !== 0) return null; // submodules have size = 0
+    // check if it's a submodule (has size = 0 and different owner & repo)
+    if (item.type === "file") {
+      if (item.size !== 0) return null; // submodules have size = 0
 
-			// get owner and repo from git_url
-			const { git_url } = item;
-			const startIndex = git_url.indexOf("repos/") + 6;
-			const endIndex = git_url.indexOf("/git");
-			const ownerRepo = git_url.substring(startIndex, endIndex);
+      // get owner and repo from git_url
+      const { git_url } = item;
+      const startIndex = git_url.indexOf("repos/") + 6;
+      const endIndex = git_url.indexOf("/git");
+      const ownerRepoStr = git_url.substring(startIndex, endIndex);
+      const [owner, repo] = ownerRepoStr.split("/");
 
-			// quick fetch repo info to get the default branch
-			const repoInfo = await getRepoInfo(ownerRepo);
+      // quick fetch repo info to get the default branch
+      const { default_branch } = await getRepoInfo(owner, repo);
 
-			// return the path with default owner, repo, and main branch (path is empty for submodules)
-			return `${ownerRepo}/${repoInfo.default_branch}`;
-		}
-
-		return null;
-	};
-
-	const url = `https://api.github.com/repos/${owner}/${repo}/contents`;
-	const response = await got(url, {
-		responseType: "json",
-	});
-	const data = response.body as any[];
-
-	const paths: string[] = [];
-	for (const item of data) {
-		const communityProjectPath = await getCommunityProjectPath(item);
-		if (communityProjectPath) paths.push(communityProjectPath);
-	}
-	return paths.map((path) => {
-    const pathArr = path.split("/");
-    const title = pathArr[3] || pathArr[1]; // use repo name if no folder path
-    return {
-      value: path,
-      title
+      // return the path with default owner, repo, and main branch (path is empty for submodules)
+      // return `${ownerRepo}/${repoInfo.default_branch}`;
+      return {
+        owner,
+        repo,
+        branch: default_branch,
+      };
     }
+
+    return null;
+  };
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents`;
+  const response = await got(url, {
+    responseType: "json",
+  });
+  const data = response.body as any[];
+
+  const projectConfigs: CommunityProjectConfig[] = [];
+  for (const item of data) {
+    const communityProjectConfig = await getCommunityProjectConfig(item);
+    if (communityProjectConfig) projectConfigs.push(communityProjectConfig);
+  }
+  return projectConfigs.map((config) => {
+    return {
+      value: config,
+      title: config.filePath || config.repo, // for submodules, use repo name as title
+    };
   });
 }
 

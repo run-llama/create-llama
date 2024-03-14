@@ -70,7 +70,7 @@ const defaults: QuestionArgs = {
   llamaCloudKey: "",
   model: "gpt-3.5-turbo",
   embeddingModel: "text-embedding-ada-002",
-  communityProjectPath: "",
+  communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
   dataSource: {
@@ -303,18 +303,21 @@ export const askQuestions = async (
       COMMUNITY_OWNER,
       COMMUNITY_REPO,
     );
-    const { communityProjectPath } = await prompts(
+    const { communityProjectConfig } = await prompts(
       {
         type: "select",
-        name: "communityProjectPath",
+        name: "communityProjectConfig",
         message: "Select community template",
-        choices: projectOptions,
+        choices: projectOptions.map(({ title, value }) => ({
+          title,
+          value: JSON.stringify(value), // serialize value to string in terminal
+        })),
         initial: 0,
       },
       handlers,
     );
-    program.communityProjectPath = communityProjectPath;
-    preferences.communityProjectPath = communityProjectPath;
+    program.communityProjectConfig = communityProjectConfig;
+    preferences.communityProjectConfig = communityProjectConfig;
     return; // early return - no further questions needed for community projects
   }
 

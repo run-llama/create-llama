@@ -27,6 +27,13 @@ export type WebSourceConfig = {
 };
 export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig;
 
+export type CommunityProjectConfig = {
+  owner: string;
+  repo: string;
+  branch: string;
+  filePath?: string;
+};
+
 export interface InstallTemplateArgs {
   appName: string;
   root: string;
@@ -43,7 +50,7 @@ export interface InstallTemplateArgs {
   llamaCloudKey?: string;
   model: string;
   embeddingModel: string;
-  communityProjectPath?: string;
+  communityProjectConfig?: string;
   llamapack?: string;
   vectorDb?: TemplateVectorDB;
   externalPort?: number;
