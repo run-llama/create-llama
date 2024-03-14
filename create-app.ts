@@ -43,6 +43,7 @@ export async function createApp({
   postInstallAction,
   dataSource,
   tools,
+  observability,
 }: InstallAppArgs): Promise<void> {
   const root = path.resolve(appPath);
 
@@ -90,6 +91,7 @@ export async function createApp({
     postInstallAction,
     dataSource,
     tools,
+    observability,
   };
 
   if (frontend) {
@@ -143,5 +145,15 @@ export async function createApp({
       `file://${root}/README.md`,
     )} and learn how to get started.`,
   );
+
+  if (args.observability === "opentelemetry") {
+    console.log(
+      `\n${yellow("Observability")}: Visit the ${terminalLink(
+        "documentation",
+        "https://traceloop.com/docs/openllmetry/integrations",
+      )} to set up the environment variables and start seeing execution traces.`,
+    );
+  }
+
   console.log();
 }
