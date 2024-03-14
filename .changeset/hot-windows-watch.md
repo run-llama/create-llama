@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-fix missing .env value, improve docs and error message
+Minor bug fixes to improve DX (missing .env value and updated error messages)
