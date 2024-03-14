@@ -316,8 +316,9 @@ export const askQuestions = async (
       },
       handlers,
     );
-    program.communityProjectConfig = communityProjectConfig;
-    preferences.communityProjectConfig = communityProjectConfig;
+    const projectConfig = JSON.parse(communityProjectConfig);
+    program.communityProjectConfig = projectConfig;
+    preferences.communityProjectConfig = projectConfig;
     return; // early return - no further questions needed for community projects
   }
 

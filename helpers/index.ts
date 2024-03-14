@@ -119,9 +119,7 @@ const installCommunityProject = async ({
   root,
   communityProjectConfig,
 }: Pick<InstallTemplateArgs, "root" | "communityProjectConfig">) => {
-  const { owner, repo, branch, filePath } = JSON.parse(
-    communityProjectConfig!,
-  ) as CommunityProjectConfig;
+  const { owner, repo, branch, filePath } = communityProjectConfig!;
   console.log("\nInstalling community project:", filePath || repo);
   await downloadAndExtractRepo(root, {
     username: owner,

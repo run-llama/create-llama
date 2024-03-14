@@ -50,7 +50,7 @@ export interface InstallTemplateArgs {
   llamaCloudKey?: string;
   model: string;
   embeddingModel: string;
-  communityProjectConfig?: string;
+  communityProjectConfig?: CommunityProjectConfig;
   llamapack?: string;
   vectorDb?: TemplateVectorDB;
   externalPort?: number;

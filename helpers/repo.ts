@@ -68,7 +68,7 @@ export async function getProjectOptions(
     title: string;
   }[]
 > {
-  // return community path for projects and submodules
+  // TODO: consider using octokit (https://github.com/octokit) if more changes are needed in the future
   const getCommunityProjectConfig = async (
     item: any,
   ): Promise<CommunityProjectConfig | null> => {
@@ -96,7 +96,6 @@ export async function getProjectOptions(
       const { default_branch } = await getRepoInfo(owner, repo);
 
       // return the path with default owner, repo, and main branch (path is empty for submodules)
-      // return `${ownerRepo}/${repoInfo.default_branch}`;
       return {
         owner,
         repo,
