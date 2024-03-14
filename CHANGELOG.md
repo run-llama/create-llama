@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.0.29
+
+### Patch Changes
+
+- edd24c2: Add observability with openllmetry
+- 403fc6f: Minor bug fixes to improve DX (missing .env value and updated error messages)
+- 0f79757: Ability to download community submodules
+
 ## 0.0.28
 
 ### Patch Changes
