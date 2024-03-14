@@ -13,7 +13,7 @@ import {
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { getRepoRootFolders } from "./helpers/repo";
+import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
 export type QuestionArgs = Omit<
@@ -70,7 +70,7 @@ const defaults: QuestionArgs = {
   llamaCloudKey: "",
   model: "gpt-3.5-turbo",
   embeddingModel: "text-embedding-ada-002",
-  communityProjectPath: "",
+  communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
   dataSource: {
@@ -299,25 +299,26 @@ export const askQuestions = async (
   }
 
   if (program.template === "community") {
-    const rootFolderNames = await getRepoRootFolders(
+    const projectOptions = await getProjectOptions(
       COMMUNITY_OWNER,
       COMMUNITY_REPO,
     );
-    const { communityProjectPath } = await prompts(
+    const { communityProjectConfig } = await prompts(
       {
         type: "select",
-        name: "communityProjectPath",
+        name: "communityProjectConfig",
         message: "Select community template",
-        choices: rootFolderNames.map((name) => ({
-          title: name,
-          value: name,
+        choices: projectOptions.map(({ title, value }) => ({
+          title,
+          value: JSON.stringify(value), // serialize value to string in terminal
         })),
         initial: 0,
       },
       handlers,
     );
-    program.communityProjectPath = communityProjectPath;
-    preferences.communityProjectPath = communityProjectPath;
+    const projectConfig = JSON.parse(communityProjectConfig);
+    program.communityProjectConfig = projectConfig;
+    preferences.communityProjectConfig = projectConfig;
     return; // early return - no further questions needed for community projects
   }
 

@@ -5,7 +5,6 @@ import fs from "fs/promises";
 import path from "path";
 import { cyan } from "picocolors";
 
-import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./constant";
 import { templatesDir } from "./dir";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
@@ -14,6 +13,7 @@ import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
 import {
+  CommunityProjectConfig,
   FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
@@ -117,14 +117,15 @@ const copyContextData = async (
 
 const installCommunityProject = async ({
   root,
-  communityProjectPath,
-}: Pick<InstallTemplateArgs, "root" | "communityProjectPath">) => {
-  console.log("\nInstalling community project:", communityProjectPath!);
+  communityProjectConfig,
+}: Pick<InstallTemplateArgs, "root" | "communityProjectConfig">) => {
+  const { owner, repo, branch, filePath } = communityProjectConfig!;
+  console.log("\nInstalling community project:", filePath || repo);
   await downloadAndExtractRepo(root, {
-    username: COMMUNITY_OWNER,
-    name: COMMUNITY_REPO,
-    branch: "main",
-    filePath: communityProjectPath!,
+    username: owner,
+    name: repo,
+    branch,
+    filePath: filePath || "",
   });
 };
 
@@ -133,7 +134,7 @@ export const installTemplate = async (
 ) => {
   process.chdir(props.root);
 
-  if (props.template === "community" && props.communityProjectPath) {
+  if (props.template === "community" && props.communityProjectConfig) {
     await installCommunityProject(props);
     return;
   }

@@ -290,7 +290,7 @@ async function run(): Promise<void> {
     llamaCloudKey: program.llamaCloudKey,
     model: program.model,
     embeddingModel: program.embeddingModel,
-    communityProjectPath: program.communityProjectPath,
+    communityProjectConfig: program.communityProjectConfig,
     llamapack: program.llamapack,
     vectorDb: program.vectorDb,
     externalPort: program.externalPort,
