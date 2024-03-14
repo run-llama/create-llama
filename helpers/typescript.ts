@@ -85,19 +85,30 @@ export const installTSTemplate = async ({
    * If next.js is used, update its configuration if necessary
    */
   if (framework === "nextjs") {
+    const nextConfigJsonFile = path.join(root, "next.config.json");
+    const nextConfigJson: any = JSON.parse(
+      await fs.readFile(nextConfigJsonFile, "utf8"),
+    );
     if (!backend) {
       // update next.config.json for static site generation
-      const nextConfigJsonFile = path.join(root, "next.config.json");
-      const nextConfigJson: any = JSON.parse(
-        await fs.readFile(nextConfigJsonFile, "utf8"),
-      );
       nextConfigJson.output = "export";
       nextConfigJson.images = { unoptimized: true };
-      await fs.writeFile(
-        nextConfigJsonFile,
-        JSON.stringify(nextConfigJson, null, 2) + os.EOL,
-      );
+      console.log("\nUsing static site generation\n");
+    } else {
+      console.log("\nUsing server side rendering\n");
+      if (vectorDb === "milvus") {
+        console.log("\nUsing Milvus as vector DB\n");
+        nextConfigJson.experimental.serverComponentsExternalPackages =
+          nextConfigJson.experimental.serverComponentsExternalPackages ?? [];
+        nextConfigJson.experimental.serverComponentsExternalPackages.push(
+          "@zilliz/milvus2-sdk-node",
+        );
+      }
     }
+    await fs.writeFile(
+      nextConfigJsonFile,
+      JSON.stringify(nextConfigJson, null, 2) + os.EOL,
+    );
 
     const webpackConfigOtelFile = path.join(root, "webpack.config.o11y.mjs");
     if (observability === "opentelemetry") {
@@ -228,6 +239,13 @@ export const installTSTemplate = async ({
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       "@types/react-syntax-highlighter": undefined,
+    };
+  }
+
+  if (vectorDb === "milvus") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@zilliz/milvus2-sdk-node": "^2.3.5",
     };
   }
 

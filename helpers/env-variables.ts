@@ -71,6 +71,26 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
           name: "PINECONE_INDEX_NAME",
         },
       ];
+    case "milvus":
+      return [
+        {
+          name: "MILVUS_ADDRESS",
+          description: "The address of the Milvus server. Eg: localhost:19530",
+        },
+        {
+          name: "MILVUS_USER",
+          description: "The username to access the Milvus server.",
+        },
+        {
+          name: "MILVUS_PASSWORD",
+          description: "The password to access the Milvus server.",
+        },
+        {
+          name: "MILVUS_COLLECTION",
+          description:
+            "The name of the Milvus collection to store the vectors.",
+        },
+      ];
     default:
       return [];
   }
