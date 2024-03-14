@@ -64,6 +64,7 @@ export const installTSTemplate = async ({
   postInstallAction,
   backend,
   observability,
+  tools,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -141,20 +142,37 @@ export const installTSTemplate = async ({
       vectorDBFolder = vectorDb;
     }
 
-    const VectorDBPath = path.join(
+    relativeEngineDestPath =
+    framework === "nextjs"
+      ? path.join("app", "api", "chat")
+      : path.join("src", "controllers");
+
+    const enginePath = path.join(root, relativeEngineDestPath, "engine");
+
+    const vectorDBPath = path.join(
       compPath,
       "vectordbs",
       "typescript",
       vectorDBFolder,
     );
-    relativeEngineDestPath =
-      framework === "nextjs"
-        ? path.join("app", "api", "chat")
-        : path.join("src", "controllers");
-    await copy("**", path.join(root, relativeEngineDestPath, "engine"), {
+    await copy("**", enginePath, {
       parents: true,
-      cwd: VectorDBPath,
+      cwd: vectorDBPath,
     });
+
+    if (tools?.length) {
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "engines", "typescript", "agent"),
+      });
+
+      // TODO: action to install tools
+    } else {
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "engines", "typescript", "chat"),
+      });
+    }
   }
 
   /**

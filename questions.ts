@@ -703,7 +703,6 @@ export const askQuestions = async (
 
   if (
     !program.tools &&
-    program.framework === "fastapi" &&
     program.engine === "context"
   ) {
     if (ciInfo.isCI) {
