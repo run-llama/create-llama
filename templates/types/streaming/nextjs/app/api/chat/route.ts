@@ -2,7 +2,7 @@ import { initObservability } from "@/app/observability";
 import { StreamingTextResponse } from "ai";
 import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
-import { createChatEngine } from "./engine";
+import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
 
 initObservability();
