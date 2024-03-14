@@ -21,7 +21,6 @@ async function getDataSource(llm: LLM) {
   });
   const milvusClient = getMilvusClient();
   const store = new MilvusVectorStore({ milvusClient });
-  await store.connect();
 
   return await VectorStoreIndex.fromVectorStore(store, serviceContext);
 }

@@ -240,13 +240,6 @@ export const installTSTemplate = async ({
     };
   }
 
-  if (vectorDb === "milvus") {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      "@zilliz/milvus2-sdk-node": "^2.3.5",
-    };
-  }
-
   if (observability === "opentelemetry") {
     packageJson.dependencies = {
       ...packageJson.dependencies,
