@@ -96,7 +96,6 @@ export const installTSTemplate = async ({
       console.log("\nUsing static site generation\n");
     } else {
       if (vectorDb === "milvus") {
-        console.log("\nUsing Milvus as vector DB\n");
         nextConfigJson.experimental.serverComponentsExternalPackages =
           nextConfigJson.experimental.serverComponentsExternalPackages ?? [];
         nextConfigJson.experimental.serverComponentsExternalPackages.push(
