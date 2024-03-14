@@ -1,7 +1,7 @@
 import { streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
-import { createChatEngine } from "./engine";
+import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
 
 const convertMessageContent = (
