@@ -31,9 +31,7 @@ def generate_datasource():
         storage_context=storage_context,
         show_progress=True,  # this will show you a progress bar as the embeddings are created
     )
-    logger.info(
-        f"Successfully created embeddings in the Milvus collection {os.environ['MILVUS_COLLECTION']}"
-    )
+    logger.info(f"Successfully created embeddings in the Milvus")
 
 
 if __name__ == "__main__":

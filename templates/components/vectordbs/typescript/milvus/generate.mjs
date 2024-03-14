@@ -25,7 +25,7 @@ async function loadAndIndex() {
   // Connect to Milvus
   const milvusClient = getMilvusClient();
   const vectorStore = new MilvusVectorStore({ milvusClient });
-  await vectorStore.connect(collectionName);
+  await vectorStore.connect();
 
   // now create an index from all the Documents and store them in Milvus
   const storageContext = await storageContextFromDefaults({ vectorStore });

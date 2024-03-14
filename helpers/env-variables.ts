@@ -89,7 +89,7 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
         {
           name: "MILVUS_COLLECTION",
           description:
-            "The name of the Milvus collection to store the vectors.",
+            "The name of the Milvus collection to store the vectors. Default is 'llamacollection' if not specified.",
         },
       ];
     default:

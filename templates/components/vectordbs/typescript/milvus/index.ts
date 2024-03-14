@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import {
   ContextChatEngine,
   LLM,
@@ -22,7 +21,7 @@ async function getDataSource(llm: LLM) {
   });
   const milvusClient = getMilvusClient();
   const store = new MilvusVectorStore({ milvusClient });
-  await store.connect(process.env.MILVUS_COLLECTION);
+  await store.connect();
 
   return await VectorStoreIndex.fromVectorStore(store, serviceContext);
 }
