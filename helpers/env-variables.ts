@@ -75,7 +75,8 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
       return [
         {
           name: "MILVUS_ADDRESS",
-          description: "The address of the Milvus server. Eg: localhost:19530",
+          description:
+            "The address of the Milvus server. Eg: http://localhost:19530",
         },
         {
           name: "MILVUS_USER",

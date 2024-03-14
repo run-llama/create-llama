@@ -49,6 +49,13 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "milvus": {
+      dependencies.push({
+        name: "llama-index-vector-stores-milvus",
+        version: "^0.1.6",
+      });
+      break;
+    }
   }
 
   // Add data source dependencies
