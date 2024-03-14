@@ -13,7 +13,6 @@ import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
 import {
-  CommunityProjectConfig,
   FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,

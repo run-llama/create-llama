@@ -297,6 +297,7 @@ async function run(): Promise<void> {
     postInstallAction: program.postInstallAction,
     dataSource: program.dataSource,
     tools: program.tools,
+    observability: program.observability,
   });
   conf.set("preferences", preferences);
 
