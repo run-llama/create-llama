@@ -176,6 +176,10 @@ const program = new Commander.Command(packageJson.name)
   Provide a LlamaCloud API key.
 `,
   )
+  .option(
+    "--observability <observability>",
+    "Specify observability tools to use. Eg: none, opentelemetry",
+  )
   .allowUnknownOption()
   .parse(process.argv);
 if (process.argv.includes("--no-frontend")) {

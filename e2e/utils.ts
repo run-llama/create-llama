@@ -123,6 +123,8 @@ export async function runCreateLlama(
     "--tools",
     "none",
     "--no-llama-parse",
+    "--observability",
+    "none",
   ].join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {
