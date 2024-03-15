@@ -166,7 +166,17 @@ export const installTSTemplate = async ({
         cwd: path.join(compPath, "engines", "typescript", "agent"),
       });
 
-      // TODO: action to install tools
+      // Write tools_config.json
+      const configContent: Record<string, any> = {};
+      tools.forEach((tool) => {
+        configContent[tool.name] = tool.config ?? {};
+      });
+      const configFilePath = path.join(enginePath, "tools_config.json");
+      console.log(configFilePath)
+      await fs.writeFile(
+        configFilePath,
+        JSON.stringify(configContent, null, 2),
+      );
     } else {
       await copy("**", enginePath, {
         parents: true,

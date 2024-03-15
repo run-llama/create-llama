@@ -5,6 +5,7 @@ import {
 } from "llamaindex";
 import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./constants.mjs";
+import ToolFactory from "./tools";
 
 export async function createChatEngine(llm: OpenAI) {
   const index = await getDataSource(llm);
@@ -17,8 +18,10 @@ export async function createChatEngine(llm: OpenAI) {
     },
   });
 
+  const externalTools = await ToolFactory.list();
+
   const agent = new OpenAIAgent({
-    tools: [queryEngineTool],
+    tools: [queryEngineTool, ...externalTools],
     verbose: true,
     llm,
   });
