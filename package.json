@@ -64,7 +64,8 @@
     "prettier": "^3.2.5",
     "prettier-plugin-organize-imports": "^3.2.4",
     "typescript": "^5.3.3",
-    "eslint-config-prettier": "^8.10.0"
+    "eslint-config-prettier": "^8.10.0",
+    "ora": "^8.0.1"
   },
   "engines": {
     "node": ">=16.14.0"

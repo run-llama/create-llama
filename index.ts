@@ -177,6 +177,10 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
+    "--list-server-models",
+    "Fetch available LLM and embedding models from OpenAI API.",
+  )
+  .option(
     "--observability <observability>",
     "Specify observability tools to use. Eg: none, opentelemetry",
   )
