@@ -7,9 +7,9 @@ import {
 } from "llamaindex";
 import {
   checkRequiredEnvVars,
-  getMilvusClient,
   CHUNK_OVERLAP,
   CHUNK_SIZE,
+  getMilvusClient,
 } from "./shared.mjs";
 
 async function getDataSource(llm: LLM) {
