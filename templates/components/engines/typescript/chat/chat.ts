@@ -1,7 +1,4 @@
-import {
-  LLM,
-  ContextChatEngine,
-} from "llamaindex";
+import { LLM, ContextChatEngine } from "llamaindex";
 import { getDataSource } from "./index";
 
 export async function createChatEngine(llm: LLM) {

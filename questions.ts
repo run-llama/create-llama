@@ -701,10 +701,7 @@ export const askQuestions = async (
     }
   }
 
-  if (
-    !program.tools &&
-    program.engine === "context"
-  ) {
+  if (!program.tools && program.engine === "context") {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

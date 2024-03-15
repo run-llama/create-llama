@@ -59,7 +59,10 @@ export function LlamaIndexStream(
   },
 ): { stream: ReadableStream; data: experimental_StreamData } {
   const data = new experimental_StreamData();
-  const res = response instanceof StreamingAgentChatResponse ? response.response : response;
+  const res =
+    response instanceof StreamingAgentChatResponse
+      ? response.response
+      : response;
   return {
     stream: createParser(res, data, opts?.parserOptions)
       .pipeThrough(createCallbacksTransformer(opts?.callbacks))

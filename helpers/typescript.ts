@@ -143,9 +143,9 @@ export const installTSTemplate = async ({
     }
 
     relativeEngineDestPath =
-    framework === "nextjs"
-      ? path.join("app", "api", "chat")
-      : path.join("src", "controllers");
+      framework === "nextjs"
+        ? path.join("app", "api", "chat")
+        : path.join("src", "controllers");
 
     const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
@@ -172,7 +172,6 @@ export const installTSTemplate = async ({
         configContent[tool.name] = tool.config ?? {};
       });
       const configFilePath = path.join(enginePath, "tools_config.json");
-      console.log(configFilePath)
       await fs.writeFile(
         configFilePath,
         JSON.stringify(configContent, null, 2),

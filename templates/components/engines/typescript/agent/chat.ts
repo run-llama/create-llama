@@ -1,8 +1,4 @@
-import {
-  OpenAI,
-  QueryEngineTool,
-  OpenAIAgent,
-} from "llamaindex";
+import { OpenAI, QueryEngineTool, OpenAIAgent } from "llamaindex";
 import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./constants.mjs";
 import ToolFactory from "./tools";
