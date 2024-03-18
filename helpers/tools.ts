@@ -5,6 +5,7 @@ export type Tool = {
   name: string;
   config?: Record<string, any>;
   dependencies?: ToolDependencies[];
+  tsSupport?: boolean;
 };
 export type ToolDependencies = {
   name: string;
@@ -37,6 +38,7 @@ export const supportedTools: Tool[] = [
         version: "0.1.2",
       },
     ],
+    tsSupport: true,
   },
 ];
 

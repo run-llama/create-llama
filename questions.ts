@@ -705,7 +705,11 @@ export const askQuestions = async (
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {
-      const toolChoices = supportedTools.map((tool) => ({
+      const options =
+        program.framework === "fastapi"
+          ? supportedTools
+          : supportedTools.filter((t) => t.tsSupport);
+      const toolChoices = options.map((tool) => ({
         title: tool.display,
         value: tool.name,
       }));

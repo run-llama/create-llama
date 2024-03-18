@@ -1,8 +1,6 @@
 import { BaseTool } from "llamaindex";
-import config from "./tool_config.json";
 
 enum ExternalTool {
-  GoogleSearch = "google.GoogleSearchToolSpec",
   Wikipedia = "wikipedia.WikipediaToolSpec",
 }
 
@@ -19,14 +17,12 @@ export default class ToolFactory {
       return tool;
     }
 
-    // TODO: Implement GoogleSearchToolSpec
-
     throw new Error(
       `Sorry! Tool ${key} is not supported yet. Options: ${options}`,
     );
   }
 
-  public static async list(): Promise<BaseTool[]> {
+  public static async createTools(config: ToolConfig): Promise<BaseTool[]> {
     const tools: BaseTool[] = [];
     for (const [key, value] of Object.entries(config as ToolConfig)) {
       const tool = await ToolFactory.createTool(key as ExternalTool, value);
