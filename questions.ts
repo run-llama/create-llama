@@ -96,6 +96,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
     { title: "MongoDB", value: "mongo" },
     { title: "PostgreSQL", value: "pg" },
     { title: "Pinecone", value: "pinecone" },
+    { title: "Milvus", value: "milvus" },
   ];
 
   const vectordbLang = framework === "fastapi" ? "python" : "typescript";

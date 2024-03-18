@@ -85,19 +85,28 @@ export const installTSTemplate = async ({
    * If next.js is used, update its configuration if necessary
    */
   if (framework === "nextjs") {
+    const nextConfigJsonFile = path.join(root, "next.config.json");
+    const nextConfigJson: any = JSON.parse(
+      await fs.readFile(nextConfigJsonFile, "utf8"),
+    );
     if (!backend) {
       // update next.config.json for static site generation
-      const nextConfigJsonFile = path.join(root, "next.config.json");
-      const nextConfigJson: any = JSON.parse(
-        await fs.readFile(nextConfigJsonFile, "utf8"),
-      );
       nextConfigJson.output = "export";
       nextConfigJson.images = { unoptimized: true };
-      await fs.writeFile(
-        nextConfigJsonFile,
-        JSON.stringify(nextConfigJson, null, 2) + os.EOL,
-      );
+      console.log("\nUsing static site generation\n");
+    } else {
+      if (vectorDb === "milvus") {
+        nextConfigJson.experimental.serverComponentsExternalPackages =
+          nextConfigJson.experimental.serverComponentsExternalPackages ?? [];
+        nextConfigJson.experimental.serverComponentsExternalPackages.push(
+          "@zilliz/milvus2-sdk-node",
+        );
+      }
     }
+    await fs.writeFile(
+      nextConfigJsonFile,
+      JSON.stringify(nextConfigJson, null, 2) + os.EOL,
+    );
 
     const webpackConfigOtelFile = path.join(root, "webpack.config.o11y.mjs");
     if (observability === "opentelemetry") {
