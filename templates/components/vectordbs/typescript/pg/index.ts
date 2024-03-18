@@ -2,10 +2,10 @@
 import {
   ContextChatEngine,
   LLM,
-  PGVectorStore,
   VectorStoreIndex,
   serviceContextFromDefaults,
-} from "llamaindex";
+} from "@llamaindex/edge";
+import { PGVectorStore } from "@llamaindex/edge/storage/vectorStore/PGVectorStore";
 import {
   CHUNK_OVERLAP,
   CHUNK_SIZE,

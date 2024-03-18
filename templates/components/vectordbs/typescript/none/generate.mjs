@@ -1,9 +1,6 @@
-import {
-  serviceContextFromDefaults,
-  SimpleDirectoryReader,
-  storageContextFromDefaults,
-  VectorStoreIndex,
-} from "llamaindex";
+import { VectorStoreIndex, serviceContextFromDefaults } from "@llamaindex/edge";
+import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
 
 import * as dotenv from "dotenv";
 

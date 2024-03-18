@@ -2,10 +2,10 @@
 import {
   ContextChatEngine,
   LLM,
-  PineconeVectorStore,
   VectorStoreIndex,
   serviceContextFromDefaults,
-} from "llamaindex";
+} from "@llamaindex/edge";
+import { PineconeVectorStore } from "@llamaindex/edge/storage/vectorStore/PineconeVectorStore";
 import { CHUNK_OVERLAP, CHUNK_SIZE, checkRequiredEnvVars } from "./shared.mjs";
 
 async function getDataSource(llm: LLM) {

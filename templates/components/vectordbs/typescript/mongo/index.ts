@@ -2,12 +2,12 @@
 import {
   ContextChatEngine,
   LLM,
-  MongoDBAtlasVectorSearch,
-  serviceContextFromDefaults,
   VectorStoreIndex,
-} from "llamaindex";
+  serviceContextFromDefaults,
+} from "@llamaindex/edge";
+import { MongoDBAtlasVectorSearch } from "@llamaindex/edge/storage/vectorStore/MongoDBAtlasVectorSearch";
 import { MongoClient } from "mongodb";
-import { checkRequiredEnvVars, CHUNK_OVERLAP, CHUNK_SIZE } from "./shared.mjs";
+import { CHUNK_OVERLAP, CHUNK_SIZE, checkRequiredEnvVars } from "./shared.mjs";
 
 async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();

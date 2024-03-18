@@ -1,11 +1,9 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { VectorStoreIndex } from "@llamaindex/edge";
+import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
+import { MongoDBAtlasVectorSearch } from "@llamaindex/edge/storage/vectorStore/MongoDBAtlasVectorSearch";
 import * as dotenv from "dotenv";
-import {
-  MongoDBAtlasVectorSearch,
-  SimpleDirectoryReader,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
 import { MongoClient } from "mongodb";
 import { STORAGE_DIR, checkRequiredEnvVars } from "./shared.mjs";
 

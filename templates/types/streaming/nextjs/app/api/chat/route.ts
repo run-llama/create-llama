@@ -1,13 +1,13 @@
 import { initObservability } from "@/app/observability";
+import { ChatMessage, MessageContent, OpenAI } from "@llamaindex/edge";
 import { StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine";
 import { LlamaIndexStream } from "./llamaindex-stream";
 
 initObservability();
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const convertMessageContent = (

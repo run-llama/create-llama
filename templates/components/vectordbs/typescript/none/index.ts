@@ -1,11 +1,11 @@
 import {
   ContextChatEngine,
   LLM,
-  serviceContextFromDefaults,
-  SimpleDocumentStore,
-  storageContextFromDefaults,
   VectorStoreIndex,
-} from "llamaindex";
+  serviceContextFromDefaults,
+} from "@llamaindex/edge";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
+import { SimpleDocumentStore } from "@llamaindex/edge/storage/docStore/SimpleDocumentStore";
 import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./constants.mjs";
 
 async function getDataSource(llm: LLM) {

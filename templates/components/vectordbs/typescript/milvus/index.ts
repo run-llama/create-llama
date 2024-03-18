@@ -1,14 +1,14 @@
 import {
   ContextChatEngine,
   LLM,
-  MilvusVectorStore,
-  serviceContextFromDefaults,
   VectorStoreIndex,
-} from "llamaindex";
+  serviceContextFromDefaults,
+} from "@llamaindex/edge";
+import { MilvusVectorStore } from "@llamaindex/edge/storage/vectorStore/MilvusVectorStore";
 import {
-  checkRequiredEnvVars,
   CHUNK_OVERLAP,
   CHUNK_SIZE,
+  checkRequiredEnvVars,
   getMilvusClient,
 } from "./shared.mjs";
 

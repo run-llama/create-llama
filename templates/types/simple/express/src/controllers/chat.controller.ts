@@ -1,5 +1,5 @@
+import { ChatMessage, MessageContent, OpenAI } from "@llamaindex/edge";
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
 import { createChatEngine } from "./engine";
 
 const convertMessageContent = (

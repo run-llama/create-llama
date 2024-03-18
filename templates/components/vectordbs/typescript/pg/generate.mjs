@@ -1,11 +1,9 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { VectorStoreIndex } from "@llamaindex/edge";
+import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
+import { PGVectorStore } from "@llamaindex/edge/storage/vectorStore/PGVectorStore";
 import * as dotenv from "dotenv";
-import {
-  PGVectorStore,
-  SimpleDirectoryReader,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
 import {
   PGVECTOR_SCHEMA,
   PGVECTOR_TABLE,

@@ -1,11 +1,9 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { VectorStoreIndex } from "@llamaindex/edge";
+import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
+import { PineconeVectorStore } from "@llamaindex/edge/storage/vectorStore/PineconeVectorStore";
 import * as dotenv from "dotenv";
-import {
-  PineconeVectorStore,
-  SimpleDirectoryReader,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
 import { STORAGE_DIR, checkRequiredEnvVars } from "./shared.mjs";
 
 dotenv.config();

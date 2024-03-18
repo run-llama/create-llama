@@ -1,11 +1,10 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { VectorStoreIndex } from "@llamaindex/edge";
+import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
+import { storageContextFromDefaults } from "@llamaindex/edge/storage/StorageContext";
+import { MilvusVectorStore } from "@llamaindex/edge/storage/vectorStore/MilvusVectorStore";
 import * as dotenv from "dotenv";
-import {
-  MilvusVectorStore,
-  SimpleDirectoryReader,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+
 import {
   STORAGE_DIR,
   checkRequiredEnvVars,

@@ -1,3 +1,4 @@
+import { Response } from "@llamaindex/edge";
 import {
   JSONValue,
   createCallbacksTransformer,
@@ -6,7 +7,6 @@ import {
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import { Response } from "llamaindex";
 
 type ParserOptions = {
   image_url?: string;
