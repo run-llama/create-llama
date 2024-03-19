@@ -99,7 +99,10 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
   }
 };
 
-const getDataSourceEnvs = (dataSource: TemplateDataSource) => {
+const getDataSourceEnvs = (
+  dataSource: TemplateDataSource,
+  llamaCloudKey?: string,
+) => {
   switch (dataSource.type) {
     case "web":
       return [
@@ -115,6 +118,19 @@ const getDataSourceEnvs = (dataSource: TemplateDataSource) => {
           name: "MAX_DEPTH",
           description: "The maximum depth to scrape.",
         },
+      ];
+    case "file":
+    case "folder":
+      return [
+        ...((dataSource?.config as FileSourceConfig).useLlamaParse
+          ? [
+              {
+                name: "LLAMA_CLOUD_API_KEY",
+                description: `The Llama Cloud API key.`,
+                value: llamaCloudKey,
+              },
+            ]
+          : []),
       ];
     default:
       return [];
@@ -149,10 +165,13 @@ export const createBackendEnvFile = async (
       description: "The OpenAI API key to use.",
       value: opts.openAiKey,
     },
+
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
     // Add data source environment variables
-    ...(opts.dataSource ? getDataSourceEnvs(opts.dataSource) : []),
+    ...(opts.dataSource
+      ? getDataSourceEnvs(opts.dataSource, opts.llamaCloudKey)
+      : []),
   ];
   let envVars: EnvVar[] = [];
   if (opts.framework === "fastapi") {
@@ -204,13 +223,6 @@ We have provided context information below.
 Given this information, please answer the question: {query_str}
 "`,
         },
-        (opts?.dataSource?.config as FileSourceConfig).useLlamaParse
-          ? {
-              name: "LLAMA_CLOUD_API_KEY",
-              description: `The Llama Cloud API key.`,
-              value: opts.llamaCloudKey,
-            }
-          : {},
       ],
     ];
   } else {

@@ -691,9 +691,8 @@ export const askQuestions = async (
   }
 
   if (
-    (program.dataSource?.type === "file" ||
-      program.dataSource?.type === "folder") &&
-    program.framework === "fastapi"
+    program.dataSource?.type === "file" ||
+    program.dataSource?.type === "folder"
   ) {
     if (ciInfo.isCI) {
       program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");

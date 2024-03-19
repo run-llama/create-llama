@@ -42,30 +42,27 @@ async function generateContextData(
       ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
       : true;
     const hasVectorDb = vectorDb && vectorDb !== "none";
-    if (framework === "fastapi") {
-      if (
-        openAiKeyConfigured &&
-        llamaCloudKeyConfigured &&
-        !hasVectorDb &&
-        isHavingPoetryLockFile()
-      ) {
-        console.log(`Running ${runGenerate} to generate the context data.`);
-        const result = tryPoetryRun("python app/engine/generate.py");
-        if (!result) {
-          console.log(`Failed to run ${runGenerate}.`);
-          process.exit(1);
+    if (openAiKeyConfigured && llamaCloudKeyConfigured && !hasVectorDb) {
+      // If all the required environment variables are set, run the generate script
+      if (framework === "fastapi") {
+        if (isHavingPoetryLockFile()) {
+          console.log(`Running ${runGenerate} to generate the context data.`);
+          const result = tryPoetryRun("python app/engine/generate.py");
+          if (!result) {
+            console.log(`Failed to run ${runGenerate}.`);
+            process.exit(1);
+          }
+          console.log(`Generated context data`);
+          return;
         }
-        console.log(`Generated context data`);
-        return;
-      }
-    } else {
-      if (openAiKeyConfigured && vectorDb === "none") {
+      } else {
         console.log(`Running ${runGenerate} to generate the context data.`);
         await callPackageManager(packageManager, true, ["run", "generate"]);
         return;
       }
     }
 
+    // generate the message of what to do to run the generate script manually
     const settings = [];
     if (!openAiKeyConfigured) settings.push("your OpenAI key");
     if (!llamaCloudKeyConfigured) settings.push("your Llama Cloud key");
