@@ -28,6 +28,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
     "e2e": "playwright test",
     "prepare": "husky",
+    "install-local": "pnpm link --global",
     "release": "pnpm run build && changeset publish",
     "new-version": "pnpm run build && changeset version"
   },
