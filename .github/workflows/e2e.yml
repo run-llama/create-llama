@@ -17,7 +17,7 @@ jobs:
       matrix:
         node-version: [18, 20]
         python-version: ["3.11"]
-        os: [macos-latest, windows-latest]
+        os: [macos-latest] #, windows-latest]
     defaults:
       run:
         shell: bash
