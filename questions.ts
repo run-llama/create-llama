@@ -48,7 +48,7 @@ const MACOS_FOLDER_SELECTION_SCRIPT = `
 osascript -l JavaScript -e '
   a = Application.currentApplication();
   a.includeStandardAdditions = true;
-  a.chooseFolder({ withPrompt: "Please select a folder to process:" }).toString()
+  a.chooseFolder({ withPrompt: "Please select folders to process:", multipleSelectionsAllowed: true }).map(folder => folder.toString())
 '`;
 const WINDOWS_FILE_SELECTION_SCRIPT = `
 Add-Type -AssemblyName System.Windows.Forms

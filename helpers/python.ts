@@ -248,7 +248,7 @@ export const installPythonTemplate = async ({
         cwd: path.join(compPath, "engines", "python", "chat"),
       });
     }
-
+    // TODO: update this after updating the loaders code
     // const dataSourceType = dataSource?.type;
     // if (dataSourceType !== undefined && dataSourceType !== "none") {
     //   let loaderFolder: string;
