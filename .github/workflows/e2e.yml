@@ -17,7 +17,7 @@ jobs:
       matrix:
         node-version: [18, 20]
         python-version: ["3.11"]
-        os: [macos-latest] #, windows-latest]
+        os: [macos-latest, windows-latest]
     defaults:
       run:
         shell: bash
@@ -49,11 +49,20 @@ jobs:
       - name: Install
         run: pnpm run install-local
         working-directory: .
-      - name: Run Playwright tests
+      - name: Run Playwright tests (macOS)
+        if: matrix.os == 'macos-latest'
         run: pnpm run e2e
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         working-directory: .
+        shell: bash
+      - name: Run Playwright tests (Windows)
+        if: matrix.os == 'windows-latest'
+        run: pnpm run e2e
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        working-directory: .
+        shell: powershell
       - uses: actions/upload-artifact@v3
         if: always()
         with:
