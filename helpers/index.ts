@@ -27,8 +27,8 @@ async function generateContextData(
   packageManager?: PackageManager,
   openAiKey?: string,
   vectorDb?: TemplateVectorDB,
-  dataSource?: TemplateDataSource,
   llamaCloudKey?: string,
+  useLlamaParse?: boolean,
 ) {
   if (packageManager) {
     const runGenerate = `${cyan(
@@ -37,8 +37,7 @@ async function generateContextData(
         : `${packageManager} run generate`,
     )}`;
     const openAiKeyConfigured = openAiKey || process.env["OPENAI_API_KEY"];
-    const llamaCloudKeyConfigured = (dataSource?.config as FileSourceConfig)
-      ?.useLlamaParse
+    const llamaCloudKeyConfigured = useLlamaParse
       ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
       : true;
     const hasVectorDb = vectorDb && vectorDb !== "none";
@@ -81,6 +80,8 @@ const copyContextData = async (
   root: string,
   dataSource?: TemplateDataSource,
 ) => {
+  console.log(`\nCopying data for ${dataSource}\n`);
+
   const destPath = path.join(root, "data");
 
   const dataSourceConfig = dataSource?.config as FileSourceConfig;
@@ -160,12 +161,19 @@ export const installTemplate = async (
       model: props.model,
       embeddingModel: props.embeddingModel,
       framework: props.framework,
-      dataSource: props.dataSource,
+      dataSources: props.dataSources,
       port: props.externalPort,
     });
 
     if (props.engine === "context") {
-      await copyContextData(props.root, props.dataSource);
+      console.log("\nGenerating context data...\n");
+      console.log(props.dataSources);
+
+      props.dataSources.forEach(async (ds) => {
+        if (ds.type === "file" || ds.type === "folder") {
+          await copyContextData(props.root, ds);
+        }
+      });
       if (
         props.postInstallAction === "runApp" ||
         props.postInstallAction === "dependencies"
@@ -175,8 +183,12 @@ export const installTemplate = async (
           props.packageManager,
           props.openAiKey,
           props.vectorDb,
-          props.dataSource,
           props.llamaCloudKey,
+          props.dataSources.some(
+            (ds) =>
+              (ds.type === "file" || ds.type === "folder") &&
+              (ds.config as FileSourceConfig).useLlamaParse,
+          ),
         );
       }
     }

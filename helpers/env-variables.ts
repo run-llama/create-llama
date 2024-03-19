@@ -99,26 +99,28 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
   }
 };
 
-const getDataSourceEnvs = (dataSource: TemplateDataSource) => {
-  switch (dataSource.type) {
-    case "web":
-      return [
-        {
-          name: "BASE_URL",
-          description: "The base URL to start web scraping.",
-        },
-        {
-          name: "URL_PREFIX",
-          description: "The prefix of the URL to start web scraping.",
-        },
-        {
-          name: "MAX_DEPTH",
-          description: "The maximum depth to scrape.",
-        },
-      ];
-    default:
-      return [];
+const getDataSourceEnvs = (dataSources: TemplateDataSource[]) => {
+  const envs = [];
+  for (const source of dataSources) {
+    switch (source.type) {
+      case "web":
+        envs.push(
+          {
+            name: "BASE_URL",
+            description: "The base URL to start web scraping.",
+          },
+          {
+            name: "URL_PREFIX",
+            description: "The prefix of the URL to start web scraping.",
+          },
+          {
+            name: "MAX_DEPTH",
+            description: "The maximum depth to scrape.",
+          },
+        );
+    }
   }
+  return envs;
 };
 
 export const createBackendEnvFile = async (
@@ -130,7 +132,7 @@ export const createBackendEnvFile = async (
     model?: string;
     embeddingModel?: string;
     framework?: TemplateFramework;
-    dataSource?: TemplateDataSource;
+    dataSources?: TemplateDataSource[];
     port?: number;
   },
 ) => {
@@ -152,7 +154,7 @@ export const createBackendEnvFile = async (
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
     // Add data source environment variables
-    ...(opts.dataSource ? getDataSourceEnvs(opts.dataSource) : []),
+    ...(opts.dataSources ? getDataSourceEnvs(opts.dataSources) : []),
   ];
   let envVars: EnvVar[] = [];
   if (opts.framework === "fastapi") {
@@ -204,7 +206,9 @@ We have provided context information below.
 Given this information, please answer the question: {query_str}
 "`,
         },
-        (opts?.dataSource?.config as FileSourceConfig).useLlamaParse
+        opts?.dataSources?.some(
+          (ds) => (ds.config as FileSourceConfig).useLlamaParse,
+        )
           ? {
               name: "LLAMA_CLOUD_API_KEY",
               description: `The Llama Cloud API key.`,

@@ -41,7 +41,6 @@ export async function createApp({
   vectorDb,
   externalPort,
   postInstallAction,
-  dataSource,
   dataSources,
   tools,
   observability,
@@ -90,8 +89,7 @@ export async function createApp({
     vectorDb,
     externalPort,
     postInstallAction,
-    dataSource,
-    dataSources: [],
+    dataSources,
     tools,
     observability,
   };

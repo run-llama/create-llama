@@ -145,11 +145,11 @@ export const getDataSourceChoices = (
   if (process.platform === "win32" || process.platform === "darwin") {
     choices.push({
       title: `Use local files (${supportedContextFileTypes.join(", ")})`,
-      value: "localFile",
+      value: "file",
     });
     choices.push({
       title: `Use local folders`,
-      value: "localFolder",
+      value: "folder",
     });
   }
   if (framework === "fastapi") {
@@ -634,7 +634,7 @@ export const askQuestions = async (
           config: {
             path: program.files,
           },
-        }
+        },
       ];
     }
   }
@@ -676,18 +676,13 @@ export const askQuestions = async (
         }
 
         const dataSource = {
-          type: selectedSource,
+          type: selectedSource === "exampleFile" ? "folder" : selectedSource,
           config: {},
         };
 
         // Select local file or folder
-        if (
-          selectedSource === "localFile" ||
-          selectedSource === "localFolder"
-        ) {
-          const selectedPaths = await selectLocalContextData(
-            selectedSource === "localFile" ? "file" : "folder",
-          );
+        if (selectedSource === "file" || selectedSource === "folder") {
+          const selectedPaths = await selectLocalContextData(selectedSource);
           dataSource.config = {
             path: selectedPaths,
           };
@@ -756,6 +751,15 @@ export const askQuestions = async (
           };
         }
         program.dataSources.push(dataSource);
+      }
+
+      if (
+        program.dataSources.length === 0 ||
+        program.dataSources[0].type === "none"
+      ) {
+        program.engine = "simple";
+      } else {
+        program.engine = "context";
       }
     }
   }

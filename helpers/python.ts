@@ -8,7 +8,6 @@ import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
-  FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
@@ -175,7 +174,7 @@ export const installPythonTemplate = async ({
   framework,
   engine,
   vectorDb,
-  dataSource,
+  dataSources,
   tools,
   postInstallAction,
 }: Pick<
@@ -185,7 +184,7 @@ export const installPythonTemplate = async ({
   | "template"
   | "engine"
   | "vectorDb"
-  | "dataSource"
+  | "dataSources"
   | "tools"
   | "postInstallAction"
 >) => {
@@ -250,27 +249,25 @@ export const installPythonTemplate = async ({
       });
     }
 
-    const dataSourceType = dataSource?.type;
-    if (dataSourceType !== undefined && dataSourceType !== "none") {
-      let loaderFolder: string;
-      if (dataSourceType === "file" || dataSourceType === "folder") {
-        const dataSourceConfig = dataSource?.config as FileSourceConfig;
-        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
-      } else {
-        loaderFolder = dataSourceType;
-      }
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "loaders", "python", loaderFolder),
-      });
-    }
+    // const dataSourceType = dataSource?.type;
+    // if (dataSourceType !== undefined && dataSourceType !== "none") {
+    //   let loaderFolder: string;
+    //   if (dataSourceType === "file" || dataSourceType === "folder") {
+    //     const dataSourceConfig = dataSource?.config as FileSourceConfig;
+    //     loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+    //   } else {
+    //     loaderFolder = dataSourceType;
+    //   }
+    //   await copy("**", enginePath, {
+    //     parents: true,
+    //     cwd: path.join(compPath, "loaders", "python", loaderFolder),
+    //   });
+    // }
   }
 
-  const addOnDependencies = getAdditionalDependencies(
-    vectorDb,
-    dataSource,
-    tools,
-  );
+  const addOnDependencies = dataSources
+    .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
+    .flat();
   await addDependencies(root, addOnDependencies);
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
