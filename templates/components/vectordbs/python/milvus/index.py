@@ -12,7 +12,7 @@ def get_index():
     logger.info("Connecting to index from Milvus...")
     store = MilvusVectorStore(
         uri=os.getenv("MILVUS_ADDRESS"),
-        user=os.getenv("MILVUS_USER"),
+        user=os.getenv("MILVUS_USERNAME"),
         password=os.getenv("MILVUS_PASSWORD"),
         collection_name=os.getenv("MILVUS_COLLECTION"),
         dim=int(os.getenv("EMBEDDING_DIM", "1536")),

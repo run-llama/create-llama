@@ -20,7 +20,7 @@ def generate_datasource():
     documents = get_documents()
     store = MilvusVectorStore(
         uri=os.environ["MILVUS_ADDRESS"],
-        user=os.getenv("MILVUS_USER"),
+        user=os.getenv("MILVUS_USERNAME"),
         password=os.getenv("MILVUS_PASSWORD"),
         collection_name=os.getenv("MILVUS_COLLECTION"),
         dim=int(os.getenv("MILVUS_DIMENSION", "1536")),
