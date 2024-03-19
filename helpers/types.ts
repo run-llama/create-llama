@@ -45,6 +45,7 @@ export interface InstallTemplateArgs {
   engine: TemplateEngine;
   ui: TemplateUI;
   dataSource?: TemplateDataSource;
+  dataSources: TemplateDataSource[];
   eslint: boolean;
   customApiPath?: string;
   openAiKey?: string;

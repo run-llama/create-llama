@@ -42,6 +42,7 @@ export async function createApp({
   externalPort,
   postInstallAction,
   dataSource,
+  dataSources,
   tools,
   observability,
 }: InstallAppArgs): Promise<void> {
@@ -90,6 +91,7 @@ export async function createApp({
     externalPort,
     postInstallAction,
     dataSource,
+    dataSources: [],
     tools,
     observability,
   };

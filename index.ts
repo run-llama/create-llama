@@ -304,6 +304,7 @@ async function run(): Promise<void> {
     externalPort: program.externalPort,
     postInstallAction: program.postInstallAction,
     dataSource: program.dataSource,
+    dataSources: program.dataSources,
     tools: program.tools,
     observability: program.observability,
   });
