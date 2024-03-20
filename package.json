@@ -30,7 +30,9 @@
     "prepare": "husky",
     "install-local": "pnpm link --global",
     "release": "pnpm run build && changeset publish",
-    "new-version": "pnpm run build && changeset version"
+    "new-version": "pnpm run build && changeset version",
+    "release-snapshot": "pnpm run build && changeset publish --tag snapshot",
+    "new-snapshot": "pnpm run build && changeset version --snapshot"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",
