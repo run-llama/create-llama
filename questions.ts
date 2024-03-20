@@ -142,22 +142,32 @@ export const getDataSourceChoices = (
       value: "exampleFile",
     });
   }
-  if (process.platform === "win32" || process.platform === "darwin") {
+
+  if (!selectedDataSource.some((ds) => ds.type === "file")) {
     choices.push({
       title: `Use local files (${supportedContextFileTypes.join(", ")})`,
       value: "file",
     });
+  }
+
+  if (!selectedDataSource.some((ds) => ds.type === "folder")) {
     choices.push({
-      title: `Use local folders`,
+      title: "Use local folder",
       value: "folder",
     });
   }
-  if (framework === "fastapi") {
+
+  if (
+    !selectedDataSource.some((ds) => ds.type === "web") &&
+    (process.platform === "win32" || process.platform === "darwin") &&
+    framework === "fastapi"
+  ) {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",
     });
   }
+
   return choices;
 };
 
@@ -686,32 +696,6 @@ export const askQuestions = async (
           dataSource.config = {
             path: selectedPaths,
           };
-
-          // Asking for LlamaParse
-          // Is user selected pdf file or is there a folder data source
-          const askingLlamaParse =
-            dataSource.type === "folder"
-              ? true
-              : // : path.extname(selectedPaths) === ".pdf";
-                selectedPaths
-                  .split(", ")
-                  .some((p: string) => path.extname(p) === ".pdf");
-          if (askingLlamaParse) {
-            const { useLlamaParse } = await prompts(
-              {
-                type: "toggle",
-                name: "useLlamaParse",
-                message:
-                  "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-                initial: true,
-                active: "yes",
-                inactive: "no",
-              },
-              handlers,
-            );
-            (dataSource.config as FileSourceConfig).useLlamaParse =
-              useLlamaParse;
-          }
         }
 
         // Selected web data source
@@ -751,6 +735,11 @@ export const askQuestions = async (
           };
         }
         program.dataSources.push(dataSource);
+
+        // No need to ask for another data source if user selected example data
+        if (selectedSource === "exampleFile") {
+          break;
+        }
       }
 
       if (
@@ -761,6 +750,37 @@ export const askQuestions = async (
       } else {
         program.engine = "context";
       }
+    }
+  }
+
+  // Asking for LlamaParse
+  // Is user selected pdf file or is there a folder data source
+  if (!program.llamaParse && program.engine === "context") {
+    const askingLlamaParse = program.dataSources.some(
+      (ds) =>
+        ds.type === "folder" ||
+        (ds.type === "file" &&
+          path.extname((ds.config as FileSourceConfig).path ?? "") === ".pdf"),
+    );
+    if (askingLlamaParse) {
+      const { useLlamaParse } = await prompts(
+        {
+          type: "toggle",
+          name: "useLlamaParse",
+          message:
+            "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+          initial: true,
+          active: "yes",
+          inactive: "no",
+        },
+        handlers,
+      );
+      // TODO: Consider separate llamaParse to another config
+      program.dataSources.forEach((dataSource) => {
+        if (dataSource.type === "file") {
+          (dataSource.config as FileSourceConfig).useLlamaParse = useLlamaParse;
+        }
+      });
     }
   }
 
