@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.0.30
+
+### Patch Changes
+
+- 3af6328: Add support for llamaparse using Typescript
+- dd92b91: Add fetching llm and embedding models from server
+- bac1b43: Add Milvus vector database
+
 ## 0.0.29
 
 ### Patch Changes
