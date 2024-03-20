@@ -2,15 +2,11 @@
 import * as dotenv from "dotenv";
 import {
   MilvusVectorStore,
-  SimpleDirectoryReader,
   VectorStoreIndex,
   storageContextFromDefaults,
 } from "llamaindex";
-import {
-  STORAGE_DIR,
-  checkRequiredEnvVars,
-  getMilvusClient,
-} from "./shared.mjs";
+import { getDocuments } from "./loader.mjs";
+import { checkRequiredEnvVars, getMilvusClient } from "./shared.mjs";
 
 dotenv.config();
 
@@ -18,9 +14,7 @@ const collectionName = process.env.MILVUS_COLLECTION;
 
 async function loadAndIndex() {
   // load objects from storage and convert them into LlamaIndex Document objects
-  const documents = await new SimpleDirectoryReader().loadData({
-    directoryPath: STORAGE_DIR,
-  });
+  const documents = await getDocuments();
 
   // Connect to Milvus
   const milvusClient = getMilvusClient();

@@ -6,7 +6,7 @@ import { copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { InstallTemplateArgs } from "./types";
+import { FileSourceConfig, InstallTemplateArgs } from "./types";
 
 const rename = (name: string) => {
   switch (name) {
@@ -64,6 +64,7 @@ export const installTSTemplate = async ({
   postInstallAction,
   backend,
   observability,
+  dataSource,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -118,6 +119,7 @@ export const installTSTemplate = async ({
     }
   }
 
+  // copy observability component
   if (observability && observability !== "none") {
     const chosenObservabilityPath = path.join(
       templatesDir,
@@ -150,20 +152,40 @@ export const installTSTemplate = async ({
       vectorDBFolder = vectorDb;
     }
 
-    const VectorDBPath = path.join(
+    relativeEngineDestPath =
+      framework === "nextjs"
+        ? path.join("app", "api", "chat")
+        : path.join("src", "controllers");
+
+    const enginePath = path.join(root, relativeEngineDestPath, "engine");
+
+    // copy vector db component
+    const vectorDBPath = path.join(
       compPath,
       "vectordbs",
       "typescript",
       vectorDBFolder,
     );
-    relativeEngineDestPath =
-      framework === "nextjs"
-        ? path.join("app", "api", "chat")
-        : path.join("src", "controllers");
-    await copy("**", path.join(root, relativeEngineDestPath, "engine"), {
+    await copy("**", enginePath, {
       parents: true,
-      cwd: VectorDBPath,
+      cwd: vectorDBPath,
     });
+
+    // copy loader component
+    const dataSourceType = dataSource?.type;
+    if (dataSourceType && dataSourceType !== "none") {
+      let loaderFolder: string;
+      if (dataSourceType === "file" || dataSourceType === "folder") {
+        const dataSourceConfig = dataSource?.config as FileSourceConfig;
+        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+      } else {
+        loaderFolder = dataSourceType;
+      }
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+      });
+    }
   }
 
   /**

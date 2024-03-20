@@ -2,19 +2,17 @@
 import * as dotenv from "dotenv";
 import {
   PineconeVectorStore,
-  SimpleDirectoryReader,
   VectorStoreIndex,
   storageContextFromDefaults,
 } from "llamaindex";
-import { STORAGE_DIR, checkRequiredEnvVars } from "./shared.mjs";
+import { getDocuments } from "./loader.mjs";
+import { checkRequiredEnvVars } from "./shared.mjs";
 
 dotenv.config();
 
 async function loadAndIndex() {
   // load objects from storage and convert them into LlamaIndex Document objects
-  const documents = await new SimpleDirectoryReader().loadData({
-    directoryPath: STORAGE_DIR,
-  });
+  const documents = await getDocuments();
 
   // create vector store
   const vectorStore = new PineconeVectorStore();
