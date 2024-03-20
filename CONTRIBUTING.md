@@ -45,3 +45,29 @@ pnpm run e2e
 ```
 
 To write new test cases write them in [e2e](/e2e)
+
+## Changeset
+
+We use [changesets](https://github.com/changesets/changesets) for managing versions and changelogs. To create a new changeset, run:
+
+```
+pnpm changeset
+```
+
+Please send a descriptive changeset for each PR.
+
+## Publishing (maintainers only)
+
+To publish a new version of the library, first create a new version:
+
+```shell
+pnpm new-version
+```
+
+If everything looks good, commit the generated files and release the new version:
+
+```shell
+pnpm release
+git push # push to the main branch
+git push --tags
+```
