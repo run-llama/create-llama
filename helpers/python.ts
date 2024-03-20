@@ -8,6 +8,7 @@ import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
+  FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
@@ -248,7 +249,36 @@ export const installPythonTemplate = async ({
         cwd: path.join(compPath, "engines", "python", "chat"),
       });
     }
-    // TODO: update this after updating the loaders code
+
+    if (dataSources.length > 0 || dataSources[0].type !== "none") {
+      // Copy loader.py file to enginePath
+      await copy("loader.py", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "loaders", "python"),
+      });
+
+      // Copy data source loaders
+      const loaderPath = path.join(enginePath, "loaders");
+      for (const source of dataSources) {
+        const sourceType = source.type;
+        if (sourceType === "file" || sourceType === "folder") {
+          const sourceConfig = source.config as FileSourceConfig;
+          const loaderFolder = sourceConfig.useLlamaParse
+            ? "llama_parse"
+            : "file";
+          await copy("**", loaderPath, {
+            parents: true,
+            cwd: path.join(compPath, "loaders", "python", loaderFolder),
+          });
+        } else {
+          await copy("**", loaderPath, {
+            parents: true,
+            cwd: path.join(compPath, "loaders", "python", sourceType),
+          });
+        }
+      }
+    }
+
     // const dataSourceType = dataSource?.type;
     // if (dataSourceType !== undefined && dataSourceType !== "none") {
     //   let loaderFolder: string;
