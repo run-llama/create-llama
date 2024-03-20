@@ -47,7 +47,7 @@ jobs:
         run: pnpm run build
         working-directory: .
       - name: Install
-        run: pnpm run install-local
+        run: pnpm run pack-install
         working-directory: .
       - name: Run Playwright tests
         run: pnpm run e2e
