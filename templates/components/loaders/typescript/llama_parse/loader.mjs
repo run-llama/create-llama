@@ -1,10 +1,19 @@
-import { SimpleDirectoryReader } from "llamaindex";
+import {
+  FILE_EXT_TO_READER,
+  LlamaParseReader,
+  SimpleDirectoryReader,
+} from "llamaindex";
 
-// TODO: add llamaparse loader
 export const DATA_DIR = "./data";
 
 export async function getDocuments() {
-  return await new SimpleDirectoryReader().loadData({
+  const reader = new SimpleDirectoryReader();
+  // Load PDFs using LlamaParseReader
+  return await reader.loadData({
     directoryPath: DATA_DIR,
+    fileExtToReader: {
+      ...FILE_EXT_TO_READER,
+      pdf: new LlamaParseReader({ resultType: "markdown" }),
+    },
   });
 }
