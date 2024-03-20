@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node \n
 /* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from "child_process";
 import Commander from "commander";
