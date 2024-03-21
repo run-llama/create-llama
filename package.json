@@ -32,7 +32,7 @@
     "new-version": "pnpm run build && changeset version",
     "release-snapshot": "pnpm run build && changeset publish --tag snapshot",
     "new-snapshot": "pnpm run build && changeset version --snapshot",
-    "pack-install": "pnpm pack && npm install -g $(pwd)/$(ls ./*.tgz | head -1)"
+    "pack-install": "bash ./scripts/pack.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",
