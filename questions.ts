@@ -132,6 +132,12 @@ export const getDataSourceChoices = (
   selectedDataSource: TemplateDataSource[],
 ) => {
   const choices = [];
+  if (selectedDataSource.length > 0) {
+    choices.push({
+      title: "No",
+      value: "none",
+    });
+  }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
     choices.push({
       title: "No data, just a simple chat",
@@ -676,12 +682,14 @@ export const askQuestions = async (
         // Asking for data source config
         // Select None data source, No need to config and asking for another data source
         if (selectedSource === "none") {
-          program.dataSources = [
-            {
-              type: "none",
-              config: {},
-            },
-          ];
+          if (selectedSource.length === 0) {
+            program.dataSources = [
+              {
+                type: "none",
+                config: {},
+              },
+            ];
+          }
           break;
         }
 
