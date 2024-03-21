@@ -54,9 +54,10 @@ const WINDOWS_FILE_SELECTION_SCRIPT = `
 Add-Type -AssemblyName System.Windows.Forms
 $openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
 $openFileDialog.InitialDirectory = [Environment]::GetFolderPath('Desktop')
+$openFileDialog.Multiselect = $true
 $result = $openFileDialog.ShowDialog()
 if ($result -eq 'OK') {
-  $openFileDialog.FileName
+  $openFileDialog.FileNames
 }
 `;
 const WINDOWS_FOLDER_SELECTION_SCRIPT = `
@@ -68,7 +69,7 @@ $folderBrowser.ShowNewFolderButton = $true
 $folderBrowser.RootFolder = [System.Environment+SpecialFolder]::Desktop
 $folderBrowser.SelectedPath = [System.IO.Path]::GetFullPath($folderBrowser.SelectedPath)
 $folderBrowser.ShowDialog() | Out-Null
-$folderBrowser.SelectedPath
+$folderBrowser.SelectedPath, $folderBrowser.SelectedPaths
 `;
 
 const defaults: QuestionArgs = {
