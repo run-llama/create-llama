@@ -784,6 +784,19 @@ export const askQuestions = async (
         },
         handlers,
       );
+      // Ask for LlamaCloud API key
+      if (useLlamaParse && program.llamaCloudKey === undefined) {
+        const { llamaCloudKey } = await prompts(
+          {
+            type: "text",
+            name: "llamaCloudKey",
+            message:
+              "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
+          },
+          handlers,
+        );
+        program.llamaCloudKey = llamaCloudKey;
+      }
       // TODO: Consider separate llamaParse to another config
       program.dataSources.forEach((dataSource) => {
         if (dataSource.type === "file" || dataSource.type === "folder") {
