@@ -785,7 +785,7 @@ export const askQuestions = async (
       );
       // TODO: Consider separate llamaParse to another config
       program.dataSources.forEach((dataSource) => {
-        if (dataSource.type === "file") {
+        if (dataSource.type === "file" || dataSource.type === "folder") {
           (dataSource.config as FileSourceConfig).useLlamaParse = useLlamaParse;
         }
       });

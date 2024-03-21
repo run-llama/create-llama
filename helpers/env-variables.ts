@@ -5,6 +5,7 @@ import {
   TemplateDataSource,
   TemplateFramework,
   TemplateVectorDB,
+  WebSourceConfig,
 } from "./types";
 
 type EnvVar = {
@@ -104,18 +105,22 @@ const getDataSourceEnvs = (dataSources: TemplateDataSource[]) => {
   for (const source of dataSources) {
     switch (source.type) {
       case "web":
+        const config = source.config as WebSourceConfig;
         envs.push(
           {
             name: "BASE_URL",
             description: "The base URL to start web scraping.",
+            value: config.baseUrl,
           },
           {
             name: "URL_PREFIX",
             description: "The prefix of the URL to start web scraping.",
+            value: config.baseUrl,
           },
           {
             name: "MAX_DEPTH",
             description: "The maximum depth to scrape.",
+            value: config.depth?.toString(),
           },
         );
     }
