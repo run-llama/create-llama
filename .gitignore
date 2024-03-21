@@ -45,3 +45,6 @@ e2e/cache
 
 # intellij
 **/.idea
+
+# build artifacts
+create-llama-*.tgz

@@ -17,7 +17,7 @@ jobs:
       matrix:
         node-version: [18, 20]
         python-version: ["3.11"]
-        os: [macos-latest] #, windows-latest]
+        os: [macos-latest, windows-latest]
     defaults:
       run:
         shell: bash
@@ -47,7 +47,7 @@ jobs:
         run: pnpm run build
         working-directory: .
       - name: Install
-        run: pnpm run install-local
+        run: pnpm run pack-install
         working-directory: .
       - name: Run Playwright tests
         run: pnpm run e2e

@@ -32,10 +32,10 @@ To install it, call:
 pnpm exec playwright install --with-deps
 ```
 
-Then you can first install the `create-llama` command locally:
+Then you can create a global `create-llama` command (used by the e2e tests) that is linked to your local dev environment (if you update the build, you don't need to re-link):
 
 ```
-pnpm run install-local
+pnpm link --global
 ```
 
 And then finally run the tests:

@@ -24,15 +24,15 @@
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
     "dev": "ncc build ./index.ts -w -o dist/",
-    "build": "npm run clean && ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
+    "build": "bash ./scripts/build.sh",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
     "e2e": "playwright test",
     "prepare": "husky",
-    "install-local": "pnpm link --global",
     "release": "pnpm run build && changeset publish",
     "new-version": "pnpm run build && changeset version",
     "release-snapshot": "pnpm run build && changeset publish --tag snapshot",
-    "new-snapshot": "pnpm run build && changeset version --snapshot"
+    "new-snapshot": "pnpm run build && changeset version --snapshot",
+    "pack-install": "bash ./scripts/pack.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",
