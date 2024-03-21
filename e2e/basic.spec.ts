@@ -12,11 +12,18 @@ import type {
 } from "../helpers";
 import { createTestDir, runCreateLlama, type AppType } from "./utils";
 
-const templateTypes: TemplateType[] = ["streaming"];
-const templateFrameworks: TemplateFramework[] = ["nextjs"];
-const templateEngines: TemplateEngine[] = ["context"];
-const templateUIs: TemplateUI[] = ["shadcn"];
-const templatePostInstallActions: TemplatePostInstallAction[] = ["runApp"];
+const templateTypes: TemplateType[] = ["streaming", "simple"];
+const templateFrameworks: TemplateFramework[] = [
+  "nextjs",
+  "express",
+  "fastapi",
+];
+const templateEngines: TemplateEngine[] = ["simple", "context"];
+const templateUIs: TemplateUI[] = ["shadcn", "html"];
+const templatePostInstallActions: TemplatePostInstallAction[] = [
+  "none",
+  "runApp",
+];
 
 for (const templateType of templateTypes) {
   for (const templateFramework of templateFrameworks) {
@@ -70,61 +77,61 @@ for (const templateType of templateTypes) {
               const dirExists = fs.existsSync(path.join(cwd, name));
               expect(dirExists).toBeTruthy();
             });
-            // test("Frontend should have a title", async ({ page }) => {
-            //   test.skip(templatePostInstallAction !== "runApp");
-            //   test.skip(appType === "--no-frontend");
-            //   await page.goto(`http://localhost:${port}`);
-            //   await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
-            // });
+            test("Frontend should have a title", async ({ page }) => {
+              test.skip(templatePostInstallAction !== "runApp");
+              test.skip(appType === "--no-frontend");
+              await page.goto(`http://localhost:${port}`);
+              await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
+            });
 
-            // test("Frontend should be able to submit a message and receive a response", async ({
-            //   page,
-            // }) => {
-            //   test.skip(templatePostInstallAction !== "runApp");
-            //   test.skip(appType === "--no-frontend");
-            //   await page.goto(`http://localhost:${port}`);
-            //   await page.fill("form input", "hello");
-            //   const [response] = await Promise.all([
-            //     page.waitForResponse(
-            //       (res) => {
-            //         return (
-            //           res.url().includes("/api/chat") && res.status() === 200
-            //         );
-            //       },
-            //       {
-            //         timeout: 1000 * 60,
-            //       },
-            //     ),
-            //     page.click("form button[type=submit]"),
-            //   ]);
-            //   const text = await response.text();
-            //   console.log("AI response when submitting message: ", text);
-            //   expect(response.ok()).toBeTruthy();
-            // });
+            test("Frontend should be able to submit a message and receive a response", async ({
+              page,
+            }) => {
+              test.skip(templatePostInstallAction !== "runApp");
+              test.skip(appType === "--no-frontend");
+              await page.goto(`http://localhost:${port}`);
+              await page.fill("form input", "hello");
+              const [response] = await Promise.all([
+                page.waitForResponse(
+                  (res) => {
+                    return (
+                      res.url().includes("/api/chat") && res.status() === 200
+                    );
+                  },
+                  {
+                    timeout: 1000 * 60,
+                  },
+                ),
+                page.click("form button[type=submit]"),
+              ]);
+              const text = await response.text();
+              console.log("AI response when submitting message: ", text);
+              expect(response.ok()).toBeTruthy();
+            });
 
-            // test("Backend should response when calling API", async ({
-            //   request,
-            // }) => {
-            //   test.skip(templatePostInstallAction !== "runApp");
-            //   test.skip(appType !== "--no-frontend");
-            //   const backendPort = appType === "" ? port : externalPort;
-            //   const response = await request.post(
-            //     `http://localhost:${backendPort}/api/chat`,
-            //     {
-            //       data: {
-            //         messages: [
-            //           {
-            //             role: "user",
-            //             content: "Hello",
-            //           },
-            //         ],
-            //       },
-            //     },
-            //   );
-            //   const text = await response.text();
-            //   console.log("AI response when calling API: ", text);
-            //   expect(response.ok()).toBeTruthy();
-            // });
+            test("Backend should response when calling API", async ({
+              request,
+            }) => {
+              test.skip(templatePostInstallAction !== "runApp");
+              test.skip(appType !== "--no-frontend");
+              const backendPort = appType === "" ? port : externalPort;
+              const response = await request.post(
+                `http://localhost:${backendPort}/api/chat`,
+                {
+                  data: {
+                    messages: [
+                      {
+                        role: "user",
+                        content: "Hello",
+                      },
+                    ],
+                  },
+                },
+              );
+              const text = await response.text();
+              console.log("AI response when calling API: ", text);
+              expect(response.ok()).toBeTruthy();
+            });
 
             // clean processes
             test.afterAll(async () => {
