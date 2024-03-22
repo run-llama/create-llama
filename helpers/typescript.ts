@@ -205,7 +205,7 @@ export const installTSTemplate = async ({
         configFilePath,
         JSON.stringify(configContent, null, 2),
       );
-    } else {
+    } else if (engine !== "simple") {
       await copy("**", enginePath, {
         parents: true,
         cwd: path.join(compPath, "engines", "typescript", "chat"),
