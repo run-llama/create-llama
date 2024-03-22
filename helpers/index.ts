@@ -85,12 +85,10 @@ const copyContextData = async (
 
   // Copy file
   if (dataSource?.type === "file") {
-    if (dataSourceConfig.path) {
+    if (dataSourceConfig.paths) {
       await fs.mkdir(destPath, { recursive: true });
-      // Split and strip beginning and trailing blank spaces
-      const paths = dataSourceConfig.path.split(",").map((p) => p.trim());
-      console.log("Copying data from files:", paths);
-      for (const p of paths) {
+      console.log("Copying data from files:", dataSourceConfig.paths.toString());
+      for (const p of dataSourceConfig.paths) {
         await fs.copyFile(p, path.join(destPath, path.basename(p)));
       }
     } else {
@@ -103,7 +101,7 @@ const copyContextData = async (
   // Copy folder
   if (dataSource?.type === "folder") {
     // Example data does not have path config, set the default path
-    const srcPaths = dataSourceConfig.path?.split(",").map((p) => p.trim()) ?? [
+    const srcPaths = dataSourceConfig.paths ?? [
       path.join(templatesDir, "components", "data"),
     ];
     console.log("Copying data from folders: ", srcPaths);

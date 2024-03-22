@@ -19,7 +19,7 @@ export type TemplateDataSourceType = "none" | "file" | "folder" | "web";
 export type TemplateObservability = "none" | "opentelemetry";
 // Config for both file and folder
 export type FileSourceConfig = {
-  path?: string;
+  paths?: string[];
   useLlamaParse?: boolean;
 };
 export type WebSourceConfig = {

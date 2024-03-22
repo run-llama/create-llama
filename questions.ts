@@ -202,9 +202,15 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
         process.exit(1);
     }
     selectedPath = execSync(execScript, execOpts).toString().trim();
-    if (type === "file") {
-      const fileType = path.extname(selectedPath);
-      if (!supportedContextFileTypes.includes(fileType)) {
+    const paths =
+      process.platform === "win32"
+        ? selectedPath.split("\r\n")
+        : selectedPath.split(",");
+    for (const p of paths) {
+      if (
+        type == "file" &&
+        !supportedContextFileTypes.includes(path.extname(p))
+      ) {
         console.log(
           red(
             `Please select a supported file type: ${supportedContextFileTypes}`,
@@ -213,7 +219,7 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
         process.exit(1);
       }
     }
-    return selectedPath;
+    return paths;
   } catch (error) {
     console.log(
       red(
@@ -649,7 +655,7 @@ export const askQuestions = async (
         {
           type: fs.lstatSync(program.files).isDirectory() ? "folder" : "file",
           config: {
-            path: program.files,
+            paths: program.files.split(","),
           },
         },
       ];
@@ -703,7 +709,7 @@ export const askQuestions = async (
         if (selectedSource === "file" || selectedSource === "folder") {
           const selectedPaths = await selectLocalContextData(selectedSource);
           dataSource.config = {
-            path: selectedPaths,
+            paths: selectedPaths,
           };
         }
 
@@ -769,7 +775,9 @@ export const askQuestions = async (
       (ds) =>
         ds.type === "folder" ||
         (ds.type === "file" &&
-          path.extname((ds.config as FileSourceConfig).path ?? "") === ".pdf"),
+          (ds.config as FileSourceConfig).paths?.some(
+            (p) => path.extname(p) === ".pdf",
+          )),
     );
     if (askingLlamaParse) {
       const { useLlamaParse } = await prompts(
@@ -805,6 +813,8 @@ export const askQuestions = async (
       });
     }
   }
+
+  console.log("program.dataSources", program.dataSources);
 
   if (program.engine !== "simple" && !program.vectorDb) {
     if (ciInfo.isCI) {
