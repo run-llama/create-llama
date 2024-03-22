@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.0.31
+
+### Patch Changes
+
+- 56faee0: Added windows e2e tests
+- 60ed8fe: Added missing environment variable config for URL data source
+- 60ed8fe: Fixed tool usage by freezing llama-index package versions
+
 ## 0.0.30
 
 ### Patch Changes
