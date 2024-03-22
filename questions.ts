@@ -14,7 +14,6 @@ import {
   TemplateFramework,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
-// import { getDataSourceChoices } from "./helpers/data-source";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { getProjectOptions } from "./helpers/repo";
@@ -86,10 +85,6 @@ const defaults: QuestionArgs = {
   communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
-  // dataSource: {
-  //   type: "none",
-  //   config: {},
-  // },
   dataSources: [],
   tools: [],
 };
@@ -205,7 +200,7 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
     const paths =
       process.platform === "win32"
         ? selectedPath.split("\r\n")
-        : selectedPath.split(",");
+        : selectedPath.split(", ");
     for (const p of paths) {
       if (
         type == "file" &&
@@ -813,8 +808,6 @@ export const askQuestions = async (
       });
     }
   }
-
-  console.log("program.dataSources", program.dataSources);
 
   if (program.engine !== "simple" && !program.vectorDb) {
     if (ciInfo.isCI) {

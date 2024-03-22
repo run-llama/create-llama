@@ -87,7 +87,10 @@ const copyContextData = async (
   if (dataSource?.type === "file") {
     if (dataSourceConfig.paths) {
       await fs.mkdir(destPath, { recursive: true });
-      console.log("Copying data from files:", dataSourceConfig.paths.toString());
+      console.log(
+        "Copying data from files:",
+        dataSourceConfig.paths.toString(),
+      );
       for (const p of dataSourceConfig.paths) {
         await fs.copyFile(p, path.join(destPath, path.basename(p)));
       }
@@ -170,8 +173,6 @@ export const installTemplate = async (
 
     if (props.engine === "context") {
       console.log("\nGenerating context data...\n");
-      console.log(props.dataSources);
-
       props.dataSources.forEach(async (ds) => {
         if (ds.type === "file" || ds.type === "folder") {
           await copyContextData(props.root, ds);
