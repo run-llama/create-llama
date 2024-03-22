@@ -65,7 +65,7 @@ export const installTSTemplate = async ({
   backend,
   observability,
   tools,
-  dataSource,
+  dataSources,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -173,11 +173,11 @@ export const installTSTemplate = async ({
     });
 
     // copy loader component
-    const dataSourceType = dataSource?.type;
+    const dataSourceType = dataSources[0]?.type;
     if (dataSourceType && dataSourceType !== "none") {
       let loaderFolder: string;
       if (dataSourceType === "file" || dataSourceType === "folder") {
-        const dataSourceConfig = dataSource?.config as FileSourceConfig;
+        const dataSourceConfig = dataSources[0]?.config as FileSourceConfig;
         loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
       } else {
         loaderFolder = dataSourceType;

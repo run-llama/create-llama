@@ -9,6 +9,7 @@ import prompts from "prompts";
 import { InstallAppArgs } from "./create-app";
 import {
   FileSourceConfig,
+  TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
   WebSourceConfig,
@@ -26,7 +27,6 @@ export type QuestionArgs = Omit<
   "appPath" | "packageManager"
 > & {
   files?: string;
-  llamaParse?: boolean;
   listServerModels?: boolean;
 };
 const supportedContextFileTypes = [
@@ -78,15 +78,13 @@ const defaults: QuestionArgs = {
   frontend: false,
   openAiKey: "",
   llamaCloudKey: "",
+  useLlamaParse: false,
   model: "gpt-3.5-turbo",
   embeddingModel: "text-embedding-ada-002",
   communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
-  dataSource: {
-    type: "none",
-    config: {},
-  },
+  dataSources: [],
   tools: [],
 };
 
@@ -124,28 +122,49 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
   return displayedChoices;
 };
 
-const getDataSourceChoices = (framework: TemplateFramework) => {
-  const choices = [
-    {
+export const getDataSourceChoices = (
+  framework: TemplateFramework,
+  selectedDataSource: TemplateDataSource[],
+) => {
+  const choices = [];
+  if (selectedDataSource.length > 0) {
+    choices.push({
+      title: "No",
+      value: "none",
+    });
+  }
+  if (selectedDataSource === undefined || selectedDataSource.length === 0) {
+    choices.push({
       title: "No data, just a simple chat",
-      value: "simple",
-    },
-    { title: "Use an example PDF", value: "exampleFile" },
-  ];
-  if (process.platform === "win32" || process.platform === "darwin") {
+      value: "none",
+    });
+    choices.push({
+      title: "Use an example PDF",
+      value: "exampleFile",
+    });
+  }
+
+  if (!selectedDataSource.some((ds) => ds.type === "file")) {
     choices.push({
       title: `Use local files (${supportedContextFileTypes.join(", ")})`,
-      value: "localFile",
+      value: "file",
     });
+  }
+
+  if (!selectedDataSource.some((ds) => ds.type === "folder")) {
     choices.push({
       title:
         process.platform === "win32"
           ? "Use a local folder"
           : "Use local folders",
-      value: "localFolder",
+      value: "folder",
     });
   }
-  if (framework === "fastapi") {
+
+  if (
+    !selectedDataSource.some((ds) => ds.type === "web") &&
+    framework === "fastapi"
+  ) {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",
@@ -320,9 +339,7 @@ export const askQuestions = async (
         const openAiKeyConfigured =
           program.openAiKey || process.env["OPENAI_API_KEY"];
         // If using LlamaParse, require LlamaCloud API key
-        const llamaCloudKeyConfigured = (
-          program.dataSource?.config as FileSourceConfig
-        )?.useLlamaParse
+        const llamaCloudKeyConfigured = program.useLlamaParse
           ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
           : true;
         const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
@@ -625,182 +642,225 @@ export const askQuestions = async (
       console.log("File or folder not found");
       process.exit(1);
     } else {
-      program.dataSource = {
-        type: fs.lstatSync(program.files).isDirectory() ? "folder" : "file",
-        config: {
-          paths: program.files.split(","),
+      program.dataSources = [
+        {
+          type: fs.lstatSync(program.files).isDirectory() ? "folder" : "file",
+          config: {
+            paths: program.files.split(","),
+          },
         },
-      };
+      ];
     }
   }
 
   if (!program.engine) {
     if (ciInfo.isCI) {
       program.engine = getPrefOrDefault("engine");
+      program.dataSources = getPrefOrDefault("dataSources");
     } else {
-      const { dataSource } = await prompts(
-        {
-          type: "select",
-          name: "dataSource",
-          message: "Which data source would you like to use?",
-          choices: getDataSourceChoices(program.framework),
-          initial: 1,
-        },
-        handlers,
-      );
-      // Initialize with default config
-      program.dataSource = getPrefOrDefault("dataSource");
-      if (program.dataSource) {
-        switch (dataSource) {
-          case "simple":
-            program.engine = "simple";
-            program.dataSource = { type: "none", config: {} };
-            break;
-          case "exampleFile":
-            program.engine = "context";
-            // Treat example as a folder data source with no config
-            program.dataSource = { type: "folder", config: {} };
-            break;
-          case "localFile":
-            program.engine = "context";
-            program.dataSource = {
-              type: "file",
-              config: {
-                paths: await selectLocalContextData("file"),
+      program.dataSources = [];
+      for (let i = 0; i < 2; i++) {
+        const { selectedSource } = await prompts(
+          {
+            type: "select",
+            name: "selectedSource",
+            message:
+              i === 0
+                ? "Which data source would you like to use?"
+                : "Would you like to add another data source?",
+            choices: getDataSourceChoices(
+              program.framework,
+              program.dataSources,
+            ),
+            initial: 0,
+          },
+          handlers,
+        );
+
+        // Asking for data source config
+        // Select None data source, No need to config and asking for another data source
+        if (selectedSource === "none") {
+          if (selectedSource.length === 0) {
+            program.dataSources = [
+              {
+                type: "none",
+                config: {},
               },
-            };
-            break;
-          case "localFolder":
-            program.engine = "context";
-            program.dataSource = {
-              type: "folder",
-              config: {
-                paths: await selectLocalContextData("folder"),
+            ];
+          }
+          break;
+        }
+
+        // Select local file or folder
+        if (selectedSource === "file" || selectedSource === "folder") {
+          const dataSource = {
+            type: selectedSource === "exampleFile" ? "folder" : selectedSource,
+            config: {},
+          };
+
+          const selectedPaths = await selectLocalContextData(selectedSource);
+          dataSource.config = {
+            paths: selectedPaths,
+          };
+          program.dataSources.push(dataSource);
+        }
+
+        // Selected web data source
+        else if (selectedSource === "web") {
+          const validateUrl = (value: string) => {
+            for (let url of value.split(",")) {
+              if (!url.includes("://")) {
+                url = `https://${url}`;
+              }
+              const urlObj = new URL(url);
+              if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+                return `URL=${url} has invalid protocol, only allow http or https`;
+              }
+            }
+            return true;
+          };
+
+          const dataSource: TemplateDataSource = {
+            type: "web",
+            config: [] as WebSourceConfig[],
+          };
+
+          while (true) {
+            const questions: any[] = [
+              {
+                type: "text",
+                name: "baseUrl",
+                message: "Please provide base URL of the website: ",
+                initial: "https://www.llamaindex.ai",
+                validate: (value: string) => {
+                  if (!value.includes("://")) {
+                    value = `https://${value}`;
+                  }
+                  const urlObj = new URL(value);
+                  if (
+                    urlObj.protocol !== "https:" &&
+                    urlObj.protocol !== "http:"
+                  ) {
+                    return `URL=${value} has invalid protocol, only allow http or https`;
+                  }
+                  // Check duplicated URL
+                  if (
+                    (dataSource.config as WebSourceConfig[]).some(
+                      (c) => c.baseUrl === value,
+                    )
+                  ) {
+                    return `URL=${value} is already added. Please provide a different URL.`;
+                  }
+                  return true;
+                },
               },
-            };
-            break;
-          case "web":
-            program.engine = "context";
-            program.dataSource.type = "web";
-            break;
+              {
+                type: "toggle",
+                name: "shouldContinue",
+                message: "Would you like to add another website?",
+                initial: false,
+                active: "Yes",
+                inactive: "No",
+              },
+            ];
+            let { shouldContinue, baseUrl } = await prompts(
+              questions,
+              handlers,
+            );
+            (dataSource.config as WebSourceConfig[]).push({
+              baseUrl: baseUrl,
+              prefix: baseUrl,
+              depth: 1,
+            });
+            if (shouldContinue !== undefined && !shouldContinue) {
+              break;
+            }
+          }
+          program.dataSources.push(dataSource);
+        }
+
+        // No need to ask for another data source if user selected example data
+        if (selectedSource === "exampleFile") {
+          break;
         }
       }
+
+      if (
+        program.dataSources.length === 0 ||
+        program.dataSources[0].type === "none"
+      ) {
+        program.engine = "simple";
+      } else {
+        program.engine = "context";
+      }
     }
-  } else if (!program.dataSource) {
+  } else if (!program.dataSources) {
     // Handle a case when engine is specified but dataSource is not
     if (program.engine === "context") {
-      program.dataSource = {
-        type: "folder",
-        config: {},
-      };
+      program.dataSources = [
+        {
+          type: "folder",
+          config: {},
+        },
+      ];
     } else if (program.engine === "simple") {
-      program.dataSource = {
-        type: "none",
-        config: {},
-      };
+      program.dataSources = [
+        {
+          type: "none",
+          config: {},
+        },
+      ];
     }
   }
 
   if (
-    program.dataSource?.type === "file" ||
-    program.dataSource?.type === "folder"
+    program.dataSources.some(
+      (ds) => ds.type === "file" || ds.type === "folder",
+    ) &&
+    !program.useLlamaParse
   ) {
     if (ciInfo.isCI) {
+      program.useLlamaParse = getPrefOrDefault("useLlamaParse");
       program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
     } else {
-      const dataSourceConfig = program.dataSource.config as FileSourceConfig;
-      dataSourceConfig.useLlamaParse = program.llamaParse;
-
-      // Is pdf file selected as data source or is it a folder data source
-      const askingLlamaParse =
-        dataSourceConfig.useLlamaParse === undefined &&
-        (program.dataSource.type === "folder" ||
-          (program.dataSource.type === "file" &&
-            dataSourceConfig.paths?.some((p) => path.extname(p) === ".pdf")));
-
-      // Ask if user wants to use LlamaParse
-      if (askingLlamaParse) {
-        const { useLlamaParse } = await prompts(
-          {
-            type: "toggle",
-            name: "useLlamaParse",
-            message:
-              "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-            initial: true,
-            active: "yes",
-            inactive: "no",
-          },
-          handlers,
+      if (!program.useLlamaParse && program.engine === "context") {
+        const askingLlamaParse = program.dataSources.some(
+          (ds) =>
+            ds.type === "folder" ||
+            (ds.type === "file" &&
+              (ds.config as FileSourceConfig).paths?.some(
+                (p) => path.extname(p) === ".pdf",
+              )),
         );
-        dataSourceConfig.useLlamaParse = useLlamaParse;
-        program.dataSource.config = dataSourceConfig;
-      }
+        if (askingLlamaParse) {
+          const { useLlamaParse } = await prompts(
+            {
+              type: "toggle",
+              name: "useLlamaParse",
+              message:
+                "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+              initial: true,
+              active: "yes",
+              inactive: "no",
+            },
+            handlers,
+          );
+          program.useLlamaParse = useLlamaParse;
 
-      // Ask for LlamaCloud API key
-      if (
-        dataSourceConfig.useLlamaParse &&
-        program.llamaCloudKey === undefined
-      ) {
-        const { llamaCloudKey } = await prompts(
-          {
-            type: "text",
-            name: "llamaCloudKey",
-            message:
-              "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
-          },
-          handlers,
-        );
-        program.llamaCloudKey = llamaCloudKey;
-      }
-    }
-  }
-
-  if (program.dataSource?.type === "web" && program.framework === "fastapi") {
-    program.dataSource.config = [];
-
-    while (true) {
-      const questions: any[] = [
-        {
-          type: "text",
-          name: "baseUrl",
-          message: "Please provide base URL of the website: ",
-          initial: "https://www.llamaindex.ai",
-          validate: (value: string) => {
-            if (!value.includes("://")) {
-              value = `https://${value}`;
-            }
-            const urlObj = new URL(value);
-            if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
-              return `URL=${value} has invalid protocol, only allow http or https`;
-            }
-            // Check duplicated URL
-            if (
-              (program.dataSource?.config as WebSourceConfig[]).some(
-                (c) => c.baseUrl === value,
-              )
-            ) {
-              return `URL=${value} is already added. Please provide a different URL.`;
-            }
-            return true;
-          },
-        },
-        {
-          type: "toggle",
-          name: "shouldContinue",
-          message: "Would you like to add another website?",
-          initial: false,
-          active: "Yes",
-          inactive: "No",
-        },
-      ];
-      let { shouldContinue, baseUrl } = await prompts(questions, handlers);
-      program.dataSource.config.push({
-        baseUrl: baseUrl,
-        prefix: baseUrl,
-        depth: 1,
-      });
-      if (!shouldContinue) {
-        break;
+          // Ask for LlamaCloud API key
+          if (useLlamaParse && program.llamaCloudKey === undefined) {
+            const { llamaCloudKey } = await prompts(
+              {
+                type: "text",
+                name: "llamaCloudKey",
+                message:
+                  "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
+              },
+              handlers,
+            );
+            program.llamaCloudKey = llamaCloudKey;
+          }
+        }
       }
     }
   }

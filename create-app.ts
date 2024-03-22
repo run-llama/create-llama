@@ -41,7 +41,7 @@ export async function createApp({
   vectorDb,
   externalPort,
   postInstallAction,
-  dataSource,
+  dataSources,
   tools,
   observability,
 }: InstallAppArgs): Promise<void> {
@@ -89,7 +89,7 @@ export async function createApp({
     vectorDb,
     externalPort,
     postInstallAction,
-    dataSource,
+    dataSources,
     tools,
     observability,
   };

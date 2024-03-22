@@ -180,7 +180,7 @@ export const installPythonTemplate = async ({
   framework,
   engine,
   vectorDb,
-  dataSource,
+  dataSources,
   tools,
   postInstallAction,
 }: Pick<
@@ -190,7 +190,7 @@ export const installPythonTemplate = async ({
   | "template"
   | "engine"
   | "vectorDb"
-  | "dataSource"
+  | "dataSources"
   | "tools"
   | "postInstallAction"
 >) => {
@@ -256,74 +256,86 @@ export const installPythonTemplate = async ({
       });
     }
 
-    // Write loader configs
-    if (dataSource?.type === "web") {
-      const config = dataSource.config as WebSourceConfig[];
-      const webLoaderConfig = config.map((c) => {
-        return {
-          base_url: c.baseUrl,
-          prefix: c.prefix || c.baseUrl,
-          depth: c.depth || 1,
-        };
-      });
+    // const dataSourceType = dataSource?.type;
+    // if (dataSourceType !== undefined && dataSourceType !== "none") {
+    //   let loaderFolder: string;
+    //   if (dataSourceType === "file" || dataSourceType === "folder") {
+    //     const dataSourceConfig = dataSource?.config as FileSourceConfig;
+    //     loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+
+    // Copy data source loaders
+    const loaderConfigs: Record<string, any> = {};
+    const loaderPath = path.join(enginePath, "loaders");
+    for (const dataSource of dataSources) {
+      const sourceType = dataSource.type;
+      if (sourceType === "file" || sourceType === "folder") {
+        const sourceConfig = dataSource.config as FileSourceConfig;
+        const loaderFolder = sourceConfig.useLlamaParse
+          ? "llama_parse"
+          : "file";
+        await copy("**", loaderPath, {
+          parents: true,
+          cwd: path.join(compPath, "loaders", "python", loaderFolder),
+        });
+      } else {
+        // Write loader configs
+        if (sourceType === "web") {
+          const config = dataSource.config as WebSourceConfig[];
+          const webLoaderConfig = config.map((c) => {
+            return {
+              base_url: c.baseUrl,
+              prefix: c.prefix || c.baseUrl,
+              depth: c.depth || 1,
+            };
+          });
+          loaderConfigs["web"] = webLoaderConfig;
+        }
+        await copy("**", loaderPath, {
+          parents: true,
+          cwd: path.join(compPath, "loaders", "python", sourceType),
+        });
+      }
+    }
+
+    // Write loaders config
+    if (Object.keys(loaderConfigs).length > 0) {
       const loaderConfigPath = path.join(root, "config/loaders.json");
       await fs.mkdir(path.join(root, "config"), { recursive: true });
       await fs.writeFile(
         loaderConfigPath,
-        JSON.stringify(
-          {
-            web: webLoaderConfig,
-          },
-          null,
-          2,
-        ),
+        JSON.stringify(loaderConfigs, null, 2),
       );
-    }
-
-    const dataSourceType = dataSource?.type;
-    if (dataSourceType !== undefined && dataSourceType !== "none") {
-      let loaderFolder: string;
-      if (dataSourceType === "file" || dataSourceType === "folder") {
-        const dataSourceConfig = dataSource?.config as FileSourceConfig;
-        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
-      } else {
-        loaderFolder = dataSourceType;
-      }
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "loaders", "python", loaderFolder),
-      });
     }
 
     // Generate loader configs
-    if (dataSource?.type === "web") {
-      const config = dataSource.config as WebSourceConfig[];
-      const webLoaderConfig = config.map((c) => {
-        return {
-          base_url: c.baseUrl,
-          prefix: c.prefix || c.baseUrl,
-          depth: c.depth || 1,
-        };
-      });
-      const loaderConfigPath = path.join(root, "loaders.json");
-      await fs.writeFile(
-        loaderConfigPath,
-        JSON.stringify(
-          {
-            web: webLoaderConfig,
-          },
-          null,
-          2,
-        ),
-      );
+    for (const dataSource of dataSources) {
+      if (dataSource?.type === "web") {
+        const config = dataSource.config as WebSourceConfig[];
+        const webLoaderConfig = config.map((c) => {
+          return {
+            base_url: c.baseUrl,
+            prefix: c.prefix || c.baseUrl,
+            depth: c.depth || 1,
+          };
+        });
+        const loaderConfigPath = path.join(root, "loaders.json");
+        await fs.writeFile(
+          loaderConfigPath,
+          JSON.stringify(
+            {
+              web: webLoaderConfig,
+            },
+            null,
+            2,
+          ),
+        );
+      }
     }
   }
 
-  const addOnDependencies = getAdditionalDependencies(
-    vectorDb,
-    dataSource,
-    tools,
-  );
+  const addOnDependencies = dataSources
+    .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
+    .flat();
   await addDependencies(root, addOnDependencies);
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {

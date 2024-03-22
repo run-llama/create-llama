@@ -107,7 +107,7 @@ export const createBackendEnvFile = async (
     model?: string;
     embeddingModel?: string;
     framework?: TemplateFramework;
-    dataSource?: TemplateDataSource;
+    dataSources?: TemplateDataSource[];
     port?: number;
   },
 ) => {

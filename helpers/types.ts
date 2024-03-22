@@ -46,11 +46,12 @@ export interface InstallTemplateArgs {
   framework: TemplateFramework;
   engine: TemplateEngine;
   ui: TemplateUI;
-  dataSource?: TemplateDataSource;
+  dataSources: TemplateDataSource[];
   eslint: boolean;
   customApiPath?: string;
   openAiKey?: string;
   llamaCloudKey?: string;
+  useLlamaParse?: boolean;
   model: string;
   embeddingModel: string;
   communityProjectConfig?: CommunityProjectConfig;
