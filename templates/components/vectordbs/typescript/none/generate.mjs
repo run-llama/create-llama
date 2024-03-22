@@ -1,18 +1,13 @@
 import {
   serviceContextFromDefaults,
-  SimpleDirectoryReader,
   storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
 
 import * as dotenv from "dotenv";
 
-import {
-  CHUNK_OVERLAP,
-  CHUNK_SIZE,
-  STORAGE_CACHE_DIR,
-  STORAGE_DIR,
-} from "./constants.mjs";
+import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./constants.mjs";
+import { getDocuments } from "./loader.mjs";
 
 // Load environment variables from local .env file
 dotenv.config();
@@ -31,9 +26,7 @@ async function generateDatasource(serviceContext) {
     const storageContext = await storageContextFromDefaults({
       persistDir: STORAGE_CACHE_DIR,
     });
-    const documents = await new SimpleDirectoryReader().loadData({
-      directoryPath: STORAGE_DIR,
-    });
+    const documents = await getDocuments();
     await VectorStoreIndex.fromDocuments(documents, {
       storageContext,
       serviceContext,

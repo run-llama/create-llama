@@ -1,12 +1,26 @@
+import { MilvusClient } from "@zilliz/milvus2-sdk-node";
+
 export const CHUNK_SIZE = 512;
 export const CHUNK_OVERLAP = 20;
 
 const REQUIRED_ENV_VARS = [
-  "MONGO_URI",
-  "MONGODB_DATABASE",
-  "MONGODB_VECTORS",
-  "MONGODB_VECTOR_INDEX",
+  "MILVUS_ADDRESS",
+  "MILVUS_USERNAME",
+  "MILVUS_PASSWORD",
+  "MILVUS_COLLECTION",
 ];
+
+export function getMilvusClient() {
+  const milvusAddress = process.env.MILVUS_ADDRESS;
+  if (!milvusAddress) {
+    throw new Error("MILVUS_ADDRESS environment variable is required");
+  }
+  return new MilvusClient({
+    address: process.env.MILVUS_ADDRESS,
+    username: process.env.MILVUS_USERNAME,
+    password: process.env.MILVUS_PASSWORD,
+  });
+}
 
 export function checkRequiredEnvVars() {
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {

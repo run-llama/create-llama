@@ -6,7 +6,7 @@ import { copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { InstallTemplateArgs } from "./types";
+import { FileSourceConfig, InstallTemplateArgs } from "./types";
 
 const rename = (name: string) => {
   switch (name) {
@@ -65,6 +65,7 @@ export const installTSTemplate = async ({
   backend,
   observability,
   tools,
+  dataSource,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -86,19 +87,28 @@ export const installTSTemplate = async ({
    * If next.js is used, update its configuration if necessary
    */
   if (framework === "nextjs") {
+    const nextConfigJsonFile = path.join(root, "next.config.json");
+    const nextConfigJson: any = JSON.parse(
+      await fs.readFile(nextConfigJsonFile, "utf8"),
+    );
     if (!backend) {
       // update next.config.json for static site generation
-      const nextConfigJsonFile = path.join(root, "next.config.json");
-      const nextConfigJson: any = JSON.parse(
-        await fs.readFile(nextConfigJsonFile, "utf8"),
-      );
       nextConfigJson.output = "export";
       nextConfigJson.images = { unoptimized: true };
-      await fs.writeFile(
-        nextConfigJsonFile,
-        JSON.stringify(nextConfigJson, null, 2) + os.EOL,
-      );
+      console.log("\nUsing static site generation\n");
+    } else {
+      if (vectorDb === "milvus") {
+        nextConfigJson.experimental.serverComponentsExternalPackages =
+          nextConfigJson.experimental.serverComponentsExternalPackages ?? [];
+        nextConfigJson.experimental.serverComponentsExternalPackages.push(
+          "@zilliz/milvus2-sdk-node",
+        );
+      }
     }
+    await fs.writeFile(
+      nextConfigJsonFile,
+      JSON.stringify(nextConfigJson, null, 2) + os.EOL,
+    );
 
     const webpackConfigOtelFile = path.join(root, "webpack.config.o11y.mjs");
     if (observability === "opentelemetry") {
@@ -110,6 +120,7 @@ export const installTSTemplate = async ({
     }
   }
 
+  // copy observability component
   if (observability && observability !== "none") {
     const chosenObservabilityPath = path.join(
       templatesDir,
@@ -149,6 +160,7 @@ export const installTSTemplate = async ({
 
     const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
+    // copy vector db component
     const vectorDBPath = path.join(
       compPath,
       "vectordbs",
@@ -160,6 +172,23 @@ export const installTSTemplate = async ({
       cwd: vectorDBPath,
     });
 
+    // copy loader component
+    const dataSourceType = dataSource?.type;
+    if (dataSourceType && dataSourceType !== "none") {
+      let loaderFolder: string;
+      if (dataSourceType === "file" || dataSourceType === "folder") {
+        const dataSourceConfig = dataSource?.config as FileSourceConfig;
+        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+      } else {
+        loaderFolder = dataSourceType;
+      }
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+      });
+    }
+
+    // copy tools component
     if (tools?.length) {
       await copy("**", enginePath, {
         parents: true,

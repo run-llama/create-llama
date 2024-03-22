@@ -5,6 +5,7 @@ import {
   TemplateDataSource,
   TemplateFramework,
   TemplateVectorDB,
+  WebSourceConfig,
 } from "./types";
 
 type EnvVar = {
@@ -71,27 +72,70 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
           name: "PINECONE_INDEX_NAME",
         },
       ];
+    case "milvus":
+      return [
+        {
+          name: "MILVUS_ADDRESS",
+          description:
+            "The address of the Milvus server. Eg: http://localhost:19530",
+          value: "http://localhost:19530",
+        },
+        {
+          name: "MILVUS_COLLECTION",
+          description:
+            "The name of the Milvus collection to store the vectors.",
+          value: "llamacollection",
+        },
+        {
+          name: "MILVUS_USERNAME",
+          description: "The username to access the Milvus server.",
+        },
+        {
+          name: "MILVUS_PASSWORD",
+          description: "The password to access the Milvus server.",
+        },
+      ];
     default:
       return [];
   }
 };
 
-const getDataSourceEnvs = (dataSource: TemplateDataSource) => {
+const getDataSourceEnvs = (
+  dataSource: TemplateDataSource,
+  llamaCloudKey?: string,
+) => {
   switch (dataSource.type) {
     case "web":
+      const config = dataSource.config as WebSourceConfig;
       return [
         {
           name: "BASE_URL",
           description: "The base URL to start web scraping.",
+          value: config.baseUrl,
         },
         {
           name: "URL_PREFIX",
           description: "The prefix of the URL to start web scraping.",
+          value: config.baseUrl,
         },
         {
           name: "MAX_DEPTH",
           description: "The maximum depth to scrape.",
+          value: config.depth?.toString(),
         },
+      ];
+    case "file":
+    case "folder":
+      return [
+        ...((dataSource?.config as FileSourceConfig).useLlamaParse
+          ? [
+              {
+                name: "LLAMA_CLOUD_API_KEY",
+                description: `The Llama Cloud API key.`,
+                value: llamaCloudKey,
+              },
+            ]
+          : []),
       ];
     default:
       return [];
@@ -126,10 +170,13 @@ export const createBackendEnvFile = async (
       description: "The OpenAI API key to use.",
       value: opts.openAiKey,
     },
+
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
     // Add data source environment variables
-    ...(opts.dataSource ? getDataSourceEnvs(opts.dataSource) : []),
+    ...(opts.dataSource
+      ? getDataSourceEnvs(opts.dataSource, opts.llamaCloudKey)
+      : []),
   ];
   let envVars: EnvVar[] = [];
   if (opts.framework === "fastapi") {
@@ -181,13 +228,6 @@ We have provided context information below.
 Given this information, please answer the question: {query_str}
 "`,
         },
-        (opts?.dataSource?.config as FileSourceConfig).useLlamaParse
-          ? {
-              name: "LLAMA_CLOUD_API_KEY",
-              description: `The Llama Cloud API key.`,
-              value: opts.llamaCloudKey,
-            }
-          : {},
       ],
     ];
   } else {

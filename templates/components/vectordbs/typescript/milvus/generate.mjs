@@ -1,28 +1,32 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
 import {
-  PineconeVectorStore,
+  MilvusVectorStore,
   VectorStoreIndex,
   storageContextFromDefaults,
 } from "llamaindex";
 import { getDocuments } from "./loader.mjs";
-import { checkRequiredEnvVars } from "./shared.mjs";
+import { checkRequiredEnvVars, getMilvusClient } from "./shared.mjs";
 
 dotenv.config();
+
+const collectionName = process.env.MILVUS_COLLECTION;
 
 async function loadAndIndex() {
   // load objects from storage and convert them into LlamaIndex Document objects
   const documents = await getDocuments();
 
-  // create vector store
-  const vectorStore = new PineconeVectorStore();
+  // Connect to Milvus
+  const milvusClient = getMilvusClient();
+  const vectorStore = new MilvusVectorStore({ milvusClient });
 
-  // create index from all the Documentss and store them in Pinecone
-  console.log("Start creating embeddings...");
+  // now create an index from all the Documents and store them in Milvus
   const storageContext = await storageContextFromDefaults({ vectorStore });
-  await VectorStoreIndex.fromDocuments(documents, { storageContext });
+  await VectorStoreIndex.fromDocuments(documents, {
+    storageContext: storageContext,
+  });
   console.log(
-    "Successfully created embeddings and save to your Pinecone index.",
+    `Successfully created embeddings in the Milvus collection ${collectionName}.`,
   );
 }
 

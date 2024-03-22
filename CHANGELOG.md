@@ -1,5 +1,21 @@
 # create-llama
 
+## 0.0.30
+
+### Patch Changes
+
+- 3af6328: Add support for llamaparse using Typescript
+- dd92b91: Add fetching llm and embedding models from server
+- bac1b43: Add Milvus vector database
+
+## 0.0.29
+
+### Patch Changes
+
+- edd24c2: Add observability with openllmetry
+- 403fc6f: Minor bug fixes to improve DX (missing .env value and updated error messages)
+- 0f79757: Ability to download community submodules
+
 ## 0.0.28
 
 ### Patch Changes

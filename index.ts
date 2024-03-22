@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from "child_process";
 import Commander from "commander";
@@ -176,6 +175,14 @@ const program = new Commander.Command(packageJson.name)
   Provide a LlamaCloud API key.
 `,
   )
+  .option(
+    "--list-server-models",
+    "Fetch available LLM and embedding models from OpenAI API.",
+  )
+  .option(
+    "--observability <observability>",
+    "Specify observability tools to use. Eg: none, opentelemetry",
+  )
   .allowUnknownOption()
   .parse(process.argv);
 if (process.argv.includes("--no-frontend")) {
@@ -297,6 +304,7 @@ async function run(): Promise<void> {
     postInstallAction: program.postInstallAction,
     dataSource: program.dataSource,
     tools: program.tools,
+    observability: program.observability,
   });
   conf.set("preferences", preferences);
 

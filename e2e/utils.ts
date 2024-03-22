@@ -75,15 +75,6 @@ export async function runCreateLlama(
   externalPort: number,
   postInstallAction: TemplatePostInstallAction,
 ): Promise<CreateLlamaResult> {
-  const createLlama = path.join(
-    __dirname,
-    "..",
-    "output",
-    "package",
-    "dist",
-    "index.js",
-  );
-
   const name = [
     templateType,
     templateFramework,
@@ -92,8 +83,7 @@ export async function runCreateLlama(
     appType,
   ].join("-");
   const command = [
-    "node",
-    createLlama,
+    "create-llama",
     name,
     "--template",
     templateType,
@@ -113,7 +103,7 @@ export async function runCreateLlama(
     process.env.OPENAI_API_KEY || "testKey",
     appType,
     "--eslint",
-    "--use-npm",
+    "--use-pnpm",
     "--port",
     port,
     "--external-port",
@@ -123,6 +113,8 @@ export async function runCreateLlama(
     "--tools",
     "none",
     "--no-llama-parse",
+    "--observability",
+    "none",
   ].join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {

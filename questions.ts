@@ -1,6 +1,8 @@
 import { execSync } from "child_process";
 import ciInfo from "ci-info";
 import fs from "fs";
+import got from "got";
+import ora from "ora";
 import path from "path";
 import { blue, green, red } from "picocolors";
 import prompts from "prompts";
@@ -16,10 +18,16 @@ import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
+const OPENAI_API_URL = "https://api.openai.com/v1";
+
 export type QuestionArgs = Omit<
   InstallAppArgs,
   "appPath" | "packageManager"
-> & { files?: string; llamaParse?: boolean };
+> & {
+  files?: string;
+  llamaParse?: boolean;
+  listServerModels?: boolean;
+};
 const supportedContextFileTypes = [
   ".pdf",
   ".doc",
@@ -96,6 +104,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
     { title: "MongoDB", value: "mongo" },
     { title: "PostgreSQL", value: "pg" },
     { title: "Pinecone", value: "pinecone" },
+    { title: "Milvus", value: "milvus" },
   ];
 
   const vectordbLang = framework === "fastapi" ? "python" : "typescript";
@@ -193,6 +202,78 @@ export const onPromptState = (state: any) => {
     process.stdout.write("\x1B[?25h");
     process.stdout.write("\n");
     process.exit(1);
+  }
+};
+
+const getAvailableModelChoices = async (
+  selectEmbedding: boolean,
+  apiKey?: string,
+  listServerModels?: boolean,
+) => {
+  const defaultLLMModels = [
+    "gpt-3.5-turbo-0125",
+    "gpt-4-turbo-preview",
+    "gpt-4",
+    "gpt-4-vision-preview",
+  ];
+  const defaultEmbeddingModels = [
+    "text-embedding-ada-002",
+    "text-embedding-3-small",
+    "text-embedding-3-large",
+  ];
+
+  const isLLMModels = (model_id: string) => {
+    return model_id.startsWith("gpt");
+  };
+
+  const isEmbeddingModel = (model_id: string) => {
+    return (
+      model_id.includes("embedding") ||
+      defaultEmbeddingModels.includes(model_id)
+    );
+  };
+
+  if (apiKey && listServerModels) {
+    const spinner = ora("Fetching available models").start();
+    try {
+      const response = await got(`${OPENAI_API_URL}/models`, {
+        headers: {
+          Authorization: "Bearer " + apiKey,
+        },
+        timeout: 5000,
+        responseType: "json",
+      });
+      const data: any = await response.body;
+      spinner.stop();
+      return data.data
+        .filter((model: any) =>
+          selectEmbedding ? isEmbeddingModel(model.id) : isLLMModels(model.id),
+        )
+        .map((el: any) => {
+          return {
+            title: el.id,
+            value: el.id,
+          };
+        });
+    } catch (error) {
+      spinner.stop();
+      if ((error as any).response?.statusCode === 401) {
+        console.log(
+          red(
+            "Invalid OpenAI API key provided! Please provide a valid key and try again!",
+          ),
+        );
+      } else {
+        console.log(red("Request failed: " + error));
+      }
+      process.exit(1);
+    }
+  } else {
+    const data = selectEmbedding ? defaultEmbeddingModels : defaultLLMModels;
+    return data.map((model) => ({
+      title: model,
+      value: model,
+    }));
   }
 };
 
@@ -434,22 +515,50 @@ export const askQuestions = async (
     if (!program.observability) {
       if (ciInfo.isCI) {
         program.observability = getPrefOrDefault("observability");
-      }
-    } else {
-      const { observability } = await prompts({
-        type: "select",
-        name: "observability",
-        message: "Would you like to set up observability?",
-        choices: [
-          { title: "No", value: "none" },
-          { title: "OpenTelemetry", value: "opentelemetry" },
-        ],
-        initial: 0,
-      });
+      } else {
+        const { observability } = await prompts(
+          {
+            type: "select",
+            name: "observability",
+            message: "Would you like to set up observability?",
+            choices: [
+              { title: "No", value: "none" },
+              { title: "OpenTelemetry", value: "opentelemetry" },
+            ],
+            initial: 0,
+          },
+          handlers,
+        );
 
-      program.observability = observability;
-      preferences.observability = observability;
+        program.observability = observability;
+        preferences.observability = observability;
+      }
     }
+  }
+
+  if (!program.openAiKey) {
+    const { key } = await prompts(
+      {
+        type: "text",
+        name: "key",
+        message: program.listServerModels
+          ? "Please provide your OpenAI API key (or reuse OPENAI_API_KEY env variable):"
+          : "Please provide your OpenAI API key (leave blank to skip):",
+        validate: (value: string) => {
+          if (program.listServerModels && !value) {
+            if (process.env.OPENAI_API_KEY) {
+              return true;
+            }
+            return "OpenAI API key is required";
+          }
+          return true;
+        },
+      },
+      handlers,
+    );
+
+    program.openAiKey = key || process.env.OPENAI_API_KEY;
+    preferences.openAiKey = key || process.env.OPENAI_API_KEY;
   }
 
   if (!program.model) {
@@ -461,15 +570,11 @@ export const askQuestions = async (
           type: "select",
           name: "model",
           message: "Which model would you like to use?",
-          choices: [
-            { title: "gpt-3.5-turbo", value: "gpt-3.5-turbo-0125" },
-            { title: "gpt-4-turbo-preview", value: "gpt-4-turbo-preview" },
-            { title: "gpt-4", value: "gpt-4" },
-            {
-              title: "gpt-4-vision-preview",
-              value: "gpt-4-vision-preview",
-            },
-          ],
+          choices: await getAvailableModelChoices(
+            false,
+            program.openAiKey,
+            program.listServerModels,
+          ),
           initial: 0,
         },
         handlers,
@@ -488,20 +593,11 @@ export const askQuestions = async (
           type: "select",
           name: "embeddingModel",
           message: "Which embedding model would you like to use?",
-          choices: [
-            {
-              title: "text-embedding-ada-002",
-              value: "text-embedding-ada-002",
-            },
-            {
-              title: "text-embedding-3-small",
-              value: "text-embedding-3-small",
-            },
-            {
-              title: "text-embedding-3-large",
-              value: "text-embedding-3-large",
-            },
-          ],
+          choices: await getAvailableModelChoices(
+            true,
+            program.openAiKey,
+            program.listServerModels,
+          ),
           initial: 0,
         },
         handlers,
@@ -595,9 +691,8 @@ export const askQuestions = async (
   }
 
   if (
-    (program.dataSource?.type === "file" ||
-      program.dataSource?.type === "folder") &&
-    program.framework === "fastapi"
+    program.dataSource?.type === "file" ||
+    program.dataSource?.type === "folder"
   ) {
     if (ciInfo.isCI) {
       program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
@@ -726,19 +821,6 @@ export const askQuestions = async (
       program.tools = tools;
       preferences.tools = tools;
     }
-  }
-
-  if (!program.openAiKey) {
-    const { key } = await prompts(
-      {
-        type: "text",
-        name: "key",
-        message: "Please provide your OpenAI API key (leave blank to skip):",
-      },
-      handlers,
-    );
-    program.openAiKey = key;
-    preferences.openAiKey = key;
   }
 
   if (program.framework !== "fastapi" && program.eslint === undefined) {

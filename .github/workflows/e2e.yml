@@ -46,14 +46,11 @@ jobs:
       - name: Build create-llama
         run: pnpm run build
         working-directory: .
-      - name: Pack
-        run: pnpm pack --pack-destination ./output
-        working-directory: .
-      - name: Extract Pack
-        run: tar -xvzf ./output/*.tgz -C ./output
+      - name: Install
+        run: pnpm run pack-install
         working-directory: .
       - name: Run Playwright tests
-        run: pnpm exec playwright test
+        run: pnpm run e2e
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         working-directory: .
