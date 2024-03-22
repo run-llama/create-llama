@@ -800,10 +800,9 @@ export const askQuestions = async (
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {
-      const options =
-        program.framework === "fastapi"
-          ? supportedTools
-          : supportedTools.filter((t) => t.tsSupport);
+      const options = supportedTools.filter((t) =>
+        t.supportedFrameworks?.includes(program.framework),
+      );
       const toolChoices = options.map((tool) => ({
         title: tool.display,
         value: tool.name,
