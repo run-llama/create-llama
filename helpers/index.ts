@@ -84,13 +84,15 @@ const copyContextData = async (
 
   // Copy file
   if (dataSource?.type === "file") {
-    if (dataSourceConfig.path) {
-      console.log(`\nCopying file to ${cyan(destPath)}\n`);
+    if (dataSourceConfig.paths) {
       await fs.mkdir(destPath, { recursive: true });
-      await fs.copyFile(
-        dataSourceConfig.path,
-        path.join(destPath, path.basename(dataSourceConfig.path)),
+      console.log(
+        "Copying data from files:",
+        dataSourceConfig.paths.toString(),
       );
+      for (const p of dataSourceConfig.paths) {
+        await fs.copyFile(p, path.join(destPath, path.basename(p)));
+      }
     } else {
       console.log("Missing file path in config");
       process.exit(1);
@@ -100,13 +102,20 @@ const copyContextData = async (
 
   // Copy folder
   if (dataSource?.type === "folder") {
-    const srcPath =
-      dataSourceConfig.path ?? path.join(templatesDir, "components", "data");
-    console.log(`\nCopying data to ${cyan(destPath)}\n`);
-    await copy("**", destPath, {
-      parents: true,
-      cwd: srcPath,
-    });
+    // Example data does not have path config, set the default path
+    const srcPaths = dataSourceConfig.paths ?? [
+      path.join(templatesDir, "components", "data"),
+    ];
+    console.log("Copying data from folders: ", srcPaths);
+    for (const p of srcPaths) {
+      const folderName = path.basename(p);
+      const destFolderPath = path.join(destPath, folderName);
+      await fs.mkdir(destFolderPath, { recursive: true });
+      await copy("**", destFolderPath, {
+        parents: true,
+        cwd: p,
+      });
+    }
     return;
   }
 };

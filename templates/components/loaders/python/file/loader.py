@@ -4,4 +4,7 @@ DATA_DIR = "data"  # directory containing the documents
 
 
 def get_documents():
-    return SimpleDirectoryReader(DATA_DIR).load_data()
+    return SimpleDirectoryReader(
+        DATA_DIR,
+        recursive=True,
+    ).load_data()
