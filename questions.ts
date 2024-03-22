@@ -40,21 +40,22 @@ const MACOS_FILE_SELECTION_SCRIPT = `
 osascript -l JavaScript -e '
   a = Application.currentApplication();
   a.includeStandardAdditions = true;
-  a.chooseFile({ withPrompt: "Please select a file to process:" }).toString()
+  a.chooseFile({ withPrompt: "Please select files to process:", multipleSelectionsAllowed: true }).map(file => file.toString())
 '`;
 const MACOS_FOLDER_SELECTION_SCRIPT = `
 osascript -l JavaScript -e '
   a = Application.currentApplication();
   a.includeStandardAdditions = true;
-  a.chooseFolder({ withPrompt: "Please select a folder to process:" }).toString()
+  a.chooseFolder({ withPrompt: "Please select folders to process:", multipleSelectionsAllowed: true }).map(folder => folder.toString())
 '`;
 const WINDOWS_FILE_SELECTION_SCRIPT = `
 Add-Type -AssemblyName System.Windows.Forms
 $openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
 $openFileDialog.InitialDirectory = [Environment]::GetFolderPath('Desktop')
+$openFileDialog.Multiselect = $true
 $result = $openFileDialog.ShowDialog()
 if ($result -eq 'OK') {
-  $openFileDialog.FileName
+  $openFileDialog.FileNames
 }
 `;
 const WINDOWS_FOLDER_SELECTION_SCRIPT = `
@@ -132,11 +133,14 @@ const getDataSourceChoices = (framework: TemplateFramework) => {
   ];
   if (process.platform === "win32" || process.platform === "darwin") {
     choices.push({
-      title: `Use a local file (${supportedContextFileTypes.join(", ")})`,
+      title: `Use local files (${supportedContextFileTypes.join(", ")})`,
       value: "localFile",
     });
     choices.push({
-      title: `Use a local folder`,
+      title:
+        process.platform === "win32"
+          ? "Use a local folder"
+          : "Use local folders",
       value: "localFolder",
     });
   }
@@ -173,9 +177,15 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
         process.exit(1);
     }
     selectedPath = execSync(execScript, execOpts).toString().trim();
-    if (type === "file") {
-      const fileType = path.extname(selectedPath);
-      if (!supportedContextFileTypes.includes(fileType)) {
+    const paths =
+      process.platform === "win32"
+        ? selectedPath.split("\r\n")
+        : selectedPath.split(", ");
+    for (const p of paths) {
+      if (
+        type == "file" &&
+        !supportedContextFileTypes.includes(path.extname(p))
+      ) {
         console.log(
           red(
             `Please select a supported file type: ${supportedContextFileTypes}`,
@@ -184,7 +194,7 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
         process.exit(1);
       }
     }
-    return selectedPath;
+    return paths;
   } catch (error) {
     console.log(
       red(
@@ -617,7 +627,7 @@ export const askQuestions = async (
       program.dataSource = {
         type: fs.lstatSync(program.files).isDirectory() ? "folder" : "file",
         config: {
-          path: program.files,
+          paths: program.files.split(","),
         },
       };
     }
@@ -655,7 +665,7 @@ export const askQuestions = async (
             program.dataSource = {
               type: "file",
               config: {
-                path: await selectLocalContextData("file"),
+                paths: await selectLocalContextData("file"),
               },
             };
             break;
@@ -664,7 +674,7 @@ export const askQuestions = async (
             program.dataSource = {
               type: "folder",
               config: {
-                path: await selectLocalContextData("folder"),
+                paths: await selectLocalContextData("folder"),
               },
             };
             break;
@@ -703,10 +713,9 @@ export const askQuestions = async (
       // Is pdf file selected as data source or is it a folder data source
       const askingLlamaParse =
         dataSourceConfig.useLlamaParse === undefined &&
-        (program.dataSource.type === "folder"
-          ? true
-          : dataSourceConfig.path &&
-            path.extname(dataSourceConfig.path) === ".pdf");
+        (program.dataSource.type === "folder" ||
+          (program.dataSource.type === "file" &&
+            dataSourceConfig.paths?.some((p) => path.extname(p) === ".pdf")));
 
       // Ask if user wants to use LlamaParse
       if (askingLlamaParse) {
