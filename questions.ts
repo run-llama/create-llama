@@ -755,35 +755,56 @@ export const askQuestions = async (
   }
 
   if (program.dataSource?.type === "web" && program.framework === "fastapi") {
-    let { baseUrl } = await prompts(
-      {
-        type: "text",
-        name: "baseUrl",
-        message: "Please provide base URL of the website:",
-        initial: "https://www.llamaindex.ai",
-      },
-      handlers,
-    );
-    try {
-      if (!baseUrl.includes("://")) {
-        baseUrl = `https://${baseUrl}`;
+    const validateUrl = (value: string) => {
+      for (let url of value.split(",")) {
+        if (!url.includes("://")) {
+          url = `https://${url}`;
+        }
+        const urlObj = new URL(url);
+        if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+          return `URL=${url} has invalid protocol, only allow http or https`;
+        }
       }
-      const checkUrl = new URL(baseUrl);
-      if (checkUrl.protocol !== "https:" && checkUrl.protocol !== "http:") {
-        throw new Error("Invalid protocol");
-      }
-    } catch (error) {
-      console.log(
-        red(
-          "Invalid URL provided! Please provide a valid URL (e.g. https://www.llamaindex.ai)",
-        ),
-      );
-      process.exit(1);
-    }
-    program.dataSource.config = {
-      baseUrl: baseUrl,
-      depth: 1,
+      return true;
     };
+
+    program.dataSource.config = [];
+
+    while (true) {
+      const questions: any[] = [
+        {
+          type: "text",
+          name: "baseUrl",
+          message: "Please provide base URL of the website: ",
+          initial: "https://www.llamaindex.ai",
+          validate: validateUrl,
+        },
+        {
+          type: "text",
+          name: "prefix",
+          message:
+            "Please provide prefix for the URLs you would like to crawl: ",
+          initial: "https://www.llamaindex.ai/enterprise",
+          validate: validateUrl,
+        },
+        {
+          type: "toggle",
+          name: "shouldContinue",
+          message: "Would you like to add another website?",
+          initial: false,
+          active: "Yes",
+          inactive: "No",
+        },
+      ];
+      let { shouldContinue, baseUrl, prefix } = await prompts(
+        questions,
+        handlers,
+      );
+      program.dataSource.config.push({ baseUrl, prefix, depth: 1 });
+      if (shouldContinue !== undefined && !shouldContinue) {
+        break;
+      }
+    }
   }
 
   if (program.engine !== "simple" && !program.vectorDb) {

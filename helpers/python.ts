@@ -12,6 +12,7 @@ import {
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
+  WebSourceConfig,
 } from "./types";
 
 interface Dependency {
@@ -267,6 +268,29 @@ export const installPythonTemplate = async ({
         parents: true,
         cwd: path.join(compPath, "loaders", "python", loaderFolder),
       });
+    }
+
+    // Generate loader configs
+    if (dataSource?.type === "web") {
+      const config = dataSource.config as WebSourceConfig[];
+      const webLoaderConfig = config.map((c) => {
+        return {
+          base_url: c.baseUrl,
+          prefix: c.prefix || c.baseUrl,
+          depth: c.depth || 1,
+        };
+      });
+      const loaderConfigPath = path.join(root, "loaders.json");
+      await fs.writeFile(
+        loaderConfigPath,
+        JSON.stringify(
+          {
+            web: webLoaderConfig,
+          },
+          null,
+          2,
+        ),
+      );
     }
   }
 

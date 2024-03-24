@@ -24,9 +24,11 @@ export type FileSourceConfig = {
 };
 export type WebSourceConfig = {
   baseUrl?: string;
+  prefix?: string;
   depth?: number;
 };
-export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig;
+
+export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig[];
 
 export type CommunityProjectConfig = {
   owner: string;
