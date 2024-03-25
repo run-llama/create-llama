@@ -1,11 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 import {
-  FileSourceConfig,
   TemplateDataSource,
   TemplateFramework,
   TemplateVectorDB,
-  WebSourceConfig,
 } from "./types";
 
 type EnvVar = {
@@ -100,48 +98,6 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
   }
 };
 
-const getDataSourceEnvs = (
-  dataSource: TemplateDataSource,
-  llamaCloudKey?: string,
-) => {
-  switch (dataSource.type) {
-    case "web":
-      const config = dataSource.config as WebSourceConfig;
-      return [
-        {
-          name: "BASE_URL",
-          description: "The base URL to start web scraping.",
-          value: config.baseUrl,
-        },
-        {
-          name: "URL_PREFIX",
-          description: "The prefix of the URL to start web scraping.",
-          value: config.baseUrl,
-        },
-        {
-          name: "MAX_DEPTH",
-          description: "The maximum depth to scrape.",
-          value: config.depth?.toString(),
-        },
-      ];
-    case "file":
-    case "folder":
-      return [
-        ...((dataSource?.config as FileSourceConfig).useLlamaParse
-          ? [
-              {
-                name: "LLAMA_CLOUD_API_KEY",
-                description: `The Llama Cloud API key.`,
-                value: llamaCloudKey,
-              },
-            ]
-          : []),
-      ];
-    default:
-      return [];
-  }
-};
-
 export const createBackendEnvFile = async (
   root: string,
   opts: {
@@ -173,9 +129,15 @@ export const createBackendEnvFile = async (
 
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
-    // Add data source environment variables
-    ...(opts.dataSource
-      ? getDataSourceEnvs(opts.dataSource, opts.llamaCloudKey)
+    // Add LlamaCloud API key
+    ...(opts.llamaCloudKey
+      ? [
+          {
+            name: "LLAMA_CLOUD_API_KEY",
+            description: `The Llama Cloud API key.`,
+            value: opts.llamaCloudKey,
+          },
+        ]
       : []),
   ];
   let envVars: EnvVar[] = [];

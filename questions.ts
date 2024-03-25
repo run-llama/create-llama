@@ -11,6 +11,7 @@ import {
   FileSourceConfig,
   TemplateDataSourceType,
   TemplateFramework,
+  WebSourceConfig,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { templatesDir } from "./helpers/dir";
@@ -755,35 +756,53 @@ export const askQuestions = async (
   }
 
   if (program.dataSource?.type === "web" && program.framework === "fastapi") {
-    let { baseUrl } = await prompts(
-      {
-        type: "text",
-        name: "baseUrl",
-        message: "Please provide base URL of the website:",
-        initial: "https://www.llamaindex.ai",
-      },
-      handlers,
-    );
-    try {
-      if (!baseUrl.includes("://")) {
-        baseUrl = `https://${baseUrl}`;
+    program.dataSource.config = [];
+
+    while (true) {
+      const questions: any[] = [
+        {
+          type: "text",
+          name: "baseUrl",
+          message: "Please provide base URL of the website: ",
+          initial: "https://www.llamaindex.ai",
+          validate: (value: string) => {
+            if (!value.includes("://")) {
+              value = `https://${value}`;
+            }
+            const urlObj = new URL(value);
+            if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+              return `URL=${value} has invalid protocol, only allow http or https`;
+            }
+            // Check duplicated URL
+            if (
+              (program.dataSource?.config as WebSourceConfig[]).some(
+                (c) => c.baseUrl === value,
+              )
+            ) {
+              return `URL=${value} is already added. Please provide a different URL.`;
+            }
+            return true;
+          },
+        },
+        {
+          type: "toggle",
+          name: "shouldContinue",
+          message: "Would you like to add another website?",
+          initial: false,
+          active: "Yes",
+          inactive: "No",
+        },
+      ];
+      let { shouldContinue, baseUrl } = await prompts(questions, handlers);
+      program.dataSource.config.push({
+        baseUrl: baseUrl,
+        prefix: baseUrl,
+        depth: 1,
+      });
+      if (!shouldContinue) {
+        break;
       }
-      const checkUrl = new URL(baseUrl);
-      if (checkUrl.protocol !== "https:" && checkUrl.protocol !== "http:") {
-        throw new Error("Invalid protocol");
-      }
-    } catch (error) {
-      console.log(
-        red(
-          "Invalid URL provided! Please provide a valid URL (e.g. https://www.llamaindex.ai)",
-        ),
-      );
-      process.exit(1);
     }
-    program.dataSource.config = {
-      baseUrl: baseUrl,
-      depth: 1,
-    };
   }
 
   if (program.engine !== "simple" && !program.vectorDb) {

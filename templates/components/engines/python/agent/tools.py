@@ -26,7 +26,7 @@ class ToolFactory:
     @staticmethod
     def from_env() -> list[FunctionTool]:
         tools = []
-        with open("tools_config.json", "r") as f:
+        with open("config/tools.json", "r") as f:
             tool_configs = json.load(f)
             for name, config in tool_configs.items():
                 tools += ToolFactory.create_tool(name, **config)

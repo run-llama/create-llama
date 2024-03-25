@@ -12,6 +12,7 @@ import {
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
+  WebSourceConfig,
 } from "./types";
 
 interface Dependency {
@@ -237,12 +238,13 @@ export const installPythonTemplate = async ({
         parents: true,
         cwd: path.join(compPath, "engines", "python", "agent"),
       });
-      // Write tools_config.json
+      // Write tool configs
       const configContent: Record<string, any> = {};
       tools.forEach((tool) => {
         configContent[tool.name] = tool.config ?? {};
       });
-      const configFilePath = path.join(root, "tools_config.json");
+      const configFilePath = path.join(root, "config/tools.json");
+      await fs.mkdir(path.join(root, "config"), { recursive: true });
       await fs.writeFile(
         configFilePath,
         JSON.stringify(configContent, null, 2),
@@ -252,6 +254,30 @@ export const installPythonTemplate = async ({
         parents: true,
         cwd: path.join(compPath, "engines", "python", "chat"),
       });
+    }
+
+    // Write loader configs
+    if (dataSource?.type === "web") {
+      const config = dataSource.config as WebSourceConfig[];
+      const webLoaderConfig = config.map((c) => {
+        return {
+          base_url: c.baseUrl,
+          prefix: c.prefix || c.baseUrl,
+          depth: c.depth || 1,
+        };
+      });
+      const loaderConfigPath = path.join(root, "config/loaders.json");
+      await fs.mkdir(path.join(root, "config"), { recursive: true });
+      await fs.writeFile(
+        loaderConfigPath,
+        JSON.stringify(
+          {
+            web: webLoaderConfig,
+          },
+          null,
+          2,
+        ),
+      );
     }
 
     const dataSourceType = dataSource?.type;

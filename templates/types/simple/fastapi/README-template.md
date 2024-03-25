@@ -19,6 +19,8 @@ Example `backend/.env` file:
 OPENAI_API_KEY=<openai_api_key>
 ```
 
+If you are using any tools or data sources, you can update their config files in the `config` folder.
+
 Second, generate the embeddings of the documents in the `./data` directory (if this folder exists - otherwise, skip this step):
 
 ```
