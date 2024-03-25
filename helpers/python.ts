@@ -256,78 +256,57 @@ export const installPythonTemplate = async ({
       });
     }
 
-    // const dataSourceType = dataSource?.type;
-    // if (dataSourceType !== undefined && dataSourceType !== "none") {
-    //   let loaderFolder: string;
-    //   if (dataSourceType === "file" || dataSourceType === "folder") {
-    //     const dataSourceConfig = dataSource?.config as FileSourceConfig;
-    //     loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+    if (dataSources.length > 0 && dataSources[0].type !== "none") {
+      const loaderConfigs: Record<string, any> = {};
+      const loaderPath = path.join(enginePath, "loaders");
 
-    // Copy data source loaders
-    const loaderConfigs: Record<string, any> = {};
-    const loaderPath = path.join(enginePath, "loaders");
-    for (const dataSource of dataSources) {
-      const sourceType = dataSource.type;
-      if (sourceType === "file" || sourceType === "folder") {
-        const sourceConfig = dataSource.config as FileSourceConfig;
-        const loaderFolder = sourceConfig.useLlamaParse
-          ? "llama_parse"
-          : "file";
-        await copy("**", loaderPath, {
-          parents: true,
-          cwd: path.join(compPath, "loaders", "python", loaderFolder),
-        });
-      } else {
-        // Write loader configs
-        if (sourceType === "web") {
-          const config = dataSource.config as WebSourceConfig[];
-          const webLoaderConfig = config.map((c) => {
-            return {
-              base_url: c.baseUrl,
-              prefix: c.prefix || c.baseUrl,
-              depth: c.depth || 1,
-            };
-          });
-          loaderConfigs["web"] = webLoaderConfig;
+      // Copy loader.py file to enginePath
+      await copy("loader.py", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "loaders", "python"),
+      });
+
+      for (const dataSource of dataSources) {
+        const sourceType = dataSource.type;
+        switch (sourceType) {
+          case "file":
+          case "folder": {
+            const sourceConfig = dataSource.config as FileSourceConfig;
+            const loaderFolder = sourceConfig.useLlamaParse
+              ? "llama_parse"
+              : "file";
+            await copy("**", loaderPath, {
+              parents: true,
+              cwd: path.join(compPath, "loaders", "python", loaderFolder),
+            });
+            break;
+          }
+          case "web": {
+            const config = dataSource.config as WebSourceConfig[];
+            // Append web loader config
+            const webLoaderConfig = config.map((c) => {
+              return {
+                base_url: c.baseUrl,
+                prefix: c.prefix || c.baseUrl,
+                depth: c.depth || 1,
+              };
+            });
+            loaderConfigs["web"] = webLoaderConfig;
+            await copy("**", loaderPath, {
+              parents: true,
+              cwd: path.join(compPath, "loaders", "python", sourceType),
+            });
+            break;
+          }
         }
-        await copy("**", loaderPath, {
-          parents: true,
-          cwd: path.join(compPath, "loaders", "python", sourceType),
-        });
       }
-    }
-
-    // Write loaders config
-    if (Object.keys(loaderConfigs).length > 0) {
-      const loaderConfigPath = path.join(root, "config/loaders.json");
-      await fs.mkdir(path.join(root, "config"), { recursive: true });
-      await fs.writeFile(
-        loaderConfigPath,
-        JSON.stringify(loaderConfigs, null, 2),
-      );
-    }
-
-    // Generate loader configs
-    for (const dataSource of dataSources) {
-      if (dataSource?.type === "web") {
-        const config = dataSource.config as WebSourceConfig[];
-        const webLoaderConfig = config.map((c) => {
-          return {
-            base_url: c.baseUrl,
-            prefix: c.prefix || c.baseUrl,
-            depth: c.depth || 1,
-          };
-        });
-        const loaderConfigPath = path.join(root, "loaders.json");
+      // Write loaders config
+      if (Object.keys(loaderConfigs).length > 0) {
+        const loaderConfigPath = path.join(root, "config/loaders.json");
+        await fs.mkdir(path.join(root, "config"), { recursive: true });
         await fs.writeFile(
           loaderConfigPath,
-          JSON.stringify(
-            {
-              web: webLoaderConfig,
-            },
-            null,
-            2,
-          ),
+          JSON.stringify(loaderConfigs, null, 2),
         );
       }
     }
