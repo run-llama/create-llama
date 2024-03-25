@@ -8,7 +8,6 @@ import { blue, green, red } from "picocolors";
 import prompts from "prompts";
 import { InstallAppArgs } from "./create-app";
 import {
-  FileSourceConfig,
   TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
@@ -130,7 +129,7 @@ export const getDataSourceChoices = (
   if (selectedDataSource.length > 0) {
     choices.push({
       title: "No",
-      value: "none",
+      value: "no",
     });
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
@@ -678,17 +677,19 @@ export const askQuestions = async (
           handlers,
         );
 
-        // Asking for data source config
-        // Select None data source, No need to config and asking for another data source
+        if (selectedSource === "no") {
+          break;
+        }
+
         if (selectedSource === "none") {
-          if (selectedSource.length === 0) {
-            program.dataSources = [
-              {
-                type: "none",
-                config: {},
-              },
-            ];
-          }
+          // Selected simple chat
+          program.dataSources = [
+            {
+              type: "none",
+              config: {},
+            },
+          ];
+          // Stop asking for another data source
           break;
         }
 
@@ -817,6 +818,7 @@ export const askQuestions = async (
     }
   }
 
+  // Asking for LlamaParse if user selected file or folder data source
   if (
     program.dataSources.some(
       (ds) => ds.type === "file" || ds.type === "folder",
@@ -827,44 +829,32 @@ export const askQuestions = async (
       program.useLlamaParse = getPrefOrDefault("useLlamaParse");
       program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
     } else {
-      if (!program.useLlamaParse && program.engine === "context") {
-        const askingLlamaParse = program.dataSources.some(
-          (ds) =>
-            ds.type === "folder" ||
-            (ds.type === "file" &&
-              (ds.config as FileSourceConfig).paths?.some(
-                (p) => path.extname(p) === ".pdf",
-              )),
-        );
-        if (askingLlamaParse) {
-          const { useLlamaParse } = await prompts(
-            {
-              type: "toggle",
-              name: "useLlamaParse",
-              message:
-                "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-              initial: true,
-              active: "yes",
-              inactive: "no",
-            },
-            handlers,
-          );
-          program.useLlamaParse = useLlamaParse;
+      const { useLlamaParse } = await prompts(
+        {
+          type: "toggle",
+          name: "useLlamaParse",
+          message:
+            "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+          initial: true,
+          active: "yes",
+          inactive: "no",
+        },
+        handlers,
+      );
+      program.useLlamaParse = useLlamaParse;
 
-          // Ask for LlamaCloud API key
-          if (useLlamaParse && program.llamaCloudKey === undefined) {
-            const { llamaCloudKey } = await prompts(
-              {
-                type: "text",
-                name: "llamaCloudKey",
-                message:
-                  "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
-              },
-              handlers,
-            );
-            program.llamaCloudKey = llamaCloudKey;
-          }
-        }
+      // Ask for LlamaCloud API key
+      if (useLlamaParse && program.llamaCloudKey === undefined) {
+        const { llamaCloudKey } = await prompts(
+          {
+            type: "text",
+            name: "llamaCloudKey",
+            message:
+              "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
+          },
+          handlers,
+        );
+        program.llamaCloudKey = llamaCloudKey;
       }
     }
   }
