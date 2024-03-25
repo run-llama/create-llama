@@ -10,7 +10,7 @@ import type {
   TemplateType,
   TemplateUI,
 } from "../helpers";
-import { AppType, createTestDir, runCreateLlama } from "./utils";
+import { createTestDir, runCreateLlama, type AppType } from "./utils";
 
 const templateTypes: TemplateType[] = ["streaming"];
 const templateFrameworks: TemplateFramework[] = [
@@ -30,7 +30,8 @@ for (const templateType of templateTypes) {
     for (const templateEngine of templateEngines) {
       for (const templateUI of templateUIs) {
         for (const templatePostInstallAction of templatePostInstallActions) {
-          const appType: AppType = "--frontend";
+          const appType: AppType =
+            templateFramework === "nextjs" ? "" : "--frontend";
           test.describe(`try create-llama ${templateType} ${templateFramework} ${templateEngine} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
             let port: number;
             let externalPort: number;
