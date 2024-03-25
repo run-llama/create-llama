@@ -10,9 +10,9 @@ import type {
   TemplateType,
   TemplateUI,
 } from "../helpers";
-import { createTestDir, runCreateLlama, type AppType } from "./utils";
+import { AppType, createTestDir, runCreateLlama } from "./utils";
 
-const templateTypes: TemplateType[] = ["streaming", "simple"];
+const templateTypes: TemplateType[] = ["streaming"];
 const templateFrameworks: TemplateFramework[] = [
   "nextjs",
   "express",
@@ -30,20 +30,7 @@ for (const templateType of templateTypes) {
     for (const templateEngine of templateEngines) {
       for (const templateUI of templateUIs) {
         for (const templatePostInstallAction of templatePostInstallActions) {
-          if (templateFramework === "nextjs" && templateType === "simple") {
-            // nextjs doesn't support simple templates - skip tests
-            continue;
-          }
-          const appType: AppType =
-            templateFramework === "express" || templateFramework === "fastapi"
-              ? templateType === "simple"
-                ? "--no-frontend" // simple templates don't have frontends
-                : "--frontend"
-              : "";
-          if (appType === "--no-frontend" && templateUI !== "html") {
-            // if there's no frontend, don't iterate over UIs
-            continue;
-          }
+          const appType: AppType = "--frontend";
           test.describe(`try create-llama ${templateType} ${templateFramework} ${templateEngine} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
             let port: number;
             let externalPort: number;
@@ -79,7 +66,6 @@ for (const templateType of templateTypes) {
             });
             test("Frontend should have a title", async ({ page }) => {
               test.skip(templatePostInstallAction !== "runApp");
-              test.skip(appType === "--no-frontend");
               await page.goto(`http://localhost:${port}`);
               await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
             });
@@ -88,7 +74,6 @@ for (const templateType of templateTypes) {
               page,
             }) => {
               test.skip(templatePostInstallAction !== "runApp");
-              test.skip(appType === "--no-frontend");
               await page.goto(`http://localhost:${port}`);
               await page.fill("form input", "hello");
               const [response] = await Promise.all([
@@ -109,14 +94,13 @@ for (const templateType of templateTypes) {
               expect(response.ok()).toBeTruthy();
             });
 
-            test("Backend should response when calling API", async ({
+            test("Backend frameworks should response when calling non-streaming chat API", async ({
               request,
             }) => {
               test.skip(templatePostInstallAction !== "runApp");
-              test.skip(appType !== "--no-frontend");
-              const backendPort = appType === "" ? port : externalPort;
+              test.skip(templateFramework === "nextjs");
               const response = await request.post(
-                `http://localhost:${backendPort}/api/chat`,
+                `http://localhost:${externalPort}/api/chat/request`,
                 {
                   data: {
                     messages: [
