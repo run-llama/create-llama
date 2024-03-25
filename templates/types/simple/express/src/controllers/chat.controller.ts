@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
-import { createChatEngine } from "./engine";
+import { createChatEngine } from "./engine/chat";
 
 const convertMessageContent = (
   textMessage: string,

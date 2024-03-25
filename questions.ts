@@ -805,15 +805,14 @@ export const askQuestions = async (
     }
   }
 
-  if (
-    !program.tools &&
-    program.framework === "fastapi" &&
-    program.engine === "context"
-  ) {
+  if (!program.tools && program.engine === "context") {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {
-      const toolChoices = supportedTools.map((tool) => ({
+      const options = supportedTools.filter((t) =>
+        t.supportedFrameworks?.includes(program.framework),
+      );
+      const toolChoices = options.map((tool) => ({
         title: tool.display,
         value: tool.name,
       }));

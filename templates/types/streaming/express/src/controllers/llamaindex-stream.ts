@@ -6,7 +6,7 @@ import {
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import { Response } from "llamaindex";
+import { Response, StreamingAgentChatResponse } from "llamaindex";
 
 type ParserOptions = {
   image_url?: string;
@@ -52,13 +52,17 @@ function createParser(
 }
 
 export function LlamaIndexStream(
-  res: AsyncIterable<Response>,
+  response: StreamingAgentChatResponse | AsyncIterable<Response>,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
     parserOptions?: ParserOptions;
   },
 ): { stream: ReadableStream; data: experimental_StreamData } {
   const data = new experimental_StreamData();
+  const res =
+    response instanceof StreamingAgentChatResponse
+      ? response.response
+      : response;
   return {
     stream: createParser(res, data, opts?.parserOptions)
       .pipeThrough(createCallbacksTransformer(opts?.callbacks))

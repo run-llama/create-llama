@@ -1,10 +1,12 @@
 import { red } from "picocolors";
+import { TemplateFramework } from "./types";
 
 export type Tool = {
   display: string;
   name: string;
   config?: Record<string, any>;
   dependencies?: ToolDependencies[];
+  supportedFrameworks?: Array<TemplateFramework>;
 };
 export type ToolDependencies = {
   name: string;
@@ -27,6 +29,7 @@ export const supportedTools: Tool[] = [
         version: "0.1.2",
       },
     ],
+    supportedFrameworks: ["fastapi"],
   },
   {
     display: "Wikipedia",
@@ -37,6 +40,7 @@ export const supportedTools: Tool[] = [
         version: "0.1.2",
       },
     ],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
   },
 ];
 

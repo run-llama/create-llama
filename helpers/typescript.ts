@@ -64,6 +64,7 @@ export const installTSTemplate = async ({
   postInstallAction,
   backend,
   observability,
+  tools,
   dataSource,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
@@ -184,6 +185,30 @@ export const installTSTemplate = async ({
       await copy("**", enginePath, {
         parents: true,
         cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+      });
+    }
+
+    // copy tools component
+    if (tools?.length) {
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "engines", "typescript", "agent"),
+      });
+
+      // Write tools_config.json
+      const configContent: Record<string, any> = {};
+      tools.forEach((tool) => {
+        configContent[tool.name] = tool.config ?? {};
+      });
+      const configFilePath = path.join(enginePath, "tools_config.json");
+      await fs.writeFile(
+        configFilePath,
+        JSON.stringify(configContent, null, 2),
+      );
+    } else if (engine !== "simple") {
+      await copy("**", enginePath, {
+        parents: true,
+        cwd: path.join(compPath, "engines", "typescript", "chat"),
       });
     }
   }
