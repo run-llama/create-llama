@@ -8,7 +8,6 @@ import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
-  FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
@@ -183,6 +182,7 @@ export const installPythonTemplate = async ({
   dataSources,
   tools,
   postInstallAction,
+  useLlamaParse,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -192,6 +192,7 @@ export const installPythonTemplate = async ({
   | "vectorDb"
   | "dataSources"
   | "tools"
+  | "useLlamaParse"
   | "postInstallAction"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
@@ -271,10 +272,7 @@ export const installPythonTemplate = async ({
         switch (sourceType) {
           case "file":
           case "folder": {
-            const sourceConfig = dataSource.config as FileSourceConfig;
-            const loaderFolder = sourceConfig.useLlamaParse
-              ? "llama_parse"
-              : "file";
+            const loaderFolder = useLlamaParse ? "llama_parse" : "file";
             await copy("**", loaderPath, {
               parents: true,
               cwd: path.join(compPath, "loaders", "python", loaderFolder),

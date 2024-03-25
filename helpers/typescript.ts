@@ -6,7 +6,7 @@ import { copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { FileSourceConfig, InstallTemplateArgs } from "./types";
+import { InstallTemplateArgs } from "./types";
 
 const rename = (name: string) => {
   switch (name) {
@@ -66,6 +66,7 @@ export const installTSTemplate = async ({
   observability,
   tools,
   dataSources,
+  useLlamaParse,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -177,8 +178,7 @@ export const installTSTemplate = async ({
     if (dataSourceType && dataSourceType !== "none") {
       let loaderFolder: string;
       if (dataSourceType === "file" || dataSourceType === "folder") {
-        const dataSourceConfig = dataSources[0]?.config as FileSourceConfig;
-        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
+        loaderFolder = useLlamaParse ? "llama_parse" : "file";
       } else {
         loaderFolder = dataSourceType;
       }

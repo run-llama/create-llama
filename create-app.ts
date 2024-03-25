@@ -43,6 +43,7 @@ export async function createApp({
   postInstallAction,
   dataSources,
   tools,
+  useLlamaParse,
   observability,
 }: InstallAppArgs): Promise<void> {
   const root = path.resolve(appPath);
@@ -91,6 +92,7 @@ export async function createApp({
     postInstallAction,
     dataSources,
     tools,
+    useLlamaParse,
     observability,
   };
 

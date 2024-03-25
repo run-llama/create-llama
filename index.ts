@@ -304,6 +304,7 @@ async function run(): Promise<void> {
     postInstallAction: program.postInstallAction,
     dataSources: program.dataSources,
     tools: program.tools,
+    useLlamaParse: program.useLlamaParse,
     observability: program.observability,
   });
   conf.set("preferences", preferences);
