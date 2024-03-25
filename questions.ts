@@ -691,7 +691,6 @@ export const askQuestions = async (
           break;
         }
 
-        console.log("selectedSource", selectedSource);
         if (selectedSource === "exampleFile") {
           program.dataSources.push({
             type: "folder",
