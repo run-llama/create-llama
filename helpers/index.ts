@@ -96,7 +96,6 @@ const copyContextData = async (
       console.log("Missing file path in config");
       process.exit(1);
     }
-    return;
   }
 
   // Copy folder
@@ -115,7 +114,6 @@ const copyContextData = async (
         cwd: p,
       });
     }
-    return;
   }
 };
 
@@ -171,11 +169,11 @@ export const installTemplate = async (
 
     if (props.engine === "context") {
       console.log("\nGenerating context data...\n");
-      props.dataSources.forEach(async (ds) => {
+      for (const ds of props.dataSources) {
         if (ds.type === "file" || ds.type === "folder") {
           await copyContextData(props.root, ds);
         }
-      });
+      }
       if (
         props.postInstallAction === "runApp" ||
         props.postInstallAction === "dependencies"
@@ -192,7 +190,7 @@ export const installTemplate = async (
     }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
-    createFrontendEnvFile(props.root, {
+    await createFrontendEnvFile(props.root, {
       model: props.model,
       customApiPath: props.customApiPath,
     });
