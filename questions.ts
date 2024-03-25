@@ -659,7 +659,8 @@ export const askQuestions = async (
       program.dataSources = getPrefOrDefault("dataSources");
     } else {
       program.dataSources = [];
-      for (let i = 0; i < 2; i++) {
+      const numberDataSources = program.framework === "fastapi" ? 2 : 1;
+      for (let i = 0; i < numberDataSources; i++) {
         const { selectedSource } = await prompts(
           {
             type: "select",
