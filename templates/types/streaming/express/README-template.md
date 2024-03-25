@@ -20,7 +20,7 @@ Third, run the development server:
 npm run dev
 ```
 
-Then call the express API endpoint `/api/chat` to see the result:
+To test streaming chat, call the express API endpoint `/api/chat` to see the result:
 
 ```
 curl --location 'localhost:8000/api/chat' \
@@ -28,7 +28,15 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
 
-You can start editing the API by modifying `src/controllers/chat.controller.ts`. The endpoint auto-updates as you save the file.
+To test chat request, call the express API endpoint `/api/chat/request` to see the result:
+
+```
+curl --location 'localhost:8000/api/chat/request' \
+--header 'Content-Type: text/plain' \
+--data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
+```
+
+You can start editing the API by modifying `src/controllers/chat.controller.ts` or `src/controllers/chat-request.controller.ts`. The endpoint auto-updates as you save the file.
 
 ## Production
 

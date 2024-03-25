@@ -33,10 +33,18 @@ Third, run the development server:
 python main.py
 ```
 
-Then call the API endpoint `/api/chat` to see the result:
+To test streaming chat, call the API endpoint `/api/chat` to see the result:
 
 ```
 curl --location 'localhost:8000/api/chat' \
+--header 'Content-Type: application/json' \
+--data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
+```
+
+To test chat request, call the API endpoint `/api/chat/request` to see the result:
+
+```
+curl --location 'localhost:8000/api/chat/request' \
 --header 'Content-Type: application/json' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
