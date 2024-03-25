@@ -801,7 +801,7 @@ export const askQuestions = async (
         handlers,
       );
       program.dataSource.config.push({ baseUrl, prefix, depth: 1 });
-      if (shouldContinue !== undefined && !shouldContinue) {
+      if (!shouldContinue) {
         break;
       }
     }
