@@ -17,6 +17,7 @@
   list-style: lower-alpha;
 }
 
-.custom-markdown ul ul, .custom-markdown ol ol {
+.custom-markdown ul ul,
+.custom-markdown ol ol {
   margin-left: 20px;
 }
