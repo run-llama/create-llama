@@ -691,10 +691,16 @@ export const askQuestions = async (
           break;
         }
 
-        // Select local file or folder
-        if (selectedSource === "file" || selectedSource === "folder") {
+        console.log("selectedSource", selectedSource);
+        if (selectedSource === "exampleFile") {
+          program.dataSources.push({
+            type: "folder",
+            config: {},
+          });
+        } else if (selectedSource === "file" || selectedSource === "folder") {
+          // Select local file or folder
           const dataSource = {
-            type: selectedSource === "exampleFile" ? "folder" : selectedSource,
+            type: selectedSource,
             config: {},
           };
 
@@ -703,10 +709,8 @@ export const askQuestions = async (
             paths: selectedPaths,
           };
           program.dataSources.push(dataSource);
-        }
-
-        // Selected web data source
-        else if (selectedSource === "web") {
+        } else if (selectedSource === "web") {
+          // Selected web data source
           const validateUrl = (value: string) => {
             for (let url of value.split(",")) {
               if (!url.includes("://")) {
