@@ -18,20 +18,18 @@ class _ChatData(BaseModel):
     messages: List[_Message]
 
 
-@r.post("")
-async def chat(
-    request: Request,
-    data: _ChatData,
-    chat_engine: BaseChatEngine = Depends(get_chat_engine),
-):
-    # check preconditions and get last message
+class _Result(BaseModel):
+    result: _Message
+
+
+async def preprocess_request(data: _ChatData) -> tuple:
     if len(data.messages) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No messages provided",
         )
-    lastMessage = data.messages.pop()
-    if lastMessage.role != MessageRole.USER:
+    last_message = data.messages.pop()
+    if last_message.role != MessageRole.USER:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Last message must be from user",
@@ -44,16 +42,36 @@ async def chat(
         )
         for m in data.messages
     ]
+    return last_message, messages
 
-    # query chat engine
-    response = await chat_engine.astream_chat(lastMessage.content, messages)
 
-    # stream response
+@r.post("")
+async def chat(
+    request: Request,
+    data: _ChatData,
+    chat_engine: BaseChatEngine = Depends(get_chat_engine),
+):
+    last_message, messages = await preprocess_request(data)
+
+    response = await chat_engine.astream_chat(last_message.content, messages)
+
     async def event_generator():
         async for token in response.async_response_gen():
-            # If client closes connection, stop sending events
             if await request.is_disconnected():
                 break
             yield token
 
     return StreamingResponse(event_generator(), media_type="text/plain")
+
+
+@r.post("/request")
+async def chat_request(
+    data: _ChatData,
+    chat_engine: BaseChatEngine = Depends(get_chat_engine),
+) -> _Result:
+    last_message, messages = await preprocess_request(data)
+
+    response = await chat_engine.achat(last_message.content, messages)
+    return _Result(
+        result=_Message(role=MessageRole.ASSISTANT, content=response.response)
+    )
