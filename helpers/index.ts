@@ -1,10 +1,9 @@
-import { copy } from "./copy";
 import { callPackageManager } from "./install";
 
-import fs from "fs/promises";
 import path from "path";
 import { cyan } from "picocolors";
 
+import fsExtra from "fs-extra";
 import { templatesDir } from "./dir";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
@@ -75,45 +74,16 @@ async function generateContextData(
 
 const copyContextData = async (
   root: string,
-  dataSource?: TemplateDataSource,
+  dataSources: TemplateDataSource[],
 ) => {
-  const destPath = path.join(root, "data");
-
-  const dataSourceConfig = dataSource?.config as FileSourceConfig;
-
-  // Copy file
-  if (dataSource?.type === "file") {
-    if (dataSourceConfig.paths) {
-      await fs.mkdir(destPath, { recursive: true });
-      console.log(
-        "Copying data from files:",
-        dataSourceConfig.paths.toString(),
-      );
-      for (const p of dataSourceConfig.paths) {
-        await fs.copyFile(p, path.join(destPath, path.basename(p)));
-      }
-    } else {
-      console.log("Missing file path in config");
-      process.exit(1);
-    }
-  }
-
-  // Copy folder
-  if (dataSource?.type === "folder") {
-    // Example data does not have path config, set the default path
-    const srcPaths = dataSourceConfig.paths ?? [
-      path.join(templatesDir, "components", "data"),
-    ];
-    console.log("Copying data from folders: ", srcPaths);
-    for (const p of srcPaths) {
-      const folderName = path.basename(p);
-      const destFolderPath = path.join(destPath, folderName);
-      await fs.mkdir(destFolderPath, { recursive: true });
-      await copy("**", destFolderPath, {
-        parents: true,
-        cwd: p,
-      });
-    }
+  for (const dataSource of dataSources) {
+    const dataSourceConfig = dataSource?.config as FileSourceConfig;
+    // Copy local data
+    const dataPath =
+      dataSourceConfig.path ?? path.join(templatesDir, "components", "data");
+    const destPath = path.join(root, "data", path.basename(dataPath));
+    console.log("Copying data from path:", dataPath);
+    await fsExtra.copy(dataPath, destPath);
   }
 };
 
@@ -169,11 +139,7 @@ export const installTemplate = async (
 
     if (props.engine === "context") {
       console.log("\nGenerating context data...\n");
-      for (const ds of props.dataSources) {
-        if (ds.type === "file" || ds.type === "folder") {
-          await copyContextData(props.root, ds);
-        }
-      }
+      await copyContextData(props.root, props.dataSources);
       if (
         props.postInstallAction === "runApp" ||
         props.postInstallAction === "dependencies"

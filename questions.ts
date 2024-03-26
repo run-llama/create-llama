@@ -193,9 +193,10 @@ const selectLocalContextData = async (type: TemplateDataSourceType) => {
       process.platform === "win32"
         ? selectedPath.split("\r\n")
         : selectedPath.split(", ");
+
     for (const p of paths) {
       if (
-        type == "file" &&
+        fs.statSync(p).isFile() &&
         !supportedContextFileTypes.includes(path.extname(p))
       ) {
         console.log(
@@ -630,19 +631,14 @@ export const askQuestions = async (
   if (program.files) {
     // If user specified files option, then the program should use context engine
     program.engine = "context";
-    if (!fs.existsSync(program.files)) {
-      console.log("File or folder not found");
-      process.exit(1);
-    } else {
-      program.dataSources = [
-        {
-          type: fs.lstatSync(program.files).isDirectory() ? "folder" : "file",
-          config: {
-            paths: program.files.split(","),
-          },
+    program.files.split(",").forEach((filePath) => {
+      program.dataSources.push({
+        type: "file",
+        config: {
+          path: filePath,
         },
-      ];
-    }
+      });
+    });
   }
 
   if (!program.engine) {
@@ -682,21 +678,20 @@ export const askQuestions = async (
 
         if (selectedSource === "exampleFile") {
           program.dataSources.push({
-            type: "folder",
+            type: "file",
             config: {},
           });
         } else if (selectedSource === "file" || selectedSource === "folder") {
-          // Select local file or folder
-          const dataSource = {
-            type: selectedSource,
-            config: {},
-          };
-
+          // Select local data source
           const selectedPaths = await selectLocalContextData(selectedSource);
-          dataSource.config = {
-            paths: selectedPaths,
-          };
-          program.dataSources.push(dataSource);
+          for (const p of selectedPaths) {
+            program.dataSources.push({
+              type: "file",
+              config: {
+                path: p,
+              },
+            });
+          }
         } else if (selectedSource === "web") {
           // Selected web data source
           const { baseUrl } = await prompts(
@@ -731,13 +726,6 @@ export const askQuestions = async (
             },
           });
         }
-
-        if (
-          program.framework !== "fastapi" ||
-          selectedSource === "exampleFile"
-        ) {
-          break;
-        }
       }
 
       if (program.dataSources.length === 0) {
@@ -751,7 +739,7 @@ export const askQuestions = async (
     if (program.engine === "context") {
       program.dataSources = [
         {
-          type: "folder",
+          type: "file",
           config: {},
         },
       ];
@@ -762,9 +750,7 @@ export const askQuestions = async (
 
   // Asking for LlamaParse if user selected file or folder data source
   if (
-    program.dataSources.some(
-      (ds) => ds.type === "file" || ds.type === "folder",
-    ) &&
+    program.dataSources.some((ds) => ds.type === "file") &&
     !program.useLlamaParse
   ) {
     if (ciInfo.isCI) {

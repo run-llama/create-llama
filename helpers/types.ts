@@ -15,11 +15,11 @@ export type TemplateDataSource = {
   type: TemplateDataSourceType;
   config: TemplateDataSourceConfig;
 };
-export type TemplateDataSourceType = "file" | "folder" | "web";
+export type TemplateDataSourceType = "file" | "web";
 export type TemplateObservability = "none" | "opentelemetry";
 // Config for both file and folder
 export type FileSourceConfig = {
-  paths?: string[];
+  path?: string;
 };
 export type WebSourceConfig = {
   baseUrl?: string;

@@ -64,7 +64,7 @@ const getAdditionalDependencies = (
 
   // Add data source dependencies
   const dataSourceType = dataSource?.type;
-  if (dataSourceType === "file" || dataSourceType === "folder") {
+  if (dataSourceType === "file") {
     // llama-index-readers-file (pdf, excel, csv) is already included in llama_index package
     dependencies.push({
       name: "docx2txt",
@@ -283,9 +283,7 @@ export const installPythonTemplate = async ({
         loaderConfigs["web"] = webLoaderConfig;
       }
       // File loader config
-      if (
-        dataSources.some((ds) => ds.type === "file" || ds.type === "folder")
-      ) {
+      if (dataSources.some((ds) => ds.type === "file")) {
         loaderConfigs["file"] = {
           use_llama_parse: useLlamaParse,
         };
