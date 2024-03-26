@@ -3,15 +3,10 @@ from llama_parse import LlamaParse
 from pydantic import BaseModel, validator
 from llama_index.core.readers import SimpleDirectoryReader
 
-DATA_DIR = "data"  # directory containing the documents
-
 
 class FileLoaderConfig(BaseModel):
-    data_dir: str = DATA_DIR
+    data_dir: str = "data"
     use_llama_parse: bool = False
-
-    class Config:
-        extra = "forbid"
 
     @validator("data_dir")
     def data_dir_must_exist(cls, v):
@@ -32,7 +27,7 @@ def llama_parse_parser():
 
 def get_file_documents(config: FileLoaderConfig):
     reader = SimpleDirectoryReader(
-        DATA_DIR,
+        config.data_dir,
         recursive=True,
     )
     if config.use_llama_parse:
