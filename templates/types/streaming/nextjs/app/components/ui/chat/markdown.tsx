@@ -15,7 +15,7 @@ const MemoizedReactMarkdown: FC<Options> = memo(
 export default function Markdown({ content }: { content: string }) {
   return (
     <MemoizedReactMarkdown
-      className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words"
+      className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words custom-markdown"
       remarkPlugins={[remarkGfm, remarkMath]}
       components={{
         p({ children }) {
