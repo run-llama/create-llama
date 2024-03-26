@@ -257,46 +257,36 @@ export const installPythonTemplate = async ({
       });
     }
 
-    if (dataSources.length === 0) {
+    if (dataSources.length > 0) {
       const loaderConfigs: Record<string, any> = {};
       const loaderPath = path.join(enginePath, "loaders");
 
-      // Copy loader.py file to enginePath
-      await copy("loader.py", enginePath, {
+      // Copy loaders to enginePath
+      await copy("**", loaderPath, {
         parents: true,
         cwd: path.join(compPath, "loaders", "python"),
       });
 
-      for (const dataSource of dataSources) {
-        const sourceType = dataSource.type;
-        switch (sourceType) {
-          case "file":
-          case "folder": {
-            const loaderFolder = useLlamaParse ? "llama_parse" : "file";
-            await copy("**", loaderPath, {
-              parents: true,
-              cwd: path.join(compPath, "loaders", "python", loaderFolder),
-            });
-            break;
-          }
-          case "web": {
-            const config = dataSource.config as WebSourceConfig[];
-            // Append web loader config
-            const webLoaderConfig = config.map((c) => {
-              return {
-                base_url: c.baseUrl,
-                prefix: c.prefix || c.baseUrl,
-                depth: c.depth || 1,
-              };
-            });
-            loaderConfigs["web"] = webLoaderConfig;
-            await copy("**", loaderPath, {
-              parents: true,
-              cwd: path.join(compPath, "loaders", "python", sourceType),
-            });
-            break;
-          }
-        }
+      // Generate loaders config
+      // Web loader config
+      if (dataSources.some((ds) => ds.type === "web")) {
+        const webLoaderConfig = dataSources
+          .filter((ds) => ds.type === "web")
+          .map((ds) => {
+            const dsConfig = ds.config as WebSourceConfig;
+            return {
+              base_url: dsConfig.baseUrl,
+              prefix: dsConfig.prefix,
+              depth: dsConfig.depth,
+            };
+          });
+        loaderConfigs["web"] = webLoaderConfig;
+      }
+      // File loader config
+      if (dataSources.some((ds) => ds.type === "file")) {
+        loaderConfigs["file"] = {
+          use_llama_parse: useLlamaParse,
+        };
       }
       // Write loaders config
       if (Object.keys(loaderConfigs).length > 0) {

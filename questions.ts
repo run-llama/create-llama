@@ -11,7 +11,6 @@ import {
   TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
-  WebSourceConfig,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { templatesDir } from "./helpers/dir";
@@ -143,27 +142,21 @@ export const getDataSourceChoices = (
     });
   }
 
-  if (!selectedDataSource.some((ds) => ds.type === "file")) {
-    choices.push({
+  choices.push(
+    {
       title: `Use local files (${supportedContextFileTypes.join(", ")})`,
       value: "file",
-    });
-  }
-
-  if (!selectedDataSource.some((ds) => ds.type === "folder")) {
-    choices.push({
+    },
+    {
       title:
         process.platform === "win32"
           ? "Use a local folder"
           : "Use local folders",
       value: "folder",
-    });
-  }
+    },
+  );
 
-  if (
-    !selectedDataSource.some((ds) => ds.type === "web") &&
-    framework === "fastapi"
-  ) {
+  if (framework === "fastapi") {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",
@@ -658,14 +651,13 @@ export const askQuestions = async (
       program.dataSources = getPrefOrDefault("dataSources");
     } else {
       program.dataSources = [];
-      const numberDataSources = program.framework === "fastapi" ? 2 : 1;
-      for (let i = 0; i < numberDataSources; i++) {
+      while (true) {
         const { selectedSource } = await prompts(
           {
             type: "select",
             name: "selectedSource",
             message:
-              i === 0
+              program.dataSources.length === 0
                 ? "Which data source would you like to use?"
                 : "Would you like to add another data source?",
             choices: getDataSourceChoices(
@@ -707,80 +699,43 @@ export const askQuestions = async (
           program.dataSources.push(dataSource);
         } else if (selectedSource === "web") {
           // Selected web data source
-          const validateUrl = (value: string) => {
-            for (let url of value.split(",")) {
-              if (!url.includes("://")) {
-                url = `https://${url}`;
-              }
-              const urlObj = new URL(url);
-              if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
-                return `URL=${url} has invalid protocol, only allow http or https`;
-              }
-            }
-            return true;
-          };
+          const { baseUrl } = await prompts(
+            {
+              type: "text",
+              name: "baseUrl",
+              message: "Please provide base URL of the website: ",
+              initial: "https://www.llamaindex.ai",
+              validate: (value: string) => {
+                if (!value.includes("://")) {
+                  value = `https://${value}`;
+                }
+                const urlObj = new URL(value);
+                if (
+                  urlObj.protocol !== "https:" &&
+                  urlObj.protocol !== "http:"
+                ) {
+                  return `URL=${value} has invalid protocol, only allow http or https`;
+                }
+                return true;
+              },
+            },
+            handlers,
+          );
 
-          const dataSource: TemplateDataSource = {
+          program.dataSources.push({
             type: "web",
-            config: [] as WebSourceConfig[],
-          };
-
-          while (true) {
-            const questions: any[] = [
-              {
-                type: "text",
-                name: "baseUrl",
-                message: "Please provide base URL of the website: ",
-                initial: "https://www.llamaindex.ai",
-                validate: (value: string) => {
-                  if (!value.includes("://")) {
-                    value = `https://${value}`;
-                  }
-                  const urlObj = new URL(value);
-                  if (
-                    urlObj.protocol !== "https:" &&
-                    urlObj.protocol !== "http:"
-                  ) {
-                    return `URL=${value} has invalid protocol, only allow http or https`;
-                  }
-                  // Check duplicated URL
-                  if (
-                    (dataSource.config as WebSourceConfig[]).some(
-                      (c) => c.baseUrl === value,
-                    )
-                  ) {
-                    return `URL=${value} is already added. Please provide a different URL.`;
-                  }
-                  return true;
-                },
-              },
-              {
-                type: "toggle",
-                name: "shouldContinue",
-                message: "Would you like to add another website?",
-                initial: false,
-                active: "Yes",
-                inactive: "No",
-              },
-            ];
-            let { shouldContinue, baseUrl } = await prompts(
-              questions,
-              handlers,
-            );
-            (dataSource.config as WebSourceConfig[]).push({
-              baseUrl: baseUrl,
+            config: {
+              baseUrl,
               prefix: baseUrl,
               depth: 1,
-            });
-            if (shouldContinue !== undefined && !shouldContinue) {
-              break;
-            }
-          }
-          program.dataSources.push(dataSource);
+            },
+          });
         }
 
-        // No need to ask for another data source if user selected example data
-        if (selectedSource === "exampleFile") {
+        if (
+          program.framework !== "fastapi" ||
+          selectedSource === "exampleFile"
+        ) {
           break;
         }
       }

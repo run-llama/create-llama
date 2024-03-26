@@ -28,7 +28,7 @@ export type WebSourceConfig = {
   depth?: number;
 };
 
-export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig[];
+export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig;
 
 export type CommunityProjectConfig = {
   owner: string;
