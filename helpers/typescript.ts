@@ -180,7 +180,7 @@ export const installTSTemplate = async ({
       loaderFolder = useLlamaParse ? "llama_parse" : dataSourceType;
       await copy("**", enginePath, {
         parents: true,
-        cwd: path.join(compPath, "loaders", "typescript", dataSourceType),
+        cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
       });
     }
 

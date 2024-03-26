@@ -126,19 +126,13 @@ export const createBackendEnvFile = async (
       description: "The OpenAI API key to use.",
       value: opts.openAiKey,
     },
-
+    {
+      name: "LLAMA_CLOUD_API_KEY",
+      description: `The Llama Cloud API key.`,
+      value: opts.llamaCloudKey,
+    },
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
-    // Add LlamaCloud API key
-    ...(opts.llamaCloudKey
-      ? [
-          {
-            name: "LLAMA_CLOUD_API_KEY",
-            description: `The Llama Cloud API key.`,
-            value: opts.llamaCloudKey,
-          },
-        ]
-      : []),
   ];
   let envVars: EnvVar[] = [];
   if (opts.framework === "fastapi") {
