@@ -283,7 +283,9 @@ export const installPythonTemplate = async ({
         loaderConfigs["web"] = webLoaderConfig;
       }
       // File loader config
-      if (dataSources.some((ds) => ds.type === "file")) {
+      if (
+        dataSources.some((ds) => ds.type === "file" || ds.type === "folder")
+      ) {
         loaderConfigs["file"] = {
           use_llama_parse: useLlamaParse,
         };
