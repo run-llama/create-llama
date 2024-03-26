@@ -11,7 +11,7 @@ poetry install
 poetry shell
 ```
 
-By default, we use the OpenAI LLM (though you can customize, see `app/settings.py`). As a result you need to specify an `OPENAI_API_KEY` in an .env file in this directory.
+By default, we use the OpenAI LLM (though you can customize, see `app/settings.py`). As a result, you need to specify an `OPENAI_API_KEY` in an .env file in this directory.
 
 Example `.env` file:
 
@@ -33,7 +33,11 @@ Third, run the development server:
 python main.py
 ```
 
-To test streaming chat, call the API endpoint `/api/chat` to see the result:
+The example provides two different API endpoints:
+1. `/api/chat` - a streaming chat endpoint 
+2. `/api/chat/request` - a non-streaming chat endpoint 
+
+You can test the streaming endpoint with the following curl request:
 
 ```
 curl --location 'localhost:8000/api/chat' \
@@ -41,7 +45,7 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
 
-To test chat request, call the API endpoint `/api/chat/request` to see the result:
+And for the non-streaming endpoint run:
 
 ```
 curl --location 'localhost:8000/api/chat/request' \
@@ -49,7 +53,7 @@ curl --location 'localhost:8000/api/chat/request' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
 
-You can start editing the API by modifying `app/api/routers/chat.py`. The endpoint auto-updates as you save the file.
+You can start editing the API endpoints by modifying `app/api/routers/chat.py`. The endpoints auto-update as you save the file. You can delete the endpoint you're not using.
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 
