@@ -629,7 +629,7 @@ export const askQuestions = async (
 
   if (program.files) {
     // If user specified files option, then the program should use context engine
-    program.engine == "context";
+    program.engine = "context";
     if (!fs.existsSync(program.files)) {
       console.log("File or folder not found");
       process.exit(1);
