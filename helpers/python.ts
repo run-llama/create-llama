@@ -257,7 +257,7 @@ export const installPythonTemplate = async ({
       });
     }
 
-    if (dataSources.length > 0 && dataSources[0].type !== "none") {
+    if (dataSources.length === 0) {
       const loaderConfigs: Record<string, any> = {};
       const loaderPath = path.join(enginePath, "loaders");
 

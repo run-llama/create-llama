@@ -175,7 +175,7 @@ export const installTSTemplate = async ({
 
     // copy loader component
     const dataSourceType = dataSources[0]?.type;
-    if (dataSourceType && dataSourceType !== "none") {
+    if (dataSourceType) {
       let loaderFolder: string;
       if (dataSourceType === "file" || dataSourceType === "folder") {
         loaderFolder = useLlamaParse ? "llama_parse" : "file";

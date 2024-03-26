@@ -683,12 +683,7 @@ export const askQuestions = async (
 
         if (selectedSource === "none") {
           // Selected simple chat
-          program.dataSources = [
-            {
-              type: "none",
-              config: {},
-            },
-          ];
+          program.dataSources = [];
           // Stop asking for another data source
           break;
         }
@@ -790,10 +785,7 @@ export const askQuestions = async (
         }
       }
 
-      if (
-        program.dataSources.length === 0 ||
-        program.dataSources[0].type === "none"
-      ) {
+      if (program.dataSources.length === 0) {
         program.engine = "simple";
       } else {
         program.engine = "context";
@@ -809,12 +801,7 @@ export const askQuestions = async (
         },
       ];
     } else if (program.engine === "simple") {
-      program.dataSources = [
-        {
-          type: "none",
-          config: {},
-        },
-      ];
+      program.dataSources = [];
     }
   }
 
