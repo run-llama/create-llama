@@ -1,7 +1,6 @@
 import os
 import json
 from pydantic import BaseModel, Field
-from llama_index.readers.web import WholeSiteReader
 
 
 class WebLoaderConfig(BaseModel):
@@ -11,6 +10,8 @@ class WebLoaderConfig(BaseModel):
 
 
 def get_web_documents(config: WebLoaderConfig):
+    from llama_index.readers.web import WholeSiteReader
+
     scraper = WholeSiteReader(
         prefix=config.prefix,
         max_depth=config.max_depth,

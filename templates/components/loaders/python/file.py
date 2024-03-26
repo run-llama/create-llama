@@ -1,7 +1,6 @@
 import os
 from llama_parse import LlamaParse
 from pydantic import BaseModel, validator
-from llama_index.core.readers import SimpleDirectoryReader
 
 
 class FileLoaderConfig(BaseModel):
@@ -26,6 +25,8 @@ def llama_parse_parser():
 
 
 def get_file_documents(config: FileLoaderConfig):
+    from llama_index.core.readers import SimpleDirectoryReader
+
     reader = SimpleDirectoryReader(
         config.data_dir,
         recursive=True,
