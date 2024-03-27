@@ -138,7 +138,10 @@ export const installTemplate = async (
 
     if (props.dataSources.length > 0) {
       console.log("\nGenerating context data...\n");
-      await copyContextData(props.root, props.dataSources);
+      await copyContextData(
+        props.root,
+        props.dataSources.filter((ds) => ds.type === "file"),
+      );
       if (
         props.postInstallAction === "runApp" ||
         props.postInstallAction === "dependencies"
