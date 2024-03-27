@@ -60,6 +60,20 @@ NODE_ENV=production npm run start
 
 > Note that the `NODE_ENV` environment variable is set to `production`. This disables CORS for all origins.
 
+## Using docker
+
+1. Build an image for Express app:
+
+```
+docker build -t <your_backend_image_name> .
+```
+
+2. Run a container:
+
+```
+docker run --rm -e ENVIRONMENT=dev -p 8000:8000 <your_backend_image_name>
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:

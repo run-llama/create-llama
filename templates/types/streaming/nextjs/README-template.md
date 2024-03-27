@@ -26,6 +26,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Using docker
+
+1. Build an image for Next app:
+
+```
+docker build -t <your_app_image_name> .
+```
+
+2. Run a container:
+
+```
+docker run --rm -e ENVIRONMENT=dev -p 3000:3000 <your_app_image_name>
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:

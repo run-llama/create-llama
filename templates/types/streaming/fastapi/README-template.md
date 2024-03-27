@@ -66,17 +66,13 @@ ENVIRONMENT=prod python main.py
 
 ## Using docker
 
-### Build images:
-
-1. Build backend image:
+1. Build an image for FastAPI app:
 
 ```
 docker build -t <your_backend_image_name> .
 ```
 
-### Run the container:
-
-1. Start the backend app:
+2. Run a container:
 
 ```
 docker run --rm -e ENVIRONMENT=dev -p 8000:8000 <your_backend_image_name>
