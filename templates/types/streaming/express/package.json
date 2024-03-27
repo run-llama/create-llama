@@ -1,13 +1,13 @@
 {
   "name": "llama-index-express-streaming",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "scripts": {
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
     "build": "tsup index.ts --format esm --dts",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon -q dist/index.js\""
+    "start": "node dist/index.mjs",
+    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon -q dist/index.mjs\""
   },
   "dependencies": {
     "ai": "^2.2.25",
