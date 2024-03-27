@@ -26,7 +26,6 @@ export type InstallAppArgs = Omit<
 export async function createApp({
   template,
   framework,
-  engine,
   ui,
   appPath,
   packageManager,
@@ -76,7 +75,6 @@ export async function createApp({
     root,
     template,
     framework,
-    engine,
     ui,
     packageManager,
     isOnline,

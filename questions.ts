@@ -13,6 +13,7 @@ import {
   TemplateFramework,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
+import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { getProjectOptions } from "./helpers/repo";
@@ -24,7 +25,6 @@ export type QuestionArgs = Omit<
   InstallAppArgs,
   "appPath" | "packageManager"
 > & {
-  files?: string;
   listServerModels?: boolean;
 };
 const supportedContextFileTypes = [
@@ -70,7 +70,6 @@ if ($dialogResult -eq [System.Windows.Forms.DialogResult]::OK)
 const defaults: QuestionArgs = {
   template: "streaming",
   framework: "nextjs",
-  engine: "simple",
   ui: "html",
   eslint: true,
   frontend: false,
@@ -621,25 +620,12 @@ export const askQuestions = async (
     }
   }
 
-  if (program.files) {
-    // If user specified files option, then the program should use context engine
-    program.engine = "context";
-    program.files.split(",").forEach((filePath) => {
-      program.dataSources.push({
-        type: "file",
-        config: {
-          path: filePath,
-        },
-      });
-    });
-  }
-
-  if (!program.engine) {
+  if (!program.dataSources) {
     if (ciInfo.isCI) {
-      program.engine = getPrefOrDefault("engine");
       program.dataSources = getPrefOrDefault("dataSources");
     } else {
       program.dataSources = [];
+      // continue asking user for data sources if none are initially provided
       while (true) {
         const { selectedSource } = await prompts(
           {
@@ -658,22 +644,12 @@ export const askQuestions = async (
           handlers,
         );
 
-        if (selectedSource === "no") {
+        if (selectedSource === "no" || selectedSource === "none") {
+          // user doesn't want another data source or any data source
           break;
         }
-
-        if (selectedSource === "none") {
-          // Selected simple chat
-          program.dataSources = [];
-          // Stop asking for another data source
-          break;
-        }
-
         if (selectedSource === "exampleFile") {
-          program.dataSources.push({
-            type: "file",
-            config: {},
-          });
+          program.dataSources.push(EXAMPLE_FILE);
         } else if (selectedSource === "file" || selectedSource === "folder") {
           // Select local data source
           const selectedPaths = await selectLocalContextData(selectedSource);
@@ -720,31 +696,13 @@ export const askQuestions = async (
           });
         }
       }
-
-      if (program.dataSources.length === 0) {
-        program.engine = "simple";
-      } else {
-        program.engine = "context";
-      }
-    }
-  } else if (!program.dataSources) {
-    // Handle a case when engine is specified but dataSource is not
-    if (program.engine === "context") {
-      program.dataSources = [
-        {
-          type: "file",
-          config: {},
-        },
-      ];
-    } else if (program.engine === "simple") {
-      program.dataSources = [];
     }
   }
 
   // Asking for LlamaParse if user selected file or folder data source
   if (
     program.dataSources.some((ds) => ds.type === "file") &&
-    !program.useLlamaParse
+    program.useLlamaParse === undefined
   ) {
     if (ciInfo.isCI) {
       program.useLlamaParse = getPrefOrDefault("useLlamaParse");
@@ -780,7 +738,7 @@ export const askQuestions = async (
     }
   }
 
-  if (program.engine !== "simple" && !program.vectorDb) {
+  if (program.dataSources.length > 0 && !program.vectorDb) {
     if (ciInfo.isCI) {
       program.vectorDb = getPrefOrDefault("vectorDb");
     } else {
@@ -799,7 +757,8 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools && program.engine === "context") {
+  // TODO: allow tools also without datasources
+  if (!program.tools && program.dataSources.length > 0) {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {
@@ -845,10 +804,4 @@ export const askQuestions = async (
   }
 
   await askPostInstallAction();
-
-  // TODO: consider using zod to validate the input (doesn't work like this as not every option is required)
-  // templateUISchema.parse(program.ui);
-  // templateEngineSchema.parse(program.engine);
-  // templateFrameworkSchema.parse(program.framework);
-  // templateTypeSchema.parse(program.template);``
 };

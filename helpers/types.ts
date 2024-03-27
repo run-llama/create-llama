@@ -3,7 +3,6 @@ import { Tool } from "./tools";
 
 export type TemplateType = "streaming" | "community" | "llamapack";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
-export type TemplateEngine = "simple" | "context";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB = "none" | "mongo" | "pg" | "pinecone" | "milvus";
 export type TemplatePostInstallAction =
@@ -43,7 +42,6 @@ export interface InstallTemplateArgs {
   isOnline: boolean;
   template: TemplateType;
   framework: TemplateFramework;
-  engine: TemplateEngine;
   ui: TemplateUI;
   dataSources: TemplateDataSource[];
   eslint: boolean;
