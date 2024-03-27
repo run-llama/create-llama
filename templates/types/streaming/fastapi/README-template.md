@@ -34,8 +34,9 @@ python main.py
 ```
 
 The example provides two different API endpoints:
-1. `/api/chat` - a streaming chat endpoint 
-2. `/api/chat/request` - a non-streaming chat endpoint 
+
+1. `/api/chat` - a streaming chat endpoint
+2. `/api/chat/request` - a non-streaming chat endpoint
 
 You can test the streaming endpoint with the following curl request:
 
