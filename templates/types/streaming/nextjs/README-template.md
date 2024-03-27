@@ -34,10 +34,27 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 docker build -t <your_app_image_name> .
 ```
 
-2. Run a container:
+2. Start the app:
+
+- Generate the embedding for `./data` folder if it exists - otherwise, skip this step:
 
 ```
-docker run --rm -v $(pwd)/.env:/app/.env -p 3000:3000 <your_app_image_name>
+docker run \
+  --rm \
+  -v $(pwd)/.env:/app/.env  \
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  -p 3000:3000 \
+  npm run generate
+```
+
+- Start the API
+
+```
+docker run \
+  --rm \
+  -v $(pwd)/.env:/app/.env \
+  -p 3000:3000 \
+  <your_app_image_name>
 ```
 
 ## Learn More

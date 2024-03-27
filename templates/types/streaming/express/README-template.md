@@ -68,10 +68,26 @@ NODE_ENV=production npm run start
 docker build -t <your_backend_image_name> .
 ```
 
-2. Run a container:
+2. Start the app:
+
+- Generate index data:
 
 ```
-docker run --rm -v $(pwd)/.env:/app/.env -p 8000:8000 <your_backend_image_name>
+docker run --rm \
+  -v $(pwd)/.env:/app/.env \
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  <your_backend_image_name>
+  npm generate
+```
+
+- Start the API:
+
+```
+docker run \
+  -v $(pwd)/.env:/app/.env \
+  -v ./storage:/app/storage \ # Can remove this option if you use a vector data base
+  <your_backend_image_name> \
+  -p 8000:8000
 ```
 
 ## Learn More
