@@ -37,7 +37,7 @@ docker build -t <your_app_image_name> .
 2. Run a container:
 
 ```
-docker run --rm -e ENVIRONMENT=dev -p 3000:3000 <your_app_image_name>
+docker run --rm -v $(pwd)/.env:/app/.env -p 3000:3000 <your_app_image_name>
 ```
 
 ## Learn More

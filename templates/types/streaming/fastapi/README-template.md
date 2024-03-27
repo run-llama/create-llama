@@ -75,7 +75,7 @@ docker build -t <your_backend_image_name> .
 2. Run a container:
 
 ```
-docker run --rm -e ENVIRONMENT=dev -p 8000:8000 <your_backend_image_name>
+docker run --rm -v $(pwd)/.env:/app/.env -p 8000:8000 <your_backend_image_name>
 ```
 
 ## Learn More
