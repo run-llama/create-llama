@@ -42,8 +42,9 @@ docker build -t <your_app_image_name> .
 docker run \
   --rm \
   -v $(pwd)/.env:/app/.env  \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
   -p 3000:3000 \
+  <your_app_image_name> \
   npm run generate
 ```
 
@@ -53,6 +54,7 @@ docker run \
 docker run \
   --rm \
   -v $(pwd)/.env:/app/.env \
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
   -p 3000:3000 \
   <your_app_image_name>
 ```

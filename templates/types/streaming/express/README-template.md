@@ -75,9 +75,9 @@ docker build -t <your_backend_image_name> .
 ```
 docker run --rm \
   -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
   <your_backend_image_name>
-  npm generate
+  npm run generate
 ```
 
 - Start the API:
@@ -85,9 +85,9 @@ docker run --rm \
 ```
 docker run \
   -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you use a vector data base
-  <your_backend_image_name> \
-  -p 8000:8000
+  -v ./storage:/app/storage \ # Can remove this option if you use a vector database
+  -p 8000:8000 \
+  <your_backend_image_name>
 ```
 
 ## Learn More

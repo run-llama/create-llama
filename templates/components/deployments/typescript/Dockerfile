@@ -4,12 +4,11 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml* /app/
-RUN npm install -g pnpm
-RUN pnpm install
+RUN npm install 
 
 # Build the application
 COPY . .
-RUN pnpm run build
+RUN npm run build
 
 # ====================================
 FROM build as release

@@ -74,13 +74,13 @@ docker build -t <your_backend_image_name> .
 
 2. Start the app:
 
-- Generate index data:
+- Generate embedding for index data:
 
 ```
 docker run \
   --rm \
   -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
   <your_backend_image_name> \
   python app/engine/generate.py
 ```
@@ -90,9 +90,9 @@ docker run \
 ```
 docker run \
   -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector data base
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -p 8000:8000 \
   <your_backend_image_name> \
-  -p 8000:8000
 ```
 
 ## Learn More

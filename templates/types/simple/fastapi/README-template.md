@@ -53,16 +53,27 @@ ENVIRONMENT=prod python main.py
 
 ## Using docker
 
-1. Build an image for FastAPI app:
+2. Start the app:
+
+- Generate embedding for index data:
 
 ```
-docker build -t <your_backend_image_name> .
+docker run \
+  --rm \
+  -v $(pwd)/.env:/app/.env \
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  <your_backend_image_name> \
+  python app/engine/generate.py
 ```
 
-2. Run a container:
+- Start the API:
 
 ```
-docker run --rm -v $(pwd)/.env:/app/.env -p 8000:8000 <your_backend_image_name>
+docker run \
+  -v $(pwd)/.env:/app/.env \
+  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -p 8000:8000 \
+  <your_backend_image_name> \
 ```
 
 ## Learn More

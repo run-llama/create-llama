@@ -4,8 +4,8 @@ set -e
 
 if [ "$ENVIRONMENT" = "dev" ]; then
     echo "Running Development mode"
-    pnpm dev
+    npm run dev
 else
     echo "Running Production mode"
-    pnpm start
+    npm start
 fi
