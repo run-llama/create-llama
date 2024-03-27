@@ -216,9 +216,10 @@ export const installPythonTemplate = async ({
     },
   });
 
+  const compPath = path.join(templatesDir, "components");
+
   if (dataSources.length > 0) {
     const enginePath = path.join(root, "app", "engine");
-    const compPath = path.join(templatesDir, "components");
 
     const vectorDbDirName = vectorDb ?? "none";
     const VectorDBPath = path.join(
@@ -308,4 +309,9 @@ export const installPythonTemplate = async ({
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
     installPythonDependencies();
   }
+
+  // Copy deployment files for python
+  await copy("**", root, {
+    cwd: path.join(compPath, "deployments", "python"),
+  });
 };
