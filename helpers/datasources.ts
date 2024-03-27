@@ -1,9 +1,12 @@
+import path from "path";
+import { templatesDir } from "./dir";
 import { TemplateDataSource } from "./types";
 
-// Example file has an empty config
 export const EXAMPLE_FILE: TemplateDataSource = {
   type: "file",
-  config: {},
+  config: {
+    path: path.join(templatesDir, "components", "data", "101.pdf"),
+  },
 };
 
 export function getDataSources(

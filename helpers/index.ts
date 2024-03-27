@@ -4,7 +4,6 @@ import path from "path";
 import { cyan } from "picocolors";
 
 import fsExtra from "fs-extra";
-import { templatesDir } from "./dir";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
@@ -79,8 +78,8 @@ const copyContextData = async (
   for (const dataSource of dataSources) {
     const dataSourceConfig = dataSource?.config as FileSourceConfig;
     // Copy local data
-    const dataPath =
-      dataSourceConfig.path ?? path.join(templatesDir, "components", "data");
+    const dataPath = dataSourceConfig.path;
+
     const destPath = path.join(root, "data", path.basename(dataPath));
     console.log("Copying data from path:", dataPath);
     await fsExtra.copy(dataPath, destPath);
