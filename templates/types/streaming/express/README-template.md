@@ -21,6 +21,7 @@ npm run dev
 ```
 
 The example provides two different API endpoints:
+
 1. `/api/chat` - a streaming chat endpoint (found in `src/controllers/chat.controller.ts`)
 2. `/api/chat/request` - a non-streaming chat endpoint (found in `src/controllers/chat-request.controller.ts`)
 
@@ -28,7 +29,7 @@ You can test the streaming endpoint with the following curl request:
 
 ```
 curl --location 'localhost:8000/api/chat' \
---header 'Content-Type: text/plain' \
+--header 'Content-Type: application/json' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
 
@@ -36,7 +37,7 @@ And for the non-streaming endpoint run:
 
 ```
 curl --location 'localhost:8000/api/chat/request' \
---header 'Content-Type: text/plain' \
+--header 'Content-Type: application/json' \
 --data '{ "messages": [{ "role": "user", "content": "Hello" }] }'
 ```
 

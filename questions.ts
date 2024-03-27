@@ -380,7 +380,7 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Chat with streaming", value: "streaming" },
+            { title: "Chat", value: "streaming" },
             {
               title: `Community template from ${styledRepo}`,
               value: "community",
