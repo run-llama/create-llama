@@ -389,7 +389,7 @@ export const askQuestions = async (
               value: "llamapack",
             },
           ],
-          initial: 1,
+          initial: 0,
         },
         handlers,
       );
