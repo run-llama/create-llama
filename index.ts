@@ -33,13 +33,6 @@ const program = new Commander.Command(packageJson.name)
     projectPath = name;
   })
   .option(
-    "--eslint",
-    `
-
-  Initialize with eslint config.
-`,
-  )
-  .option(
     "--use-npm",
     `
 
@@ -189,9 +182,6 @@ const program = new Commander.Command(packageJson.name)
 if (process.argv.includes("--no-frontend")) {
   program.frontend = false;
 }
-if (process.argv.includes("--no-eslint")) {
-  program.eslint = false;
-}
 if (process.argv.includes("--tools")) {
   if (program.tools === "none") {
     program.tools = [];
@@ -296,7 +286,6 @@ async function run(): Promise<void> {
     ui: program.ui,
     appPath: resolvedProjectPath,
     packageManager,
-    eslint: program.eslint,
     frontend: program.frontend,
     openAiKey: program.openAiKey,
     llamaCloudKey: program.llamaCloudKey,

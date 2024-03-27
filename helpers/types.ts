@@ -44,7 +44,6 @@ export interface InstallTemplateArgs {
   framework: TemplateFramework;
   ui: TemplateUI;
   dataSources: TemplateDataSource[];
-  eslint: boolean;
   customApiPath?: string;
   openAiKey?: string;
   llamaCloudKey?: string;

@@ -103,7 +103,6 @@ export async function runCreateLlama(
     "--open-ai-key",
     process.env.OPENAI_API_KEY,
     appType,
-    "--eslint",
     "--use-pnpm",
     "--port",
     port,

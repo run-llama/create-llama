@@ -71,7 +71,6 @@ const defaults: QuestionArgs = {
   template: "streaming",
   framework: "nextjs",
   ui: "html",
-  eslint: true,
   frontend: false,
   openAiKey: "",
   llamaCloudKey: "",
@@ -781,25 +780,6 @@ export const askQuestions = async (
       );
       program.tools = tools;
       preferences.tools = tools;
-    }
-  }
-
-  if (program.framework !== "fastapi" && program.eslint === undefined) {
-    if (ciInfo.isCI) {
-      program.eslint = getPrefOrDefault("eslint");
-    } else {
-      const styledEslint = blue("ESLint");
-      const { eslint } = await prompts({
-        onState: onPromptState,
-        type: "toggle",
-        name: "eslint",
-        message: `Would you like to use ${styledEslint}?`,
-        initial: getPrefOrDefault("eslint"),
-        active: "Yes",
-        inactive: "No",
-      });
-      program.eslint = Boolean(eslint);
-      preferences.eslint = Boolean(eslint);
     }
   }
 
