@@ -7,6 +7,5 @@ if [ "$ENVIRONMENT" = "dev" ]; then
     pnpm dev
 else
     echo "Running Production mode"
-    pnpm build
     pnpm start
 fi
