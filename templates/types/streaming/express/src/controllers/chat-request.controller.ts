@@ -21,7 +21,7 @@ const convertMessageContent = (
   ];
 };
 
-export const chat = async (req: Request, res: Response) => {
+export const chatRequest = async (req: Request, res: Response) => {
   try {
     const { messages, data }: { messages: ChatMessage[]; data: any } = req.body;
     const userMessage = messages.pop();
@@ -48,7 +48,7 @@ export const chat = async (req: Request, res: Response) => {
     // Calling LlamaIndex's ChatEngine to get a response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      messages,
+      chatHistory: messages,
     });
     const result: ChatMessage = {
       role: "assistant",

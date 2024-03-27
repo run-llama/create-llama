@@ -380,8 +380,7 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Chat without streaming", value: "simple" },
-            { title: "Chat with streaming", value: "streaming" },
+            { title: "Chat", value: "streaming" },
             {
               title: `Community template from ${styledRepo}`,
               value: "community",
@@ -450,13 +449,10 @@ export const askQuestions = async (
       program.framework = getPrefOrDefault("framework");
     } else {
       const choices = [
+        { title: "NextJS", value: "nextjs" },
         { title: "Express", value: "express" },
         { title: "FastAPI (Python)", value: "fastapi" },
       ];
-      if (program.template === "streaming") {
-        // allow NextJS only for streaming template
-        choices.unshift({ title: "NextJS", value: "nextjs" });
-      }
 
       const { framework } = await prompts(
         {
@@ -473,10 +469,7 @@ export const askQuestions = async (
     }
   }
 
-  if (
-    program.template === "streaming" &&
-    (program.framework === "express" || program.framework === "fastapi")
-  ) {
+  if (program.framework === "express" || program.framework === "fastapi") {
     // if a backend-only framework is selected, ask whether we should create a frontend
     // (only for streaming backends)
     if (program.frontend === undefined) {
