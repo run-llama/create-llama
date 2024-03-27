@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add multiple URLs for web data source
+Let user select multiple datasources (URLs, files and folders)
