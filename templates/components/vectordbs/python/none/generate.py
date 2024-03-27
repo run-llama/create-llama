@@ -7,7 +7,7 @@ from llama_index.core.indices import (
     VectorStoreIndex,
 )
 from app.engine.constants import STORAGE_DIR
-from app.engine.loader import get_documents
+from app.engine.loaders import get_documents
 from app.settings import init_settings
 
 

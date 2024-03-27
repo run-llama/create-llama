@@ -15,12 +15,11 @@ export type TemplateDataSource = {
   type: TemplateDataSourceType;
   config: TemplateDataSourceConfig;
 };
-export type TemplateDataSourceType = "none" | "file" | "folder" | "web";
+export type TemplateDataSourceType = "file" | "web";
 export type TemplateObservability = "none" | "opentelemetry";
 // Config for both file and folder
 export type FileSourceConfig = {
-  paths?: string[];
-  useLlamaParse?: boolean;
+  path?: string;
 };
 export type WebSourceConfig = {
   baseUrl?: string;
@@ -28,7 +27,7 @@ export type WebSourceConfig = {
   depth?: number;
 };
 
-export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig[];
+export type TemplateDataSourceConfig = FileSourceConfig | WebSourceConfig;
 
 export type CommunityProjectConfig = {
   owner: string;
@@ -46,11 +45,12 @@ export interface InstallTemplateArgs {
   framework: TemplateFramework;
   engine: TemplateEngine;
   ui: TemplateUI;
-  dataSource?: TemplateDataSource;
+  dataSources: TemplateDataSource[];
   eslint: boolean;
   customApiPath?: string;
   openAiKey?: string;
   llamaCloudKey?: string;
+  useLlamaParse?: boolean;
   model: string;
   embeddingModel: string;
   communityProjectConfig?: CommunityProjectConfig;

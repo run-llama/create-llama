@@ -1,10 +1,9 @@
-import { copy } from "./copy";
 import { callPackageManager } from "./install";
 
-import fs from "fs/promises";
 import path from "path";
 import { cyan } from "picocolors";
 
+import fsExtra from "fs-extra";
 import { templatesDir } from "./dir";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
@@ -27,8 +26,8 @@ async function generateContextData(
   packageManager?: PackageManager,
   openAiKey?: string,
   vectorDb?: TemplateVectorDB,
-  dataSource?: TemplateDataSource,
   llamaCloudKey?: string,
+  useLlamaParse?: boolean,
 ) {
   if (packageManager) {
     const runGenerate = `${cyan(
@@ -37,8 +36,7 @@ async function generateContextData(
         : `${packageManager} run generate`,
     )}`;
     const openAiKeyConfigured = openAiKey || process.env["OPENAI_API_KEY"];
-    const llamaCloudKeyConfigured = (dataSource?.config as FileSourceConfig)
-      ?.useLlamaParse
+    const llamaCloudKeyConfigured = useLlamaParse
       ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
       : true;
     const hasVectorDb = vectorDb && vectorDb !== "none";
@@ -76,47 +74,16 @@ async function generateContextData(
 
 const copyContextData = async (
   root: string,
-  dataSource?: TemplateDataSource,
+  dataSources: TemplateDataSource[],
 ) => {
-  const destPath = path.join(root, "data");
-
-  const dataSourceConfig = dataSource?.config as FileSourceConfig;
-
-  // Copy file
-  if (dataSource?.type === "file") {
-    if (dataSourceConfig.paths) {
-      await fs.mkdir(destPath, { recursive: true });
-      console.log(
-        "Copying data from files:",
-        dataSourceConfig.paths.toString(),
-      );
-      for (const p of dataSourceConfig.paths) {
-        await fs.copyFile(p, path.join(destPath, path.basename(p)));
-      }
-    } else {
-      console.log("Missing file path in config");
-      process.exit(1);
-    }
-    return;
-  }
-
-  // Copy folder
-  if (dataSource?.type === "folder") {
-    // Example data does not have path config, set the default path
-    const srcPaths = dataSourceConfig.paths ?? [
-      path.join(templatesDir, "components", "data"),
-    ];
-    console.log("Copying data from folders: ", srcPaths);
-    for (const p of srcPaths) {
-      const folderName = path.basename(p);
-      const destFolderPath = path.join(destPath, folderName);
-      await fs.mkdir(destFolderPath, { recursive: true });
-      await copy("**", destFolderPath, {
-        parents: true,
-        cwd: p,
-      });
-    }
-    return;
+  for (const dataSource of dataSources) {
+    const dataSourceConfig = dataSource?.config as FileSourceConfig;
+    // Copy local data
+    const dataPath =
+      dataSourceConfig.path ?? path.join(templatesDir, "components", "data");
+    const destPath = path.join(root, "data", path.basename(dataPath));
+    console.log("Copying data from path:", dataPath);
+    await fsExtra.copy(dataPath, destPath);
   }
 };
 
@@ -166,12 +133,13 @@ export const installTemplate = async (
       model: props.model,
       embeddingModel: props.embeddingModel,
       framework: props.framework,
-      dataSource: props.dataSource,
+      dataSources: props.dataSources,
       port: props.externalPort,
     });
 
     if (props.engine === "context") {
-      await copyContextData(props.root, props.dataSource);
+      console.log("\nGenerating context data...\n");
+      await copyContextData(props.root, props.dataSources);
       if (
         props.postInstallAction === "runApp" ||
         props.postInstallAction === "dependencies"
@@ -181,14 +149,14 @@ export const installTemplate = async (
           props.packageManager,
           props.openAiKey,
           props.vectorDb,
-          props.dataSource,
           props.llamaCloudKey,
+          props.useLlamaParse,
         );
       }
     }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
-    createFrontendEnvFile(props.root, {
+    await createFrontendEnvFile(props.root, {
       model: props.model,
       customApiPath: props.customApiPath,
     });

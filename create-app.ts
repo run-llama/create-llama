@@ -41,8 +41,9 @@ export async function createApp({
   vectorDb,
   externalPort,
   postInstallAction,
-  dataSource,
+  dataSources,
   tools,
+  useLlamaParse,
   observability,
 }: InstallAppArgs): Promise<void> {
   const root = path.resolve(appPath);
@@ -89,8 +90,9 @@ export async function createApp({
     vectorDb,
     externalPort,
     postInstallAction,
-    dataSource,
+    dataSources,
     tools,
+    useLlamaParse,
     observability,
   };
 

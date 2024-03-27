@@ -8,7 +8,6 @@ import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
-  FileSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
@@ -65,7 +64,7 @@ const getAdditionalDependencies = (
 
   // Add data source dependencies
   const dataSourceType = dataSource?.type;
-  if (dataSourceType === "file" || dataSourceType === "folder") {
+  if (dataSourceType === "file") {
     // llama-index-readers-file (pdf, excel, csv) is already included in llama_index package
     dependencies.push({
       name: "docx2txt",
@@ -180,9 +179,10 @@ export const installPythonTemplate = async ({
   framework,
   engine,
   vectorDb,
-  dataSource,
+  dataSources,
   tools,
   postInstallAction,
+  useLlamaParse,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -190,8 +190,9 @@ export const installPythonTemplate = async ({
   | "template"
   | "engine"
   | "vectorDb"
-  | "dataSource"
+  | "dataSources"
   | "tools"
+  | "useLlamaParse"
   | "postInstallAction"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
@@ -256,51 +257,52 @@ export const installPythonTemplate = async ({
       });
     }
 
-    // Write loader configs
-    if (dataSource?.type === "web") {
-      const config = dataSource.config as WebSourceConfig[];
-      const webLoaderConfig = config.map((c) => {
-        return {
-          base_url: c.baseUrl,
-          prefix: c.prefix || c.baseUrl,
-          depth: c.depth || 1,
-        };
-      });
-      const loaderConfigPath = path.join(root, "config/loaders.json");
-      await fs.mkdir(path.join(root, "config"), { recursive: true });
-      await fs.writeFile(
-        loaderConfigPath,
-        JSON.stringify(
-          {
-            web: webLoaderConfig,
-          },
-          null,
-          2,
-        ),
-      );
-    }
+    if (dataSources.length > 0) {
+      const loaderConfigs: Record<string, any> = {};
+      const loaderPath = path.join(enginePath, "loaders");
 
-    const dataSourceType = dataSource?.type;
-    if (dataSourceType !== undefined && dataSourceType !== "none") {
-      let loaderFolder: string;
-      if (dataSourceType === "file" || dataSourceType === "folder") {
-        const dataSourceConfig = dataSource?.config as FileSourceConfig;
-        loaderFolder = dataSourceConfig.useLlamaParse ? "llama_parse" : "file";
-      } else {
-        loaderFolder = dataSourceType;
-      }
-      await copy("**", enginePath, {
+      // Copy loaders to enginePath
+      await copy("**", loaderPath, {
         parents: true,
-        cwd: path.join(compPath, "loaders", "python", loaderFolder),
+        cwd: path.join(compPath, "loaders", "python"),
       });
+
+      // Generate loaders config
+      // Web loader config
+      if (dataSources.some((ds) => ds.type === "web")) {
+        const webLoaderConfig = dataSources
+          .filter((ds) => ds.type === "web")
+          .map((ds) => {
+            const dsConfig = ds.config as WebSourceConfig;
+            return {
+              base_url: dsConfig.baseUrl,
+              prefix: dsConfig.prefix,
+              depth: dsConfig.depth,
+            };
+          });
+        loaderConfigs["web"] = webLoaderConfig;
+      }
+      // File loader config
+      if (dataSources.some((ds) => ds.type === "file")) {
+        loaderConfigs["file"] = {
+          use_llama_parse: useLlamaParse,
+        };
+      }
+      // Write loaders config
+      if (Object.keys(loaderConfigs).length > 0) {
+        const loaderConfigPath = path.join(root, "config/loaders.json");
+        await fs.mkdir(path.join(root, "config"), { recursive: true });
+        await fs.writeFile(
+          loaderConfigPath,
+          JSON.stringify(loaderConfigs, null, 2),
+        );
+      }
     }
   }
 
-  const addOnDependencies = getAdditionalDependencies(
-    vectorDb,
-    dataSource,
-    tools,
-  );
+  const addOnDependencies = dataSources
+    .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
+    .flat();
   await addDependencies(root, addOnDependencies);
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
