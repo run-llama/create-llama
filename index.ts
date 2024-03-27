@@ -9,6 +9,7 @@ import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
+import { getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
 import { runApp } from "./helpers/run-app";
@@ -164,7 +165,7 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
-    "--llama-parse",
+    "--use-llama-parse",
     `
     Enable LlamaParse.
 `,
@@ -200,6 +201,11 @@ if (process.argv.includes("--tools")) {
 }
 if (process.argv.includes("--no-llama-parse")) {
   program.useLlamaParse = false;
+}
+if (process.argv.includes("--no-files")) {
+  program.dataSources = [];
+} else {
+  program.dataSources = getDataSources(program.files, program.exampleFile);
 }
 
 const packageManager = !!program.useNpm

@@ -13,6 +13,7 @@ import {
   TemplateFramework,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
+import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { getProjectOptions } from "./helpers/repo";
@@ -24,8 +25,6 @@ export type QuestionArgs = Omit<
   InstallAppArgs,
   "appPath" | "packageManager"
 > & {
-  files?: string;
-  exampleFile?: boolean;
   listServerModels?: boolean;
 };
 const supportedContextFileTypes = [
@@ -621,105 +620,81 @@ export const askQuestions = async (
     }
   }
 
-  if (ciInfo.isCI) {
-    program.dataSources = getPrefOrDefault("dataSources");
-  } else {
-    program.dataSources = [];
-  }
-  if (program.files) {
-    // If user specified files option, then the program should use context engine
-    program.files.split(",").forEach((filePath) => {
-      program.dataSources.push({
-        type: "file",
-        config: {
-          path: filePath,
-        },
-      });
-    });
-  }
-  if (program.exampleFile) {
-    // XXX: example file has an empty config
-    program.dataSources.push({
-      type: "file",
-      config: {},
-    });
-  }
-
-  if (program.dataSources.length === 0) {
-    // continue asking user for data sources if none are initially provided
-    while (true) {
-      const { selectedSource } = await prompts(
-        {
-          type: "select",
-          name: "selectedSource",
-          message:
-            program.dataSources.length === 0
-              ? "Which data source would you like to use?"
-              : "Would you like to add another data source?",
-          choices: getDataSourceChoices(program.framework, program.dataSources),
-          initial: 0,
-        },
-        handlers,
-      );
-
-      if (selectedSource === "no") {
-        break;
-      }
-
-      if (selectedSource === "none") {
-        // Selected simple chat
-        program.dataSources = [];
-        // Stop asking for another data source
-        break;
-      }
-
-      if (selectedSource === "exampleFile") {
-        // XXX: example file has an empty config
-        program.dataSources.push({
-          type: "file",
-          config: {},
-        });
-      } else if (selectedSource === "file" || selectedSource === "folder") {
-        // Select local data source
-        const selectedPaths = await selectLocalContextData(selectedSource);
-        for (const p of selectedPaths) {
-          program.dataSources.push({
-            type: "file",
-            config: {
-              path: p,
-            },
-          });
-        }
-      } else if (selectedSource === "web") {
-        // Selected web data source
-        const { baseUrl } = await prompts(
+  if (!program.dataSources) {
+    if (ciInfo.isCI) {
+      program.dataSources = getPrefOrDefault("dataSources");
+    } else {
+      program.dataSources = [];
+      // continue asking user for data sources if none are initially provided
+      while (true) {
+        const { selectedSource } = await prompts(
           {
-            type: "text",
-            name: "baseUrl",
-            message: "Please provide base URL of the website: ",
-            initial: "https://www.llamaindex.ai",
-            validate: (value: string) => {
-              if (!value.includes("://")) {
-                value = `https://${value}`;
-              }
-              const urlObj = new URL(value);
-              if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
-                return `URL=${value} has invalid protocol, only allow http or https`;
-              }
-              return true;
-            },
+            type: "select",
+            name: "selectedSource",
+            message:
+              program.dataSources.length === 0
+                ? "Which data source would you like to use?"
+                : "Would you like to add another data source?",
+            choices: getDataSourceChoices(
+              program.framework,
+              program.dataSources,
+            ),
+            initial: 0,
           },
           handlers,
         );
 
-        program.dataSources.push({
-          type: "web",
-          config: {
-            baseUrl,
-            prefix: baseUrl,
-            depth: 1,
-          },
-        });
+        if (selectedSource === "no" || selectedSource === "none") {
+          // user doesn't want another data source or any data source
+          break;
+        }
+        if (selectedSource === "exampleFile") {
+          program.dataSources.push(EXAMPLE_FILE);
+        } else if (selectedSource === "file" || selectedSource === "folder") {
+          // Select local data source
+          const selectedPaths = await selectLocalContextData(selectedSource);
+          for (const p of selectedPaths) {
+            program.dataSources.push({
+              type: "file",
+              config: {
+                path: p,
+              },
+            });
+          }
+        } else if (selectedSource === "web") {
+          // Selected web data source
+          const { baseUrl } = await prompts(
+            {
+              type: "text",
+              name: "baseUrl",
+              message: "Please provide base URL of the website: ",
+              initial: "https://www.llamaindex.ai",
+              validate: (value: string) => {
+                if (!value.includes("://")) {
+                  value = `https://${value}`;
+                }
+                const urlObj = new URL(value);
+                if (
+                  urlObj.protocol !== "https:" &&
+                  urlObj.protocol !== "http:"
+                ) {
+                  return `URL=${value} has invalid protocol, only allow http or https`;
+                }
+                return true;
+              },
+            },
+            handlers,
+          );
+
+          program.dataSources.push({
+            type: "web",
+            config: {
+              baseUrl,
+              prefix: baseUrl,
+              depth: 1,
+            },
+          });
+        }
       }
     }
   }
@@ -763,11 +738,7 @@ export const askQuestions = async (
     }
   }
 
-  if (
-    program.dataSources &&
-    program.dataSources.length > 0 &&
-    !program.vectorDb
-  ) {
+  if (program.dataSources.length > 0 && !program.vectorDb) {
     if (ciInfo.isCI) {
       program.vectorDb = getPrefOrDefault("vectorDb");
     } else {
@@ -833,10 +804,4 @@ export const askQuestions = async (
   }
 
   await askPostInstallAction();
-
-  // TODO: consider using zod to validate the input (doesn't work like this as not every option is required)
-  // templateUISchema.parse(program.ui);
-  // templateEngineSchema.parse(program.engine);
-  // templateFrameworkSchema.parse(program.framework);
-  // templateTypeSchema.parse(program.template);``
 };
