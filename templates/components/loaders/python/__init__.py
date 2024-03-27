@@ -1,5 +1,5 @@
 import os
-import json
+import yaml
 import importlib
 import logging
 from typing import Dict
@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def load_configs():
-    with open("config/loaders.json") as f:
-        configs = json.load(f)
+    with open("config/loaders.yaml") as f:
+        configs = yaml.safe_load(f)
     return configs
 
 
