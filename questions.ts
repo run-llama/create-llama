@@ -25,6 +25,7 @@ export type QuestionArgs = Omit<
   "appPath" | "packageManager"
 > & {
   files?: string;
+  exampleFile?: boolean;
   listServerModels?: boolean;
 };
 const supportedContextFileTypes = [
@@ -70,7 +71,6 @@ if ($dialogResult -eq [System.Windows.Forms.DialogResult]::OK)
 const defaults: QuestionArgs = {
   template: "streaming",
   framework: "nextjs",
-  engine: "simple",
   ui: "html",
   eslint: true,
   frontend: false,
@@ -621,9 +621,13 @@ export const askQuestions = async (
     }
   }
 
+  if (ciInfo.isCI) {
+    program.dataSources = getPrefOrDefault("dataSources");
+  } else {
+    program.dataSources = [];
+  }
   if (program.files) {
     // If user specified files option, then the program should use context engine
-    program.engine = "context";
     program.files.split(",").forEach((filePath) => {
       program.dataSources.push({
         type: "file",
@@ -633,118 +637,97 @@ export const askQuestions = async (
       });
     });
   }
+  if (program.exampleFile) {
+    // XXX: example file has an empty config
+    program.dataSources.push({
+      type: "file",
+      config: {},
+    });
+  }
 
-  if (!program.engine) {
-    if (ciInfo.isCI) {
-      program.engine = getPrefOrDefault("engine");
-      program.dataSources = getPrefOrDefault("dataSources");
-    } else {
-      program.dataSources = [];
-      while (true) {
-        const { selectedSource } = await prompts(
+  if (program.dataSources.length === 0) {
+    // continue asking user for data sources if none are initially provided
+    while (true) {
+      const { selectedSource } = await prompts(
+        {
+          type: "select",
+          name: "selectedSource",
+          message:
+            program.dataSources.length === 0
+              ? "Which data source would you like to use?"
+              : "Would you like to add another data source?",
+          choices: getDataSourceChoices(program.framework, program.dataSources),
+          initial: 0,
+        },
+        handlers,
+      );
+
+      if (selectedSource === "no") {
+        break;
+      }
+
+      if (selectedSource === "none") {
+        // Selected simple chat
+        program.dataSources = [];
+        // Stop asking for another data source
+        break;
+      }
+
+      if (selectedSource === "exampleFile") {
+        // XXX: example file has an empty config
+        program.dataSources.push({
+          type: "file",
+          config: {},
+        });
+      } else if (selectedSource === "file" || selectedSource === "folder") {
+        // Select local data source
+        const selectedPaths = await selectLocalContextData(selectedSource);
+        for (const p of selectedPaths) {
+          program.dataSources.push({
+            type: "file",
+            config: {
+              path: p,
+            },
+          });
+        }
+      } else if (selectedSource === "web") {
+        // Selected web data source
+        const { baseUrl } = await prompts(
           {
-            type: "select",
-            name: "selectedSource",
-            message:
-              program.dataSources.length === 0
-                ? "Which data source would you like to use?"
-                : "Would you like to add another data source?",
-            choices: getDataSourceChoices(
-              program.framework,
-              program.dataSources,
-            ),
-            initial: 0,
+            type: "text",
+            name: "baseUrl",
+            message: "Please provide base URL of the website: ",
+            initial: "https://www.llamaindex.ai",
+            validate: (value: string) => {
+              if (!value.includes("://")) {
+                value = `https://${value}`;
+              }
+              const urlObj = new URL(value);
+              if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+                return `URL=${value} has invalid protocol, only allow http or https`;
+              }
+              return true;
+            },
           },
           handlers,
         );
 
-        if (selectedSource === "no") {
-          break;
-        }
-
-        if (selectedSource === "none") {
-          // Selected simple chat
-          program.dataSources = [];
-          // Stop asking for another data source
-          break;
-        }
-
-        if (selectedSource === "exampleFile") {
-          program.dataSources.push({
-            type: "file",
-            config: {},
-          });
-        } else if (selectedSource === "file" || selectedSource === "folder") {
-          // Select local data source
-          const selectedPaths = await selectLocalContextData(selectedSource);
-          for (const p of selectedPaths) {
-            program.dataSources.push({
-              type: "file",
-              config: {
-                path: p,
-              },
-            });
-          }
-        } else if (selectedSource === "web") {
-          // Selected web data source
-          const { baseUrl } = await prompts(
-            {
-              type: "text",
-              name: "baseUrl",
-              message: "Please provide base URL of the website: ",
-              initial: "https://www.llamaindex.ai",
-              validate: (value: string) => {
-                if (!value.includes("://")) {
-                  value = `https://${value}`;
-                }
-                const urlObj = new URL(value);
-                if (
-                  urlObj.protocol !== "https:" &&
-                  urlObj.protocol !== "http:"
-                ) {
-                  return `URL=${value} has invalid protocol, only allow http or https`;
-                }
-                return true;
-              },
-            },
-            handlers,
-          );
-
-          program.dataSources.push({
-            type: "web",
-            config: {
-              baseUrl,
-              prefix: baseUrl,
-              depth: 1,
-            },
-          });
-        }
+        program.dataSources.push({
+          type: "web",
+          config: {
+            baseUrl,
+            prefix: baseUrl,
+            depth: 1,
+          },
+        });
       }
-
-      if (program.dataSources.length === 0) {
-        program.engine = "simple";
-      } else {
-        program.engine = "context";
-      }
-    }
-  } else if (!program.dataSources) {
-    // Handle a case when engine is specified but dataSource is not
-    if (program.engine === "context") {
-      program.dataSources = [
-        {
-          type: "file",
-          config: {},
-        },
-      ];
-    } else if (program.engine === "simple") {
-      program.dataSources = [];
     }
   }
 
   // Asking for LlamaParse if user selected file or folder data source
   if (
     program.dataSources.some((ds) => ds.type === "file") &&
-    !program.useLlamaParse
+    program.useLlamaParse === undefined
   ) {
     if (ciInfo.isCI) {
       program.useLlamaParse = getPrefOrDefault("useLlamaParse");
@@ -780,7 +763,11 @@ export const askQuestions = async (
     }
   }
 
-  if (program.engine !== "simple" && !program.vectorDb) {
+  if (
+    program.dataSources &&
+    program.dataSources.length > 0 &&
+    !program.vectorDb
+  ) {
     if (ciInfo.isCI) {
       program.vectorDb = getPrefOrDefault("vectorDb");
     } else {
@@ -799,7 +786,8 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools && program.engine === "context") {
+  // TODO: allow tools also without datasources
+  if (!program.tools && program.dataSources.length > 0) {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

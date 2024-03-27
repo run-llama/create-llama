@@ -74,13 +74,6 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
-    "--engine <engine>",
-    `
-
-  Select a chat engine to bootstrap the application with.
-`,
-  )
-  .option(
     "--framework <framework>",
     `
 
@@ -92,6 +85,13 @@ const program = new Commander.Command(packageJson.name)
     `
   
     Specify the path to a local file or folder for chatting.
+`,
+  )
+  .option(
+    "--example-file",
+    `
+
+  Select to use an example PDF as data source.
 `,
   )
   .option(
@@ -199,7 +199,7 @@ if (process.argv.includes("--tools")) {
   }
 }
 if (process.argv.includes("--no-llama-parse")) {
-  program.llamaParse = false;
+  program.useLlamaParse = false;
 }
 
 const packageManager = !!program.useNpm
@@ -287,7 +287,6 @@ async function run(): Promise<void> {
   await createApp({
     template: program.template,
     framework: program.framework,
-    engine: program.engine,
     ui: program.ui,
     appPath: resolvedProjectPath,
     packageManager,

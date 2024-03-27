@@ -177,7 +177,6 @@ export const installPythonTemplate = async ({
   root,
   template,
   framework,
-  engine,
   vectorDb,
   dataSources,
   tools,
@@ -188,7 +187,6 @@ export const installPythonTemplate = async ({
   | "root"
   | "framework"
   | "template"
-  | "engine"
   | "vectorDb"
   | "dataSources"
   | "tools"
@@ -217,7 +215,7 @@ export const installPythonTemplate = async ({
     },
   });
 
-  if (engine === "context") {
+  if (dataSources.length > 0) {
     const enginePath = path.join(root, "app", "engine");
     const compPath = path.join(templatesDir, "components");
 
@@ -257,46 +255,44 @@ export const installPythonTemplate = async ({
       });
     }
 
-    if (dataSources.length > 0) {
-      const loaderConfigs: Record<string, any> = {};
-      const loaderPath = path.join(enginePath, "loaders");
+    const loaderConfigs: Record<string, any> = {};
+    const loaderPath = path.join(enginePath, "loaders");
 
-      // Copy loaders to enginePath
-      await copy("**", loaderPath, {
-        parents: true,
-        cwd: path.join(compPath, "loaders", "python"),
-      });
+    // Copy loaders to enginePath
+    await copy("**", loaderPath, {
+      parents: true,
+      cwd: path.join(compPath, "loaders", "python"),
+    });
 
-      // Generate loaders config
-      // Web loader config
-      if (dataSources.some((ds) => ds.type === "web")) {
-        const webLoaderConfig = dataSources
-          .filter((ds) => ds.type === "web")
-          .map((ds) => {
-            const dsConfig = ds.config as WebSourceConfig;
-            return {
-              base_url: dsConfig.baseUrl,
-              prefix: dsConfig.prefix,
-              depth: dsConfig.depth,
-            };
-          });
-        loaderConfigs["web"] = webLoaderConfig;
-      }
-      // File loader config
-      if (dataSources.some((ds) => ds.type === "file")) {
-        loaderConfigs["file"] = {
-          use_llama_parse: useLlamaParse,
-        };
-      }
-      // Write loaders config
-      if (Object.keys(loaderConfigs).length > 0) {
-        const loaderConfigPath = path.join(root, "config/loaders.json");
-        await fs.mkdir(path.join(root, "config"), { recursive: true });
-        await fs.writeFile(
-          loaderConfigPath,
-          JSON.stringify(loaderConfigs, null, 2),
-        );
-      }
+    // Generate loaders config
+    // Web loader config
+    if (dataSources.some((ds) => ds.type === "web")) {
+      const webLoaderConfig = dataSources
+        .filter((ds) => ds.type === "web")
+        .map((ds) => {
+          const dsConfig = ds.config as WebSourceConfig;
+          return {
+            base_url: dsConfig.baseUrl,
+            prefix: dsConfig.prefix,
+            depth: dsConfig.depth,
+          };
+        });
+      loaderConfigs["web"] = webLoaderConfig;
+    }
+    // File loader config
+    if (dataSources.some((ds) => ds.type === "file")) {
+      loaderConfigs["file"] = {
+        use_llama_parse: useLlamaParse,
+      };
+    }
+    // Write loaders config
+    if (Object.keys(loaderConfigs).length > 0) {
+      const loaderConfigPath = path.join(root, "config/loaders.json");
+      await fs.mkdir(path.join(root, "config"), { recursive: true });
+      await fs.writeFile(
+        loaderConfigPath,
+        JSON.stringify(loaderConfigs, null, 2),
+      );
     }
   }
 

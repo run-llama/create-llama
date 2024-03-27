@@ -56,7 +56,6 @@ export const installTSTemplate = async ({
   isOnline,
   template,
   framework,
-  engine,
   ui,
   eslint,
   customApiPath,
@@ -142,50 +141,41 @@ export const installTSTemplate = async ({
   /**
    * Copy the selected chat engine files to the target directory and reference it.
    */
-  let relativeEngineDestPath;
   const compPath = path.join(templatesDir, "components");
-  if (engine && (framework === "express" || framework === "nextjs")) {
-    console.log("\nUsing chat engine:", engine, "\n");
+  const relativeEngineDestPath =
+    framework === "nextjs"
+      ? path.join("app", "api", "chat")
+      : path.join("src", "controllers");
+  const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
-    let vectorDBFolder: string = engine;
-
-    if (engine !== "simple" && vectorDb) {
+  if (dataSources.length === 0) {
+    // use simple hat engine if user neither select tools nor a data source
+    console.log("\nUsing simple chat engine\n");
+  } else {
+    if (vectorDb) {
+      // copy vector db component
       console.log("\nUsing vector DB:", vectorDb, "\n");
-      vectorDBFolder = vectorDb;
-    }
-
-    relativeEngineDestPath =
-      framework === "nextjs"
-        ? path.join("app", "api", "chat")
-        : path.join("src", "controllers");
-
-    const enginePath = path.join(root, relativeEngineDestPath, "engine");
-
-    // copy vector db component
-    const vectorDBPath = path.join(
-      compPath,
-      "vectordbs",
-      "typescript",
-      vectorDBFolder,
-    );
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: vectorDBPath,
-    });
-
-    // copy loader component
-    const dataSourceType = dataSources[0]?.type;
-    if (dataSourceType) {
-      let loaderFolder: string;
-      loaderFolder = useLlamaParse ? "llama_parse" : dataSourceType;
+      const vectorDBPath = path.join(
+        compPath,
+        "vectordbs",
+        "typescript",
+        vectorDb,
+      );
       await copy("**", enginePath, {
         parents: true,
-        cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+        cwd: vectorDBPath,
       });
     }
-
-    // copy tools component
+    // copy loader component (TS only supports llama_parse and file for now)
+    let loaderFolder: string;
+    loaderFolder = useLlamaParse ? "llama_parse" : "file";
+    await copy("**", enginePath, {
+      parents: true,
+      cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+    });
     if (tools?.length) {
+      // use agent chat engine if user selects tools
+      console.log("\nUsing agent chat engine\n");
       await copy("**", enginePath, {
         parents: true,
         cwd: path.join(compPath, "engines", "typescript", "agent"),
@@ -201,7 +191,9 @@ export const installTSTemplate = async ({
         configFilePath,
         JSON.stringify(configContent, null, 2),
       );
-    } else if (engine !== "simple") {
+    } else {
+      // use context chat engine if user does not select tools
+      console.log("\nUsing context chat engine\n");
       await copy("**", enginePath, {
         parents: true,
         cwd: path.join(compPath, "engines", "typescript", "chat"),
@@ -248,7 +240,7 @@ export const installTSTemplate = async ({
     // modify the dev script to use the custom api path
   }
 
-  if (engine === "context" && relativeEngineDestPath) {
+  if (dataSources.length > 0 && relativeEngineDestPath) {
     // add generate script if using context engine
     packageJson.scripts = {
       ...packageJson.scripts,

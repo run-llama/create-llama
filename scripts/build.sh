@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # build dist/index.js file
-npm run clean && ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register
+pnpm run build:ncc
 
 # add shebang to the top of dist/index.js
 # XXX: Windows needs a space after `node` to work correctly

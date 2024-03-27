@@ -137,7 +137,7 @@ export const installTemplate = async (
       port: props.externalPort,
     });
 
-    if (props.engine === "context") {
+    if (props.dataSources.length > 0) {
       console.log("\nGenerating context data...\n");
       await copyContextData(props.root, props.dataSources);
       if (

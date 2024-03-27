@@ -4,7 +4,6 @@ import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
 import type {
-  TemplateEngine,
   TemplateFramework,
   TemplatePostInstallAction,
   TemplateType,
@@ -18,7 +17,7 @@ const templateFrameworks: TemplateFramework[] = [
   "express",
   "fastapi",
 ];
-const templateEngines: TemplateEngine[] = ["simple", "context"];
+const dataSources: string[] = ["", "--example-file"];
 const templateUIs: TemplateUI[] = ["shadcn", "html"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
@@ -27,12 +26,12 @@ const templatePostInstallActions: TemplatePostInstallAction[] = [
 
 for (const templateType of templateTypes) {
   for (const templateFramework of templateFrameworks) {
-    for (const templateEngine of templateEngines) {
+    for (const dataSource of dataSources) {
       for (const templateUI of templateUIs) {
         for (const templatePostInstallAction of templatePostInstallActions) {
           const appType: AppType =
             templateFramework === "nextjs" ? "" : "--frontend";
-          test.describe(`try create-llama ${templateType} ${templateFramework} ${templateEngine} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
+          test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
             let port: number;
             let externalPort: number;
             let cwd: string;
@@ -49,7 +48,7 @@ for (const templateType of templateTypes) {
                 cwd,
                 templateType,
                 templateFramework,
-                templateEngine,
+                dataSource,
                 templateUI,
                 vectorDb,
                 appType,

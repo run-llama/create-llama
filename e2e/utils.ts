@@ -4,7 +4,6 @@ import { mkdir } from "node:fs/promises";
 import * as path from "path";
 import waitPort from "wait-port";
 import {
-  TemplateEngine,
   TemplateFramework,
   TemplatePostInstallAction,
   TemplateType,
@@ -67,7 +66,7 @@ export async function runCreateLlama(
   cwd: string,
   templateType: TemplateType,
   templateFramework: TemplateFramework,
-  templateEngine: TemplateEngine,
+  dataSource: string,
   templateUI: TemplateUI,
   vectorDb: TemplateVectorDB,
   appType: AppType,
@@ -75,10 +74,13 @@ export async function runCreateLlama(
   externalPort: number,
   postInstallAction: TemplatePostInstallAction,
 ): Promise<CreateLlamaResult> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Setting OPENAI_API_KEY is mandatory to run tests");
+  }
   const name = [
     templateType,
     templateFramework,
-    templateEngine,
+    dataSource,
     templateUI,
     appType,
   ].join("-");
@@ -89,8 +91,7 @@ export async function runCreateLlama(
     templateType,
     "--framework",
     templateFramework,
-    "--engine",
-    templateEngine,
+    dataSource,
     "--ui",
     templateUI,
     "--vector-db",
@@ -100,7 +101,7 @@ export async function runCreateLlama(
     "--embedding-model",
     EMBEDDING_MODEL,
     "--open-ai-key",
-    process.env.OPENAI_API_KEY || "testKey",
+    process.env.OPENAI_API_KEY,
     appType,
     "--eslint",
     "--use-pnpm",
