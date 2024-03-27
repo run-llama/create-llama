@@ -2,8 +2,9 @@
   "name": "llama-index-express-streaming",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
+    "format": "prettier --ignore-unknown --cache --check .",
+    "format:write": "prettier --ignore-unknown --write .",
     "build": "tsup index.ts --format esm --dts",
     "start": "node dist/index.js",
     "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon -q dist/index.js\""
@@ -23,6 +24,9 @@
     "eslint": "^8.54.0",
     "nodemon": "^3.0.1",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "prettier": "^3.2.5",
+    "prettier-plugin-organize-imports": "^3.2.4",
+    "eslint-config-prettier": "^8.10.0"
   }
 }
