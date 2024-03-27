@@ -2,12 +2,11 @@
 
 set -e
 
-# Check if ENVIRONMENT=dev
 if [ "$ENVIRONMENT" = "dev" ]; then
-    echo "Running Development Server"
+    echo "Running Development mode"
     pnpm dev
 else
-    echo "Running Production Server"
+    echo "Running Production mode"
     pnpm build
     pnpm start
 fi
