@@ -785,7 +785,7 @@ export const askQuestions = async (
   }
 
   if (program.framework !== "fastapi" && program.eslint === undefined) {
-    if (ciInfo.isCI) {
+    if (ciInfo.isCI || program.framework === "nextjs") {
       program.eslint = getPrefOrDefault("eslint");
     } else {
       const styledEslint = blue("ESLint");
