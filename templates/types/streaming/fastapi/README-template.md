@@ -64,6 +64,24 @@ The API allows CORS for all origins to simplify development. You can change this
 ENVIRONMENT=prod python main.py
 ```
 
+## Using docker
+
+### Build images:
+
+1. Build backend image:
+
+```
+docker build -t <your_backend_image_name> .
+```
+
+### Run the container:
+
+1. Start the backend app:
+
+```
+docker run --rm -e ENVIRONMENT=dev -p 8000:8000 <your_backend_image_name>
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
