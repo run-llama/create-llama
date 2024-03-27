@@ -57,7 +57,6 @@ export const installTSTemplate = async ({
   template,
   framework,
   ui,
-  eslint,
   customApiPath,
   vectorDb,
   postInstallAction,
@@ -75,7 +74,6 @@ export const installTSTemplate = async ({
   console.log("\nInitializing project with template:", template, "\n");
   const templatePath = path.join(templatesDir, "types", template, framework);
   const copySource = ["**"];
-  if (!eslint) copySource.push("!eslintrc.json");
 
   await copy(copySource, root, {
     parents: true,
@@ -287,14 +285,6 @@ export const installTSTemplate = async ({
     };
   }
 
-  if (!eslint) {
-    // Remove packages starting with "eslint" from devDependencies
-    packageJson.devDependencies = Object.fromEntries(
-      Object.entries(packageJson.devDependencies).filter(
-        ([key]) => !key.startsWith("eslint"),
-      ),
-    );
-  }
   await fs.writeFile(
     packageJsonFile,
     JSON.stringify(packageJson, null, 2) + os.EOL,

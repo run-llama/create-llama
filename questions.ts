@@ -71,7 +71,6 @@ const defaults: QuestionArgs = {
   template: "streaming",
   framework: "nextjs",
   ui: "html",
-  eslint: true,
   frontend: false,
   openAiKey: "",
   llamaCloudKey: "",
@@ -782,12 +781,6 @@ export const askQuestions = async (
       program.tools = tools;
       preferences.tools = tools;
     }
-  }
-
-  if (program.framework !== "fastapi" && program.eslint === undefined) {
-    const eslint = getPrefOrDefault("eslint");
-    program.eslint = eslint;
-    preferences.eslint = eslint;
   }
 
   await askPostInstallAction();
