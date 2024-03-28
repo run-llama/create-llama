@@ -3,10 +3,15 @@ import json
 from pydantic import BaseModel, Field
 
 
-class WebLoaderConfig(BaseModel):
+class CrawlUrl(BaseModel):
     base_url: str
     prefix: str
     max_depth: int = Field(default=1, ge=0)
+
+
+class WebLoaderConfig(BaseModel):
+    driver_arguments: list[str] = Field(default=None)
+    urls: list[CrawlUrl]
 
 
 def get_web_documents(config: WebLoaderConfig):
@@ -15,13 +20,17 @@ def get_web_documents(config: WebLoaderConfig):
     from selenium.webdriver.chrome.options import Options
 
     options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    driver_arguments = config.driver_arguments or []
+    for arg in driver_arguments:
+        options.add_argument(arg)
 
-    scraper = WholeSiteReader(
-        prefix=config.prefix,
-        max_depth=config.max_depth,
-        driver=webdriver.Chrome(options=options),
-    )
-    return scraper.load_data(config.base_url)
+    docs = []
+    for url in config.urls:
+        scraper = WholeSiteReader(
+            prefix=url.prefix,
+            max_depth=url.max_depth,
+            driver=webdriver.Chrome(options=options),
+        )
+        docs.extend(scraper.load_data(url.base_url))
+
+    return docs

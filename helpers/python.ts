@@ -266,7 +266,19 @@ export const installPythonTemplate = async ({
     // Generate loaders config
     // Web loader config
     if (dataSources.some((ds) => ds.type === "web")) {
-      const webLoaderConfig = dataSources
+      const webLoaderConfig = new Document({});
+
+      // Create config for browser driver arguments
+      const driverArgNodeValue = webLoaderConfig.createNode([
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+      ]);
+      driverArgNodeValue.commentBefore =
+        " The arguments to pass to the webdriver. Eg: add --headless to run in headless mode";
+      webLoaderConfig.set("driver_arguments", driverArgNodeValue);
+
+      // Create config for urls
+      const urlConfigs = dataSources
         .filter((ds) => ds.type === "web")
         .map((ds) => {
           const dsConfig = ds.config as WebSourceConfig;
@@ -276,13 +288,15 @@ export const installPythonTemplate = async ({
             depth: dsConfig.depth,
           };
         });
-      // Add documentation to web loader config
-      const node = loaderConfig.createNode(webLoaderConfig);
-      node.commentBefore = ` base_url: The URL to start crawling with
+      const urlConfigNode = webLoaderConfig.createNode(urlConfigs);
+      urlConfigNode.commentBefore = ` base_url: The URL to start crawling with
  prefix: Only crawl URLs matching the specified prefix
  depth: The maximum depth for BFS traversal
  You can add more websites by adding more entries (don't forget the - prefix from YAML)`;
-      loaderConfig.set("web", node);
+      webLoaderConfig.set("urls", urlConfigNode);
+
+      // Add web config to the loaders config
+      loaderConfig.set("web", webLoaderConfig);
     }
     // File loader config
     if (dataSources.some((ds) => ds.type === "file")) {

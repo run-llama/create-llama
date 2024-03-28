@@ -26,8 +26,7 @@ def get_documents():
             document = get_file_documents(FileLoaderConfig(**loader_config))
             documents.extend(document)
         elif loader_type == "web":
-            for entry in loader_config:
-                document = get_web_documents(WebLoaderConfig(**entry))
-                documents.extend(document)
+            document = get_web_documents(WebLoaderConfig(**loader_config))
+            documents.extend(document)
 
     return documents
