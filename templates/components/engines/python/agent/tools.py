@@ -1,4 +1,4 @@
-import json
+import yaml
 import importlib
 
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
@@ -26,8 +26,8 @@ class ToolFactory:
     @staticmethod
     def from_env() -> list[FunctionTool]:
         tools = []
-        with open("config/tools.json", "r") as f:
-            tool_configs = json.load(f)
+        with open("config/tools.yaml", "r") as f:
+            tool_configs = yaml.safe_load(f)
             for name, config in tool_configs.items():
                 tools += ToolFactory.create_tool(name, **config)
         return tools

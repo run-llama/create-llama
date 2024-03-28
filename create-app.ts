@@ -128,8 +128,8 @@ export async function createApp({
     console.log(
       yellow(
         `You have selected tools that require configuration. Please configure them in the ${terminalLink(
-          "config/tools.json",
-          `file://${root}/config/tools.json`,
+          "config/tools.yaml",
+          `file://${root}/config/tools.yaml`,
         )} file.`,
       ),
     );

@@ -3,6 +3,7 @@ import path from "path";
 import { cyan, red } from "picocolors";
 import { parse, stringify } from "smol-toml";
 import terminalLink from "terminal-link";
+import yaml, { Document } from "yaml";
 import { copy } from "./copy";
 import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
@@ -242,12 +243,9 @@ export const installPythonTemplate = async ({
       tools.forEach((tool) => {
         configContent[tool.name] = tool.config ?? {};
       });
-      const configFilePath = path.join(root, "config/tools.json");
+      const configFilePath = path.join(root, "config/tools.yaml");
       await fs.mkdir(path.join(root, "config"), { recursive: true });
-      await fs.writeFile(
-        configFilePath,
-        JSON.stringify(configContent, null, 2),
-      );
+      await fs.writeFile(configFilePath, yaml.stringify(configContent));
     } else {
       await copy("**", enginePath, {
         parents: true,
@@ -255,7 +253,7 @@ export const installPythonTemplate = async ({
       });
     }
 
-    const loaderConfigs: Record<string, any> = {};
+    const loaderConfigs = new Document({});
     const loaderPath = path.join(enginePath, "loaders");
 
     // Copy loaders to enginePath
@@ -277,22 +275,27 @@ export const installPythonTemplate = async ({
             depth: dsConfig.depth,
           };
         });
-      loaderConfigs["web"] = webLoaderConfig;
+      // Create YamlNode from array of YAMLMap
+      const node = loaderConfigs.createNode(webLoaderConfig);
+      node.commentBefore = `
+ Config for web loader
+- base_url: The url to start crawling with
+- prefix: the prefix of next URLs to crawl
+- depth: the maximum depth in DFS
+ You can add more web loaders by adding more config below`;
+      loaderConfigs.set("web", node);
     }
     // File loader config
     if (dataSources.some((ds) => ds.type === "file")) {
-      loaderConfigs["file"] = {
+      loaderConfigs.set("file", {
         use_llama_parse: useLlamaParse,
-      };
+      });
     }
     // Write loaders config
     if (Object.keys(loaderConfigs).length > 0) {
-      const loaderConfigPath = path.join(root, "config/loaders.json");
+      const loaderConfigPath = path.join(root, "config/loaders.yaml");
       await fs.mkdir(path.join(root, "config"), { recursive: true });
-      await fs.writeFile(
-        loaderConfigPath,
-        JSON.stringify(loaderConfigs, null, 2),
-      );
+      await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfigs));
     }
   }
 
