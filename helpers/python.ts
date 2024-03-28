@@ -253,7 +253,7 @@ export const installPythonTemplate = async ({
       });
     }
 
-    const loaderConfigs = new Document({});
+    const loaderConfig = new Document({});
     const loaderPath = path.join(enginePath, "loaders");
 
     // Copy loaders to enginePath
@@ -275,27 +275,28 @@ export const installPythonTemplate = async ({
             depth: dsConfig.depth,
           };
         });
-      // Create YamlNode from array of YAMLMap
-      const node = loaderConfigs.createNode(webLoaderConfig);
-      node.commentBefore = `
- Config for web loader
-- base_url: The url to start crawling with
-- prefix: the prefix of next URLs to crawl
-- depth: the maximum depth in DFS
- You can add more web loaders by adding more config below`;
-      loaderConfigs.set("web", node);
+      // Add documentation to web loader config
+      const node = loaderConfig.createNode(webLoaderConfig);
+      node.commentBefore = ` base_url: The URL to start crawling with
+ prefix: Only crawl URLs matching the specified prefix
+ depth: The maximum depth for BFS traversal
+ You can add more websites by adding more entries (don't forget the - prefix from YAML)`;
+      loaderConfig.set("web", node);
     }
     // File loader config
     if (dataSources.some((ds) => ds.type === "file")) {
-      loaderConfigs.set("file", {
+      // Add documentation to web loader config
+      const node = loaderConfig.createNode({
         use_llama_parse: useLlamaParse,
       });
+      node.commentBefore = ` use_llama_parse: Use LlamaParse if \`true\`. Needs a \`LLAMA_CLOUD_API_KEY\` from https://cloud.llamaindex.ai set as environment variable`;
+      loaderConfig.set("file", node);
     }
     // Write loaders config
-    if (Object.keys(loaderConfigs).length > 0) {
+    if (Object.keys(loaderConfig).length > 0) {
       const loaderConfigPath = path.join(root, "config/loaders.yaml");
       await fs.mkdir(path.join(root, "config"), { recursive: true });
-      await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfigs));
+      await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfig));
     }
   }
 
