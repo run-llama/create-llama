@@ -274,7 +274,7 @@ export const installPythonTemplate = async ({
         "--disable-dev-shm-usage",
       ]);
       driverArgNodeValue.commentBefore =
-        " The arguments to pass to the webdriver. Eg: add --headless to run in headless mode";
+        " The arguments to pass to the webdriver. E.g.: add --headless to run in headless mode";
       webLoaderConfig.set("driver_arguments", driverArgNodeValue);
 
       // Create config for urls
