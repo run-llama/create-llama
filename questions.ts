@@ -70,7 +70,7 @@ if ($dialogResult -eq [System.Windows.Forms.DialogResult]::OK)
 const defaults: QuestionArgs = {
   template: "streaming",
   framework: "nextjs",
-  ui: "html",
+  ui: "shadcn",
   frontend: false,
   openAiKey: "",
   llamaCloudKey: "",
@@ -501,25 +501,7 @@ export const askQuestions = async (
 
   if (program.framework === "nextjs" || program.frontend) {
     if (!program.ui) {
-      if (ciInfo.isCI) {
-        program.ui = getPrefOrDefault("ui");
-      } else {
-        const { ui } = await prompts(
-          {
-            type: "select",
-            name: "ui",
-            message: "Which UI would you like to use?",
-            choices: [
-              { title: "Just HTML", value: "html" },
-              { title: "Shadcn", value: "shadcn" },
-            ],
-            initial: 0,
-          },
-          handlers,
-        );
-        program.ui = ui;
-        preferences.ui = ui;
-      }
+      program.ui = getPrefOrDefault("ui");
     }
   }
 
@@ -713,7 +695,7 @@ export const askQuestions = async (
           name: "useLlamaParse",
           message:
             "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-          initial: true,
+          initial: false,
           active: "yes",
           inactive: "no",
         },
