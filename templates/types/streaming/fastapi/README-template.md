@@ -64,29 +64,30 @@ The API allows CORS for all origins to simplify development. You can change this
 ENVIRONMENT=prod python main.py
 ```
 
-## Using docker
+## Using Docker
 
-1. Build an image for FastAPI app:
+1. Build an image for the FastAPI app:
 
 ```
 docker build -t <your_backend_image_name> .
 ```
 
-2. Start the app:
+2. Generate embeddings:
 
-- Generate embedding for index data:
+Parse the data and generate the vector embeddings if the `./data` folder exists - otherwise, skip this step:
 
 ```
 docker run \
   --rm \
   -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
   -v $(pwd)/config:/app/config \
-  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
+  -v $(pwd)/data:/app/data \ # Use your local folder to read the data
+  -v $(pwd)/storage:/app/storage \ # Use your file system to store the vector database
   <your_backend_image_name> \
   python app/engine/generate.py
 ```
 
-- Start the API:
+3. Start the API:
 
 ```
 docker run \

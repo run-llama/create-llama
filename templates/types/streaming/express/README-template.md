@@ -62,32 +62,33 @@ NODE_ENV=production npm run start
 
 ## Using Docker
 
-1. Build an image for Express app:
+1. Build an image for the Express API:
 
 ```
 docker build -t <your_backend_image_name> .
 ```
 
-2. Start the app:
+2. Generate embeddings:
 
-- Generate index data:
+Parse the data and generate the vector embeddings if the `./data` folder exists - otherwise, skip this step:
 
 ```
 docker run --rm \
-  --v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
   -v $(pwd)/config:/app/config \
-  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store the vector database
   <your_backend_image_name>
   npm run generate
 ```
 
-- Start the API:
+3. Start the API:
 
 ```
 docker run \
   -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
   -v $(pwd)/config:/app/config \
-  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store the vector database
   -p 8000:8000 \
   <your_backend_image_name>
 ```
