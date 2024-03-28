@@ -26,35 +26,37 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## Using docker
+## Using Docker
 
-1. Build an image for Next app:
+1. Build an image for the Next.js app:
 
 ```
 docker build -t <your_app_image_name> .
 ```
 
-2. Start the app:
+2. Generate embeddings:
 
-- Generate the embedding for `./data` folder if it exists - otherwise, skip this step:
+Parse the data and generate the vector embeddings if the `./data` folder exists - otherwise, skip this step:
 
 ```
 docker run \
   --rm \
-  -v $(pwd)/.env:/app/.env  \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
   -p 3000:3000 \
   <your_app_image_name> \
   npm run generate
 ```
 
-- Start the API
+3. Start the API
 
 ```
 docker run \
   --rm \
-  -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
   -p 3000:3000 \
   <your_app_image_name>
 ```

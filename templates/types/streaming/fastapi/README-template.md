@@ -79,8 +79,9 @@ docker build -t <your_backend_image_name> .
 ```
 docker run \
   --rm \
-  -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
   <your_backend_image_name> \
   python app/engine/generate.py
 ```
@@ -89,10 +90,11 @@ docker run \
 
 ```
 docker run \
-  -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
   -p 8000:8000 \
-  <your_backend_image_name> \
+  <your_backend_image_name>
 ```
 
 ## Learn More

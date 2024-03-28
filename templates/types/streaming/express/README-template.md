@@ -60,7 +60,7 @@ NODE_ENV=production npm run start
 
 > Note that the `NODE_ENV` environment variable is set to `production`. This disables CORS for all origins.
 
-## Using docker
+## Using Docker
 
 1. Build an image for Express app:
 
@@ -74,8 +74,9 @@ docker build -t <your_backend_image_name> .
 
 ```
 docker run --rm \
-  -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you us a vector database
+  --v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
   <your_backend_image_name>
   npm run generate
 ```
@@ -84,8 +85,9 @@ docker run --rm \
 
 ```
 docker run \
-  -v $(pwd)/.env:/app/.env \
-  -v ./storage:/app/storage \ # Can remove this option if you use a vector database
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
   -p 8000:8000 \
   <your_backend_image_name>
 ```
