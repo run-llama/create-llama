@@ -626,19 +626,19 @@ export const askQuestions = async (
       program.dataSources = [];
       // continue asking user for data sources if none are initially provided
       while (true) {
+        const firstQuestion = program.dataSources.length === 0;
         const { selectedSource } = await prompts(
           {
             type: "select",
             name: "selectedSource",
-            message:
-              program.dataSources.length === 0
-                ? "Which data source would you like to use?"
-                : "Would you like to add another data source?",
+            message: firstQuestion
+              ? "Which data source would you like to use?"
+              : "Would you like to add another data source?",
             choices: getDataSourceChoices(
               program.framework,
               program.dataSources,
             ),
-            initial: 0,
+            initial: firstQuestion ? 1 : 0,
           },
           handlers,
         );

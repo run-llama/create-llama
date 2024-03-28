@@ -1,7 +1,7 @@
+import config from "@/config/tools.json";
 import { OpenAI, OpenAIAgent, QueryEngineTool, ToolFactory } from "llamaindex";
 import { STORAGE_CACHE_DIR } from "./constants.mjs";
 import { getDataSource } from "./index";
-import config from "./tools_config.json";
 
 export async function createChatEngine(llm: OpenAI) {
   const index = await getDataSource(llm);

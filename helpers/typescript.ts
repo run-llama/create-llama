@@ -6,6 +6,7 @@ import { copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
+import { makeDir } from "./make-dir";
 import { InstallTemplateArgs } from "./types";
 
 const rename = (name: string) => {
@@ -179,14 +180,15 @@ export const installTSTemplate = async ({
         cwd: path.join(compPath, "engines", "typescript", "agent"),
       });
 
-      // Write tools_config.json
+      // Write config/tools.json
       const configContent: Record<string, any> = {};
       tools.forEach((tool) => {
         configContent[tool.name] = tool.config ?? {};
       });
-      const configFilePath = path.join(enginePath, "tools_config.json");
+      const configPath = path.join(root, "config");
+      await makeDir(configPath);
       await fs.writeFile(
-        configFilePath,
+        path.join(configPath, "tools.json"),
         JSON.stringify(configContent, null, 2),
       );
     } else {

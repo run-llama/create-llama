@@ -125,11 +125,13 @@ export async function createApp({
   }
 
   if (toolsRequireConfig(tools)) {
+    const configFile =
+      framework === "fastapi" ? "config/tools.yaml" : "config/tools.json";
     console.log(
       yellow(
         `You have selected tools that require configuration. Please configure them in the ${terminalLink(
-          "config/tools.yaml",
-          `file://${root}/config/tools.yaml`,
+          configFile,
+          `file://${root}/${configFile}`,
         )} file.`,
       ),
     );
