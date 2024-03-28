@@ -60,6 +60,38 @@ NODE_ENV=production npm run start
 
 > Note that the `NODE_ENV` environment variable is set to `production`. This disables CORS for all origins.
 
+## Using Docker
+
+1. Build an image for Express app:
+
+```
+docker build -t <your_backend_image_name> .
+```
+
+2. Start the app:
+
+- Generate index data:
+
+```
+docker run --rm \
+  --v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
+  <your_backend_image_name>
+  npm run generate
+```
+
+- Start the API:
+
+```
+docker run \
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/cache:/app/cache \ # Use your file system to store gea vector database
+  -p 8000:8000 \
+  <your_backend_image_name>
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:

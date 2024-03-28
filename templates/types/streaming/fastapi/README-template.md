@@ -64,6 +64,39 @@ The API allows CORS for all origins to simplify development. You can change this
 ENVIRONMENT=prod python main.py
 ```
 
+## Using docker
+
+1. Build an image for FastAPI app:
+
+```
+docker build -t <your_backend_image_name> .
+```
+
+2. Start the app:
+
+- Generate embedding for index data:
+
+```
+docker run \
+  --rm \
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
+  <your_backend_image_name> \
+  python app/engine/generate.py
+```
+
+- Start the API:
+
+```
+docker run \
+  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
+  -p 8000:8000 \
+  <your_backend_image_name>
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
