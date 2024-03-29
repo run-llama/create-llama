@@ -7,6 +7,7 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from app.api.routers.chat import chat_router
 from app.settings import init_settings
 
@@ -28,6 +29,12 @@ if environment == "dev":
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Redirect to documentation page when accessing base URL
+    @app.get("/")
+    async def redirect_to_docs():
+        return RedirectResponse(url="/docs")
+
 
 app.include_router(chat_router, prefix="/api/chat")
 
