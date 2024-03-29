@@ -336,7 +336,7 @@ export const installPythonTemplate = async ({
       console.log("configEntries", configEntries);
 
       const node = dbLoaderConfig.createNode(configEntries);
-      node.commentBefore = ` The configuration for the database loader.
+      node.commentBefore = ` The configuration for the database loader, only supports MySQL database for now.
  uri: The URI for the database. E.g.: mysql+pymysql://user:password@localhost:3306/db.
  query: The query to fetch data from the database. E.g.: SELECT * FROM table`;
       loaderConfig.set("db", node);
