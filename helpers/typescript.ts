@@ -2,50 +2,12 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { bold, cyan } from "picocolors";
-import { copy } from "../helpers/copy";
+import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
 import { makeDir } from "./make-dir";
 import { InstallTemplateArgs } from "./types";
-
-const rename = (name: string) => {
-  switch (name) {
-    case "gitignore":
-    case "eslintrc.json": {
-      return `.${name}`;
-    }
-    // README.md is ignored by webpack-asset-relocator-loader used by ncc:
-    // https://github.com/vercel/webpack-asset-relocator-loader/blob/e9308683d47ff507253e37c9bcbb99474603192b/src/asset-relocator.js#L227
-    case "README-template.md": {
-      return "README.md";
-    }
-    default: {
-      return name;
-    }
-  }
-};
-
-export const installTSDependencies = async (
-  packageJson: any,
-  packageManager: PackageManager,
-  isOnline: boolean,
-): Promise<void> => {
-  console.log("\nInstalling dependencies:");
-  for (const dependency in packageJson.dependencies)
-    console.log(`- ${cyan(dependency)}`);
-
-  console.log("\nInstalling devDependencies:");
-  for (const dependency in packageJson.devDependencies)
-    console.log(`- ${cyan(dependency)}`);
-
-  console.log();
-
-  await callPackageManager(packageManager, isOnline).catch((error) => {
-    console.error("Failed to install TS dependencies. Exiting...");
-    process.exit(1);
-  });
-};
 
 /**
  * Install a LlamaIndex internal template to a given `root` directory.
@@ -79,7 +41,7 @@ export const installTSTemplate = async ({
   await copy(copySource, root, {
     parents: true,
     cwd: templatePath,
-    rename,
+    rename: assetRelocator,
   });
 
   /**
@@ -214,21 +176,17 @@ export const installTSTemplate = async ({
     await copy("**", destUiPath, {
       parents: true,
       cwd: uiPath,
-      rename,
+      rename: assetRelocator,
     });
   }
 
-  /**
-   * Update the package.json scripts.
-   */
-  const packageJsonFile = path.join(root, "package.json");
-  const packageJson: any = JSON.parse(
-    await fs.readFile(packageJsonFile, "utf8"),
-  );
-  packageJson.name = appName;
-  packageJson.version = "0.1.0";
-
-  if (framework === "nextjs" && customApiPath) {
+  /** Modify frontend code to use custom API path */
+  if (framework === "nextjs" && !backend) {
+    if (!customApiPath) {
+      throw new Error(
+        "Custom API path is required when using Next.js as a frontend.",
+      );
+    }
     console.log(
       "\nUsing external API with custom API path:",
       customApiPath,
@@ -237,10 +195,51 @@ export const installTSTemplate = async ({
     // remove the default api folder
     const apiPath = path.join(root, "app", "api");
     await fs.rm(apiPath, { recursive: true });
-    // modify the dev script to use the custom api path
   }
 
+  const packageJson = await updatePackageJson({
+    root,
+    appName,
+    dataSources,
+    relativeEngineDestPath,
+    framework,
+    ui,
+    observability,
+  });
+
+  if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
+    await installTSDependencies(packageJson, packageManager, isOnline);
+  }
+
+  // Copy deployment files for typescript
+  await copy("**", root, {
+    cwd: path.join(compPath, "deployments", "typescript"),
+  });
+};
+
+async function updatePackageJson({
+  root,
+  appName,
+  dataSources,
+  relativeEngineDestPath,
+  framework,
+  ui,
+  observability,
+}: Pick<
+  InstallTemplateArgs,
+  "root" | "appName" | "dataSources" | "framework" | "ui" | "observability"
+> & {
+  relativeEngineDestPath: string;
+}): Promise<any> {
+  const packageJsonFile = path.join(root, "package.json");
+  const packageJson: any = JSON.parse(
+    await fs.readFile(packageJsonFile, "utf8"),
+  );
+  packageJson.name = appName;
+  packageJson.version = "0.1.0";
+
   if (dataSources.length > 0 && relativeEngineDestPath) {
+    // TODO: move script to {root}/scripts for all frameworks
     // add generate script if using context engine
     packageJson.scripts = {
       ...packageJson.scripts,
@@ -292,12 +291,26 @@ export const installTSTemplate = async ({
     JSON.stringify(packageJson, null, 2) + os.EOL,
   );
 
-  if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
-    await installTSDependencies(packageJson, packageManager, isOnline);
-  }
+  return packageJson;
+}
 
-  // Copy deployment files for typescript
-  await copy("**", root, {
-    cwd: path.join(compPath, "deployments", "typescript"),
+async function installTSDependencies(
+  packageJson: any,
+  packageManager: PackageManager,
+  isOnline: boolean,
+): Promise<void> {
+  console.log("\nInstalling dependencies:");
+  for (const dependency in packageJson.dependencies)
+    console.log(`- ${cyan(dependency)}`);
+
+  console.log("\nInstalling devDependencies:");
+  for (const dependency in packageJson.devDependencies)
+    console.log(`- ${cyan(dependency)}`);
+
+  console.log();
+
+  await callPackageManager(packageManager, isOnline).catch((error) => {
+    console.error("Failed to install TS dependencies. Exiting...");
+    process.exit(1);
   });
-};
+}
