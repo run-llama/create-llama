@@ -333,7 +333,6 @@ export const installPythonTemplate = async ({
           queries: [dsConfig.queries],
         };
       });
-      console.log("configEntries", configEntries);
 
       const node = dbLoaderConfig.createNode(configEntries);
       node.commentBefore = ` The configuration for the database loader, only supports MySQL database for now.

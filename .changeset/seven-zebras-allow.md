@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add database data source
+Use databases as data source

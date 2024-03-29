@@ -12,14 +12,11 @@ class DBLoaderConfig(BaseModel):
     queries: List[str]
 
 
-def get_db_documents(raw_configs: list[dict]):
+def get_db_documents(configs: list[DBLoaderConfig]):
     from llama_index.readers.database import DatabaseReader
 
-    # Parse and validate the config
-    db_configs = [DBLoaderConfig(**cfg) for cfg in raw_configs]
-
     docs = []
-    for entry in db_configs:
+    for entry in configs:
         loader = DatabaseReader(uri=entry.uri)
         for query in entry.queries:
             logger.info(f"Loading data from database with query: {query}")

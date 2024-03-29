@@ -14,13 +14,10 @@ class WebLoaderConfig(BaseModel):
     urls: list[CrawlUrl]
 
 
-def get_web_documents(raw_config: dict):
+def get_web_documents(config: WebLoaderConfig):
     from llama_index.readers.web import WholeSiteReader
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
-
-    # Parse and validate the config
-    config = WebLoaderConfig(**raw_config)
 
     options = Options()
     driver_arguments = config.driver_arguments or []
