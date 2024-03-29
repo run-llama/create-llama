@@ -20,7 +20,6 @@ export const installTSTemplate = async ({
   template,
   framework,
   ui,
-  customApiPath,
   vectorDb,
   postInstallAction,
   backend,
@@ -182,19 +181,12 @@ export const installTSTemplate = async ({
 
   /** Modify frontend code to use custom API path */
   if (framework === "nextjs" && !backend) {
-    if (!customApiPath) {
-      throw new Error(
-        "Custom API path is required when using Next.js as a frontend.",
-      );
-    }
     console.log(
-      "\nUsing external API with custom API path:",
-      customApiPath,
-      "\n",
+      "\nUsing external API for frontend, removing API code and configuration\n",
     );
-    // remove the default api folder
-    const apiPath = path.join(root, "app", "api");
-    await fs.rm(apiPath, { recursive: true });
+    // remove the default api folder and config folder
+    await fs.rm(path.join(root, "app", "api"), { recursive: true });
+    await fs.rm(path.join(root, "config"), { recursive: true, force: true });
   }
 
   const packageJson = await updatePackageJson({
