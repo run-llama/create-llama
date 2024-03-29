@@ -89,6 +89,10 @@ const getAdditionalDependencies = (
         version: "^1.1.0",
         extras: ["rsa"],
       });
+      dependencies.push({
+        name: "psycopg",
+        version: "^3.1.18",
+      });
       break;
   }
 
@@ -335,8 +339,8 @@ export const installPythonTemplate = async ({
       });
 
       const node = dbLoaderConfig.createNode(configEntries);
-      node.commentBefore = ` The configuration for the database loader, only supports MySQL database for now.
- uri: The URI for the database. E.g.: mysql+pymysql://user:password@localhost:3306/db.
+      node.commentBefore = ` The configuration for the database loader, only supports MySQL and PostgreSQL databases for now.
+ uri: The URI for the database. E.g.: mysql+pymysql://user:password@localhost:3306/db or postgresql+psycopg2://user:password@localhost:5432/db
  query: The query to fetch data from the database. E.g.: SELECT * FROM table`;
       loaderConfig.set("db", node);
     }

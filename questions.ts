@@ -160,7 +160,7 @@ export const getDataSourceChoices = (
       value: "web",
     });
     choices.push({
-      title: "Use data from a database (Mysql)",
+      title: "Use data from a database (Mysql, PostgreSQL)",
       value: "db",
     });
   }
@@ -696,8 +696,13 @@ export const askQuestions = async (
                 validate: (value: string) => {
                   if (!value) {
                     return "Please provide a valid connection string";
-                  } else if (!value.startsWith("mysql+pymysql://")) {
-                    return "The connection string must start with 'mysql+pymysql://'";
+                  } else if (
+                    !(
+                      value.startsWith("mysql+pymysql://") ||
+                      value.startsWith("postgresql+psycopg://")
+                    )
+                  ) {
+                    return "The connection string must start with 'mysql+pymysql://' for MySQL or 'postgresql+psycopg://' for PostgreSQL";
                   }
                   return true;
                 },
