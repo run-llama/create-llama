@@ -3,8 +3,9 @@ import yaml
 import importlib
 import logging
 from typing import Dict
-from app.engine.loaders.file import FileLoaderConfig, get_file_documents
-from app.engine.loaders.web import WebLoaderConfig, get_web_documents
+from app.engine.loaders.file import get_file_documents
+from app.engine.loaders.web import get_web_documents
+from app.engine.loaders.db import get_db_documents
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,15 @@ def get_documents():
         logger.info(
             f"Loading documents from loader: {loader_type}, config: {loader_config}"
         )
-        if loader_type == "file":
-            document = get_file_documents(FileLoaderConfig(**loader_config))
-            documents.extend(document)
-        elif loader_type == "web":
-            document = get_web_documents(WebLoaderConfig(**loader_config))
-            documents.extend(document)
+        match loader_type:
+            case "file":
+                document = get_file_documents(loader_config)
+            case "web":
+                document = get_web_documents(loader_config)
+            case "db":
+                document = get_db_documents(loader_config)
+            case _:
+                raise ValueError(f"Invalid loader type: {loader_type}")
+        documents.extend(document)
 
     return documents

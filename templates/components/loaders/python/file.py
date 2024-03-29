@@ -24,8 +24,11 @@ def llama_parse_parser():
     return parser
 
 
-def get_file_documents(config: FileLoaderConfig):
+def get_file_documents(raw_config: dict):
     from llama_index.core.readers import SimpleDirectoryReader
+
+    # Parse and validate the config
+    config = FileLoaderConfig(**raw_config)
 
     reader = SimpleDirectoryReader(
         config.data_dir,

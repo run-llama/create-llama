@@ -9,6 +9,7 @@ import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
+  DbSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
@@ -65,17 +66,30 @@ const getAdditionalDependencies = (
 
   // Add data source dependencies
   const dataSourceType = dataSource?.type;
-  if (dataSourceType === "file") {
-    // llama-index-readers-file (pdf, excel, csv) is already included in llama_index package
-    dependencies.push({
-      name: "docx2txt",
-      version: "^0.8",
-    });
-  } else if (dataSourceType === "web") {
-    dependencies.push({
-      name: "llama-index-readers-web",
-      version: "^0.1.6",
-    });
+  switch (dataSourceType) {
+    case "file":
+      dependencies.push({
+        name: "docx2txt",
+        version: "^0.8",
+      });
+      break;
+    case "web":
+      dependencies.push({
+        name: "llama-index-readers-web",
+        version: "^0.1.6",
+      });
+      break;
+    case "db":
+      dependencies.push({
+        name: "llama-index-readers-database",
+        version: "^0.1.3",
+      });
+      dependencies.push({
+        name: "pymysql",
+        version: "^1.1.0",
+        extras: ["rsa"],
+      });
+      break;
   }
 
   // Add tools dependencies
@@ -307,6 +321,27 @@ export const installPythonTemplate = async ({
       node.commentBefore = ` use_llama_parse: Use LlamaParse if \`true\`. Needs a \`LLAMA_CLOUD_API_KEY\` from https://cloud.llamaindex.ai set as environment variable`;
       loaderConfig.set("file", node);
     }
+
+    // DB loader config
+    const dbLoaders = dataSources.filter((ds) => ds.type === "db");
+    if (dbLoaders.length > 0) {
+      const dbLoaderConfig = new Document({});
+      const configEntries = dbLoaders.map((ds) => {
+        const dsConfig = ds.config as DbSourceConfig;
+        return {
+          uri: dsConfig.uri,
+          queries: [dsConfig.queries],
+        };
+      });
+      console.log("configEntries", configEntries);
+
+      const node = dbLoaderConfig.createNode(configEntries);
+      node.commentBefore = ` The configuration for the database loader.
+ uri: The URI for the database. E.g.: mysql+pymysql://user:password@localhost:3306/db.
+ query: The query to fetch data from the database. E.g.: SELECT * FROM table`;
+      loaderConfig.set("db", node);
+    }
+
     // Write loaders config
     if (Object.keys(loaderConfig).length > 0) {
       const loaderConfigPath = path.join(root, "config/loaders.yaml");
