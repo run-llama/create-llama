@@ -90,8 +90,8 @@ const getAdditionalDependencies = (
         extras: ["rsa"],
       });
       dependencies.push({
-        name: "psycopg",
-        version: "^3.1.18",
+        name: "psycopg2",
+        version: "^2.9.9",
       });
       break;
   }
