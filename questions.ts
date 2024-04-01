@@ -505,7 +505,7 @@ export const askQuestions = async (
 
   if (program.framework === "nextjs" || program.frontend) {
     if (!program.ui) {
-      program.ui = getPrefOrDefault("ui");
+      program.ui = defaults.ui;
     }
   }
 
