@@ -1,7 +1,5 @@
-import json
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
-from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import (
     BaseChatEngine,
@@ -10,6 +8,7 @@ from llama_index.core.chat_engine.types import (
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 from app.engine import get_chat_engine
+from app.api.routers.vercel_response import VercelStreamResponse
 
 chat_router = r = APIRouter()
 
@@ -44,57 +43,6 @@ class _SourceNodes(BaseModel):
 class _Result(BaseModel):
     result: _Message
     nodes: List[_SourceNodes]
-
-
-class VercelStreamResponse(StreamingResponse):
-    """
-    Class to convert the response from the chat engine to the streaming format expected by Vercel
-    """
-
-    TEXT_PREFIX = "0:"
-    DATA_PREFIX = "2:"
-    VERCEL_HEADERS = {
-        "X-Experimental-Stream-Data": "true",
-        "Content-Type": "text/plain; charset=utf-8",
-        "Access-Control-Expose-Headers": "X-Experimental-Stream-Data",
-    }
-
-    @classmethod
-    def convert_text(cls, token: str):
-        return f'{cls.TEXT_PREFIX}"{token}"\n'
-
-    @classmethod
-    def convert_data(cls, data: dict):
-        data_str = json.dumps(data)
-        return f"{cls.DATA_PREFIX}[{data_str}]\n"
-
-    @classmethod
-    async def event_generator(
-        cls, request: Request, response: StreamingAgentChatResponse
-    ):
-        # Yield the text response
-        async for token in response.async_response_gen():
-            # If client closes connection, stop sending events
-            if await request.is_disconnected():
-                break
-            yield cls.convert_text(token)
-
-        # Yield the source nodes
-        yield cls.convert_data(
-            {
-                "nodes": [
-                    _SourceNodes.from_source_node(node).dict()
-                    for node in response.source_nodes
-                ]
-            }
-        )
-
-    def __init__(self, content: Any, **kwargs):
-        super().__init__(
-            content=content,
-            headers=self.VERCEL_HEADERS,
-            **kwargs,
-        )
 
 
 async def parse_chat_data(data: _ChatData) -> Tuple[str, List[ChatMessage]]:
@@ -132,9 +80,25 @@ async def chat(
 
     response = await chat_engine.astream_chat(last_message_content, messages)
 
-    return VercelStreamResponse(
-        content=VercelStreamResponse.event_generator(request, response)
-    )
+    async def event_generator(request: Request, response: StreamingAgentChatResponse):
+        # Yield the text response
+        async for token in response.async_response_gen():
+            # If client closes connection, stop sending events
+            if await request.is_disconnected():
+                break
+            yield VercelStreamResponse.convert_text(token)
+
+        # Yield the source nodes
+        yield VercelStreamResponse.convert_data(
+            {
+                "nodes": [
+                    _SourceNodes.from_source_node(node).dict()
+                    for node in response.source_nodes
+                ]
+            }
+        )
+
+    return VercelStreamResponse(content=event_generator(request, response))
 
 
 # non-streaming endpoint - delete if not needed
