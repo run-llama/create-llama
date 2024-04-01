@@ -159,6 +159,10 @@ export const getDataSourceChoices = (
       title: "Use website content (requires Chrome)",
       value: "web",
     });
+    choices.push({
+      title: "Use data from a database (Mysql, PostgreSQL)",
+      value: "db",
+    });
   }
   return choices;
 };
@@ -629,52 +633,93 @@ export const askQuestions = async (
           // user doesn't want another data source or any data source
           break;
         }
-        if (selectedSource === "exampleFile") {
-          program.dataSources.push(EXAMPLE_FILE);
-        } else if (selectedSource === "file" || selectedSource === "folder") {
-          // Select local data source
-          const selectedPaths = await selectLocalContextData(selectedSource);
-          for (const p of selectedPaths) {
+        switch (selectedSource) {
+          case "exampleFile": {
+            program.dataSources.push(EXAMPLE_FILE);
+            break;
+          }
+          case "file":
+          case "folder": {
+            const selectedPaths = await selectLocalContextData(selectedSource);
+            for (const p of selectedPaths) {
+              program.dataSources.push({
+                type: "file",
+                config: {
+                  path: p,
+                },
+              });
+            }
+            break;
+          }
+          case "web": {
+            const { baseUrl } = await prompts(
+              {
+                type: "text",
+                name: "baseUrl",
+                message: "Please provide base URL of the website: ",
+                initial: "https://www.llamaindex.ai",
+                validate: (value: string) => {
+                  if (!value.includes("://")) {
+                    value = `https://${value}`;
+                  }
+                  const urlObj = new URL(value);
+                  if (
+                    urlObj.protocol !== "https:" &&
+                    urlObj.protocol !== "http:"
+                  ) {
+                    return `URL=${value} has invalid protocol, only allow http or https`;
+                  }
+                  return true;
+                },
+              },
+              handlers,
+            );
+
             program.dataSources.push({
-              type: "file",
+              type: "web",
               config: {
-                path: p,
+                baseUrl,
+                prefix: baseUrl,
+                depth: 1,
               },
             });
+            break;
           }
-        } else if (selectedSource === "web") {
-          // Selected web data source
-          const { baseUrl } = await prompts(
-            {
-              type: "text",
-              name: "baseUrl",
-              message: "Please provide base URL of the website: ",
-              initial: "https://www.llamaindex.ai",
-              validate: (value: string) => {
-                if (!value.includes("://")) {
-                  value = `https://${value}`;
-                }
-                const urlObj = new URL(value);
-                if (
-                  urlObj.protocol !== "https:" &&
-                  urlObj.protocol !== "http:"
-                ) {
-                  return `URL=${value} has invalid protocol, only allow http or https`;
-                }
-                return true;
+          case "db": {
+            const dbPrompts: prompts.PromptObject<string>[] = [
+              {
+                type: "text",
+                name: "uri",
+                message:
+                  "Please enter the connection string (URI) for the database.",
+                initial: "mysql+pymysql://user:pass@localhost:3306/mydb",
+                validate: (value: string) => {
+                  if (!value) {
+                    return "Please provide a valid connection string";
+                  } else if (
+                    !(
+                      value.startsWith("mysql+pymysql://") ||
+                      value.startsWith("postgresql+psycopg://")
+                    )
+                  ) {
+                    return "The connection string must start with 'mysql+pymysql://' for MySQL or 'postgresql+psycopg://' for PostgreSQL";
+                  }
+                  return true;
+                },
               },
-            },
-            handlers,
-          );
-
-          program.dataSources.push({
-            type: "web",
-            config: {
-              baseUrl,
-              prefix: baseUrl,
-              depth: 1,
-            },
-          });
+              // Only ask for a query, user can provide more complex queries in the config file later
+              {
+                type: (prev) => (prev ? "text" : null),
+                name: "queries",
+                message: "Please enter the SQL query to fetch data:",
+                initial: "SELECT * FROM mytable",
+              },
+            ];
+            program.dataSources.push({
+              type: "db",
+              config: await prompts(dbPrompts, handlers),
+            });
+          }
         }
       }
     }
