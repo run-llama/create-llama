@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 
 class VercelStreamResponse(StreamingResponse):
     """
-    Class to convert the response from the chat engine to the streaming format expected by Vercel
+    Class to convert the response from the chat engine to the streaming format expected by Vercel/AI
     """
 
     TEXT_PREFIX = "0:"
