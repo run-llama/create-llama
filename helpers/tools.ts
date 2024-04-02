@@ -1,4 +1,8 @@
+import fs from "fs/promises";
+import path from "path";
 import { red } from "picocolors";
+import yaml from "yaml";
+import { makeDir } from "./make-dir";
 import { TemplateFramework } from "./types";
 
 export type Tool = {
@@ -8,6 +12,7 @@ export type Tool = {
   dependencies?: ToolDependencies[];
   supportedFrameworks?: Array<TemplateFramework>;
 };
+
 export type ToolDependencies = {
   name: string;
   version?: string;
@@ -72,4 +77,34 @@ export const toolsRequireConfig = (tools?: Tool[]): boolean => {
     return tools?.some((tool) => Object.keys(tool.config || {}).length > 0);
   }
   return false;
+};
+
+export enum ConfigFileType {
+  YAML = "yaml",
+  JSON = "json",
+}
+
+export const writeToolsConfig = async (
+  root: string,
+  tools: Tool[] = [],
+  type: ConfigFileType = ConfigFileType.YAML,
+) => {
+  if (tools.length === 0) return; // no tools selected, no config need
+  const configContent: Record<string, any> = {};
+  tools.forEach((tool) => {
+    configContent[tool.name] = tool.config ?? {};
+  });
+  const configPath = path.join(root, "config");
+  await makeDir(configPath);
+  if (type === ConfigFileType.YAML) {
+    await fs.writeFile(
+      path.join(configPath, "tools.yaml"),
+      yaml.stringify(configContent),
+    );
+  } else {
+    await fs.writeFile(
+      path.join(configPath, "tools.json"),
+      JSON.stringify(configContent, null, 2),
+    );
+  }
 };

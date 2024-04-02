@@ -3,17 +3,15 @@ import path from "path";
 import { cyan, red } from "picocolors";
 import { parse, stringify } from "smol-toml";
 import terminalLink from "terminal-link";
-import yaml, { Document } from "yaml";
+
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
 import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
-  DbSourceConfig,
   InstallTemplateArgs,
   TemplateDataSource,
   TemplateVectorDB,
-  WebSourceConfig,
 } from "./types";
 
 interface Dependency {
@@ -236,10 +234,7 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "loaders", "python"),
   });
 
-  // write configuration for  loaders
-  await writeLoadersConfig(root, dataSources, useLlamaParse);
-
-  // Select engine code based on data sources and tools
+  // Select and copy engine code based on data sources and tools
   let engine;
   tools = tools ?? [];
   if (dataSources.length > 0 && tools.length === 0) {
@@ -247,7 +242,6 @@ export const installPythonTemplate = async ({
     engine = "chat";
   } else {
     engine = "agent";
-    await writeToolsConfig(root, tools);
   }
 
   // Copy engine code
@@ -270,91 +264,3 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "deployments", "python"),
   });
 };
-
-async function writeToolsConfig(root: string, tools: Tool[]) {
-  if (tools.length === 0) return; // no tools selected, no config need
-  const configContent: Record<string, any> = {};
-  tools.forEach((tool) => {
-    configContent[tool.name] = tool.config ?? {};
-  });
-  const configFilePath = path.join(root, "config", "tools.yaml");
-  await fs.mkdir(path.join(root, "config"), { recursive: true });
-  await fs.writeFile(configFilePath, yaml.stringify(configContent));
-}
-
-async function writeLoadersConfig(
-  root: string,
-  dataSources: TemplateDataSource[],
-  useLlamaParse?: boolean,
-) {
-  if (dataSources.length === 0) return; // no datasources, no config needed
-  const loaderConfig = new Document({});
-  // Web loader config
-  if (dataSources.some((ds) => ds.type === "web")) {
-    const webLoaderConfig = new Document({});
-
-    // Create config for browser driver arguments
-    const driverArgNodeValue = webLoaderConfig.createNode([
-      "--no-sandbox",
-      "--disable-dev-shm-usage",
-    ]);
-    driverArgNodeValue.commentBefore =
-      " The arguments to pass to the webdriver. E.g.: add --headless to run in headless mode";
-    webLoaderConfig.set("driver_arguments", driverArgNodeValue);
-
-    // Create config for urls
-    const urlConfigs = dataSources
-      .filter((ds) => ds.type === "web")
-      .map((ds) => {
-        const dsConfig = ds.config as WebSourceConfig;
-        return {
-          base_url: dsConfig.baseUrl,
-          prefix: dsConfig.prefix,
-          depth: dsConfig.depth,
-        };
-      });
-    const urlConfigNode = webLoaderConfig.createNode(urlConfigs);
-    urlConfigNode.commentBefore = ` base_url: The URL to start crawling with
- prefix: Only crawl URLs matching the specified prefix
- depth: The maximum depth for BFS traversal
- You can add more websites by adding more entries (don't forget the - prefix from YAML)`;
-    webLoaderConfig.set("urls", urlConfigNode);
-
-    // Add web config to the loaders config
-    loaderConfig.set("web", webLoaderConfig);
-  }
-
-  // File loader config
-  if (dataSources.some((ds) => ds.type === "file")) {
-    // Add documentation to web loader config
-    const node = loaderConfig.createNode({
-      use_llama_parse: useLlamaParse,
-    });
-    node.commentBefore = ` use_llama_parse: Use LlamaParse if \`true\`. Needs a \`LLAMA_CLOUD_API_KEY\` from https://cloud.llamaindex.ai set as environment variable`;
-    loaderConfig.set("file", node);
-  }
-
-  // DB loader config
-  const dbLoaders = dataSources.filter((ds) => ds.type === "db");
-  if (dbLoaders.length > 0) {
-    const dbLoaderConfig = new Document({});
-    const configEntries = dbLoaders.map((ds) => {
-      const dsConfig = ds.config as DbSourceConfig;
-      return {
-        uri: dsConfig.uri,
-        queries: [dsConfig.queries],
-      };
-    });
-
-    const node = dbLoaderConfig.createNode(configEntries);
-    node.commentBefore = ` The configuration for the database loader, only supports MySQL and PostgreSQL databases for now.
- uri: The URI for the database. E.g.: mysql+pymysql://user:password@localhost:3306/db or postgresql+psycopg2://user:password@localhost:5432/db
- query: The query to fetch data from the database. E.g.: SELECT * FROM table`;
-    loaderConfig.set("db", node);
-  }
-
-  // Write loaders config
-  const loaderConfigPath = path.join(root, "config/loaders.yaml");
-  await fs.mkdir(path.join(root, "config"), { recursive: true });
-  await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfig));
-}

@@ -6,7 +6,6 @@ import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { makeDir } from "./make-dir";
 import { InstallTemplateArgs } from "./types";
 
 /**
@@ -133,18 +132,6 @@ export const installTSTemplate = async ({
       parents: true,
       cwd: path.join(compPath, "engines", "typescript", "agent"),
     });
-
-    // Write config/tools.json
-    const configContent: Record<string, any> = {};
-    tools.forEach((tool) => {
-      configContent[tool.name] = tool.config ?? {};
-    });
-    const configPath = path.join(root, "config");
-    await makeDir(configPath);
-    await fs.writeFile(
-      path.join(configPath, "tools.json"),
-      JSON.stringify(configContent, null, 2),
-    );
   } else if (dataSources.length > 0) {
     // use context chat engine if user does not select tools
     console.log("\nUsing context chat engine\n");
