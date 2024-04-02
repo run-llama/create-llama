@@ -98,9 +98,6 @@ export const installTSTemplate = async ({
     );
   }
 
-  /**
-   * Copy the selected chat engine files to the target directory and reference it.
-   */
   const compPath = path.join(templatesDir, "components");
   const relativeEngineDestPath =
     framework === "nextjs"
@@ -108,58 +105,57 @@ export const installTSTemplate = async ({
       : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
-  if (dataSources.length === 0) {
-    // use simple hat engine if user neither select tools nor a data source
-    console.log("\nUsing simple chat engine\n");
-  } else {
+  if (dataSources.length > 0) {
     if (vectorDb) {
       // copy vector db component
       console.log("\nUsing vector DB:", vectorDb, "\n");
-      const vectorDBPath = path.join(
-        compPath,
-        "vectordbs",
-        "typescript",
-        vectorDb,
-      );
       await copy("**", enginePath, {
         parents: true,
-        cwd: vectorDBPath,
+        cwd: path.join(compPath, "vectordbs", "typescript", vectorDb),
       });
     }
     // copy loader component (TS only supports llama_parse and file for now)
-    let loaderFolder: string;
-    loaderFolder = useLlamaParse ? "llama_parse" : "file";
+    const loaderFolder = useLlamaParse ? "llama_parse" : "file";
     await copy("**", enginePath, {
       parents: true,
       cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
     });
-    if (tools?.length) {
-      // use agent chat engine if user selects tools
-      console.log("\nUsing agent chat engine\n");
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "engines", "typescript", "agent"),
-      });
+  }
 
-      // Write config/tools.json
-      const configContent: Record<string, any> = {};
-      tools.forEach((tool) => {
-        configContent[tool.name] = tool.config ?? {};
-      });
-      const configPath = path.join(root, "config");
-      await makeDir(configPath);
-      await fs.writeFile(
-        path.join(configPath, "tools.json"),
-        JSON.stringify(configContent, null, 2),
-      );
-    } else {
-      // use context chat engine if user does not select tools
-      console.log("\nUsing context chat engine\n");
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "engines", "typescript", "chat"),
-      });
-    }
+  /**
+   * Selected chat engine and copy necessary files
+   */
+  // copy engine
+  if (tools && tools.length > 0) {
+    // use agent chat engine if user selects tools
+    console.log("\nUsing agent chat engine\n");
+    await copy("**", enginePath, {
+      parents: true,
+      cwd: path.join(compPath, "engines", "typescript", "agent"),
+    });
+
+    // Write config/tools.json
+    const configContent: Record<string, any> = {};
+    tools.forEach((tool) => {
+      configContent[tool.name] = tool.config ?? {};
+    });
+    const configPath = path.join(root, "config");
+    await makeDir(configPath);
+    await fs.writeFile(
+      path.join(configPath, "tools.json"),
+      JSON.stringify(configContent, null, 2),
+    );
+  } else if (dataSources.length > 0) {
+    // use context chat engine if user does not select tools
+    console.log("\nUsing context chat engine\n");
+    await copy("**", enginePath, {
+      parents: true,
+      cwd: path.join(compPath, "engines", "typescript", "chat"),
+    });
+  } else {
+    console.log(
+      "\nUsing simple chat as neither a datasource nor tools are selected\n",
+    );
   }
 
   /**
