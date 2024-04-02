@@ -11,11 +11,12 @@ def get_chat_engine():
     top_k = os.getenv("TOP_K", "3")
     tools = []
 
-    # Add query tool
+    # Add query tool if index exists
     index = get_index()
-    query_engine = index.as_query_engine(similarity_top_k=int(top_k))
-    query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
-    tools.append(query_engine_tool)
+    if index is not None:
+        query_engine = index.as_query_engine(similarity_top_k=int(top_k))
+        query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
+        tools.append(query_engine_tool)
 
     # Add additional tools
     tools += ToolFactory.from_env()

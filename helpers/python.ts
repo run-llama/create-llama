@@ -223,57 +223,38 @@ export const installPythonTemplate = async ({
   const compPath = path.join(templatesDir, "components");
   const enginePath = path.join(root, "app", "engine");
 
-  if (dataSources.length > 0) {
-    // copy vector db component
-    const vectorDbDirName = vectorDb ?? "none";
-    const VectorDBPath = path.join(
-      compPath,
-      "vectordbs",
-      "python",
-      vectorDbDirName,
-    );
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: VectorDBPath,
-    });
+  // Copy selected vector DB
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "vectordbs", "python", vectorDb ?? "none"),
+  });
 
-    // Copy loaders to enginePath
-    const loaderPath = path.join(enginePath, "loaders");
-    await copy("**", loaderPath, {
-      parents: true,
-      cwd: path.join(compPath, "loaders", "python"),
-    });
+  // Copy all loaders to enginePath
+  const loaderPath = path.join(enginePath, "loaders");
+  await copy("**", loaderPath, {
+    parents: true,
+    cwd: path.join(compPath, "loaders", "python"),
+  });
 
-    // Generate loaders config
-    await writeLoadersConfig(root, dataSources, useLlamaParse);
+  // write configuration for  loaders
+  await writeLoadersConfig(root, dataSources, useLlamaParse);
+
+  // Select engine code based on data sources and tools
+  let engine;
+  tools = tools ?? [];
+  if (dataSources.length > 0 && tools.length === 0) {
+    console.log("\nNo tools selected - use optimized context chat engine\n");
+    engine = "chat";
+  } else {
+    engine = "agent";
+    await writeToolsConfig(root, tools);
   }
 
   // Copy engine code
-  if (tools && tools.length > 0) {
-    console.log("\nUsing agent chat engine\n");
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "engines", "python", "agent"),
-    });
-    // Write tool configs
-    const configContent: Record<string, any> = {};
-    tools.forEach((tool) => {
-      configContent[tool.name] = tool.config ?? {};
-    });
-    const configFilePath = path.join(root, "config/tools.yaml");
-    await fs.mkdir(path.join(root, "config"), { recursive: true });
-    await fs.writeFile(configFilePath, yaml.stringify(configContent));
-  } else if (dataSources.length > 0) {
-    console.log("\nUsing context chat engine\n");
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "engines", "python", "chat"),
-    });
-  } else {
-    console.log(
-      "\nUsing simple chat as neither a datasource nor tools are selected\n",
-    );
-  }
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "engines", "python", engine),
+  });
 
   const addOnDependencies = dataSources
     .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
@@ -290,11 +271,23 @@ export const installPythonTemplate = async ({
   });
 };
 
+async function writeToolsConfig(root: string, tools: Tool[]) {
+  if (tools.length === 0) return; // no tools selected, no config need
+  const configContent: Record<string, any> = {};
+  tools.forEach((tool) => {
+    configContent[tool.name] = tool.config ?? {};
+  });
+  const configFilePath = path.join(root, "config", "tools.yaml");
+  await fs.mkdir(path.join(root, "config"), { recursive: true });
+  await fs.writeFile(configFilePath, yaml.stringify(configContent));
+}
+
 async function writeLoadersConfig(
   root: string,
   dataSources: TemplateDataSource[],
   useLlamaParse?: boolean,
 ) {
+  if (dataSources.length === 0) return; // no datasources, no config needed
   const loaderConfig = new Document({});
   // Web loader config
   if (dataSources.some((ds) => ds.type === "web")) {
@@ -361,9 +354,7 @@ async function writeLoadersConfig(
   }
 
   // Write loaders config
-  if (Object.keys(loaderConfig).length > 0) {
-    const loaderConfigPath = path.join(root, "config/loaders.yaml");
-    await fs.mkdir(path.join(root, "config"), { recursive: true });
-    await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfig));
-  }
+  const loaderConfigPath = path.join(root, "config/loaders.yaml");
+  await fs.mkdir(path.join(root, "config"), { recursive: true });
+  await fs.writeFile(loaderConfigPath, yaml.stringify(loaderConfig));
 }
