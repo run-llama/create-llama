@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add Dockerfile template
+Add Dockerfile templates for Typescript and Python
