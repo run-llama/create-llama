@@ -119,12 +119,17 @@ export const installTemplate = async (
 
   if (props.framework === "fastapi") {
     await installPythonTemplate(props);
+    // write loaders configuration (currently Python only)
+    await writeLoadersConfig(
+      props.root,
+      props.dataSources,
+      props.useLlamaParse,
+    );
   } else {
     await installTSTemplate(props);
   }
 
-  // write configuration files
-  await writeLoadersConfig(props.root, props.dataSources, props.useLlamaParse);
+  // write tools configuration
   await writeToolsConfig(
     props.root,
     props.tools,
