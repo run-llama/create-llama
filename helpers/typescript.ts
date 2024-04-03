@@ -104,46 +104,33 @@ export const installTSTemplate = async ({
       : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
-  if (dataSources.length > 0) {
-    if (vectorDb) {
-      // copy vector db component
-      console.log("\nUsing vector DB:", vectorDb, "\n");
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "vectordbs", "typescript", vectorDb),
-      });
-    }
-    // copy loader component (TS only supports llama_parse and file for now)
-    const loaderFolder = useLlamaParse ? "llama_parse" : "file";
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
-    });
-  }
+  // copy vector db component
+  console.log("\nUsing vector DB:", vectorDb, "\n");
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
+  });
 
-  /**
-   * Selected chat engine and copy necessary files
-   */
-  // copy engine
-  if (tools && tools.length > 0) {
-    // use agent chat engine if user selects tools
-    console.log("\nUsing agent chat engine\n");
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "engines", "typescript", "agent"),
-    });
-  } else if (dataSources.length > 0) {
-    // use context chat engine if user does not select tools
-    console.log("\nUsing context chat engine\n");
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "engines", "typescript", "chat"),
-    });
+  // copy loader component (TS only supports llama_parse and file for now)
+  const loaderFolder = useLlamaParse ? "llama_parse" : "file";
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+  });
+
+  // Select and copy engine code based on data sources and tools
+  let engine;
+  tools = tools ?? [];
+  if (dataSources.length > 0 && tools.length === 0) {
+    console.log("\nNo tools selected - use optimized context chat engine\n");
+    engine = "chat";
   } else {
-    console.log(
-      "\nUsing simple chat as neither a datasource nor tools are selected\n",
-    );
+    engine = "agent";
   }
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "engines", "typescript", engine),
+  });
 
   /**
    * Copy the selected UI files to the target directory and reference it.

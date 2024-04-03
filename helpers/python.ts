@@ -243,8 +243,6 @@ export const installPythonTemplate = async ({
   } else {
     engine = "agent";
   }
-
-  // Copy engine code
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "engines", "python", engine),
