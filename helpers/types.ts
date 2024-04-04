@@ -4,7 +4,13 @@ import { Tool } from "./tools";
 export type TemplateType = "streaming" | "community" | "llamapack";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
-export type TemplateVectorDB = "none" | "mongo" | "pg" | "pinecone" | "milvus";
+export type TemplateVectorDB =
+  | "none"
+  | "mongo"
+  | "pg"
+  | "pinecone"
+  | "milvus"
+  | "astra";
 export type TemplatePostInstallAction =
   | "none"
   | "VSCode"
