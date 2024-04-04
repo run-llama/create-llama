@@ -131,7 +131,7 @@ export const getDataSourceChoices = (
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
     choices.push({
-      title: "No data, just a simple chat",
+      title: "No data, just a simple chat or agent",
       value: "none",
     });
     choices.push({
@@ -783,8 +783,7 @@ export const askQuestions = async (
     }
   }
 
-  // TODO: allow tools also without datasources
-  if (!program.tools && program.dataSources.length > 0) {
+  if (!program.tools) {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

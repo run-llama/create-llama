@@ -4,12 +4,14 @@ import path from "path";
 import { cyan } from "picocolors";
 
 import fsExtra from "fs-extra";
+import { writeLoadersConfig } from "./datasources";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
 import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
+import { ConfigFileType, writeToolsConfig } from "./tools";
 import {
   FileSourceConfig,
   InstallTemplateArgs,
@@ -117,9 +119,22 @@ export const installTemplate = async (
 
   if (props.framework === "fastapi") {
     await installPythonTemplate(props);
+    // write loaders configuration (currently Python only)
+    await writeLoadersConfig(
+      props.root,
+      props.dataSources,
+      props.useLlamaParse,
+    );
   } else {
     await installTSTemplate(props);
   }
+
+  // write tools configuration
+  await writeToolsConfig(
+    props.root,
+    props.tools,
+    props.framework === "fastapi" ? ConfigFileType.YAML : ConfigFileType.JSON,
+  );
 
   if (props.backend) {
     // This is a backend, so we need to copy the test data and create the env file.

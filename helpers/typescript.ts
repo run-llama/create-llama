@@ -2,50 +2,11 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { bold, cyan } from "picocolors";
-import { copy } from "../helpers/copy";
+import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { makeDir } from "./make-dir";
 import { InstallTemplateArgs } from "./types";
-
-const rename = (name: string) => {
-  switch (name) {
-    case "gitignore":
-    case "eslintrc.json": {
-      return `.${name}`;
-    }
-    // README.md is ignored by webpack-asset-relocator-loader used by ncc:
-    // https://github.com/vercel/webpack-asset-relocator-loader/blob/e9308683d47ff507253e37c9bcbb99474603192b/src/asset-relocator.js#L227
-    case "README-template.md": {
-      return "README.md";
-    }
-    default: {
-      return name;
-    }
-  }
-};
-
-export const installTSDependencies = async (
-  packageJson: any,
-  packageManager: PackageManager,
-  isOnline: boolean,
-): Promise<void> => {
-  console.log("\nInstalling dependencies:");
-  for (const dependency in packageJson.dependencies)
-    console.log(`- ${cyan(dependency)}`);
-
-  console.log("\nInstalling devDependencies:");
-  for (const dependency in packageJson.devDependencies)
-    console.log(`- ${cyan(dependency)}`);
-
-  console.log();
-
-  await callPackageManager(packageManager, isOnline).catch((error) => {
-    console.error("Failed to install TS dependencies. Exiting...");
-    process.exit(1);
-  });
-};
 
 /**
  * Install a LlamaIndex internal template to a given `root` directory.
@@ -58,7 +19,6 @@ export const installTSTemplate = async ({
   template,
   framework,
   ui,
-  customApiPath,
   vectorDb,
   postInstallAction,
   backend,
@@ -79,7 +39,7 @@ export const installTSTemplate = async ({
   await copy(copySource, root, {
     parents: true,
     cwd: templatePath,
-    rename,
+    rename: assetRelocator,
   });
 
   /**
@@ -137,9 +97,6 @@ export const installTSTemplate = async ({
     );
   }
 
-  /**
-   * Copy the selected chat engine files to the target directory and reference it.
-   */
   const compPath = path.join(templatesDir, "components");
   const relativeEngineDestPath =
     framework === "nextjs"
@@ -147,59 +104,33 @@ export const installTSTemplate = async ({
       : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
-  if (dataSources.length === 0) {
-    // use simple hat engine if user neither select tools nor a data source
-    console.log("\nUsing simple chat engine\n");
-  } else {
-    if (vectorDb) {
-      // copy vector db component
-      console.log("\nUsing vector DB:", vectorDb, "\n");
-      const vectorDBPath = path.join(
-        compPath,
-        "vectordbs",
-        "typescript",
-        vectorDb,
-      );
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: vectorDBPath,
-      });
-    }
-    // copy loader component (TS only supports llama_parse and file for now)
-    let loaderFolder: string;
-    loaderFolder = useLlamaParse ? "llama_parse" : "file";
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
-    });
-    if (tools?.length) {
-      // use agent chat engine if user selects tools
-      console.log("\nUsing agent chat engine\n");
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "engines", "typescript", "agent"),
-      });
+  // copy vector db component
+  console.log("\nUsing vector DB:", vectorDb, "\n");
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
+  });
 
-      // Write config/tools.json
-      const configContent: Record<string, any> = {};
-      tools.forEach((tool) => {
-        configContent[tool.name] = tool.config ?? {};
-      });
-      const configPath = path.join(root, "config");
-      await makeDir(configPath);
-      await fs.writeFile(
-        path.join(configPath, "tools.json"),
-        JSON.stringify(configContent, null, 2),
-      );
-    } else {
-      // use context chat engine if user does not select tools
-      console.log("\nUsing context chat engine\n");
-      await copy("**", enginePath, {
-        parents: true,
-        cwd: path.join(compPath, "engines", "typescript", "chat"),
-      });
-    }
+  // copy loader component (TS only supports llama_parse and file for now)
+  const loaderFolder = useLlamaParse ? "llama_parse" : "file";
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
+  });
+
+  // Select and copy engine code based on data sources and tools
+  let engine;
+  tools = tools ?? [];
+  if (dataSources.length > 0 && tools.length === 0) {
+    console.log("\nNo tools selected - use optimized context chat engine\n");
+    engine = "chat";
+  } else {
+    engine = "agent";
   }
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "engines", "typescript", engine),
+  });
 
   /**
    * Copy the selected UI files to the target directory and reference it.
@@ -214,13 +145,54 @@ export const installTSTemplate = async ({
     await copy("**", destUiPath, {
       parents: true,
       cwd: uiPath,
-      rename,
+      rename: assetRelocator,
     });
   }
 
-  /**
-   * Update the package.json scripts.
-   */
+  /** Modify frontend code to use custom API path */
+  if (framework === "nextjs" && !backend) {
+    console.log(
+      "\nUsing external API for frontend, removing API code and configuration\n",
+    );
+    // remove the default api folder and config folder
+    await fs.rm(path.join(root, "app", "api"), { recursive: true });
+    await fs.rm(path.join(root, "config"), { recursive: true, force: true });
+  }
+
+  const packageJson = await updatePackageJson({
+    root,
+    appName,
+    dataSources,
+    relativeEngineDestPath,
+    framework,
+    ui,
+    observability,
+  });
+
+  if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
+    await installTSDependencies(packageJson, packageManager, isOnline);
+  }
+
+  // Copy deployment files for typescript
+  await copy("**", root, {
+    cwd: path.join(compPath, "deployments", "typescript"),
+  });
+};
+
+async function updatePackageJson({
+  root,
+  appName,
+  dataSources,
+  relativeEngineDestPath,
+  framework,
+  ui,
+  observability,
+}: Pick<
+  InstallTemplateArgs,
+  "root" | "appName" | "dataSources" | "framework" | "ui" | "observability"
+> & {
+  relativeEngineDestPath: string;
+}): Promise<any> {
   const packageJsonFile = path.join(root, "package.json");
   const packageJson: any = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8"),
@@ -228,19 +200,8 @@ export const installTSTemplate = async ({
   packageJson.name = appName;
   packageJson.version = "0.1.0";
 
-  if (framework === "nextjs" && customApiPath) {
-    console.log(
-      "\nUsing external API with custom API path:",
-      customApiPath,
-      "\n",
-    );
-    // remove the default api folder
-    const apiPath = path.join(root, "app", "api");
-    await fs.rm(apiPath, { recursive: true });
-    // modify the dev script to use the custom api path
-  }
-
   if (dataSources.length > 0 && relativeEngineDestPath) {
+    // TODO: move script to {root}/scripts for all frameworks
     // add generate script if using context engine
     packageJson.scripts = {
       ...packageJson.scripts,
@@ -292,12 +253,26 @@ export const installTSTemplate = async ({
     JSON.stringify(packageJson, null, 2) + os.EOL,
   );
 
-  if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
-    await installTSDependencies(packageJson, packageManager, isOnline);
-  }
+  return packageJson;
+}
 
-  // Copy deployment files for typescript
-  await copy("**", root, {
-    cwd: path.join(compPath, "deployments", "typescript"),
+async function installTSDependencies(
+  packageJson: any,
+  packageManager: PackageManager,
+  isOnline: boolean,
+): Promise<void> {
+  console.log("\nInstalling dependencies:");
+  for (const dependency in packageJson.dependencies)
+    console.log(`- ${cyan(dependency)}`);
+
+  console.log("\nInstalling devDependencies:");
+  for (const dependency in packageJson.devDependencies)
+    console.log(`- ${cyan(dependency)}`);
+
+  console.log();
+
+  await callPackageManager(packageManager, isOnline).catch((error) => {
+    console.error("Failed to install TS dependencies. Exiting...");
+    process.exit(1);
   });
-};
+}

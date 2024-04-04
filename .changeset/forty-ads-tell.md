@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add redirect to documentation page when accessing the base URL
+Add redirect to documentation page when accessing the base URL (FastAPI)

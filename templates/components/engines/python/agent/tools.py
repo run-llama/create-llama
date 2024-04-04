@@ -1,3 +1,4 @@
+import os
 import yaml
 import importlib
 
@@ -26,8 +27,9 @@ class ToolFactory:
     @staticmethod
     def from_env() -> list[FunctionTool]:
         tools = []
-        with open("config/tools.yaml", "r") as f:
-            tool_configs = yaml.safe_load(f)
-            for name, config in tool_configs.items():
-                tools += ToolFactory.create_tool(name, **config)
+        if os.path.exists("config/tools.yaml"):
+            with open("config/tools.yaml", "r") as f:
+                tool_configs = yaml.safe_load(f)
+                for name, config in tool_configs.items():
+                    tools += ToolFactory.create_tool(name, **config)
         return tools

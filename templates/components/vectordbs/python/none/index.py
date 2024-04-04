@@ -11,10 +11,7 @@ logger = logging.getLogger("uvicorn")
 def get_index():
     # check if storage already exists
     if not os.path.exists(STORAGE_DIR):
-        raise Exception(
-            "StorageContext is empty - call 'python app/engine/generate.py' to generate the storage first"
-        )
-
+        return None
     # load the existing index
     logger.info(f"Loading index from {STORAGE_DIR}...")
     storage_context = StorageContext.from_defaults(persist_dir=STORAGE_DIR)
