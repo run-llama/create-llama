@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-support astra vectordb
+Support Astra VectorDB
