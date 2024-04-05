@@ -10,11 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from app.api.routers.chat import chat_router
 from app.settings import init_settings
+from app.observability import init_observability
 
 
 app = FastAPI()
 
 init_settings()
+init_observability()
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
 

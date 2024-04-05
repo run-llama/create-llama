@@ -206,6 +206,7 @@ export const installPythonTemplate = async ({
   tools,
   postInstallAction,
   useLlamaParse,
+  observability,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -216,6 +217,7 @@ export const installPythonTemplate = async ({
   | "tools"
   | "useLlamaParse"
   | "postInstallAction"
+  | "observability"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
   const templatePath = path.join(templatesDir, "types", template, framework);
@@ -258,6 +260,25 @@ export const installPythonTemplate = async ({
   const addOnDependencies = dataSources
     .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
     .flat();
+
+  if (observability === "opentelemetry") {
+    addOnDependencies.push({
+      name: "traceloop-sdk",
+      version: "^0.15.11",
+    });
+
+    const templateObservabilityPath = path.join(
+      templatesDir,
+      "components",
+      "observability",
+      "python",
+      "opentelemetry",
+    );
+    await copy("**", path.join(root, "app"), {
+      cwd: templateObservabilityPath,
+    });
+  }
+
   await addDependencies(root, addOnDependencies);
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
