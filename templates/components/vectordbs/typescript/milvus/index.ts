@@ -10,7 +10,7 @@ import {
   CHUNK_OVERLAP,
   CHUNK_SIZE,
   getMilvusClient,
-} from "./shared.mjs";
+} from "./shared";
 
 async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();

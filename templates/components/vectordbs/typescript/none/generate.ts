@@ -7,7 +7,7 @@ import {
 import * as dotenv from "dotenv";
 
 import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./constants.mjs";
-import { getDocuments } from "./loader.mjs";
+import { getDocuments } from "./loader";
 
 // Load environment variables from local .env file
 dotenv.config();

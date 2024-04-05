@@ -5,8 +5,8 @@ import {
   VectorStoreIndex,
   storageContextFromDefaults,
 } from "llamaindex";
-import { getDocuments } from "./loader.mjs";
-import { checkRequiredEnvVars } from "./shared.mjs";
+import { getDocuments } from "./loader";
+import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
 

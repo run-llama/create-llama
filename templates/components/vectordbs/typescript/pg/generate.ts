@@ -5,13 +5,13 @@ import {
   VectorStoreIndex,
   storageContextFromDefaults,
 } from "llamaindex";
-import { getDocuments } from "./loader.mjs";
+import { getDocuments } from "./loader";
 import {
   PGVECTOR_COLLECTION,
   PGVECTOR_SCHEMA,
   PGVECTOR_TABLE,
   checkRequiredEnvVars,
-} from "./shared.mjs";
+} from "./shared";
 
 dotenv.config();
 

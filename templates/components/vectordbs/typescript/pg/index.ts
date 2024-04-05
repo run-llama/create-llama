@@ -12,7 +12,7 @@ import {
   PGVECTOR_SCHEMA,
   PGVECTOR_TABLE,
   checkRequiredEnvVars,
-} from "./shared.mjs";
+} from "./shared";
 
 async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();

@@ -7,7 +7,7 @@ import {
   VectorStoreIndex,
 } from "llamaindex";
 import { MongoClient } from "mongodb";
-import { checkRequiredEnvVars, CHUNK_OVERLAP, CHUNK_SIZE } from "./shared.mjs";
+import { checkRequiredEnvVars, CHUNK_OVERLAP, CHUNK_SIZE } from "./shared";
 
 async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();

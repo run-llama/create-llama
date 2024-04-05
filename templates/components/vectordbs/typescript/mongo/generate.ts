@@ -6,8 +6,8 @@ import {
   storageContextFromDefaults,
 } from "llamaindex";
 import { MongoClient } from "mongodb";
-import { getDocuments } from "./loader.mjs";
-import { checkRequiredEnvVars } from "./shared.mjs";
+import { getDocuments } from "./loader";
+import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
 
