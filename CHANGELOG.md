@@ -1,5 +1,21 @@
 # create-llama
 
+## 0.0.32
+
+### Patch Changes
+
+- 625ed4d: Support Astra VectorDB
+- 922e0ce: Remove UI question (use shadcn as default). Use `html` UI by calling create-llama with --ui html parameter
+- ce2f24d: Update loaders and tools config to yaml format (for Python)
+- e8db041: Let user select multiple datasources (URLs, files and folders)
+- c06d4af: Add nodes to the response (Python)
+- 29b17ee: Allow using agents without any data source
+- 665c26c: Add redirect to documentation page when accessing the base URL (FastAPI)
+- 78ded9e: Add Dockerfile templates for Typescript and Python
+- 99e758f: Merge non-streaming and streaming template to one
+- b3f2685: Add support for agent generation for Typescript
+- 2739714: Use a database (MySQL or PostgreSQL) as a data source
+
 ## 0.0.31
 
 ### Patch Changes
