@@ -1,4 +1,5 @@
 import {
+  ServiceContext,
   serviceContextFromDefaults,
   storageContextFromDefaults,
   VectorStoreIndex,
@@ -6,20 +7,20 @@ import {
 
 import * as dotenv from "dotenv";
 
-import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./constants.mjs";
-import { getDocuments } from "./loader.mjs";
+import { getDocuments } from "./loader";
+import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./shared";
 
 // Load environment variables from local .env file
 dotenv.config();
 
-async function getRuntime(func) {
+async function getRuntime(func: any) {
   const start = Date.now();
   await func();
   const end = Date.now();
   return end - start;
 }
 
-async function generateDatasource(serviceContext) {
+async function generateDatasource(serviceContext: ServiceContext) {
   console.log(`Generating storage context...`);
   // Split documents, create embeddings and store them in the storage context
   const ms = await getRuntime(async () => {

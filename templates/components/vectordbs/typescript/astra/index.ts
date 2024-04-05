@@ -5,7 +5,7 @@ import {
   VectorStoreIndex,
   serviceContextFromDefaults,
 } from "llamaindex";
-import { CHUNK_OVERLAP, CHUNK_SIZE, checkRequiredEnvVars } from "./shared.mjs";
+import { CHUNK_OVERLAP, CHUNK_SIZE, checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();

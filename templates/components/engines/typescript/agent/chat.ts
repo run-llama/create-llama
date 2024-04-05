@@ -7,8 +7,8 @@ import {
 } from "llamaindex";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { STORAGE_CACHE_DIR } from "./constants.mjs";
 import { getDataSource } from "./index";
+import { STORAGE_CACHE_DIR } from "./shared";
 
 export async function createChatEngine(llm: OpenAI) {
   let tools: BaseTool[] = [];

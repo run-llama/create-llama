@@ -6,14 +6,14 @@ import {
   storageContextFromDefaults,
 } from "llamaindex";
 import { MongoClient } from "mongodb";
-import { getDocuments } from "./loader.mjs";
-import { checkRequiredEnvVars } from "./shared.mjs";
+import { getDocuments } from "./loader";
+import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
 
-const mongoUri = process.env.MONGO_URI;
-const databaseName = process.env.MONGODB_DATABASE;
-const vectorCollectionName = process.env.MONGODB_VECTORS;
+const mongoUri = process.env.MONGO_URI!;
+const databaseName = process.env.MONGODB_DATABASE!;
+const vectorCollectionName = process.env.MONGODB_VECTORS!;
 const indexName = process.env.MONGODB_VECTOR_INDEX;
 
 async function loadAndIndex() {

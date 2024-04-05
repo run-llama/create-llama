@@ -5,7 +5,7 @@ import {
   storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
-import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./constants.mjs";
+import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./shared";
 
 export async function getDataSource(llm: LLM) {
   const serviceContext = serviceContextFromDefaults({
