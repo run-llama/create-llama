@@ -93,6 +93,21 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
           description: "The password to access the Milvus server.",
         },
       ];
+    case "astra":
+      return [
+        {
+          name: "ASTRA_DB_APPLICATION_TOKEN",
+          description: "The generated app token for your Astra database",
+        },
+        {
+          name: "ASTRA_DB_ENDPOINT",
+          description: "The API endpoint for your Astra database",
+        },
+        {
+          name: "ASTRA_DB_COLLECTION",
+          description: "The name of the collection in your Astra database",
+        },
+      ];
     default:
       return [];
   }

@@ -60,6 +60,13 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "astra": {
+      dependencies.push({
+        name: "llama-index-vector-stores-astra-db",
+        version: "^0.1.5",
+      });
+      break;
+    }
   }
 
   // Add data source dependencies
