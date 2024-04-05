@@ -1,18 +1,11 @@
 import {
-  LLM,
-  serviceContextFromDefaults,
   SimpleDocumentStore,
   storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
-import { CHUNK_OVERLAP, CHUNK_SIZE, STORAGE_CACHE_DIR } from "./shared";
+import { STORAGE_CACHE_DIR } from "./shared";
 
-export async function getDataSource(llm: LLM) {
-  const serviceContext = serviceContextFromDefaults({
-    llm,
-    chunkSize: CHUNK_SIZE,
-    chunkOverlap: CHUNK_OVERLAP,
-  });
+export async function getDataSource() {
   const storageContext = await storageContextFromDefaults({
     persistDir: `${STORAGE_CACHE_DIR}`,
   });
@@ -25,6 +18,5 @@ export async function getDataSource(llm: LLM) {
   }
   return await VectorStoreIndex.init({
     storageContext,
-    serviceContext,
   });
 }
