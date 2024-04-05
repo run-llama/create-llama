@@ -6,6 +6,7 @@ import {
   storageContextFromDefaults,
 } from "llamaindex";
 import { getDocuments } from "./loader";
+import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
@@ -28,6 +29,7 @@ async function loadAndIndex() {
 
 (async () => {
   checkRequiredEnvVars();
+  initSettings();
   await loadAndIndex();
   console.log("Finished generating storage.");
 })();
