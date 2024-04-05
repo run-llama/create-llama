@@ -30,15 +30,12 @@ function createParser(
           },
         };
         data.append(message);
-      } else {
-        data.append({}); // send an empty image response for the user's message
       }
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
       if (done) {
         controller.close();
-        data.append({}); // send an empty image response for the assistant's message
         data.close();
         return;
       }
