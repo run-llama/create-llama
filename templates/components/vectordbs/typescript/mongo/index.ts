@@ -1,6 +1,5 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import {
-  ContextChatEngine,
   LLM,
   MongoDBAtlasVectorSearch,
   serviceContextFromDefaults,
@@ -9,7 +8,7 @@ import {
 import { MongoClient } from "mongodb";
 import { checkRequiredEnvVars, CHUNK_OVERLAP, CHUNK_SIZE } from "./shared";
 
-async function getDataSource(llm: LLM) {
+export async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();
   const client = new MongoClient(process.env.MONGO_URI!);
   const serviceContext = serviceContextFromDefaults({
@@ -19,19 +18,10 @@ async function getDataSource(llm: LLM) {
   });
   const store = new MongoDBAtlasVectorSearch({
     mongodbClient: client,
-    dbName: process.env.MONGODB_DATABASE,
-    collectionName: process.env.MONGODB_VECTORS,
+    dbName: process.env.MONGODB_DATABASE!,
+    collectionName: process.env.MONGODB_VECTORS!,
     indexName: process.env.MONGODB_VECTOR_INDEX,
   });
 
   return await VectorStoreIndex.fromVectorStore(store, serviceContext);
-}
-
-export async function createChatEngine(llm: LLM) {
-  const index = await getDataSource(llm);
-  const retriever = index.asRetriever({ similarityTopK: 3 });
-  return new ContextChatEngine({
-    chatModel: llm,
-    retriever,
-  });
 }

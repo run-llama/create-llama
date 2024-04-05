@@ -15,7 +15,7 @@ async function loadAndIndex() {
   const documents = await getDocuments();
 
   // create vector store and a collection
-  const collectionName = process.env.ASTRA_DB_COLLECTION;
+  const collectionName = process.env.ASTRA_DB_COLLECTION!;
   const vectorStore = new AstraDBVectorStore();
   await vectorStore.create(collectionName, {
     vector: { dimension: 1536, metric: "cosine" },

@@ -1,6 +1,5 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import {
-  ContextChatEngine,
   LLM,
   PGVectorStore,
   VectorStoreIndex,
@@ -14,7 +13,7 @@ import {
   checkRequiredEnvVars,
 } from "./shared";
 
-async function getDataSource(llm: LLM) {
+export async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();
   const pgvs = new PGVectorStore({
     connectionString: process.env.PG_CONNECTION_STRING,
@@ -27,13 +26,4 @@ async function getDataSource(llm: LLM) {
     chunkOverlap: CHUNK_OVERLAP,
   });
   return await VectorStoreIndex.fromVectorStore(pgvs, serviceContext);
-}
-
-export async function createChatEngine(llm: LLM) {
-  const index = await getDataSource(llm);
-  const retriever = index.asRetriever({ similarityTopK: 3 });
-  return new ContextChatEngine({
-    chatModel: llm,
-    retriever,
-  });
 }

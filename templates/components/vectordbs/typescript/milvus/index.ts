@@ -1,5 +1,4 @@
 import {
-  ContextChatEngine,
   LLM,
   MilvusVectorStore,
   serviceContextFromDefaults,
@@ -12,7 +11,7 @@ import {
   getMilvusClient,
 } from "./shared";
 
-async function getDataSource(llm: LLM) {
+export async function getDataSource(llm: LLM) {
   checkRequiredEnvVars();
   const serviceContext = serviceContextFromDefaults({
     llm,
@@ -23,13 +22,4 @@ async function getDataSource(llm: LLM) {
   const store = new MilvusVectorStore({ milvusClient });
 
   return await VectorStoreIndex.fromVectorStore(store, serviceContext);
-}
-
-export async function createChatEngine(llm: LLM) {
-  const index = await getDataSource(llm);
-  const retriever = index.asRetriever({ similarityTopK: 3 });
-  return new ContextChatEngine({
-    chatModel: llm,
-    retriever,
-  });
 }

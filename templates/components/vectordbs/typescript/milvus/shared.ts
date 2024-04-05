@@ -16,7 +16,7 @@ export function getMilvusClient() {
     throw new Error("MILVUS_ADDRESS environment variable is required");
   }
   return new MilvusClient({
-    address: process.env.MILVUS_ADDRESS,
+    address: process.env.MILVUS_ADDRESS!,
     username: process.env.MILVUS_USERNAME,
     password: process.env.MILVUS_PASSWORD,
   });
