@@ -9,5 +9,10 @@
     "paths": {
       "@/*": ["./*"]
     }
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   }
 }
