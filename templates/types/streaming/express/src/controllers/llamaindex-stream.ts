@@ -30,12 +30,19 @@ function createParser(
           },
         };
         data.append(message);
+      } else {
+        if (process.env.MODEL === "gpt-4-vision-preview") {
+          data.append({}); // send an empty image response for the user's message
+        }
       }
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
       if (done) {
         controller.close();
+        if (process.env.MODEL === "gpt-4-vision-preview") {
+          data.append({}); // send an empty image response for the user's message
+        }
         data.close();
         return;
       }
