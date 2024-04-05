@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
+import { ChatMessage, MessageContent } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
 
 const convertMessageContent = (
@@ -32,10 +32,6 @@ export const chatRequest = async (req: Request, res: Response) => {
       });
     }
 
-    const llm = new OpenAI({
-      model: process.env.MODEL || "gpt-3.5-turbo",
-    });
-
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     // Note: The non-streaming template does not need the Vercel/AI format, we're still using it for consistency with the streaming template
     const userMessageContent = convertMessageContent(
@@ -43,7 +39,7 @@ export const chatRequest = async (req: Request, res: Response) => {
       data?.imageUrl,
     );
 
-    const chatEngine = await createChatEngine(llm);
+    const chatEngine = await createChatEngine();
 
     // Calling LlamaIndex's ChatEngine to get a response
     const response = await chatEngine.chat({

@@ -1,11 +1,13 @@
 import { initObservability } from "@/app/observability";
 import { StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent, OpenAI } from "llamaindex";
+import { ChatMessage, MessageContent } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
+import { initSettings } from "./engine/settings";
 import { LlamaIndexStream } from "./llamaindex-stream";
 
 initObservability();
+initSettings();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,12 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const llm = new OpenAI({
-      model: (process.env.MODEL as any) ?? "gpt-3.5-turbo",
-      maxTokens: 512,
-    });
-
-    const chatEngine = await createChatEngine(llm);
+    const chatEngine = await createChatEngine();
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
