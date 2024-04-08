@@ -1,7 +1,8 @@
-import { OpenAI, Settings } from "llamaindex";
+import { OpenAI, OpenAIEmbedding, Settings } from "llamaindex";
 
 const CHUNK_SIZE = 512;
 const CHUNK_OVERLAP = 20;
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL;
 
 export const initSettings = async () => {
   Settings.llm = new OpenAI({
@@ -10,4 +11,7 @@ export const initSettings = async () => {
   });
   Settings.chunkSize = CHUNK_SIZE;
   Settings.chunkOverlap = CHUNK_OVERLAP;
+  Settings.embedModel = new OpenAIEmbedding({
+    model: EMBEDDING_MODEL,
+  });
 };

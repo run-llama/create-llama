@@ -581,26 +581,40 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.embeddingModel && program.framework === "fastapi") {
+  if (!program.embeddingModel) {
     if (ciInfo.isCI) {
       program.embeddingModel = getPrefOrDefault("embeddingModel");
     } else {
-      const { embeddingModel } = await prompts(
-        {
-          type: "select",
-          name: "embeddingModel",
-          message: "Which embedding model would you like to use?",
-          choices: await getAvailableModelChoices(
-            true,
-            program.openAiKey,
-            program.listServerModels,
-          ),
-          initial: 0,
-        },
-        handlers,
-      );
-      program.embeddingModel = embeddingModel;
-      preferences.embeddingModel = embeddingModel;
+      const { useEmbeddingModel } = await prompts({
+        onState: onPromptState,
+        type: "toggle",
+        name: "useEmbeddingModel",
+        message: "Would you like to use an embedding model?",
+        initial: false,
+        active: "Yes",
+        inactive: "No",
+      });
+
+      let selectedEmbeddingModel = getPrefOrDefault("embeddingModel");
+      if (useEmbeddingModel) {
+        const { embeddingModel } = await prompts(
+          {
+            type: "select",
+            name: "embeddingModel",
+            message: "Which embedding model would you like to use?",
+            choices: await getAvailableModelChoices(
+              true,
+              program.openAiKey,
+              program.listServerModels,
+            ),
+            initial: 0,
+          },
+          handlers,
+        );
+        selectedEmbeddingModel = embeddingModel;
+      }
+      program.embeddingModel = selectedEmbeddingModel;
+      preferences.embeddingModel = selectedEmbeddingModel;
     }
   }
 

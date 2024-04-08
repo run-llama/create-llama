@@ -146,6 +146,11 @@ export const createBackendEnvFile = async (
       description: `The Llama Cloud API key.`,
       value: opts.llamaCloudKey,
     },
+    {
+      name: "EMBEDDING_MODEL",
+      description: "Name of the embedding model to use.",
+      value: opts.embeddingModel,
+    },
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
   ];
@@ -163,11 +168,6 @@ export const createBackendEnvFile = async (
           name: "APP_PORT",
           description: "The port to start the backend app.",
           value: opts.port?.toString() || "8000",
-        },
-        {
-          name: "EMBEDDING_MODEL",
-          description: "Name of the embedding model to use.",
-          value: opts.embeddingModel,
         },
         {
           name: "EMBEDDING_DIM",
