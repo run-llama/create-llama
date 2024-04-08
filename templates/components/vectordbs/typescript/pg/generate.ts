@@ -6,6 +6,7 @@ import {
   storageContextFromDefaults,
 } from "llamaindex";
 import { getDocuments } from "./loader";
+import { initSettings } from "./settings";
 import {
   PGVECTOR_COLLECTION,
   PGVECTOR_SCHEMA,
@@ -37,6 +38,7 @@ async function loadAndIndex() {
 
 (async () => {
   checkRequiredEnvVars();
+  initSettings();
   await loadAndIndex();
   console.log("Finished generating storage.");
   process.exit(0);

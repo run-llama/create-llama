@@ -1,8 +1,5 @@
 import { MilvusClient } from "@zilliz/milvus2-sdk-node";
 
-export const CHUNK_SIZE = 512;
-export const CHUNK_OVERLAP = 20;
-
 const REQUIRED_ENV_VARS = [
   "MILVUS_ADDRESS",
   "MILVUS_USERNAME",

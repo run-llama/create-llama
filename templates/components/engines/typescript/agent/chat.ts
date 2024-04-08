@@ -1,8 +1,8 @@
 import {
   BaseTool,
-  OpenAI,
   OpenAIAgent,
   QueryEngineTool,
+  Settings,
   ToolFactory,
 } from "llamaindex";
 import fs from "node:fs/promises";
@@ -10,12 +10,12 @@ import path from "node:path";
 import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./shared";
 
-export async function createChatEngine(llm: OpenAI) {
+export async function createChatEngine() {
   let tools: BaseTool[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
-  const index = await getDataSource(llm);
+  const index = await getDataSource();
   if (index) {
     tools.push(
       new QueryEngineTool({
@@ -38,7 +38,7 @@ export async function createChatEngine(llm: OpenAI) {
 
   return new OpenAIAgent({
     tools,
-    llm,
+    llm: Settings.llm,
     verbose: true,
   });
 }

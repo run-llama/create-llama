@@ -1,7 +1,7 @@
-import { LLM, SimpleChatEngine } from "llamaindex";
+import { Settings, SimpleChatEngine } from "llamaindex";
 
-export async function createChatEngine(llm: LLM) {
+export async function createChatEngine() {
   return new SimpleChatEngine({
-    llm,
+    llm: Settings.llm,
   });
 }

@@ -1,6 +1,3 @@
-export const CHUNK_SIZE = 512;
-export const CHUNK_OVERLAP = 20;
-
 const REQUIRED_ENV_VARS = [
   "ASTRA_DB_APPLICATION_TOKEN",
   "ASTRA_DB_ENDPOINT",

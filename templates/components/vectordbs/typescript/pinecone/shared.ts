@@ -1,6 +1,3 @@
-export const CHUNK_SIZE = 512;
-export const CHUNK_OVERLAP = 20;
-
 const REQUIRED_ENV_VARS = ["PINECONE_ENVIRONMENT", "PINECONE_API_KEY"];
 
 export function checkRequiredEnvVars() {
