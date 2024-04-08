@@ -26,6 +26,7 @@ export type QuestionArgs = Omit<
   "appPath" | "packageManager"
 > & {
   listServerModels?: boolean;
+  useEmbedModel?: boolean;
 };
 const supportedContextFileTypes = [
   ".pdf",
@@ -76,7 +77,7 @@ const defaults: QuestionArgs = {
   llamaCloudKey: "",
   useLlamaParse: false,
   model: "gpt-3.5-turbo",
-  embeddingModel: "text-embedding-ada-002",
+  embeddingModel: "text-embedding-3-large",
   communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
@@ -582,39 +583,25 @@ export const askQuestions = async (
   }
 
   if (!program.embeddingModel) {
-    if (ciInfo.isCI) {
+    if (ciInfo.isCI || !program.useEmbedModel) {
       program.embeddingModel = getPrefOrDefault("embeddingModel");
     } else {
-      const { useEmbeddingModel } = await prompts({
-        onState: onPromptState,
-        type: "toggle",
-        name: "useEmbeddingModel",
-        message: "Would you like to use an embedding model?",
-        initial: false,
-        active: "Yes",
-        inactive: "No",
-      });
-
-      let selectedEmbeddingModel = getPrefOrDefault("embeddingModel");
-      if (useEmbeddingModel) {
-        const { embeddingModel } = await prompts(
-          {
-            type: "select",
-            name: "embeddingModel",
-            message: "Which embedding model would you like to use?",
-            choices: await getAvailableModelChoices(
-              true,
-              program.openAiKey,
-              program.listServerModels,
-            ),
-            initial: 0,
-          },
-          handlers,
-        );
-        selectedEmbeddingModel = embeddingModel;
-      }
-      program.embeddingModel = selectedEmbeddingModel;
-      preferences.embeddingModel = selectedEmbeddingModel;
+      const { embeddingModel } = await prompts(
+        {
+          type: "select",
+          name: "embeddingModel",
+          message: "Which embedding model would you like to use?",
+          choices: await getAvailableModelChoices(
+            true,
+            program.openAiKey,
+            program.listServerModels,
+          ),
+          initial: 0,
+        },
+        handlers,
+      );
+      program.embeddingModel = embeddingModel;
+      preferences.embeddingModel = embeddingModel;
     }
   }
 
