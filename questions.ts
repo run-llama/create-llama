@@ -510,28 +510,26 @@ export const askQuestions = async (
     }
   }
 
-  if (program.framework === "express" || program.framework === "nextjs") {
-    if (!program.observability) {
-      if (ciInfo.isCI) {
-        program.observability = getPrefOrDefault("observability");
-      } else {
-        const { observability } = await prompts(
-          {
-            type: "select",
-            name: "observability",
-            message: "Would you like to set up observability?",
-            choices: [
-              { title: "No", value: "none" },
-              { title: "OpenTelemetry", value: "opentelemetry" },
-            ],
-            initial: 0,
-          },
-          handlers,
-        );
+  if (!program.observability) {
+    if (ciInfo.isCI) {
+      program.observability = getPrefOrDefault("observability");
+    } else {
+      const { observability } = await prompts(
+        {
+          type: "select",
+          name: "observability",
+          message: "Would you like to set up observability?",
+          choices: [
+            { title: "No", value: "none" },
+            { title: "OpenTelemetry", value: "opentelemetry" },
+          ],
+          initial: 0,
+        },
+        handlers,
+      );
 
-        program.observability = observability;
-        preferences.observability = observability;
-      }
+      program.observability = observability;
+      preferences.observability = observability;
     }
   }
 
