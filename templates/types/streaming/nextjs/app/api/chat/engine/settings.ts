@@ -1,9 +1,11 @@
 import { OpenAI, Settings } from "llamaindex";
-import { CHUNK_OVERLAP, CHUNK_SIZE } from "./shared";
+
+const CHUNK_SIZE = 512;
+const CHUNK_OVERLAP = 20;
 
 export const initSettings = async () => {
   Settings.llm = new OpenAI({
-    model: (process.env.MODEL as any) ?? "gpt-3.5-turbo",
+    model: process.env.MODEL ?? "gpt-3.5-turbo",
     maxTokens: 512,
   });
   Settings.chunkSize = CHUNK_SIZE;
