@@ -12,5 +12,8 @@ export const initSettings = async () => {
   Settings.chunkOverlap = CHUNK_OVERLAP;
   Settings.embedModel = new OpenAIEmbedding({
     model: process.env.EMBEDDING_MODEL,
+    dimensions: process.env.EMBEDDING_DIM
+      ? parseInt(process.env.EMBEDDING_DIM)
+      : undefined,
   });
 };

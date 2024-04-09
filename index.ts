@@ -78,7 +78,7 @@ const program = new Commander.Command(packageJson.name)
     "--files <path>",
     `
   
-    Specify the path to a local file or folder for chatting.
+  Specify the path to a local file or folder for chatting.
 `,
   )
   .option(
@@ -119,6 +119,7 @@ const program = new Commander.Command(packageJson.name)
   .option(
     "--embedding-model <embeddingModel>",
     `
+
   Select OpenAI embedding model to use. E.g. text-embedding-ada-002.
 `,
   )
@@ -160,27 +161,29 @@ const program = new Commander.Command(packageJson.name)
   .option(
     "--use-llama-parse",
     `
-    Enable LlamaParse.
+
+  Enable LlamaParse.
 `,
   )
   .option(
     "--llama-cloud-key <key>",
     `
+  
   Provide a LlamaCloud API key.
 `,
   )
   .option(
-    "--list-server-models",
-    "Fetch available LLM and embedding models from OpenAI API.",
-  )
-  .option(
     "--observability <observability>",
-    "Specify observability tools to use. Eg: none, opentelemetry",
+    `
+    
+  Specify observability tools to use. Eg: none, opentelemetry
+`,
   )
   .option(
     "--ask-models",
     `
-    Select LLM and embedding models.
+
+  Select LLM and embedding models.
 `,
   )
   .allowUnknownOption()
