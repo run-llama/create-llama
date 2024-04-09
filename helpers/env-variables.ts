@@ -108,6 +108,23 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
           description: "The name of the collection in your Astra database",
         },
       ];
+    case "qdrant":
+      return [
+        {
+          name: "QDRANT_URL",
+          description:
+            "The qualified REST URL of the Qdrant server. Eg: http://localhost:6333",
+        },
+        {
+          name: "QDRANT_COLLECTION",
+          description: "The name of Qdrant collection to use.",
+        },
+        {
+          name: "QDRANT_API_KEY",
+          description:
+            "Optional API key for authenticating requests to Qdrant.",
+        },
+      ];
     default:
       return [];
   }
