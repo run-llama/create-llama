@@ -33,7 +33,7 @@ async function generateContextData(
   if (packageManager) {
     const runGenerate = `${cyan(
       framework === "fastapi"
-        ? "poetry run python app/engine/generate.py"
+        ? "poetry run generate"
         : `${packageManager} run generate`,
     )}`;
     const openAiKeyConfigured = openAiKey || process.env["OPENAI_API_KEY"];
@@ -46,7 +46,7 @@ async function generateContextData(
       if (framework === "fastapi") {
         if (isHavingPoetryLockFile()) {
           console.log(`Running ${runGenerate} to generate the context data.`);
-          const result = tryPoetryRun("python app/engine/generate.py");
+          const result = tryPoetryRun("poetry run generate");
           if (!result) {
             console.log(`Failed to run ${runGenerate}.`);
             process.exit(1);
