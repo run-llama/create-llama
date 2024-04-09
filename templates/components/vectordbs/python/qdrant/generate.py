@@ -1,14 +1,12 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
-import os
 import logging
-from llama_index.core.storage import StorageContext
-from llama_index.core.indices import VectorStoreIndex
-from llama_index.vector_stores.qdrant import QdrantVectorStore
-from app.settings import init_settings
+import os
 from app.engine.loaders import get_documents
+from app.settings import init_settings
+from dotenv import load_dotenv
+from llama_index.core.indices import VectorStoreIndex
+from llama_index.core.storage import StorageContext
+from llama_index.vector_stores.qdrant import QdrantVectorStore
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
