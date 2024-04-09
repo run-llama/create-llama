@@ -23,7 +23,7 @@ def generate_datasource():
         user=os.getenv("MILVUS_USERNAME"),
         password=os.getenv("MILVUS_PASSWORD"),
         collection_name=os.getenv("MILVUS_COLLECTION"),
-        dim=int(os.getenv("MILVUS_DIMENSION", "1536")),
+        dim=int(os.getenv("EMBEDDING_DIM")),
     )
     storage_context = StorageContext.from_defaults(vector_store=store)
     VectorStoreIndex.from_documents(

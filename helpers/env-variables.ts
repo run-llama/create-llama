@@ -150,7 +150,7 @@ export const createBackendEnvFile = async (
       render: true,
       name: "MODEL",
       description: "The name of LLM model to use.",
-      value: opts.model || "gpt-3.5-turbo",
+      value: opts.model,
     },
     {
       render: true,
@@ -162,6 +162,16 @@ export const createBackendEnvFile = async (
       name: "LLAMA_CLOUD_API_KEY",
       description: `The Llama Cloud API key.`,
       value: opts.llamaCloudKey,
+    },
+    {
+      name: "EMBEDDING_MODEL",
+      description: "Name of the embedding model to use.",
+      value: opts.embeddingModel,
+    },
+    {
+      name: "EMBEDDING_DIM",
+      description: "Dimension of the embedding model to use.",
+      value: 1536,
     },
     // Add vector database environment variables
     ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
@@ -180,15 +190,6 @@ export const createBackendEnvFile = async (
           name: "APP_PORT",
           description: "The port to start the backend app.",
           value: opts.port?.toString() || "8000",
-        },
-        {
-          name: "EMBEDDING_MODEL",
-          description: "Name of the embedding model to use.",
-          value: opts.embeddingModel,
-        },
-        {
-          name: "EMBEDDING_DIM",
-          description: "Dimension of the embedding model to use.",
         },
         {
           name: "LLM_TEMPERATURE",
@@ -227,7 +228,7 @@ Given this information, please answer the question: {query_str}
               name: "NEXT_PUBLIC_MODEL",
               description:
                 "The LLM model to use (hardcode to front-end artifact).",
-              value: opts.model || "gpt-3.5-turbo",
+              value: opts.model,
             }
           : {},
       ],

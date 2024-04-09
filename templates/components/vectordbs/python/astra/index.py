@@ -14,7 +14,7 @@ def get_index():
         token=os.environ["ASTRA_DB_APPLICATION_TOKEN"],
         api_endpoint=os.environ["ASTRA_DB_ENDPOINT"],
         collection_name=os.environ["ASTRA_DB_COLLECTION"],
-        embedding_dimension=1536,
+        embedding_dimension=int(os.environ["EMBEDDING_DIM"]),
     )
     index = VectorStoreIndex.from_vector_store(store)
     logger.info("Finished connecting to index from AstraDB.")

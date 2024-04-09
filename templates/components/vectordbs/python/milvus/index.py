@@ -15,7 +15,7 @@ def get_index():
         user=os.getenv("MILVUS_USERNAME"),
         password=os.getenv("MILVUS_PASSWORD"),
         collection_name=os.getenv("MILVUS_COLLECTION"),
-        dim=int(os.getenv("EMBEDDING_DIM", "1536")),
+        dim=int(os.getenv("EMBEDDING_DIM")),
     )
     index = VectorStoreIndex.from_vector_store(store)
     logger.info("Finished connecting to index from Milvus.")

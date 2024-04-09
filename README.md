@@ -18,25 +18,19 @@ to start the development server. You can then visit [http://localhost:3000](http
 
 ## What you'll get
 
-- A Next.js-powered front-end. The app is set up as a chat interface that can answer questions about your data (see below)
-  - You can style it with HTML and CSS, or you can optionally use components from [shadcn/ui](https://ui.shadcn.com/)
+- A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data (see below)
 - Your choice of 3 back-ends:
-  - **Next.js**: if you select this option, you’ll have a full stack Next.js application that you can deploy to a host like [Vercel](https://vercel.com/) in just a few clicks. This uses [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex), our TypeScript library.
+  - **Next.js**: if you select this option, you’ll have a full-stack Next.js application that you can deploy to a host like [Vercel](https://vercel.com/) in just a few clicks. This uses [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex), our TypeScript library.
   - **Express**: if you want a more traditional Node.js application you can generate an Express backend. This also uses LlamaIndex.TS.
-  - **Python FastAPI**: if you select this option you’ll get a backend powered by the [llama-index python package](https://pypi.org/project/llama-index/), which you can deploy to a service like Render or fly.io.
-- The back-end has a single endpoint that allows you to send the state of your chat and receive additional responses
-- You can choose whether you want a streaming or non-streaming back-end (if you're not sure, we recommend streaming)
-- You can choose whether you want to use `ContextChatEngine` or `SimpleChatEngine`
-  - `SimpleChatEngine` will just talk to the LLM directly without using your data
-  - `ContextChatEngine` will use your data to answer questions (see below).
+  - **Python FastAPI**: if you select this option, you’ll get a backend powered by the [llama-index python package](https://pypi.org/project/llama-index/), which you can deploy to a service like Render or fly.io.
+- The back-end has two endpoints (one streaming, the other one non-streaming) that allow you to send the state of your chat and receive additional responses
+- You add arbitrary data sources to your chat, like local files, websites, or data retrieved from a database.
+- Turn your chat into an AI agent by adding tools (functions called by the LLM).
 - The app uses OpenAI by default, so you'll need an OpenAI API key, or you can customize it to use any of the dozens of LLMs we support.
 
 ## Using your data
 
-If you've enabled `ContextChatEngine`, you can supply your own data and the app will index it and answer questions. Your generated app will have a folder called `data`:
-
-- With the Next.js backend this is `./data`
-- With the Express or Python backend this is in `./backend/data`
+You can supply your own data; the app will index it and answer questions. Your generated app will have a folder called `data` (If you're using Express or Python and generate a frontend, it will be `./backend/data`).
 
 The app will ingest any supported files you put in this directory. Your Next.js and Express apps use LlamaIndex.TS so they will be able to ingest any PDF, text, CSV, Markdown, Word and HTML files. The Python backend can read even more types, including video and audio files.
 
@@ -46,21 +40,27 @@ Before you can use your data, you need to index it. If you're using the Next.js 
 npm run generate
 ```
 
-Then re-start your app. Remember you'll need to re-run `generate` if you add new files to your `data` folder. If you're using the Python backend, you can trigger indexing of your data by deleting the `./storage` folder and re-starting the app.
+Then re-start your app. Remember you'll need to re-run `generate` if you add new files to your `data` folder.
 
-## Don't want a front-end?
+If you're using the Python backend, you can trigger indexing of your data by calling:
 
-It's optional! If you've selected the Python or Express back-ends, just delete the `frontend` folder and you'll get an API without any front-end code.
+```bash
+poetry run python app/engine/generate.py
+```
 
-## Customizing the LLM
+## Want a front-end?
 
-By default the app will use OpenAI's gpt-3.5-turbo model. If you want to use GPT-4, you can modify this by editing a file:
+Optionally generate a frontend if you've selected the Python or Express back-ends. If you do so, `create-llama` will generate two folders: `frontend`, for your Next.js-based frontend code, and `backend` containing your API.
 
-- In the Next.js backend, edit `./app/api/chat/route.ts` and replace `gpt-3.5-turbo` with `gpt-4`
-- In the Express backend, edit `./backend/src/controllers/chat.controller.ts` and likewise replace `gpt-3.5-turbo` with `gpt-4`
-- In the Python backend, edit `./backend/app/utils/index.py` and once again replace `gpt-3.5-turbo` with `gpt-4`
+## Customizing the AI models
+
+The app will default to OpenAI's `gpt-4-vision-preview` LLM and `text-embedding-3-large` embedding model.
+
+If you want to use different OpenAI models, add the `--ask-models` CLI parameter.
 
 You can also replace OpenAI with one of our [dozens of other supported LLMs](https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules.html).
+
+To do so, you have to manually change the generated code (edit the `settings.ts` file for Typescript projects or the `settings.py` file for Python projects)
 
 ## Example
 
@@ -84,13 +84,19 @@ Need to install the following packages:
   create-llama@latest
 Ok to proceed? (y) y
 ✔ What is your project named? … my-app
-✔ Which template would you like to use? › Chat with streaming
+✔ Which template would you like to use? › Chat
 ✔ Which framework would you like to use? › NextJS
-✔ Which UI would you like to use? › Just HTML
-✔ Which chat engine would you like to use? › ContextChatEngine
+✔ Would you like to set up observability? › No
 ✔ Please provide your OpenAI API key (leave blank to skip): …
-✔ Would you like to use ESLint? … No / Yes
-Creating a new LlamaIndex app in /home/my-app.
+✔ Which data source would you like to use? › Use an example PDF
+✔ Would you like to add another data source? › No
+✔ Would you like to use LlamaParse (improved parser for RAG - requires API key)? … no / yes
+✔ Would you like to use a vector database? › No, just store the data in the file system
+? How would you like to proceed? › - Use arrow-keys. Return to submit.
+   Just generate code (~1 sec)
+❯  Start in VSCode (~1 sec)
+   Generate code and install dependencies (~2 min)
+   Generate code, install dependencies, and run the app (~2 min)
 ```
 
 ### Running non-interactively

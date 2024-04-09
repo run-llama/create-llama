@@ -2,6 +2,7 @@ const REQUIRED_ENV_VARS = [
   "ASTRA_DB_APPLICATION_TOKEN",
   "ASTRA_DB_ENDPOINT",
   "ASTRA_DB_COLLECTION",
+  "EMBEDDING_DIM",
 ];
 
 export function checkRequiredEnvVars() {
