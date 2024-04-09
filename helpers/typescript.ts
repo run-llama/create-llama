@@ -200,7 +200,7 @@ async function updatePackageJson({
   packageJson.name = appName;
   packageJson.version = "0.1.0";
 
-  if (dataSources.length > 0 && relativeEngineDestPath) {
+  if (relativeEngineDestPath) {
     // TODO: move script to {root}/scripts for all frameworks
     // add generate script if using context engine
     packageJson.scripts = {
