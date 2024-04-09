@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Remove asking for an embedding model and use OpenAI Embeddings v3 per default. Add `--use-embed-model` CLI parameter to change embedding model. 
+Remove asking for AI models and use defaults instead (OpenAIs GPT-4 Vision Preview and Embeddings v3). Use `--ask-models` CLI parameter to select models.

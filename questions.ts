@@ -26,7 +26,7 @@ export type QuestionArgs = Omit<
   "appPath" | "packageManager"
 > & {
   listServerModels?: boolean;
-  useEmbedModel?: boolean;
+  askModels?: boolean;
 };
 const supportedContextFileTypes = [
   ".pdf",
@@ -76,7 +76,7 @@ const defaults: QuestionArgs = {
   openAiKey: "",
   llamaCloudKey: "",
   useLlamaParse: false,
-  model: "gpt-3.5-turbo",
+  model: "gpt-4-vision-preview",
   embeddingModel: "text-embedding-3-large",
   communityProjectConfig: undefined,
   llamapack: "",
@@ -560,14 +560,14 @@ export const askQuestions = async (
   }
 
   if (!program.model) {
-    if (ciInfo.isCI) {
+    if (ciInfo.isCI || !program.askModels) {
       program.model = getPrefOrDefault("model");
     } else {
       const { model } = await prompts(
         {
           type: "select",
           name: "model",
-          message: "Which model would you like to use?",
+          message: "Which LLM model would you like to use?",
           choices: await getAvailableModelChoices(
             false,
             program.openAiKey,
@@ -583,7 +583,7 @@ export const askQuestions = async (
   }
 
   if (!program.embeddingModel) {
-    if (ciInfo.isCI || !program.useEmbedModel) {
+    if (ciInfo.isCI || !program.askModels) {
       program.embeddingModel = getPrefOrDefault("embeddingModel");
     } else {
       const { embeddingModel } = await prompts(

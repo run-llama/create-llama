@@ -178,9 +178,9 @@ const program = new Commander.Command(packageJson.name)
     "Specify observability tools to use. Eg: none, opentelemetry",
   )
   .option(
-    "--use-embed-model",
+    "--ask-models",
     `
-    Enable selecting an embedding model.
+    Select LLM and embedding models.
 `,
   )
   .allowUnknownOption()
@@ -198,8 +198,8 @@ if (process.argv.includes("--tools")) {
 if (process.argv.includes("--no-llama-parse")) {
   program.useLlamaParse = false;
 }
-if (process.argv.includes("--use-embed-model")) {
-  program.useEmbedModel = true;
+if (process.argv.includes("--ask-models")) {
+  program.askModels = true;
 }
 if (process.argv.includes("--no-files")) {
   program.dataSources = [];

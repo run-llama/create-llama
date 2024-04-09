@@ -12,7 +12,7 @@ import {
 } from "../helpers";
 
 export type AppType = "--frontend" | "--no-frontend" | "";
-const MODEL = "gpt-3.5-turbo";
+
 export type CreateLlamaResult = {
   projectName: string;
   appProcess: ChildProcess;
@@ -95,8 +95,6 @@ export async function runCreateLlama(
     templateUI,
     "--vector-db",
     vectorDb,
-    "--model",
-    MODEL,
     "--open-ai-key",
     process.env.OPENAI_API_KEY,
     appType,
