@@ -1,6 +1,6 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-const REQUIRED_ENV_VARS = ["QRANT_URL", "QDRANT_COLLECTION"]; // QDRANT_API_KEY is optional
+const REQUIRED_ENV_VARS = ["QDRANT_URL", "QDRANT_COLLECTION"]; // QDRANT_API_KEY is optional
 
 export function getQdrantClient() {
   const url = process.env.QDRANT_URL;
