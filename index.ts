@@ -78,7 +78,7 @@ const program = new Commander.Command(packageJson.name)
     "--files <path>",
     `
   
-    Specify the path to a local file or folder for chatting.
+  Specify the path to a local file or folder for chatting.
 `,
   )
   .option(
@@ -119,6 +119,7 @@ const program = new Commander.Command(packageJson.name)
   .option(
     "--embedding-model <embeddingModel>",
     `
+
   Select OpenAI embedding model to use. E.g. text-embedding-ada-002.
 `,
   )
@@ -160,22 +161,30 @@ const program = new Commander.Command(packageJson.name)
   .option(
     "--use-llama-parse",
     `
-    Enable LlamaParse.
+
+  Enable LlamaParse.
 `,
   )
   .option(
     "--llama-cloud-key <key>",
     `
+  
   Provide a LlamaCloud API key.
 `,
   )
   .option(
-    "--list-server-models",
-    "Fetch available LLM and embedding models from OpenAI API.",
+    "--observability <observability>",
+    `
+    
+  Specify observability tools to use. Eg: none, opentelemetry
+`,
   )
   .option(
-    "--observability <observability>",
-    "Specify observability tools to use. Eg: none, opentelemetry",
+    "--ask-models",
+    `
+
+  Select LLM and embedding models.
+`,
   )
   .allowUnknownOption()
   .parse(process.argv);
@@ -191,6 +200,9 @@ if (process.argv.includes("--tools")) {
 }
 if (process.argv.includes("--no-llama-parse")) {
   program.useLlamaParse = false;
+}
+if (process.argv.includes("--ask-models")) {
+  program.askModels = true;
 }
 if (process.argv.includes("--no-files")) {
   program.dataSources = [];

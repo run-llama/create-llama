@@ -25,7 +25,7 @@ export type QuestionArgs = Omit<
   InstallAppArgs,
   "appPath" | "packageManager"
 > & {
-  listServerModels?: boolean;
+  askModels?: boolean;
 };
 const supportedContextFileTypes = [
   ".pdf",
@@ -75,8 +75,8 @@ const defaults: QuestionArgs = {
   openAiKey: "",
   llamaCloudKey: "",
   useLlamaParse: false,
-  model: "gpt-3.5-turbo",
-  embeddingModel: "text-embedding-ada-002",
+  model: "gpt-4-vision-preview",
+  embeddingModel: "text-embedding-3-large",
   communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
@@ -234,32 +234,16 @@ export const onPromptState = (state: any) => {
 const getAvailableModelChoices = async (
   selectEmbedding: boolean,
   apiKey?: string,
-  listServerModels?: boolean,
 ) => {
-  const defaultLLMModels = [
-    "gpt-3.5-turbo-0125",
-    "gpt-4-turbo-preview",
-    "gpt-4",
-    "gpt-4-vision-preview",
-  ];
-  const defaultEmbeddingModels = [
-    "text-embedding-ada-002",
-    "text-embedding-3-small",
-    "text-embedding-3-large",
-  ];
-
-  const isLLMModels = (model_id: string) => {
-    return model_id.startsWith("gpt");
+  const isLLMModel = (modelId: string) => {
+    return modelId.startsWith("gpt");
   };
 
-  const isEmbeddingModel = (model_id: string) => {
-    return (
-      model_id.includes("embedding") ||
-      defaultEmbeddingModels.includes(model_id)
-    );
+  const isEmbeddingModel = (modelId: string) => {
+    return modelId.includes("embedding");
   };
 
-  if (apiKey && listServerModels) {
+  if (apiKey) {
     const spinner = ora("Fetching available models").start();
     try {
       const response = await got(`${OPENAI_API_URL}/models`, {
@@ -273,7 +257,7 @@ const getAvailableModelChoices = async (
       spinner.stop();
       return data.data
         .filter((model: any) =>
-          selectEmbedding ? isEmbeddingModel(model.id) : isLLMModels(model.id),
+          selectEmbedding ? isEmbeddingModel(model.id) : isLLMModel(model.id),
         )
         .map((el: any) => {
           return {
@@ -294,12 +278,6 @@ const getAvailableModelChoices = async (
       }
       process.exit(1);
     }
-  } else {
-    const data = selectEmbedding ? defaultEmbeddingModels : defaultLLMModels;
-    return data.map((model) => ({
-      title: model,
-      value: model,
-    }));
   }
 };
 
@@ -538,11 +516,11 @@ export const askQuestions = async (
       {
         type: "text",
         name: "key",
-        message: program.listServerModels
-          ? "Please provide your OpenAI API key (or reuse OPENAI_API_KEY env variable):"
+        message: program.askModels
+          ? "Please provide your OpenAI API key (or leave blank to reuse OPENAI_API_KEY env variable):"
           : "Please provide your OpenAI API key (leave blank to skip):",
         validate: (value: string) => {
-          if (program.listServerModels && !value) {
+          if (program.askModels && !value) {
             if (process.env.OPENAI_API_KEY) {
               return true;
             }
@@ -559,19 +537,15 @@ export const askQuestions = async (
   }
 
   if (!program.model) {
-    if (ciInfo.isCI) {
-      program.model = getPrefOrDefault("model");
+    if (ciInfo.isCI || !program.askModels) {
+      program.model = defaults.model;
     } else {
       const { model } = await prompts(
         {
           type: "select",
           name: "model",
-          message: "Which model would you like to use?",
-          choices: await getAvailableModelChoices(
-            false,
-            program.openAiKey,
-            program.listServerModels,
-          ),
+          message: "Which LLM model would you like to use?",
+          choices: await getAvailableModelChoices(false, program.openAiKey),
           initial: 0,
         },
         handlers,
@@ -581,20 +555,16 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.embeddingModel && program.framework === "fastapi") {
-    if (ciInfo.isCI) {
-      program.embeddingModel = getPrefOrDefault("embeddingModel");
+  if (!program.embeddingModel) {
+    if (ciInfo.isCI || !program.askModels) {
+      program.embeddingModel = defaults.embeddingModel;
     } else {
       const { embeddingModel } = await prompts(
         {
           type: "select",
           name: "embeddingModel",
           message: "Which embedding model would you like to use?",
-          choices: await getAvailableModelChoices(
-            true,
-            program.openAiKey,
-            program.listServerModels,
-          ),
+          choices: await getAvailableModelChoices(true, program.openAiKey),
           initial: 0,
         },
         handlers,
