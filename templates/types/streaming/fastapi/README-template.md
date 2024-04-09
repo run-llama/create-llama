@@ -24,7 +24,7 @@ If you are using any tools or data sources, you can update their config files in
 Second, generate the embeddings of the documents in the `./data` directory (if this folder exists - otherwise, skip this step):
 
 ```
-python app/engine/generate.py
+poetry run generate
 ```
 
 Third, run the development server:
@@ -84,7 +84,7 @@ docker run \
   -v $(pwd)/data:/app/data \ # Use your local folder to read the data
   -v $(pwd)/storage:/app/storage \ # Use your file system to store the vector database
   <your_backend_image_name> \
-  python app/engine/generate.py
+  poetry run generate
 ```
 
 3. Start the API:
