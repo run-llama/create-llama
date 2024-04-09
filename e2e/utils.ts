@@ -13,7 +13,6 @@ import {
 
 export type AppType = "--frontend" | "--no-frontend" | "";
 const MODEL = "gpt-3.5-turbo";
-const EMBEDDING_MODEL = "text-embedding-ada-002";
 export type CreateLlamaResult = {
   projectName: string;
   appProcess: ChildProcess;
@@ -98,8 +97,6 @@ export async function runCreateLlama(
     vectorDb,
     "--model",
     MODEL,
-    "--embedding-model",
-    EMBEDDING_MODEL,
     "--open-ai-key",
     process.env.OPENAI_API_KEY,
     appType,
