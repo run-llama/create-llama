@@ -23,6 +23,9 @@ export default function ChatSection() {
   });
 
   const transformedMessages = useMemo(() => {
+    // To test non-streaming response, set NEXT_PUBLIC_CHAT_API=http://localhost:8000/api/chat/request
+    // Also uncomment the below transformNonStreamingMessages
+    // transformNonStreamingMessages(messages);
     return insertDataIntoMessages(messages, data);
   }, [messages, data]);
 

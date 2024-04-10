@@ -37,6 +37,7 @@ class _SourceNodes(BaseModel):
     id: str
     metadata: Dict[str, Any]
     score: Optional[float]
+    text: str
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
@@ -44,6 +45,7 @@ class _SourceNodes(BaseModel):
             id=source_node.node.node_id,
             metadata=source_node.node.metadata,
             score=source_node.score,
+            text=source_node.node.text,
         )
 
     @classmethod
