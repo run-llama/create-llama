@@ -1,5 +1,13 @@
 import { Check, Copy } from "lucide-react";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/app/components/ui/dialog";
 import { JSONValue, Message } from "ai";
 import Image from "next/image";
 import { Button } from "../button";
@@ -34,6 +42,34 @@ function ChatMessageData({ messageData }: { messageData: JSONValue }) {
   return null;
 }
 
+function ChatMessageSources({ nodes }: { nodes: any }) {
+  if (!nodes || nodes.length === 0) return null;
+  return (
+    <div className="space-x-1 text-sm text-blue-900">
+      <span className="underline">References:</span>
+      <div className="inline-flex gap-1 items-center">
+        {nodes.map((node: any, index: number) => (
+          <div key={node.id}>
+            <Dialog>
+              <DialogTrigger>
+                <sup className="text-sm hover:underline">{index}</sup>
+              </DialogTrigger>
+              <DialogContent className="max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Detail Information from Wikipedia</DialogTitle>
+                  <DialogDescription>
+                    <p className="mt-4 max-h-80 overflow-auto">{node.text}</p>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ChatMessage(chatMessage: Message) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   return (
@@ -45,6 +81,7 @@ export default function ChatMessage(chatMessage: Message) {
             <ChatMessageData messageData={chatMessage.data} />
           )}
           <Markdown content={chatMessage.content} />
+          <ChatMessageSources nodes={(chatMessage as any).nodes} />
         </div>
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}
