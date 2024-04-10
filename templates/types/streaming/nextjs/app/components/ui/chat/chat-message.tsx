@@ -51,7 +51,7 @@ function ChatMessageSources({ nodes }: { nodes: any }) {
         {nodes.map((node: any, index: number) => (
           <div key={node.id}>
             <Dialog>
-              <DialogTrigger>
+              <DialogTrigger onClick={() => console.log(node)}>
                 <sup className="text-sm hover:underline">{index}</sup>
               </DialogTrigger>
               <DialogContent className="max-w-[800px]">
