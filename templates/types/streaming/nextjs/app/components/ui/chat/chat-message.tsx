@@ -45,14 +45,16 @@ function ChatMessageData({ messageData }: { messageData: JSONValue }) {
 function ChatMessageSources({ nodes }: { nodes: any }) {
   if (!nodes || nodes.length === 0) return null;
   return (
-    <div className="space-x-1 text-sm text-blue-900">
+    <div className="space-x-2 text-sm">
       <span className="underline">References:</span>
       <div className="inline-flex gap-1 items-center">
         {nodes.map((node: any, index: number) => (
           <div key={node.id}>
             <Dialog>
-              <DialogTrigger onClick={() => console.log(node)}>
-                <sup className="text-sm hover:underline">{index}</sup>
+              <DialogTrigger onClick={() => console.log("Detail node", node)}>
+                <sup className="text-xs w-5 h-5 rounded-full bg-gray-100 mb-2 flex items-center justify-center hover:text-white hover:bg-primary">
+                  {index}
+                </sup>
               </DialogTrigger>
               <DialogContent className="max-w-[800px]">
                 <DialogHeader>
@@ -61,7 +63,9 @@ function ChatMessageSources({ nodes }: { nodes: any }) {
                     <div>
                       <b>Node ID: {node.id}</b>
                     </div>
-                    <p className="mt-4 max-h-80 overflow-auto">{node.text}</p>
+                    <p className="mt-4 max-h-80 whitespace-pre-wrap overflow-auto">
+                      {node.text}
+                    </p>
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>
