@@ -54,7 +54,7 @@ Optionally generate a frontend if you've selected the Python or Express back-end
 
 ## Customizing the AI models
 
-The app will default to OpenAI's `gpt-4-vision-preview` LLM and `text-embedding-3-large` embedding model.
+The app will default to OpenAI's `gpt-4-turbo` LLM and `text-embedding-3-large` embedding model.
 
 If you want to use different OpenAI models, add the `--ask-models` CLI parameter.
 

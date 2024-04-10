@@ -75,7 +75,7 @@ const defaults: QuestionArgs = {
   openAiKey: "",
   llamaCloudKey: "",
   useLlamaParse: false,
-  model: "gpt-4-vision-preview",
+  model: "gpt-4-turbo",
   embeddingModel: "text-embedding-3-large",
   communityProjectConfig: undefined,
   llamapack: "",

@@ -13,9 +13,9 @@ python = "^3.11,<3.12"
 fastapi = "^0.109.1"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 python-dotenv = "^1.0.0"
-llama-index = "0.10.15"
-llama-index-core = "0.10.15"
-llama-index-agent-openai = "0.1.5"
+llama-index = "0.10.28"
+llama-index-core = "0.10.28"
+llama-index-agent-openai = "0.2.2"
 
 [build-system]
 requires = ["poetry-core"]
