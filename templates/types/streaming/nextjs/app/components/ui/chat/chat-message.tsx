@@ -46,15 +46,15 @@ function ChatMessageSources({ nodes }: { nodes: any }) {
   if (!nodes || nodes.length === 0) return null;
   return (
     <div className="space-x-2 text-sm">
-      <span className="underline">References:</span>
+      <span className="font-semibold">Sources:</span>
       <div className="inline-flex gap-1 items-center">
         {nodes.map((node: any, index: number) => (
           <div key={node.id}>
             <Dialog>
               <DialogTrigger onClick={() => console.log("Detail node", node)}>
-                <sup className="text-xs w-5 h-5 rounded-full bg-gray-100 mb-2 flex items-center justify-center hover:text-white hover:bg-primary">
-                  {index}
-                </sup>
+                <div className="text-xs w-5 h-5 rounded-full bg-gray-100 mb-2 flex items-center justify-center hover:text-white hover:bg-primary">
+                  {index + 1}
+                </div>
               </DialogTrigger>
               <DialogContent className="max-w-[800px]">
                 <DialogHeader>
