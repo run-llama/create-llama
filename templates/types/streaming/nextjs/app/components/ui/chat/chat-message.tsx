@@ -56,8 +56,11 @@ function ChatMessageSources({ nodes }: { nodes: any }) {
               </DialogTrigger>
               <DialogContent className="max-w-[800px]">
                 <DialogHeader>
-                  <DialogTitle>Detail Information from Wikipedia</DialogTitle>
+                  <DialogTitle>Detail Information</DialogTitle>
                   <DialogDescription>
+                    <div>
+                      <b>Node ID: {node.id}</b>
+                    </div>
                     <p className="mt-4 max-h-80 overflow-auto">{node.text}</p>
                   </DialogDescription>
                 </DialogHeader>
