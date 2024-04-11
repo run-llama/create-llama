@@ -1,0 +1,35 @@
+name: Publish to GitHub Releases
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: pnpm/action-setup@v3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build tarball
+        run: |
+          pnpm pack
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "create-llama-*.tgz"
+          name: Release ${{ github.ref }}
+          bodyFile: "CHANGELOG.md"
+          token: ${{ secrets.GITHUB_TOKEN }}
