@@ -9,7 +9,7 @@ class VercelStreamResponse(StreamingResponse):
     """
 
     TEXT_PREFIX = "0:"
-    DATA_PREFIX = "2:"
+    DATA_PREFIX = "8:"
     VERCEL_HEADERS = {
         "X-Experimental-Stream-Data": "true",
         "Content-Type": "text/plain; charset=utf-8",
