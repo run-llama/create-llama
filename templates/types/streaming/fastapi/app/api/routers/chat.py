@@ -95,9 +95,6 @@ async def chat(
     response = await chat_engine.astream_chat(last_message_content, messages)
 
     async def event_generator(request: Request, response: StreamingAgentChatResponse):
-        # Yield an empty data object to start the stream
-        yield VercelStreamResponse.convert_data({})
-
         # Yield the text response
         async for token in response.async_response_gen():
             # If client closes connection, stop sending events
@@ -108,10 +105,13 @@ async def chat(
         # Yield the source nodes
         yield VercelStreamResponse.convert_data(
             {
-                "nodes": [
-                    _SourceNodes.from_source_node(node).dict()
-                    for node in response.source_nodes
-                ]
+                "type": "document",
+                "data": {
+                    "nodes": [
+                        _SourceNodes.from_source_node(node).dict()
+                        for node in response.source_nodes
+                    ]
+                },
             }
         )
 
