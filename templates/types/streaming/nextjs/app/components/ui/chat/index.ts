@@ -6,25 +6,25 @@ export { ChatInput, ChatMessages };
 
 export enum MessageAnotationType {
   IMAGE = "image",
-  DOCUMENT = "document",
+  SOURCES = "sources",
 }
 
 export type ImageData = {
   url: string;
 };
 
-export type DocumentNode = {
+export type SourceNode = {
   id: string;
   medadata: Record<string, unknown>;
   score: number;
   text: string;
 };
 
-export type DocumentData = {
-  nodes: DocumentNode[];
+export type SourceData = {
+  nodes: SourceNode[];
 };
 
-export type AnnotationData = ImageData | DocumentData;
+export type AnnotationData = ImageData | SourceData;
 
 export type MessageAnotation = {
   type: MessageAnotationType;
