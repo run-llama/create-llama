@@ -21,6 +21,18 @@ class _Message(BaseModel):
 class _ChatData(BaseModel):
     messages: List[_Message]
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "What standards for letters exist?",
+                    }
+                ]
+            }
+        }
+
 
 class _SourceNodes(BaseModel):
     id: str
