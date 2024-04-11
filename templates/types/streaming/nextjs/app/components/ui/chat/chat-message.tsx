@@ -8,10 +8,10 @@ import { ChatSources } from "./chat-document";
 import { ChatImage } from "./chat-image";
 import {
   AnnotationData,
-  DocumentData,
   ImageData,
   MessageAnotation,
   MessageAnotationType,
+  SourceData,
 } from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
@@ -36,9 +36,9 @@ function ChatMessageContent({ message }: { message: Message }) {
     annotations,
     MessageAnotationType.IMAGE,
   );
-  const documentData = getAnnotationData<DocumentData>(
+  const sourceData = getAnnotationData<SourceData>(
     annotations,
-    MessageAnotationType.DOCUMENT,
+    MessageAnotationType.SOURCES,
   );
 
   const contents: ContentDiplayConfig[] = [
@@ -52,7 +52,7 @@ function ChatMessageContent({ message }: { message: Message }) {
     },
     {
       order: 1,
-      component: documentData ? <ChatSources data={documentData} /> : null,
+      component: sourceData ? <ChatSources data={sourceData} /> : null,
     },
   ];
 

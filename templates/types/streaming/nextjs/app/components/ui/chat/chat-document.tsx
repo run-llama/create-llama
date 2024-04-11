@@ -7,15 +7,17 @@ import {
   DialogTrigger,
 } from "@/app/components/ui/dialog";
 import { useMemo } from "react";
-import { DocumentData } from "./index";
+import { SourceData } from "./index";
 
 const SCORE_THRESHOLD = 0.5;
 
-export function ChatSources({ data }: { data: DocumentData }) {
+export function ChatSources({ data }: { data: SourceData }) {
   const sources = useMemo(() => {
-    return data.nodes
-      ?.filter((node) => node.score > SCORE_THRESHOLD)
-      .sort((a, b) => b.score - a.score) || [];
+    return (
+      data.nodes
+        ?.filter((node) => node.score > SCORE_THRESHOLD)
+        .sort((a, b) => b.score - a.score) || []
+    );
   }, [data.nodes]);
 
   if (sources.length === 0) return null;

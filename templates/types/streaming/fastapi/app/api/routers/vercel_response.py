@@ -10,11 +10,6 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
-    VERCEL_HEADERS = {
-        "X-Experimental-Stream-Data": "true",
-        "Content-Type": "text/plain; charset=utf-8",
-        "Access-Control-Expose-Headers": "X-Experimental-Stream-Data",
-    }
 
     @classmethod
     def convert_text(cls, token: str):
@@ -30,6 +25,5 @@ class VercelStreamResponse(StreamingResponse):
     def __init__(self, content: Any, **kwargs):
         super().__init__(
             content=content,
-            headers=self.VERCEL_HEADERS,
             **kwargs,
         )
