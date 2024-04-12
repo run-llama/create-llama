@@ -4,7 +4,7 @@ import ChatMessages from "./chat-messages";
 export { type ChatHandler } from "./chat.interface";
 export { ChatInput, ChatMessages };
 
-export enum MessageAnotationType {
+export enum MessageAnnotationType {
   IMAGE = "image",
   SOURCES = "sources",
 }
@@ -15,8 +15,8 @@ export type ImageData = {
 
 export type SourceNode = {
   id: string;
-  medadata: Record<string, unknown>;
-  score: number;
+  metadata: Record<string, unknown>;
+  score?: number;
   text: string;
 };
 
@@ -26,7 +26,7 @@ export type SourceData = {
 
 export type AnnotationData = ImageData | SourceData;
 
-export type MessageAnotation = {
-  type: MessageAnotationType;
+export type MessageAnnotation = {
+  type: MessageAnnotationType;
   data: AnnotationData;
 };
