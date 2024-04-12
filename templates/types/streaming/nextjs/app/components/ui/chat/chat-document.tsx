@@ -15,8 +15,8 @@ export function ChatSources({ data }: { data: SourceData }) {
   const sources = useMemo(() => {
     return (
       data.nodes
-        ?.filter((node) => node.score > SCORE_THRESHOLD)
-        .sort((a, b) => b.score - a.score) || []
+        ?.filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
+        .sort((a, b) => (b.score ?? 1) - (a.score ?? 1)) || []
     );
   }, [data.nodes]);
 

@@ -6,8 +6,8 @@ import {
   type AIStreamCallbacksAndOptions,
 } from "ai";
 import {
-  BaseNode,
   Metadata,
+  NodeWithScore,
   Response,
   StreamingAgentChatResponse,
 } from "llamaindex";
@@ -28,16 +28,16 @@ function appendImageData(data: StreamData, imageUrl?: string) {
 
 function appendSourceData(
   data: StreamData,
-  sourceNodes?: BaseNode<Metadata>[],
+  sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
   data.appendMessageAnnotation({
     type: "sources",
     data: {
       nodes: sourceNodes.map((node) => ({
-        ...node.toMutableJSON(),
-        id: node.id_,
-        score: 1, // FIXME: score is not available now in the source nodes, so we assume it's 1
+        ...node.node.toMutableJSON(),
+        id: node.node.id_,
+        score: node.score ?? null,
       })),
     },
   });
@@ -51,7 +51,7 @@ function createParser(
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
 
-  let sourceNodes: BaseNode<Metadata>[] | undefined;
+  let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
     start() {
       appendImageData(data, opts?.image_url);

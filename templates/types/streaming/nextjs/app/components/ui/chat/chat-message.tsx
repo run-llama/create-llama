@@ -9,8 +9,8 @@ import { ChatImage } from "./chat-image";
 import {
   AnnotationData,
   ImageData,
-  MessageAnotation,
-  MessageAnotationType,
+  MessageAnnotation,
+  MessageAnnotationType,
   SourceData,
 } from "./index";
 import Markdown from "./markdown";
@@ -22,23 +22,23 @@ type ContentDiplayConfig = {
 };
 
 function getAnnotationData<T extends AnnotationData>(
-  annotations: MessageAnotation[],
-  type: MessageAnotationType,
+  annotations: MessageAnnotation[],
+  type: MessageAnnotationType,
 ): T | undefined {
   return annotations.find((a) => a.type === type)?.data as T | undefined;
 }
 
 function ChatMessageContent({ message }: { message: Message }) {
-  const annotations = message.annotations as MessageAnotation[] | undefined;
+  const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
 
   const imageData = getAnnotationData<ImageData>(
     annotations,
-    MessageAnotationType.IMAGE,
+    MessageAnnotationType.IMAGE,
   );
   const sourceData = getAnnotationData<SourceData>(
     annotations,
-    MessageAnotationType.SOURCES,
+    MessageAnnotationType.SOURCES,
   );
 
   const contents: ContentDiplayConfig[] = [
