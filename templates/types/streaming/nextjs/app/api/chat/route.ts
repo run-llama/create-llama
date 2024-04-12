@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { StreamingTextResponse } from "ai";
+import { Message, StreamingTextResponse } from "ai";
 import { ChatMessage, MessageContent } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
@@ -34,7 +34,7 @@ const convertMessageContent = (
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: ChatMessage[]; data: any } = body;
+    const { messages, data }: { messages: Message[]; data: any } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      chatHistory: messages,
+      chatHistory: messages as ChatMessage[],
       stream: true,
     });
 
