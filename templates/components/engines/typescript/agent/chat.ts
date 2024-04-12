@@ -1,10 +1,5 @@
-import {
-  BaseTool,
-  OpenAIAgent,
-  QueryEngineTool,
-  Settings,
-  ToolFactory,
-} from "llamaindex";
+import { BaseTool, OpenAIAgent, QueryEngineTool } from "llamaindex";
+import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
@@ -33,12 +28,10 @@ export async function createChatEngine() {
     const config = JSON.parse(
       await fs.readFile(path.join("config", "tools.json"), "utf8"),
     );
-    tools = tools.concat(await ToolFactory.createTools(config));
+    tools = tools.concat(await ToolsFactory.createTools(config));
   } catch {}
 
   return new OpenAIAgent({
     tools,
-    llm: Settings.llm,
-    verbose: true,
   });
 }
