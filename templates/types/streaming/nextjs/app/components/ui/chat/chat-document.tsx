@@ -6,10 +6,56 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/app/components/ui/dialog";
+import { ArrowUpRightSquare, Check, Copy } from "lucide-react";
 import { useMemo } from "react";
-import { SourceData } from "./index";
+import { Button } from "../button";
+import { SourceData, SourceNode } from "./index";
+import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
 const SCORE_THRESHOLD = 0.5;
+
+function NodeMetaInfo({ node }: { node: SourceNode }) {
+  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 500 });
+
+  if (node.metadata["url"]) {
+    return (
+      <a
+        className="space-x-2 flex items-start my-2 hover:text-blue-900"
+        href={node.metadata["url"] as string}
+        target="_blank"
+      >
+        <span>Document URL</span>
+        <ArrowUpRightSquare className="w-4 h-4" />
+      </a>
+    );
+  }
+
+  if (
+    node.metadata["file_path"] &&
+    process.env.NEXT_PUBLIC_SHOW_LOCAL_FILES === "true"
+  ) {
+    const fileURL = `file:///${node.metadata["file_path"]}`;
+    return (
+      <div className="flex items-center border rounded-md px-2 py-1 justify-between my-2">
+        <span>File URL: {fileURL}</span>
+        <Button
+          onClick={() => copyToClipboard(fileURL)}
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8"
+        >
+          {isCopied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export function ChatSources({ data }: { data: SourceData }) {
   const sources = useMemo(() => {
@@ -40,6 +86,7 @@ export function ChatSources({ data }: { data: SourceData }) {
                   <DialogDescription asChild>
                     <div>
                       <b className="block">Node ID: {node.id}</b>
+                      <NodeMetaInfo node={node} />
                       <p className="mt-4 max-h-80 whitespace-pre-wrap overflow-auto">
                         {node.text}
                       </p>

@@ -220,18 +220,21 @@ Given this information, please answer the question: {query_str}
       ],
     ];
   } else {
+    const nextJsEnvs = [
+      {
+        name: "NEXT_PUBLIC_MODEL",
+        description: "The LLM model to use (hardcode to front-end artifact).",
+        value: opts.model,
+      },
+      {
+        name: "NEXT_PUBLIC_SHOW_LOCAL_FILES",
+        description: "Display local file URLs in the chat component.",
+        value: "true",
+      },
+    ];
     envVars = [
       ...defaultEnvs,
-      ...[
-        opts.framework === "nextjs"
-          ? {
-              name: "NEXT_PUBLIC_MODEL",
-              description:
-                "The LLM model to use (hardcode to front-end artifact).",
-              value: opts.model,
-            }
-          : {},
-      ],
+      ...(opts.framework === "nextjs" ? nextJsEnvs : []),
     ];
   }
   // Render and write env file
