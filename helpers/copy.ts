@@ -52,6 +52,7 @@ export const copy = async (
 export const assetRelocator = (name: string) => {
   switch (name) {
     case "gitignore":
+    case "npmrc":
     case "eslintrc.json": {
       return `.${name}`;
     }
