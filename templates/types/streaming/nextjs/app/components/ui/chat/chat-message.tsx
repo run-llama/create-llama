@@ -4,8 +4,8 @@ import { Message } from "ai";
 import { Fragment } from "react";
 import { Button } from "../button";
 import ChatAvatar from "./chat-avatar";
-import { ChatSources } from "./chat-document";
 import { ChatImage } from "./chat-image";
+import { ChatSources } from "./chat-sources";
 import {
   AnnotationData,
   ImageData,
