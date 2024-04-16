@@ -226,11 +226,6 @@ Given this information, please answer the question: {query_str}
         description: "The LLM model to use (hardcode to front-end artifact).",
         value: opts.model,
       },
-      {
-        name: "NEXT_PUBLIC_SHOW_LOCAL_FILES",
-        description: "Display local file URLs in the chat component.",
-        value: "true",
-      },
     ];
     envVars = [
       ...defaultEnvs,
