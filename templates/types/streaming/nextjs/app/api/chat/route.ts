@@ -1,10 +1,16 @@
 import { initObservability } from "@/app/observability";
-import { Message, StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent } from "llamaindex";
+import { StreamData, StreamingTextResponse } from "ai";
+import {
+  CallbackManager,
+  ChatMessage,
+  MessageContent,
+  Settings,
+} from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
 import { LlamaIndexStream } from "./llamaindex-stream";
+import { appendEventData } from "./stream-helper";
 
 initObservability();
 initSettings();
@@ -34,7 +40,7 @@ const convertMessageContent = (
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data: any } = body;
+    const { messages, data }: { messages: ChatMessage[]; data: any } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -50,26 +56,37 @@ export async function POST(request: NextRequest) {
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
-      userMessage.content,
+      userMessage.content as string,
       data?.imageUrl,
     );
+
+    // Init Vercel AI StreamData
+    const vercelStreamData = new StreamData();
+
+    // Setup callback for streaming data before chatting
+    Settings.callbackManager = new CallbackManager({
+      onRetrieve: ({ query, nodes }) => {
+        const eventTitle = `Retrieved ${nodes.length} nodes for query: '${query}'`;
+        appendEventData(vercelStreamData, eventTitle);
+      },
+    });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      chatHistory: messages as ChatMessage[],
+      chatHistory: messages,
       stream: true,
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
-    const { stream, data: streamData } = LlamaIndexStream(response, {
+    const { stream } = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
         image_url: data?.imageUrl,
       },
     });
 
     // Return a StreamingTextResponse, which can be consumed by the Vercel/AI client
-    return new StreamingTextResponse(stream, {}, streamData);
+    return new StreamingTextResponse(stream, {}, vercelStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(

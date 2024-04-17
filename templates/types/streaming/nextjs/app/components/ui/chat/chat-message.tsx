@@ -4,10 +4,12 @@ import { Message } from "ai";
 import { Fragment } from "react";
 import { Button } from "../button";
 import ChatAvatar from "./chat-avatar";
+import { ChatEvents } from "./chat-events";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import {
   AnnotationData,
+  EventData,
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
@@ -36,6 +38,10 @@ function ChatMessageContent({ message }: { message: Message }) {
     annotations,
     MessageAnnotationType.IMAGE,
   );
+  const eventData = getAnnotationData<EventData>(
+    annotations,
+    MessageAnnotationType.EVENTS,
+  );
   const sourceData = getAnnotationData<SourceData>(
     annotations,
     MessageAnnotationType.SOURCES,
@@ -43,8 +49,14 @@ function ChatMessageContent({ message }: { message: Message }) {
 
   const contents: ContentDiplayConfig[] = [
     {
-      order: -1,
+      order: -2,
       component: imageData ? <ChatImage data={imageData} /> : null,
+    },
+    {
+      order: -1,
+      component: eventData ? (
+        <ChatEvents collapsed={!!sourceData} data={eventData} /> // Auto collapse events when finished
+      ) : null,
     },
     {
       order: 0,

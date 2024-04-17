@@ -7,6 +7,7 @@ export { ChatInput, ChatMessages };
 export enum MessageAnnotationType {
   IMAGE = "image",
   SOURCES = "sources",
+  EVENTS = "events",
 }
 
 export type ImageData = {
@@ -24,7 +25,12 @@ export type SourceData = {
   nodes: SourceNode[];
 };
 
-export type AnnotationData = ImageData | SourceData;
+export type EventData = {
+  title: string;
+  isCollapsed: boolean;
+};
+
+export type AnnotationData = ImageData | SourceData | EventData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

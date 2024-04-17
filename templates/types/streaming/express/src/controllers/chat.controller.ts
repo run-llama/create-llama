@@ -1,8 +1,14 @@
-import { streamToResponse } from "ai";
+import { StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent } from "llamaindex";
+import {
+  CallbackManager,
+  ChatMessage,
+  MessageContent,
+  Settings,
+} from "llamaindex";
 import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
+import { appendEventData } from "./stream-helper";
 
 const convertMessageContent = (
   textMessage: string,
@@ -38,9 +44,20 @@ export const chat = async (req: Request, res: Response) => {
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
-      userMessage.content,
+      userMessage.content as string,
       data?.imageUrl,
     );
+
+    // Init Vercel AI StreamData
+    const vercelStreamData = new StreamData();
+
+    // Setup callback for streaming data before chatting
+    Settings.callbackManager = new CallbackManager({
+      onRetrieve: ({ query, nodes }) => {
+        const eventTitle = `Retrieved ${nodes.length} nodes for query: '${query}'`;
+        appendEventData(vercelStreamData, eventTitle);
+      },
+    });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
@@ -50,14 +67,14 @@ export const chat = async (req: Request, res: Response) => {
     });
 
     // Return a stream, which can be consumed by the Vercel/AI client
-    const { stream, data: streamData } = LlamaIndexStream(response, {
+    const { stream } = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
         image_url: data?.imageUrl,
       },
     });
 
     // Pipe LlamaIndexStream to response
-    const processedStream = stream.pipeThrough(streamData.stream);
+    const processedStream = stream.pipeThrough(vercelStreamData.stream);
     return streamToResponse(processedStream, res, {
       headers: {
         // response MUST have the `X-Experimental-Stream-Data: 'true'` header

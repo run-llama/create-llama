@@ -11,37 +11,11 @@ import {
   Response,
   StreamingAgentChatResponse,
 } from "llamaindex";
+import { appendImageData, appendSourceData } from "./stream-helper";
 
 type ParserOptions = {
   image_url?: string;
 };
-
-function appendImageData(data: StreamData, imageUrl?: string) {
-  if (!imageUrl) return;
-  data.appendMessageAnnotation({
-    type: "image",
-    data: {
-      url: imageUrl,
-    },
-  });
-}
-
-function appendSourceData(
-  data: StreamData,
-  sourceNodes?: NodeWithScore<Metadata>[],
-) {
-  if (!sourceNodes?.length) return;
-  data.appendMessageAnnotation({
-    type: "sources",
-    data: {
-      nodes: sourceNodes.map((node) => ({
-        ...node.node.toMutableJSON(),
-        id: node.node.id_,
-        score: node.score ?? null,
-      })),
-    },
-  });
-}
 
 function createParser(
   res: AsyncIterable<Response>,
@@ -79,12 +53,12 @@ function createParser(
 
 export function LlamaIndexStream(
   response: StreamingAgentChatResponse | AsyncIterable<Response>,
+  data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
     parserOptions?: ParserOptions;
   },
 ): { stream: ReadableStream; data: StreamData } {
-  const data = new StreamData();
   const res =
     response instanceof StreamingAgentChatResponse
       ? response.response
