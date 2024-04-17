@@ -5,6 +5,9 @@ export default function webpack(config, isServer) {
     sharp$: false,
     "onnxruntime-node$": false,
   };
+  config.resolve.fallback = {
+    aws4: false,
+  };
   config.module.rules.push({
     test: /\.node$/,
     loader: "node-loader",
