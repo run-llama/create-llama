@@ -1,8 +1,6 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { useMemo } from "react";
-import { insertDataIntoMessages } from "./transform";
 import { ChatInput, ChatMessages } from "./ui/chat";
 
 export default function ChatSection() {
@@ -14,7 +12,6 @@ export default function ChatSection() {
     handleInputChange,
     reload,
     stop,
-    data,
   } = useChat({
     api: process.env.NEXT_PUBLIC_CHAT_API,
     headers: {
@@ -22,14 +19,10 @@ export default function ChatSection() {
     },
   });
 
-  const transformedMessages = useMemo(() => {
-    return insertDataIntoMessages(messages, data);
-  }, [messages, data]);
-
   return (
     <div className="space-y-4 max-w-5xl w-full">
       <ChatMessages
-        messages={transformedMessages}
+        messages={messages}
         isLoading={isLoading}
         reload={reload}
         stop={stop}

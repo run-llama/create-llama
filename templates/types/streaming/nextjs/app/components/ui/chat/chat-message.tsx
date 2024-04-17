@@ -1,37 +1,70 @@
 import { Check, Copy } from "lucide-react";
 
-import { JSONValue, Message } from "ai";
-import Image from "next/image";
+import { Message } from "ai";
+import { Fragment } from "react";
 import { Button } from "../button";
 import ChatAvatar from "./chat-avatar";
+import { ChatImage } from "./chat-image";
+import { ChatSources } from "./chat-sources";
+import {
+  AnnotationData,
+  ImageData,
+  MessageAnnotation,
+  MessageAnnotationType,
+  SourceData,
+} from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
-interface ChatMessageImageData {
-  type: "image_url";
-  image_url: {
-    url: string;
-  };
+type ContentDiplayConfig = {
+  order: number;
+  component: JSX.Element | null;
+};
+
+function getAnnotationData<T extends AnnotationData>(
+  annotations: MessageAnnotation[],
+  type: MessageAnnotationType,
+): T | undefined {
+  return annotations.find((a) => a.type === type)?.data as T | undefined;
 }
 
-// This component will parse message data and render the appropriate UI.
-function ChatMessageData({ messageData }: { messageData: JSONValue }) {
-  const { image_url, type } = messageData as unknown as ChatMessageImageData;
-  if (type === "image_url") {
-    return (
-      <div className="rounded-md max-w-[200px] shadow-md">
-        <Image
-          src={image_url.url}
-          width={0}
-          height={0}
-          sizes="100vw"
-          style={{ width: "100%", height: "auto" }}
-          alt=""
-        />
-      </div>
-    );
-  }
-  return null;
+function ChatMessageContent({ message }: { message: Message }) {
+  const annotations = message.annotations as MessageAnnotation[] | undefined;
+  if (!annotations?.length) return <Markdown content={message.content} />;
+
+  const imageData = getAnnotationData<ImageData>(
+    annotations,
+    MessageAnnotationType.IMAGE,
+  );
+  const sourceData = getAnnotationData<SourceData>(
+    annotations,
+    MessageAnnotationType.SOURCES,
+  );
+
+  const contents: ContentDiplayConfig[] = [
+    {
+      order: -1,
+      component: imageData ? <ChatImage data={imageData} /> : null,
+    },
+    {
+      order: 0,
+      component: <Markdown content={message.content} />,
+    },
+    {
+      order: 1,
+      component: sourceData ? <ChatSources data={sourceData} /> : null,
+    },
+  ];
+
+  return (
+    <div className="flex-1 gap-4 flex flex-col">
+      {contents
+        .sort((a, b) => a.order - b.order)
+        .map((content, index) => (
+          <Fragment key={index}>{content.component}</Fragment>
+        ))}
+    </div>
+  );
 }
 
 export default function ChatMessage(chatMessage: Message) {
@@ -40,12 +73,7 @@ export default function ChatMessage(chatMessage: Message) {
     <div className="flex items-start gap-4 pr-5 pt-5">
       <ChatAvatar role={chatMessage.role} />
       <div className="group flex flex-1 justify-between gap-2">
-        <div className="flex-1 space-y-4">
-          {chatMessage.data && (
-            <ChatMessageData messageData={chatMessage.data} />
-          )}
-          <Markdown content={chatMessage.content} />
-        </div>
+        <ChatMessageContent message={chatMessage} />
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}
           size="icon"

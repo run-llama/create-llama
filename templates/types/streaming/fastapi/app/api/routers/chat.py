@@ -1,13 +1,14 @@
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import (
     BaseChatEngine,
+    StreamingAgentChatResponse,
 )
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 from app.engine import get_chat_engine
+from app.api.routers.vercel_response import VercelStreamResponse
 
 chat_router = r = APIRouter()
 
@@ -37,6 +38,7 @@ class _SourceNodes(BaseModel):
     id: str
     metadata: Dict[str, Any]
     score: Optional[float]
+    text: str
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
@@ -44,6 +46,7 @@ class _SourceNodes(BaseModel):
             id=source_node.node.node_id,
             metadata=source_node.node.metadata,
             score=source_node.score,
+            text=source_node.node.text,
         )
 
     @classmethod
@@ -91,13 +94,28 @@ async def chat(
 
     response = await chat_engine.astream_chat(last_message_content, messages)
 
-    async def event_generator():
+    async def event_generator(request: Request, response: StreamingAgentChatResponse):
+        # Yield the text response
         async for token in response.async_response_gen():
+            # If client closes connection, stop sending events
             if await request.is_disconnected():
                 break
-            yield token
+            yield VercelStreamResponse.convert_text(token)
 
-    return StreamingResponse(event_generator(), media_type="text/plain")
+        # Yield the source nodes
+        yield VercelStreamResponse.convert_data(
+            {
+                "type": "sources",
+                "data": {
+                    "nodes": [
+                        _SourceNodes.from_source_node(node).dict()
+                        for node in response.source_nodes
+                    ]
+                },
+            }
+        )
+
+    return VercelStreamResponse(content=event_generator(request, response))
 
 
 # non-streaming endpoint - delete if not needed

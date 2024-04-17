@@ -1,48 +1,74 @@
 import {
-  JSONValue,
+  StreamData,
   createCallbacksTransformer,
   createStreamDataTransformer,
-  experimental_StreamData,
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import { Response, StreamingAgentChatResponse } from "llamaindex";
+import {
+  Metadata,
+  NodeWithScore,
+  Response,
+  StreamingAgentChatResponse,
+} from "llamaindex";
 
 type ParserOptions = {
   image_url?: string;
 };
 
+function appendImageData(data: StreamData, imageUrl?: string) {
+  if (!imageUrl) return;
+  data.appendMessageAnnotation({
+    type: "image",
+    data: {
+      url: imageUrl,
+    },
+  });
+}
+
+function appendSourceData(
+  data: StreamData,
+  sourceNodes?: NodeWithScore<Metadata>[],
+) {
+  if (!sourceNodes?.length) return;
+  data.appendMessageAnnotation({
+    type: "sources",
+    data: {
+      nodes: sourceNodes.map((node) => ({
+        ...node.node.toMutableJSON(),
+        id: node.node.id_,
+        score: node.score ?? null,
+      })),
+    },
+  });
+}
+
 function createParser(
   res: AsyncIterable<Response>,
-  data: experimental_StreamData,
+  data: StreamData,
   opts?: ParserOptions,
 ) {
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
+
+  let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
     start() {
-      // if image_url is provided, send it via the data stream
-      if (opts?.image_url) {
-        const message: JSONValue = {
-          type: "image_url",
-          image_url: {
-            url: opts.image_url,
-          },
-        };
-        data.append(message);
-      } else {
-        data.append({}); // send an empty image response for the user's message
-      }
+      appendImageData(data, opts?.image_url);
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
       if (done) {
+        appendSourceData(data, sourceNodes);
         controller.close();
-        data.append({}); // send an empty image response for the assistant's message
         data.close();
         return;
       }
 
+      if (!sourceNodes) {
+        // get source nodes from the first response
+        sourceNodes = value.sourceNodes;
+      }
       const text = trimStartOfStream(value.response ?? "");
       if (text) {
         controller.enqueue(text);
@@ -57,8 +83,8 @@ export function LlamaIndexStream(
     callbacks?: AIStreamCallbacksAndOptions;
     parserOptions?: ParserOptions;
   },
-): { stream: ReadableStream; data: experimental_StreamData } {
-  const data = new experimental_StreamData();
+): { stream: ReadableStream; data: StreamData } {
+  const data = new StreamData();
   const res =
     response instanceof StreamingAgentChatResponse
       ? response.response
@@ -66,7 +92,7 @@ export function LlamaIndexStream(
   return {
     stream: createParser(res, data, opts?.parserOptions)
       .pipeThrough(createCallbacksTransformer(opts?.callbacks))
-      .pipeThrough(createStreamDataTransformer(true)),
+      .pipeThrough(createStreamDataTransformer()),
     data,
   };
 }
