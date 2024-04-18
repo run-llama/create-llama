@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { StreamData, StreamingTextResponse } from "ai";
+import { Message, StreamData, StreamingTextResponse } from "ai";
 import {
   CallbackManager,
   ChatMessage,
@@ -40,7 +40,7 @@ const convertMessageContent = (
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: ChatMessage[]; data: any } = body;
+    const { messages, data }: { messages: Message[]; data: any } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
-      userMessage.content as string,
+      userMessage.content,
       data?.imageUrl,
     );
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      chatHistory: messages,
+      chatHistory: messages as ChatMessage[],
       stream: true,
     });
 

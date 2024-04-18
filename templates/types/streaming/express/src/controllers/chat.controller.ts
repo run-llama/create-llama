@@ -1,4 +1,4 @@
-import { StreamData, streamToResponse } from "ai";
+import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import {
   CallbackManager,
@@ -31,7 +31,7 @@ const convertMessageContent = (
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { messages, data }: { messages: ChatMessage[]; data: any } = req.body;
+    const { messages, data }: { messages: Message[]; data: any } = req.body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return res.status(400).json({
@@ -44,7 +44,7 @@ export const chat = async (req: Request, res: Response) => {
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
-      userMessage.content as string,
+      userMessage.content,
       data?.imageUrl,
     );
 
@@ -62,7 +62,7 @@ export const chat = async (req: Request, res: Response) => {
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      chatHistory: messages,
+      chatHistory: messages as ChatMessage[],
       stream: true,
     });
 

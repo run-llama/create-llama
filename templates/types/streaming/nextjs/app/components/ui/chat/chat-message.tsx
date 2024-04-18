@@ -18,7 +18,7 @@ import {
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
-type ContentDiplayConfig = {
+type ContentDisplayConfig = {
   order: number;
   component: JSX.Element | null;
 };
@@ -47,7 +47,7 @@ function ChatMessageContent({ message }: { message: Message }) {
     MessageAnnotationType.SOURCES,
   );
 
-  const contents: ContentDiplayConfig[] = [
+  const contents: ContentDisplayConfig[] = [
     {
       order: -2,
       component: imageData ? <ChatImage data={imageData} /> : null,

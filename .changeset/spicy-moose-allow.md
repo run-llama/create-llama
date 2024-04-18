@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: display chat events
+Display events (e.g. retrieving nodes) per chat message
