@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
 
     // Setup callback for streaming data before chatting
     Settings.callbackManager.on("retrieve", (data) => {
-      const { query, nodes } = data.detail;
+      const { nodes } = data.detail;
       appendEventData(
         vercelStreamData,
-        `Retrieved ${nodes.length} sources to use as context for the query: '${query}'`,
+        `Retrieved ${nodes.length} sources to use as context for the query`,
       );
     });
 
