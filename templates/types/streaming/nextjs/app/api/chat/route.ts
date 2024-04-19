@@ -1,11 +1,6 @@
 import { initObservability } from "@/app/observability";
 import { Message, StreamData, StreamingTextResponse } from "ai";
-import {
-  CallbackManager,
-  ChatMessage,
-  MessageContent,
-  Settings,
-} from "llamaindex";
+import { ChatMessage, MessageContent, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
@@ -62,13 +57,18 @@ export async function POST(request: NextRequest) {
 
     // Init Vercel AI StreamData
     const vercelStreamData = new StreamData();
+    appendEventData(
+      vercelStreamData,
+      `Retrieving context for query: '${userMessage.content}'`,
+    );
 
     // Setup callback for streaming data before chatting
-    Settings.callbackManager = new CallbackManager({
-      onRetrieve: ({ query, nodes }) => {
-        const eventTitle = `Retrieved ${nodes.length} nodes for query: '${query}'`;
-        appendEventData(vercelStreamData, eventTitle);
-      },
+    Settings.callbackManager.on("retrieve", (data) => {
+      const { query, nodes } = data.detail;
+      appendEventData(
+        vercelStreamData,
+        `Retrieved ${nodes.length} sources to use as context for the query: '${query}'`,
+      );
     });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response

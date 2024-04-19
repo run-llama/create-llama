@@ -26,8 +26,8 @@ type ContentDisplayConfig = {
 function getAnnotationData<T extends AnnotationData>(
   annotations: MessageAnnotation[],
   type: MessageAnnotationType,
-): T | undefined {
-  return annotations.find((a) => a.type === type)?.data as T | undefined;
+): T[] {
+  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
 }
 
 function ChatMessageContent({ message }: { message: Message }) {
@@ -50,13 +50,14 @@ function ChatMessageContent({ message }: { message: Message }) {
   const contents: ContentDisplayConfig[] = [
     {
       order: -2,
-      component: imageData ? <ChatImage data={imageData} /> : null,
+      component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
     },
     {
       order: -1,
-      component: eventData ? (
-        <ChatEvents collapsed={!!sourceData} data={eventData} /> // Auto collapse events when finished
-      ) : null,
+      component:
+        eventData.length > 0 ? (
+          <ChatEvents collapsed={!!sourceData} data={eventData} />
+        ) : null,
     },
     {
       order: 0,
@@ -64,7 +65,7 @@ function ChatMessageContent({ message }: { message: Message }) {
     },
     {
       order: 1,
-      component: sourceData ? <ChatSources data={sourceData} /> : null,
+      component: sourceData[0] ? <ChatSources data={sourceData[0]} /> : null,
     },
   ];
 

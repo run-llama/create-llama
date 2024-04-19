@@ -12,7 +12,7 @@ export function ChatEvents({
   data,
   collapsed,
 }: {
-  data: EventData;
+  data: EventData[];
   collapsed: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(true);
@@ -35,7 +35,11 @@ export function ChatEvents({
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent asChild>
-          <div className="space-x-2 mt-4 text-sm">{data.title}</div>
+          <div className="mt-4 text-sm space-y-2">
+            {data.map((eventItem, index) => (
+              <div key={index}>{eventItem.title}</div>
+            ))}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </div>

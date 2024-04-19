@@ -1,11 +1,6 @@
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import {
-  CallbackManager,
-  ChatMessage,
-  MessageContent,
-  Settings,
-} from "llamaindex";
+import { ChatMessage, MessageContent, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
 import { appendEventData } from "./stream-helper";
@@ -50,13 +45,18 @@ export const chat = async (req: Request, res: Response) => {
 
     // Init Vercel AI StreamData
     const vercelStreamData = new StreamData();
+    appendEventData(
+      vercelStreamData,
+      `Retrieving context for query: '${userMessage.content}'`,
+    );
 
     // Setup callback for streaming data before chatting
-    Settings.callbackManager = new CallbackManager({
-      onRetrieve: ({ query, nodes }) => {
-        const eventTitle = `Retrieved ${nodes.length} nodes for query: '${query}'`;
-        appendEventData(vercelStreamData, eventTitle);
-      },
+    Settings.callbackManager.on("retrieve", (data) => {
+      const { query, nodes } = data.detail;
+      appendEventData(
+        vercelStreamData,
+        `Retrieved ${nodes.length} sources to use as context for the query: '${query}'`,
+      );
     });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
