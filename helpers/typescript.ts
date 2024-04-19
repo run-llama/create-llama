@@ -205,7 +205,7 @@ async function updatePackageJson({
     // add generate script if using context engine
     packageJson.scripts = {
       ...packageJson.scripts,
-      generate: `ts-node ${path.join(
+      generate: `tsx ${path.join(
         relativeEngineDestPath,
         "engine",
         "generate.ts",
