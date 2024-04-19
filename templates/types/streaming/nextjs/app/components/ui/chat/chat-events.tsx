@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../button";
 import {
@@ -10,28 +10,40 @@ import { EventData } from "./index";
 
 export function ChatEvents({
   data,
-  collapsed,
+  isFinished,
+  isStreaming,
 }: {
   data: EventData[];
-  collapsed: boolean;
+  isFinished: boolean;
+  isStreaming: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
-    setIsOpen(!collapsed);
-  }, [collapsed]);
+    setIsOpen(!isFinished);
+  }, [isFinished]);
+
+  const buttonLabel = isStreaming
+    ? "In progress"
+    : isOpen
+      ? "Hide events"
+      : "Show events";
+
+  const EventIcon = isStreaming ? (
+    <Loader2 className="h-4 w-4 animate-spin" />
+  ) : isOpen ? (
+    <ChevronDown className="h-4 w-4" />
+  ) : (
+    <ChevronRight className="h-4 w-4" />
+  );
 
   return (
     <div className="border-l-2 border-indigo-400 pl-2">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <Button variant="secondary" className="space-x-2">
-            <span>View progress</span>
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
+            <span>{buttonLabel}</span>
+            {EventIcon}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent asChild>

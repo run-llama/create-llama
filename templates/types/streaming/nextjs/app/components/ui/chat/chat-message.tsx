@@ -47,6 +47,9 @@ function ChatMessageContent({ message }: { message: Message }) {
     MessageAnnotationType.SOURCES,
   );
 
+  const isFinished = sourceData.length > 0;
+  const isStreaming = !!message.content && !isFinished;
+
   const contents: ContentDisplayConfig[] = [
     {
       order: -2,
@@ -56,7 +59,11 @@ function ChatMessageContent({ message }: { message: Message }) {
       order: -1,
       component:
         eventData.length > 0 ? (
-          <ChatEvents collapsed={sourceData.length > 0} data={eventData} />
+          <ChatEvents
+            isStreaming={isStreaming}
+            isFinished={isFinished}
+            data={eventData}
+          />
         ) : null,
     },
     {
