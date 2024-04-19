@@ -110,20 +110,6 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
-    "--model <model>",
-    `
-
-  Select OpenAI model to use. E.g. gpt-3.5-turbo.
-`,
-  )
-  .option(
-    "--embedding-model <embeddingModel>",
-    `
-
-  Select OpenAI embedding model to use. E.g. text-embedding-ada-002.
-`,
-  )
-  .option(
     "--port <port>",
     `
 
@@ -290,7 +276,11 @@ async function run(): Promise<void> {
   }
 
   const preferences = (conf.get("preferences") || {}) as QuestionArgs;
-  await askQuestions(program as unknown as QuestionArgs, preferences);
+  await askQuestions(
+    program as unknown as QuestionArgs,
+    preferences,
+    program.openAiKey,
+  );
 
   await createApp({
     template: program.template,
@@ -299,10 +289,8 @@ async function run(): Promise<void> {
     appPath: resolvedProjectPath,
     packageManager,
     frontend: program.frontend,
-    openAiKey: program.openAiKey,
+    modelConfig: program.modelConfig,
     llamaCloudKey: program.llamaCloudKey,
-    model: program.model,
-    embeddingModel: program.embeddingModel,
     communityProjectConfig: program.communityProjectConfig,
     llamapack: program.llamapack,
     vectorDb: program.vectorDb,
