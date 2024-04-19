@@ -56,7 +56,7 @@ function ChatMessageContent({ message }: { message: Message }) {
       order: -1,
       component:
         eventData.length > 0 ? (
-          <ChatEvents collapsed={!!sourceData} data={eventData} />
+          <ChatEvents collapsed={sourceData.length > 0} data={eventData} />
         ) : null,
     },
     {
