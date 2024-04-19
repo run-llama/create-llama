@@ -17,6 +17,10 @@ export default function ChatSection() {
     headers: {
       "Content-Type": "application/json", // using JSON because of vercel/ai 2.2.26
     },
+    onError: (error) => {
+      const message = JSON.parse(error.message);
+      alert(message.detail);
+    },
   });
 
   return (

@@ -71,7 +71,7 @@ export const chat = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({
-      error: (error as Error).message,
+      detail: (error as Error).message,
     });
   }
 };
