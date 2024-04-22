@@ -24,7 +24,7 @@ class CallbackEvent(BaseModel):
                         return f"Retrieving context for query: '{self.payload.get('query_str')}'"
                 else:
                     return None
-            case default:
+            case _:
                 return None
 
 
