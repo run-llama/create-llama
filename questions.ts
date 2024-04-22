@@ -78,7 +78,7 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
   tools: [],
 };
 
-const handlers = {
+export const questionHandlers = {
   onCancel: () => {
     console.error("Exiting.");
     process.exit(1);
@@ -287,7 +287,7 @@ export const askQuestions = async (
             choices: actionChoices,
             initial: 1,
           },
-          handlers,
+          questionHandlers,
         );
 
         program.postInstallAction = action;
@@ -320,7 +320,7 @@ export const askQuestions = async (
           ],
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.template = template;
       preferences.template = template;
@@ -343,7 +343,7 @@ export const askQuestions = async (
         })),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     const projectConfig = JSON.parse(communityProjectConfig);
     program.communityProjectConfig = projectConfig;
@@ -364,7 +364,7 @@ export const askQuestions = async (
         })),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     program.llamapack = llamapack;
     preferences.llamapack = llamapack;
@@ -390,7 +390,7 @@ export const askQuestions = async (
           choices,
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.framework = framework;
       preferences.framework = framework;
@@ -450,7 +450,7 @@ export const askQuestions = async (
           ],
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
 
       program.observability = observability;
@@ -488,7 +488,7 @@ export const askQuestions = async (
             ),
             initial: firstQuestion ? 1 : 0,
           },
-          handlers,
+          questionHandlers,
         );
 
         if (selectedSource === "no" || selectedSource === "none") {
@@ -534,7 +534,7 @@ export const askQuestions = async (
                   return true;
                 },
               },
-              handlers,
+              questionHandlers,
             );
 
             program.dataSources.push({
@@ -579,7 +579,7 @@ export const askQuestions = async (
             ];
             program.dataSources.push({
               type: "db",
-              config: await prompts(dbPrompts, handlers),
+              config: await prompts(dbPrompts, questionHandlers),
             });
           }
         }
@@ -606,7 +606,7 @@ export const askQuestions = async (
           active: "yes",
           inactive: "no",
         },
-        handlers,
+        questionHandlers,
       );
       program.useLlamaParse = useLlamaParse;
 
@@ -619,7 +619,7 @@ export const askQuestions = async (
             message:
               "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
           },
-          handlers,
+          questionHandlers,
         );
         program.llamaCloudKey = llamaCloudKey;
       }
@@ -638,7 +638,7 @@ export const askQuestions = async (
           choices: getVectorDbChoices(program.framework),
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.vectorDb = vectorDb;
       preferences.vectorDb = vectorDb;

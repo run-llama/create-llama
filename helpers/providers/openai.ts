@@ -3,19 +3,13 @@ import got from "got";
 import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
+import { questionHandlers } from "../../questions";
 import { ModelConfig } from "./../types";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
 const DEFAULT_MODEL = "gpt-4-turbo";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
-
-const handlers = {
-  onCancel: () => {
-    console.error("Exiting2.");
-    process.exit(1);
-  },
-};
 
 type OpenAIQuestionsParams = {
   openAiKey?: string;
@@ -51,7 +45,7 @@ export async function askOpenAIQuestions({
           return true;
         },
       },
-      handlers,
+      questionHandlers,
     );
     config.apiKey = key || process.env.OPENAI_API_KEY;
   }
@@ -67,7 +61,7 @@ export async function askOpenAIQuestions({
         choices: await getAvailableModelChoices(false, config.apiKey),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     config.model = model;
 
@@ -79,7 +73,7 @@ export async function askOpenAIQuestions({
         choices: await getAvailableModelChoices(true, config.apiKey),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     config.embeddingModel = embeddingModel;
   }
