@@ -10,26 +10,27 @@ import { EventData } from "./index";
 
 export function ChatEvents({
   data,
-  isFinished,
-  isStreaming,
+  isLoading,
 }: {
   data: EventData[];
-  isFinished: boolean;
-  isStreaming: boolean;
+  isLoading: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
-    setIsOpen(!isFinished);
-  }, [isFinished]);
+    // Collapse the events when finished streaming
+    if (!isLoading) {
+      setIsOpen(false);
+    }
+  }, [isLoading]);
 
-  const buttonLabel = isStreaming
+  const buttonLabel = isLoading
     ? "In progress"
     : isOpen
       ? "Hide events"
       : "Show events";
 
-  const EventIcon = isStreaming ? (
+  const EventIcon = isLoading ? (
     <Loader2 className="h-4 w-4 animate-spin" />
   ) : isOpen ? (
     <ChevronDown className="h-4 w-4" />

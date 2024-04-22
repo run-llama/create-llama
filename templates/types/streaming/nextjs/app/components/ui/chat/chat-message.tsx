@@ -30,7 +30,13 @@ function getAnnotationData<T extends AnnotationData>(
   return annotations.filter((a) => a.type === type).map((a) => a.data as T);
 }
 
-function ChatMessageContent({ message }: { message: Message }) {
+function ChatMessageContent({
+  message,
+  isLoading,
+}: {
+  message: Message;
+  isLoading: boolean;
+}) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
 
@@ -47,9 +53,6 @@ function ChatMessageContent({ message }: { message: Message }) {
     MessageAnnotationType.SOURCES,
   );
 
-  const isFinished = sourceData.length > 0;
-  const isStreaming = !!message.content && !isFinished;
-
   const contents: ContentDisplayConfig[] = [
     {
       order: -2,
@@ -59,11 +62,7 @@ function ChatMessageContent({ message }: { message: Message }) {
       order: -1,
       component:
         eventData.length > 0 ? (
-          <ChatEvents
-            isStreaming={isStreaming}
-            isFinished={isFinished}
-            data={eventData}
-          />
+          <ChatEvents isLoading={isLoading} data={eventData} />
         ) : null,
     },
     {
@@ -87,13 +86,19 @@ function ChatMessageContent({ message }: { message: Message }) {
   );
 }
 
-export default function ChatMessage(chatMessage: Message) {
+export default function ChatMessage({
+  chatMessage,
+  isLoading,
+}: {
+  chatMessage: Message;
+  isLoading: boolean;
+}) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   return (
     <div className="flex items-start gap-4 pr-5 pt-5">
       <ChatAvatar role={chatMessage.role} />
       <div className="group flex flex-1 justify-between gap-2">
-        <ChatMessageContent message={chatMessage} />
+        <ChatMessageContent message={chatMessage} isLoading={isLoading} />
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}
           size="icon"
