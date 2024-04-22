@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(
       {
-        error: (error as Error).message,
+        detail: (error as Error).message,
       },
       {
         status: 500,

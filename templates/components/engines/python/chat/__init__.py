@@ -1,5 +1,6 @@
 import os
 from app.engine.index import get_index
+from fastapi import HTTPException
 
 
 def get_chat_engine():
@@ -8,8 +9,11 @@ def get_chat_engine():
 
     index = get_index()
     if index is None:
-        raise Exception(
-            "StorageContext is empty - call 'poetry run generate' to generate the storage first"
+        raise HTTPException(
+            status_code=500,
+            detail=str(
+                "StorageContext is empty - call 'poetry run generate' to generate the storage first"
+            ),
         )
 
     return index.as_chat_engine(
