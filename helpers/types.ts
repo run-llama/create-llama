@@ -1,7 +1,9 @@
 import { PackageManager } from "../helpers/get-pkg-manager";
 import { Tool } from "./tools";
 
+export type ModelProvider = "openai" | "ollama";
 export type ModelConfig = {
+  provider: ModelProvider;
   apiKey?: string;
   model: string;
   embeddingModel: string;

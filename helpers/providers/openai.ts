@@ -3,24 +3,19 @@ import got from "got";
 import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
+import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
 import { questionHandlers } from "../../questions";
-import { ModelConfig } from "./../types";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
 const DEFAULT_MODEL = "gpt-4-turbo";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
-type OpenAIQuestionsParams = {
-  openAiKey?: string;
-  askModels: boolean;
-};
-
 export async function askOpenAIQuestions({
   openAiKey,
   askModels,
-}: OpenAIQuestionsParams): Promise<ModelConfig> {
-  const config: ModelConfig = {
+}: ModelConfigQuestionsParams): Promise<ModelConfigParams> {
+  const config: ModelConfigParams = {
     apiKey: openAiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,

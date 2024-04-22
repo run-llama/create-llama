@@ -187,9 +187,7 @@ if (process.argv.includes("--tools")) {
 if (process.argv.includes("--no-llama-parse")) {
   program.useLlamaParse = false;
 }
-if (process.argv.includes("--ask-models")) {
-  program.askModels = true;
-}
+program.askModels = process.argv.includes("--ask-models");
 if (process.argv.includes("--no-files")) {
   program.dataSources = [];
 } else {

@@ -14,7 +14,7 @@ import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { askOpenAIQuestions } from "./helpers/providers/openai";
+import { askModelConfig } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
@@ -459,7 +459,7 @@ export const askQuestions = async (
   }
 
   if (!program.modelConfig) {
-    const modelConfig = await askOpenAIQuestions({
+    const modelConfig = await askModelConfig({
       openAiKey,
       askModels: program.askModels ?? false,
     });
@@ -672,4 +672,8 @@ export const askQuestions = async (
   }
 
   await askPostInstallAction();
+};
+
+export const toChoice = (value: string) => {
+  return { title: value, value };
 };
