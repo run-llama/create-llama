@@ -22,7 +22,7 @@ class CallbackEvent(BaseModel):
 
 class EventCallbackHandler(BaseCallbackHandler):
     _aqueue: asyncio.Queue
-    is_done: False
+    is_done: bool = False
 
     def __init__(
         self,

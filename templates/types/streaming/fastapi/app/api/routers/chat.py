@@ -10,7 +10,7 @@ from llama_index.core.llms import ChatMessage, MessageRole
 from app.engine import get_chat_engine
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.api.routers.messaging import EventCallbackHandler
-import asyncio
+from aiostream import stream
 
 chat_router = r = APIRouter()
 
@@ -48,7 +48,7 @@ class _SourceNodes(BaseModel):
             id=source_node.node.node_id,
             metadata=source_node.node.metadata,
             score=source_node.score,
-            text=source_node.node.text,
+            text=source_node.node.text,  # type: ignore
         )
 
     @classmethod
@@ -95,7 +95,7 @@ async def chat(
     last_message_content, messages = await parse_chat_data(data)
 
     event_handler = EventCallbackHandler()
-    chat_engine.callback_manager.handlers.append(event_handler)
+    chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
     response = await chat_engine.astream_chat(last_message_content, messages)
 
     async def content_generator():
@@ -116,16 +116,10 @@ async def chat(
                     }
                 )
 
-        # TODO: idea here is to to consume items yielded by both of the generators above in the order they are coming in
-        # Snippet below doesn't work - produces this error:
-        #  async for item in asyncio.as_completed([_text_generator(), _event_generator()]):
-        # TypeError: 'async for' requires an object with __aiter__ method, got generator
-        async for item in asyncio.as_completed([_text_generator(), _event_generator()]):
-            async for value in item:
-                # If client closes connection, stop sending events
-                if await request.is_disconnected():
-                    break
-                yield value
+        combine = stream.merge(_text_generator(), _event_generator())
+        async with combine.stream() as streamer:
+            async for item in streamer:
+                yield item
 
         # Yield the source nodes
         yield VercelStreamResponse.convert_data(
