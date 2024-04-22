@@ -7,7 +7,7 @@ Install NodeJS. Preferably v18 using nvm or n.
 Inside the `create-llama` directory:
 
 ```
-npm i -g pnpm ts-node
+npm i -g pnpm 
 pnpm install
 ```
 
