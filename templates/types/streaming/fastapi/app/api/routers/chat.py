@@ -119,6 +119,8 @@ async def chat(
         combine = stream.merge(_text_generator(), _event_generator())
         async with combine.stream() as streamer:
             async for item in streamer:
+                if await request.is_disconnected():
+                    break
                 yield item
 
         # Yield the source nodes

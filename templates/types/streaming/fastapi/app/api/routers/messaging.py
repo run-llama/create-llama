@@ -2,7 +2,7 @@ import asyncio
 from typing import AsyncGenerator, Dict, Any, List, Optional
 
 from llama_index.core.callbacks.base import BaseCallbackHandler
-from llama_index.core.callbacks.schema import CBEventType, EventPayload
+from llama_index.core.callbacks.schema import CBEventType
 from pydantic import BaseModel
 
 
@@ -12,12 +12,20 @@ class CallbackEvent(BaseModel):
     event_id: str = ""
 
     def get_title(self):
-        # TODO: we get two CBEventType.RETRIEVE events
-        # For the on_event_start we should render:
-        # "Retrieving context for query <query_str>"
-        # For the on_event_end we should render:
-        # "Retrieved <nodes> sources to use as context for the query"
-        return self.event_id
+        # Return as None for the unhandled event types
+        # to avoid showing them in the UI
+        match self.event_type:
+            case "retrieve":
+                if self.payload:
+                    nodes = self.payload.get("nodes")
+                    if nodes:
+                        return f"Retrieved {len(nodes)} sources to use as context for the query"
+                    else:
+                        return f"Retrieving context for query: '{self.payload.get('query_str')}'"
+                else:
+                    return None
+            case default:
+                return None
 
 
 class EventCallbackHandler(BaseCallbackHandler):
@@ -33,6 +41,7 @@ class EventCallbackHandler(BaseCallbackHandler):
             CBEventType.NODE_PARSING,
             CBEventType.EMBEDDING,
             CBEventType.LLM,
+            CBEventType.TEMPLATING,
         ]
         super().__init__(ignored_events, ignored_events)
         self._aqueue = asyncio.Queue()
