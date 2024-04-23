@@ -141,11 +141,9 @@ export const installTemplate = async (
 
     // Copy the environment file to the target directory.
     await createBackendEnvFile(props.root, {
-      openAiKey: props.modelConfig.apiKey,
+      modelConfig: props.modelConfig,
       llamaCloudKey: props.llamaCloudKey,
       vectorDb: props.vectorDb,
-      model: props.modelConfig.model,
-      embeddingModel: props.modelConfig.embeddingModel,
       framework: props.framework,
       dataSources: props.dataSources,
       port: props.externalPort,
@@ -174,7 +172,6 @@ export const installTemplate = async (
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
     await createFrontendEnvFile(props.root, {
-      model: props.modelConfig.model,
       customApiPath: props.customApiPath,
     });
   }
