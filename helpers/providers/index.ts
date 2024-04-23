@@ -19,7 +19,7 @@ export async function askModelConfig({
   openAiKey,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
-  if (askModels || !ciInfo.isCI) {
+  if (askModels && !ciInfo.isCI) {
     const { provider } = await prompts(
       {
         type: "select",
