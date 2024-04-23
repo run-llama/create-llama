@@ -76,6 +76,16 @@ export async function askOpenAIQuestions({
   return config;
 }
 
+export function isOpenAIConfigured(params: ModelConfigParams): boolean {
+  if (params.apiKey) {
+    return true;
+  }
+  if (process.env["OPENAI_API_KEY"]) {
+    return true;
+  }
+  return false;
+}
+
 async function getAvailableModelChoices(
   selectEmbedding: boolean,
   apiKey?: string,

@@ -205,7 +205,6 @@ export const installPythonTemplate = async ({
   dataSources,
   tools,
   postInstallAction,
-  useLlamaParse,
   observability,
 }: Pick<
   InstallTemplateArgs,
@@ -215,7 +214,6 @@ export const installPythonTemplate = async ({
   | "vectorDb"
   | "dataSources"
   | "tools"
-  | "useLlamaParse"
   | "postInstallAction"
   | "observability"
 >) => {

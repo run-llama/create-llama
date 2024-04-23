@@ -2,7 +2,7 @@ export const PGVECTOR_COLLECTION = "data";
 export const PGVECTOR_SCHEMA = "public";
 export const PGVECTOR_TABLE = "llamaindex_embedding";
 
-const REQUIRED_ENV_VARS = ["PG_CONNECTION_STRING", "OPENAI_API_KEY"];
+const REQUIRED_ENV_VARS = ["PG_CONNECTION_STRING"];
 
 export function checkRequiredEnvVars() {
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {

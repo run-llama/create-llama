@@ -3,7 +3,7 @@ import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider } from "../types";
 import { askOllamaQuestions } from "./ollama";
-import { askOpenAIQuestions } from "./openai";
+import { askOpenAIQuestions, isOpenAIConfigured } from "./openai";
 
 const DEFAULT_MODEL_PROVIDER = "openai";
 
@@ -54,4 +54,13 @@ export async function askModelConfig({
     ...modelConfig,
     provider: modelProvider,
   };
+}
+
+export function isModelConfigured(modelConfig: ModelConfig): boolean {
+  switch (modelConfig.provider) {
+    case "openai":
+      return isOpenAIConfigured(modelConfig);
+    default:
+      return true;
+  }
 }

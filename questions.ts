@@ -14,7 +14,7 @@ import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { askModelConfig } from "./helpers/providers";
+import { askModelConfig, isModelConfigured } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
@@ -257,8 +257,7 @@ export const askQuestions = async (
           },
         ];
 
-        const openAiKeyConfigured =
-          program.modelConfig.apiKey || process.env["OPENAI_API_KEY"];
+        const modelConfigured = isModelConfigured(program.modelConfig);
         // If using LlamaParse, require LlamaCloud API key
         const llamaCloudKeyConfigured = program.useLlamaParse
           ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
@@ -267,7 +266,7 @@ export const askQuestions = async (
         // Can run the app if all tools do not require configuration
         if (
           !hasVectorDb &&
-          openAiKeyConfigured &&
+          modelConfigured &&
           llamaCloudKeyConfigured &&
           !toolsRequireConfig(program.tools) &&
           !program.llamapack

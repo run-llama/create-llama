@@ -11,13 +11,7 @@ poetry install
 poetry shell
 ```
 
-By default, we use the OpenAI LLM (though you can customize, see `app/settings.py`). As a result, you need to specify an `OPENAI_API_KEY` in an .env file in this directory.
-
-Example `.env` file:
-
-```
-OPENAI_API_KEY=<openai_api_key>
-```
+Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
 
 If you are using any tools or data sources, you can update their config files in the `config` folder.
 
