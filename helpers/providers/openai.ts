@@ -19,6 +19,7 @@ export async function askOpenAIQuestions({
     apiKey: openAiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
+    dimensions: 1536,
   };
 
   if (!config.apiKey) {

@@ -5,14 +5,18 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions";
 
+type ModelData = {
+  dimensions: number;
+};
 const MODELS = ["llama3:8b", "wizardlm2:7b", "gemma:7b"];
 const DEFAULT_MODEL = MODELS[0];
-const EMBEDDING_MODELS = [
-  "nomic-embed-text",
-  "mxbai-embed-large",
-  "all-minilm",
-];
-const DEFAULT_EMBEDDING_MODEL = EMBEDDING_MODELS[0];
+// TODO: get embedding vector dimensions from the ollama sdk (currently not supported)
+const EMBEDDING_MODELS: Record<string, ModelData> = {
+  "nomic-embed-text": { dimensions: 768 },
+  "mxbai-embed-large": { dimensions: 1024 },
+  "all-minilm": { dimensions: 384 },
+};
+const DEFAULT_EMBEDDING_MODEL: string = Object.keys(EMBEDDING_MODELS)[0];
 
 type OllamaQuestionsParams = {
   askModels: boolean;
@@ -24,6 +28,7 @@ export async function askOllamaQuestions({
   const config: ModelConfigParams = {
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
+    dimensions: EMBEDDING_MODELS[DEFAULT_EMBEDDING_MODEL].dimensions,
   };
 
   // use default model values in CI or if user should not be asked
@@ -47,9 +52,11 @@ export async function askOllamaQuestions({
         type: "select",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: EMBEDDING_MODELS.map(toChoice).map((c) => {
-          return { ...c, value: c.value + ":latest" };
-        }),
+        choices: Object.keys(EMBEDDING_MODELS)
+          .map(toChoice)
+          .map((c) => {
+            return { ...c, value: c.value + ":latest" };
+          }),
         initial: 0,
       },
       questionHandlers,

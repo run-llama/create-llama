@@ -154,7 +154,7 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
     {
       name: "EMBEDDING_DIM",
       description: "Dimension of the embedding model to use.",
-      value: "1536",
+      value: modelConfig.dimensions.toString(),
     },
     ...(modelConfig.provider === "openai"
       ? [
