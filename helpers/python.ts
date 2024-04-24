@@ -121,6 +121,12 @@ const getAdditionalDependencies = (
         version: "0.1.2",
       });
       break;
+    case "openai":
+      dependencies.push({
+        name: "llama-index-agent-openai",
+        version: "0.2.2",
+      });
+      break;
   }
 
   return dependencies;
