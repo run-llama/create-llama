@@ -4,7 +4,6 @@ export default function webpack(config) {
   config.resolve.alias = {
     ...config.resolve.alias,
     sharp$: false,
-    "onnxruntime-node$": false,
   };
   config.resolve.fallback = {
     aws4: false,
