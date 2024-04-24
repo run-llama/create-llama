@@ -19,7 +19,7 @@ export async function askOpenAIQuestions({
     apiKey: openAiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
-    dimensions: 1536,
+    dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
   };
 
   if (!config.apiKey) {
@@ -72,6 +72,7 @@ export async function askOpenAIQuestions({
       questionHandlers,
     );
     config.embeddingModel = embeddingModel;
+    config.dimensions = getDimensions(embeddingModel);
   }
 
   return config;
@@ -136,4 +137,10 @@ async function getAvailableModelChoices(
     }
     process.exit(1);
   }
+}
+
+function getDimensions(modelName: string) {
+  // at 2024-04-24 all OpenAI embedding models support 1536 dimensions except
+  // "text-embedding-3-large", see https://openai.com/blog/new-embedding-models-and-api-updates
+  return modelName === "text-embedding-3-large" ? 1024 : 1536;
 }

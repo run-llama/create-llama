@@ -8,7 +8,7 @@ import { questionHandlers, toChoice } from "../../questions";
 type ModelData = {
   dimensions: number;
 };
-const MODELS = ["llama3:8b", "wizardlm2:7b", "gemma:7b"];
+const MODELS = ["llama3:8b", "wizardlm2:7b", "gemma:7b", "phi3"];
 const DEFAULT_MODEL = MODELS[0];
 // TODO: get embedding vector dimensions from the ollama sdk (currently not supported)
 const EMBEDDING_MODELS: Record<string, ModelData> = {
@@ -52,17 +52,14 @@ export async function askOllamaQuestions({
         type: "select",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: Object.keys(EMBEDDING_MODELS)
-          .map(toChoice)
-          .map((c) => {
-            return { ...c, value: c.value + ":latest" };
-          }),
+        choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
         initial: 0,
       },
       questionHandlers,
     );
     await ensureModel(embeddingModel);
     config.embeddingModel = embeddingModel;
+    config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
   }
 
   return config;
@@ -70,6 +67,10 @@ export async function askOllamaQuestions({
 
 async function ensureModel(modelName: string) {
   try {
+    if (modelName.split(":").length === 1) {
+      // model doesn't have a version suffix, use latest
+      modelName = modelName + ":latest";
+    }
     const { models } = await ollama.list();
     const found =
       models.find((model: ModelResponse) => model.name === modelName) !==
