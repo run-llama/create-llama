@@ -103,7 +103,7 @@ async def chat(
         async def _text_generator():
             async for token in response.async_response_gen():
                 yield VercelStreamResponse.convert_text(token)
-            # TODO: ideally we don't need is_done and we just consume till _text_generator is finished below
+            # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
 
         # Yield the events from the event handler
