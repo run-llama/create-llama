@@ -5,16 +5,13 @@ load_dotenv()
 import os
 import logging
 from llama_index.core.settings import Settings
+from llama_index.core.storage import StorageContext
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.indices import (
-    VectorStoreIndex,
-)
+from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores import SimpleVectorStore
-from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.core.storage.docstore import SimpleDocumentStore
-from llama_index.core.storage.storage_context import StorageContext
-from app.engine.constants import STORAGE_DIR, TEXT_DOC_STORE_NAME
+from app.engine.constants import STORAGE_DIR
 from app.engine.loaders import get_documents
 from app.settings import init_settings
 
@@ -23,16 +20,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
-def get_storage_context():
-    docstore = vector_store = None
+def get_vector_store():
+    if not os.path.exists(STORAGE_DIR):
+        vector_store = SimpleVectorStore()
+        return vector_store
+    else:
+        return SimpleVectorStore.from_persist_dir(STORAGE_DIR, namespace="default")
 
-    if os.path.exists(STORAGE_DIR):
-        vector_store = SimpleVectorStore.from_persist_dir(
-            persist_dir=STORAGE_DIR, namespace=TEXT_DOC_STORE_NAME
-        )
-        docstore = SimpleDocumentStore.from_persist_dir(STORAGE_DIR)
 
-    return StorageContext.from_defaults(docstore=docstore, vector_store=vector_store)
+def get_doc_store():
+    if not os.path.exists(STORAGE_DIR):
+        docstore = SimpleDocumentStore()
+        return docstore
+    else:
+        return SimpleDocumentStore.from_persist_dir(STORAGE_DIR)
 
 
 def generate_datasource():
@@ -41,7 +42,12 @@ def generate_datasource():
 
     # load the documents and create the index
     documents = get_documents()
-    storage_context = get_storage_context()
+    docstore = get_doc_store()
+    vector_store = get_vector_store()
+    storage_context = StorageContext.from_defaults(
+        vector_store=vector_store,
+        docstore=docstore,
+    )
 
     # Create ingestion pipeline
     ingestion_pipeline = IngestionPipeline(
@@ -52,10 +58,13 @@ def generate_datasource():
             ),
             Settings.embed_model,
         ],
-        docstore=storage_context.docstore,
+        docstore=docstore,
         docstore_strategy="upserts_and_delete",
     )
-    ingestion_pipeline.vector_store = storage_context.vector_store
+
+    # llama_index having an typing issue when passing vector_store to IngestionPipeline
+    # so we need to set it manually after initialization
+    ingestion_pipeline.vector_store = vector_store
 
     # Run the ingestion pipeline and store the results
     nodes = ingestion_pipeline.run(show_progress=True, documents=documents)
