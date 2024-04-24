@@ -1,5 +1,5 @@
 ---
-"create-llama": patch
+"create-llama": minor
 ---
 
-Add Llama3 support with Ollama
+Add Llama3 and Phi3 support using Ollama
