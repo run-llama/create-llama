@@ -1,8 +1,9 @@
-import { streamToResponse } from "ai";
+import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent } from "llamaindex";
+import { ChatMessage, MessageContent, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
+import { appendEventData } from "./stream-helper";
 
 const convertMessageContent = (
   textMessage: string,
@@ -25,7 +26,7 @@ const convertMessageContent = (
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { messages, data }: { messages: ChatMessage[]; data: any } = req.body;
+    const { messages, data }: { messages: Message[]; data: any } = req.body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return res.status(400).json({
@@ -42,22 +43,38 @@ export const chat = async (req: Request, res: Response) => {
       data?.imageUrl,
     );
 
+    // Init Vercel AI StreamData
+    const vercelStreamData = new StreamData();
+    appendEventData(
+      vercelStreamData,
+      `Retrieving context for query: '${userMessage.content}'`,
+    );
+
+    // Setup callback for streaming data before chatting
+    Settings.callbackManager.on("retrieve", (data) => {
+      const { nodes } = data.detail;
+      appendEventData(
+        vercelStreamData,
+        `Retrieved ${nodes.length} sources to use as context for the query`,
+      );
+    });
+
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
       message: userMessageContent,
-      chatHistory: messages,
+      chatHistory: messages as ChatMessage[],
       stream: true,
     });
 
     // Return a stream, which can be consumed by the Vercel/AI client
-    const { stream, data: streamData } = LlamaIndexStream(response, {
+    const { stream } = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
         image_url: data?.imageUrl,
       },
     });
 
     // Pipe LlamaIndexStream to response
-    const processedStream = stream.pipeThrough(streamData.stream);
+    const processedStream = stream.pipeThrough(vercelStreamData.stream);
     return streamToResponse(processedStream, res, {
       headers: {
         // response MUST have the `X-Experimental-Stream-Data: 'true'` header

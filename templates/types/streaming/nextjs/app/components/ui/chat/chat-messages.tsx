@@ -41,7 +41,7 @@ export default function ChatMessages(
         ref={scrollableChatContainerRef}
       >
         {props.messages.map((m) => (
-          <ChatMessage key={m.id} {...m} />
+          <ChatMessage key={m.id} chatMessage={m} isLoading={props.isLoading} />
         ))}
         {isPending && (
           <div className="flex justify-center items-center pt-10">

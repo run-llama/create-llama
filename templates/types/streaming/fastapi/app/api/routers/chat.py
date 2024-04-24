@@ -9,6 +9,8 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 from app.engine import get_chat_engine
 from app.api.routers.vercel_response import VercelStreamResponse
+from app.api.routers.messaging import EventCallbackHandler
+from aiostream import stream
 
 chat_router = r = APIRouter()
 
@@ -46,7 +48,7 @@ class _SourceNodes(BaseModel):
             id=source_node.node.node_id,
             metadata=source_node.node.metadata,
             score=source_node.score,
-            text=source_node.node.text,
+            text=source_node.node.text,  # type: ignore
         )
 
     @classmethod
@@ -92,15 +94,34 @@ async def chat(
 ):
     last_message_content, messages = await parse_chat_data(data)
 
+    event_handler = EventCallbackHandler()
+    chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
     response = await chat_engine.astream_chat(last_message_content, messages)
 
-    async def event_generator(request: Request, response: StreamingAgentChatResponse):
+    async def content_generator():
         # Yield the text response
-        async for token in response.async_response_gen():
-            # If client closes connection, stop sending events
-            if await request.is_disconnected():
-                break
-            yield VercelStreamResponse.convert_text(token)
+        async def _text_generator():
+            async for token in response.async_response_gen():
+                yield VercelStreamResponse.convert_text(token)
+            # the text_generator is the leading stream, once it's finished, also finish the event stream
+            event_handler.is_done = True
+
+        # Yield the events from the event handler
+        async def _event_generator():
+            async for event in event_handler.async_event_gen():
+                yield VercelStreamResponse.convert_data(
+                    {
+                        "type": "events",
+                        "data": {"title": event.get_title()},
+                    }
+                )
+
+        combine = stream.merge(_text_generator(), _event_generator())
+        async with combine.stream() as streamer:
+            async for item in streamer:
+                if await request.is_disconnected():
+                    break
+                yield item
 
         # Yield the source nodes
         yield VercelStreamResponse.convert_data(
@@ -115,7 +136,7 @@ async def chat(
             }
         )
 
-    return VercelStreamResponse(content=event_generator(request, response))
+    return VercelStreamResponse(content=content_generator())
 
 
 # non-streaming endpoint - delete if not needed

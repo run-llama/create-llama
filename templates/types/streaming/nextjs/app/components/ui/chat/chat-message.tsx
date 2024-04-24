@@ -4,10 +4,12 @@ import { Message } from "ai";
 import { Fragment } from "react";
 import { Button } from "../button";
 import ChatAvatar from "./chat-avatar";
+import { ChatEvents } from "./chat-events";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import {
   AnnotationData,
+  EventData,
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
@@ -16,7 +18,7 @@ import {
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
-type ContentDiplayConfig = {
+type ContentDisplayConfig = {
   order: number;
   component: JSX.Element | null;
 };
@@ -24,11 +26,17 @@ type ContentDiplayConfig = {
 function getAnnotationData<T extends AnnotationData>(
   annotations: MessageAnnotation[],
   type: MessageAnnotationType,
-): T | undefined {
-  return annotations.find((a) => a.type === type)?.data as T | undefined;
+): T[] {
+  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
 }
 
-function ChatMessageContent({ message }: { message: Message }) {
+function ChatMessageContent({
+  message,
+  isLoading,
+}: {
+  message: Message;
+  isLoading: boolean;
+}) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
 
@@ -36,15 +44,26 @@ function ChatMessageContent({ message }: { message: Message }) {
     annotations,
     MessageAnnotationType.IMAGE,
   );
+  const eventData = getAnnotationData<EventData>(
+    annotations,
+    MessageAnnotationType.EVENTS,
+  );
   const sourceData = getAnnotationData<SourceData>(
     annotations,
     MessageAnnotationType.SOURCES,
   );
 
-  const contents: ContentDiplayConfig[] = [
+  const contents: ContentDisplayConfig[] = [
+    {
+      order: -2,
+      component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
+    },
     {
       order: -1,
-      component: imageData ? <ChatImage data={imageData} /> : null,
+      component:
+        eventData.length > 0 ? (
+          <ChatEvents isLoading={isLoading} data={eventData} />
+        ) : null,
     },
     {
       order: 0,
@@ -52,7 +71,7 @@ function ChatMessageContent({ message }: { message: Message }) {
     },
     {
       order: 1,
-      component: sourceData ? <ChatSources data={sourceData} /> : null,
+      component: sourceData[0] ? <ChatSources data={sourceData[0]} /> : null,
     },
   ];
 
@@ -67,13 +86,19 @@ function ChatMessageContent({ message }: { message: Message }) {
   );
 }
 
-export default function ChatMessage(chatMessage: Message) {
+export default function ChatMessage({
+  chatMessage,
+  isLoading,
+}: {
+  chatMessage: Message;
+  isLoading: boolean;
+}) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   return (
     <div className="flex items-start gap-4 pr-5 pt-5">
       <ChatAvatar role={chatMessage.role} />
       <div className="group flex flex-1 justify-between gap-2">
-        <ChatMessageContent message={chatMessage} />
+        <ChatMessageContent message={chatMessage} isLoading={isLoading} />
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}
           size="icon"
