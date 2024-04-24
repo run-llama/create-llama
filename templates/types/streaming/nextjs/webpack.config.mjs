@@ -8,6 +8,7 @@ export default function webpack(config) {
   // See: https://github.com/vercel/next.js/issues/43433
   config.externals.push({
     "onnxruntime-node": "commonjs onnxruntime-node",
+    sharp: "commonjs sharp",
   });
 
   return config;
