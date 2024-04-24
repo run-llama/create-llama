@@ -7,13 +7,7 @@ settings:
 importers:
 
   .:
-    devDependencies:
-      '@changesets/cli':
-        specifier: ^2.27.1
-        version: 2.27.1
-      '@playwright/test':
-        specifier: ^1.41.1
-        version: 1.42.1
+    dependencies:
       '@types/async-retry':
         specifier: 1.4.2
         version: 1.4.2
@@ -38,9 +32,6 @@ importers:
       '@types/validate-npm-package-name':
         specifier: 3.0.0
         version: 3.0.0
-      '@vercel/ncc':
-        specifier: 0.38.1
-        version: 0.38.1
       async-retry:
         specifier: 1.3.1
         version: 1.3.1
@@ -59,12 +50,6 @@ importers:
       cross-spawn:
         specifier: 7.0.3
         version: 7.0.3
-      eslint:
-        specifier: ^8.56.0
-        version: 8.57.0
-      eslint-config-prettier:
-        specifier: ^8.10.0
-        version: 8.10.0(eslint@8.57.0)
       fast-glob:
         specifier: 3.3.1
         version: 3.3.1
@@ -74,27 +59,18 @@ importers:
       got:
         specifier: 10.7.0
         version: 10.7.0
-      husky:
-        specifier: ^9.0.10
-        version: 9.0.11
+      ollama:
+        specifier: ^0.5.0
+        version: 0.5.0
       ora:
         specifier: ^8.0.1
         version: 8.0.1
       picocolors:
         specifier: 1.0.0
         version: 1.0.0
-      prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
-      prettier-plugin-organize-imports:
-        specifier: ^3.2.4
-        version: 3.2.4(prettier@3.2.5)(typescript@5.4.2)
       prompts:
         specifier: 2.1.0
         version: 2.1.0
-      rimraf:
-        specifier: ^5.0.5
-        version: 5.0.5
       smol-toml:
         specifier: ^1.1.4
         version: 1.1.4
@@ -104,21 +80,49 @@ importers:
       terminal-link:
         specifier: ^3.0.0
         version: 3.0.0
-      typescript:
-        specifier: ^5.3.3
-        version: 5.4.2
       update-check:
         specifier: 1.5.4
         version: 1.5.4
       validate-npm-package-name:
         specifier: 3.0.0
         version: 3.0.0
-      wait-port:
-        specifier: ^1.1.0
-        version: 1.1.0
       yaml:
         specifier: 2.4.1
         version: 2.4.1
+    devDependencies:
+      '@changesets/cli':
+        specifier: ^2.27.1
+        version: 2.27.1
+      '@playwright/test':
+        specifier: ^1.41.1
+        version: 1.42.1
+      '@vercel/ncc':
+        specifier: 0.38.1
+        version: 0.38.1
+      eslint:
+        specifier: ^8.56.0
+        version: 8.57.0
+      eslint-config-prettier:
+        specifier: ^8.10.0
+        version: 8.10.0(eslint@8.57.0)
+      husky:
+        specifier: ^9.0.10
+        version: 9.0.11
+      prettier:
+        specifier: ^3.2.5
+        version: 3.2.5
+      prettier-plugin-organize-imports:
+        specifier: ^3.2.4
+        version: 3.2.4(prettier@3.2.5)(typescript@5.4.2)
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
+      wait-port:
+        specifier: ^1.1.0
+        version: 1.1.0
 
 packages:
 
@@ -1287,6 +1291,9 @@ packages:
     resolution: {integrity: sha512-byy+U7gp+FVwmyzKPYhW2h5l3crpmGsxl7X2s8y43IgxvG4g3QZ6CffDtsNQy1WsmZpQbO+ybo0AlW7TY6DcBQ==}
     engines: {node: '>= 0.4'}
 
+  ollama@0.5.0:
+    resolution: {integrity: sha512-CRtRzsho210EGdK52GrUMohA2pU+7NbgEaBG3DcYeRmvQthDO7E2LHOkLlUUeaYUlNmEd8icbjC02ug9meSYnw==}
+
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
@@ -1843,6 +1850,9 @@ packages:
 
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
+
+  whatwg-fetch@3.6.20:
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   which-boxed-primitive@1.0.2:
     resolution: {integrity: sha512-bwZdv0AKLpplFY2KZRX6TvyuN7ojjr7lwkg6ml0roIy9YeuSr7JS372qlNW18UQYzgYK9ziGcerWqZOmEn9VNg==}
@@ -3256,6 +3266,10 @@ snapshots:
       has-symbols: 1.0.3
       object-keys: 1.1.1
 
+  ollama@0.5.0:
+    dependencies:
+      whatwg-fetch: 3.6.20
+
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
@@ -3815,6 +3829,8 @@ snapshots:
   wcwidth@1.0.1:
     dependencies:
       defaults: 1.0.4
+
+  whatwg-fetch@3.6.20: {}
 
   which-boxed-primitive@1.0.2:
     dependencies:

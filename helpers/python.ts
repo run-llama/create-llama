@@ -10,6 +10,7 @@ import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
   InstallTemplateArgs,
+  ModelConfig,
   TemplateDataSource,
   TemplateVectorDB,
 } from "./types";
@@ -21,6 +22,7 @@ interface Dependency {
 }
 
 const getAdditionalDependencies = (
+  modelConfig: ModelConfig,
   vectorDb?: TemplateVectorDB,
   dataSource?: TemplateDataSource,
   tools?: Tool[],
@@ -107,6 +109,25 @@ const getAdditionalDependencies = (
       dependencies.push(dep);
     });
   });
+
+  switch (modelConfig.provider) {
+    case "ollama":
+      dependencies.push({
+        name: "llama-index-llms-ollama",
+        version: "0.1.2",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-ollama",
+        version: "0.1.2",
+      });
+      break;
+    case "openai":
+      dependencies.push({
+        name: "llama-index-agent-openai",
+        version: "0.2.2",
+      });
+      break;
+  }
 
   return dependencies;
 };
@@ -205,8 +226,8 @@ export const installPythonTemplate = async ({
   dataSources,
   tools,
   postInstallAction,
-  useLlamaParse,
   observability,
+  modelConfig,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -215,9 +236,9 @@ export const installPythonTemplate = async ({
   | "vectorDb"
   | "dataSources"
   | "tools"
-  | "useLlamaParse"
   | "postInstallAction"
   | "observability"
+  | "modelConfig"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
   const templatePath = path.join(templatesDir, "types", template, framework);
@@ -258,7 +279,7 @@ export const installPythonTemplate = async ({
   });
 
   const addOnDependencies = dataSources
-    .map((ds) => getAdditionalDependencies(vectorDb, ds, tools))
+    .map((ds) => getAdditionalDependencies(modelConfig, vectorDb, ds, tools))
     .flat();
 
   if (observability === "opentelemetry") {

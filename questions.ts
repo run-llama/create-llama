@@ -1,8 +1,6 @@
 import { execSync } from "child_process";
 import ciInfo from "ci-info";
 import fs from "fs";
-import got from "got";
-import ora from "ora";
 import path from "path";
 import { blue, green, red } from "picocolors";
 import prompts from "prompts";
@@ -16,10 +14,9 @@ import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
+import { askModelConfig, isModelConfigured } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
-
-const OPENAI_API_URL = "https://api.openai.com/v1";
 
 export type QuestionArgs = Omit<
   InstallAppArgs,
@@ -67,16 +64,13 @@ if ($dialogResult -eq [System.Windows.Forms.DialogResult]::OK)
 }
 `;
 
-const defaults: QuestionArgs = {
+const defaults: Omit<QuestionArgs, "modelConfig"> = {
   template: "streaming",
   framework: "nextjs",
   ui: "shadcn",
   frontend: false,
-  openAiKey: "",
   llamaCloudKey: "",
   useLlamaParse: false,
-  model: "gpt-4-turbo",
-  embeddingModel: "text-embedding-3-large",
   communityProjectConfig: undefined,
   llamapack: "",
   postInstallAction: "dependencies",
@@ -84,7 +78,7 @@ const defaults: QuestionArgs = {
   tools: [],
 };
 
-const handlers = {
+export const questionHandlers = {
   onCancel: () => {
     console.error("Exiting.");
     process.exit(1);
@@ -232,63 +226,15 @@ export const onPromptState = (state: any) => {
   }
 };
 
-const getAvailableModelChoices = async (
-  selectEmbedding: boolean,
-  apiKey?: string,
-) => {
-  const isLLMModel = (modelId: string) => {
-    return modelId.startsWith("gpt");
-  };
-
-  const isEmbeddingModel = (modelId: string) => {
-    return modelId.includes("embedding");
-  };
-
-  if (apiKey) {
-    const spinner = ora("Fetching available models").start();
-    try {
-      const response = await got(`${OPENAI_API_URL}/models`, {
-        headers: {
-          Authorization: "Bearer " + apiKey,
-        },
-        timeout: 5000,
-        responseType: "json",
-      });
-      const data: any = await response.body;
-      spinner.stop();
-      return data.data
-        .filter((model: any) =>
-          selectEmbedding ? isEmbeddingModel(model.id) : isLLMModel(model.id),
-        )
-        .map((el: any) => {
-          return {
-            title: el.id,
-            value: el.id,
-          };
-        });
-    } catch (error) {
-      spinner.stop();
-      if ((error as any).response?.statusCode === 401) {
-        console.log(
-          red(
-            "Invalid OpenAI API key provided! Please provide a valid key and try again!",
-          ),
-        );
-      } else {
-        console.log(red("Request failed: " + error));
-      }
-      process.exit(1);
-    }
-  }
-};
-
 export const askQuestions = async (
   program: QuestionArgs,
   preferences: QuestionArgs,
+  openAiKey?: string,
 ) => {
-  const getPrefOrDefault = <K extends keyof QuestionArgs>(
+  const getPrefOrDefault = <K extends keyof Omit<QuestionArgs, "modelConfig">>(
     field: K,
-  ): QuestionArgs[K] => preferences[field] ?? defaults[field];
+  ): Omit<QuestionArgs, "modelConfig">[K] =>
+    preferences[field] ?? defaults[field];
 
   // Ask for next action after installation
   async function askPostInstallAction() {
@@ -311,8 +257,7 @@ export const askQuestions = async (
           },
         ];
 
-        const openAiKeyConfigured =
-          program.openAiKey || process.env["OPENAI_API_KEY"];
+        const modelConfigured = isModelConfigured(program.modelConfig);
         // If using LlamaParse, require LlamaCloud API key
         const llamaCloudKeyConfigured = program.useLlamaParse
           ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
@@ -321,7 +266,7 @@ export const askQuestions = async (
         // Can run the app if all tools do not require configuration
         if (
           !hasVectorDb &&
-          openAiKeyConfigured &&
+          modelConfigured &&
           llamaCloudKeyConfigured &&
           !toolsRequireConfig(program.tools) &&
           !program.llamapack
@@ -341,7 +286,7 @@ export const askQuestions = async (
             choices: actionChoices,
             initial: 1,
           },
-          handlers,
+          questionHandlers,
         );
 
         program.postInstallAction = action;
@@ -374,7 +319,7 @@ export const askQuestions = async (
           ],
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.template = template;
       preferences.template = template;
@@ -397,7 +342,7 @@ export const askQuestions = async (
         })),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     const projectConfig = JSON.parse(communityProjectConfig);
     program.communityProjectConfig = projectConfig;
@@ -418,7 +363,7 @@ export const askQuestions = async (
         })),
         initial: 0,
       },
-      handlers,
+      questionHandlers,
     );
     program.llamapack = llamapack;
     preferences.llamapack = llamapack;
@@ -444,7 +389,7 @@ export const askQuestions = async (
           choices,
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.framework = framework;
       preferences.framework = framework;
@@ -504,7 +449,7 @@ export const askQuestions = async (
           ],
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
 
       program.observability = observability;
@@ -512,67 +457,13 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.openAiKey) {
-    const { key } = await prompts(
-      {
-        type: "text",
-        name: "key",
-        message: program.askModels
-          ? "Please provide your OpenAI API key (or leave blank to reuse OPENAI_API_KEY env variable):"
-          : "Please provide your OpenAI API key (leave blank to skip):",
-        validate: (value: string) => {
-          if (program.askModels && !value) {
-            if (process.env.OPENAI_API_KEY) {
-              return true;
-            }
-            return "OpenAI API key is required";
-          }
-          return true;
-        },
-      },
-      handlers,
-    );
-
-    program.openAiKey = key || process.env.OPENAI_API_KEY;
-    preferences.openAiKey = key || process.env.OPENAI_API_KEY;
-  }
-
-  if (!program.model) {
-    if (ciInfo.isCI || !program.askModels) {
-      program.model = defaults.model;
-    } else {
-      const { model } = await prompts(
-        {
-          type: "select",
-          name: "model",
-          message: "Which LLM model would you like to use?",
-          choices: await getAvailableModelChoices(false, program.openAiKey),
-          initial: 0,
-        },
-        handlers,
-      );
-      program.model = model;
-      preferences.model = model;
-    }
-  }
-
-  if (!program.embeddingModel) {
-    if (ciInfo.isCI || !program.askModels) {
-      program.embeddingModel = defaults.embeddingModel;
-    } else {
-      const { embeddingModel } = await prompts(
-        {
-          type: "select",
-          name: "embeddingModel",
-          message: "Which embedding model would you like to use?",
-          choices: await getAvailableModelChoices(true, program.openAiKey),
-          initial: 0,
-        },
-        handlers,
-      );
-      program.embeddingModel = embeddingModel;
-      preferences.embeddingModel = embeddingModel;
-    }
+  if (!program.modelConfig) {
+    const modelConfig = await askModelConfig({
+      openAiKey,
+      askModels: program.askModels ?? false,
+    });
+    program.modelConfig = modelConfig;
+    preferences.modelConfig = modelConfig;
   }
 
   if (!program.dataSources) {
@@ -596,7 +487,7 @@ export const askQuestions = async (
             ),
             initial: firstQuestion ? 1 : 0,
           },
-          handlers,
+          questionHandlers,
         );
 
         if (selectedSource === "no" || selectedSource === "none") {
@@ -642,7 +533,7 @@ export const askQuestions = async (
                   return true;
                 },
               },
-              handlers,
+              questionHandlers,
             );
 
             program.dataSources.push({
@@ -687,7 +578,7 @@ export const askQuestions = async (
             ];
             program.dataSources.push({
               type: "db",
-              config: await prompts(dbPrompts, handlers),
+              config: await prompts(dbPrompts, questionHandlers),
             });
           }
         }
@@ -714,7 +605,7 @@ export const askQuestions = async (
           active: "yes",
           inactive: "no",
         },
-        handlers,
+        questionHandlers,
       );
       program.useLlamaParse = useLlamaParse;
 
@@ -727,7 +618,7 @@ export const askQuestions = async (
             message:
               "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
           },
-          handlers,
+          questionHandlers,
         );
         program.llamaCloudKey = llamaCloudKey;
       }
@@ -746,7 +637,7 @@ export const askQuestions = async (
           choices: getVectorDbChoices(program.framework),
           initial: 0,
         },
-        handlers,
+        questionHandlers,
       );
       program.vectorDb = vectorDb;
       preferences.vectorDb = vectorDb;
@@ -780,4 +671,8 @@ export const askQuestions = async (
   }
 
   await askPostInstallAction();
+};
+
+export const toChoice = (value: string) => {
+  return { title: value, value };
 };

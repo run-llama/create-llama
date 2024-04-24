@@ -1,12 +1,12 @@
 {
   "name": "create-llama",
   "version": "0.0.32",
+  "description": "Create LlamaIndex-powered apps with one command",
   "keywords": [
     "rag",
     "llamaindex",
     "next.js"
   ],
-  "description": "Create LlamaIndex-powered apps with one command",
   "repository": {
     "type": "git",
     "url": "https://github.com/run-llama/LlamaIndexTS",
@@ -20,32 +20,30 @@
     "dist"
   ],
   "scripts": {
-    "clean": "rimraf --glob ./dist ./templates/**/__pycache__ ./templates/**/node_modules ./templates/**/poetry.lock",
-    "format": "prettier --ignore-unknown --cache --check .",
-    "format:write": "prettier --ignore-unknown --write .",
-    "dev": "ncc build ./index.ts -w -o dist/",
     "build": "bash ./scripts/build.sh",
     "build:ncc": "pnpm run clean && ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
+    "clean": "rimraf --glob ./dist ./templates/**/__pycache__ ./templates/**/node_modules ./templates/**/poetry.lock",
+    "dev": "ncc build ./index.ts -w -o dist/",
     "e2e": "playwright test",
+    "format": "prettier --ignore-unknown --cache --check .",
+    "format:write": "prettier --ignore-unknown --write .",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
+    "new-snapshot": "pnpm run build && changeset version --snapshot",
+    "new-version": "pnpm run build && changeset version",
+    "pack-install": "bash ./scripts/pack.sh",
     "prepare": "husky",
     "release": "pnpm run build && changeset publish",
-    "new-version": "pnpm run build && changeset version",
-    "release-snapshot": "pnpm run build && changeset publish --tag snapshot",
-    "new-snapshot": "pnpm run build && changeset version --snapshot",
-    "pack-install": "bash ./scripts/pack.sh"
+    "release-snapshot": "pnpm run build && changeset publish --tag snapshot"
   },
-  "devDependencies": {
-    "@playwright/test": "^1.41.1",
+  "dependencies": {
     "@types/async-retry": "1.4.2",
     "@types/ci-info": "2.0.0",
     "@types/cross-spawn": "6.0.0",
+    "@types/fs-extra": "11.0.4",
     "@types/node": "^20.11.7",
     "@types/prompts": "2.0.1",
     "@types/tar": "6.1.5",
     "@types/validate-npm-package-name": "3.0.0",
-    "@types/fs-extra": "11.0.4",
-    "@vercel/ncc": "0.38.1",
     "async-retry": "1.3.1",
     "async-sema": "3.0.1",
     "ci-info": "github:watson/ci-info#f43f6a1cefff47fb361c88cf4b943fdbcaafe540",
@@ -53,29 +51,34 @@
     "conf": "10.2.0",
     "cross-spawn": "7.0.3",
     "fast-glob": "3.3.1",
+    "fs-extra": "11.2.0",
     "got": "10.7.0",
+    "ollama": "^0.5.0",
+    "ora": "^8.0.1",
     "picocolors": "1.0.0",
     "prompts": "2.1.0",
-    "rimraf": "^5.0.5",
     "smol-toml": "^1.1.4",
     "tar": "6.1.15",
     "terminal-link": "^3.0.0",
     "update-check": "1.5.4",
     "validate-npm-package-name": "3.0.0",
-    "wait-port": "^1.1.0",
+    "yaml": "2.4.1"
+  },
+  "devDependencies": {
     "@changesets/cli": "^2.27.1",
+    "@playwright/test": "^1.41.1",
+    "@vercel/ncc": "0.38.1",
     "eslint": "^8.56.0",
+    "eslint-config-prettier": "^8.10.0",
     "husky": "^9.0.10",
     "prettier": "^3.2.5",
     "prettier-plugin-organize-imports": "^3.2.4",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
-    "eslint-config-prettier": "^8.10.0",
-    "ora": "^8.0.1",
-    "fs-extra": "11.2.0",
-    "yaml": "2.4.1"
+    "wait-port": "^1.1.0"
   },
+  "packageManager": "pnpm@9.0.5",
   "engines": {
     "node": ">=16.14.0"
-  },
-  "packageManager": "pnpm@9.0.5"
+  }
 }

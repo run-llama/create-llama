@@ -1,6 +1,14 @@
 import { PackageManager } from "../helpers/get-pkg-manager";
 import { Tool } from "./tools";
 
+export type ModelProvider = "openai" | "ollama";
+export type ModelConfig = {
+  provider: ModelProvider;
+  apiKey?: string;
+  model: string;
+  embeddingModel: string;
+  dimensions: number;
+};
 export type TemplateType = "streaming" | "community" | "llamapack";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
@@ -59,11 +67,9 @@ export interface InstallTemplateArgs {
   ui: TemplateUI;
   dataSources: TemplateDataSource[];
   customApiPath?: string;
-  openAiKey?: string;
+  modelConfig: ModelConfig;
   llamaCloudKey?: string;
   useLlamaParse?: boolean;
-  model: string;
-  embeddingModel: string;
   communityProjectConfig?: CommunityProjectConfig;
   llamapack?: string;
   vectorDb?: TemplateVectorDB;

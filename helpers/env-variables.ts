@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import {
+  ModelConfig,
   TemplateDataSource,
   TemplateFramework,
   TemplateVectorDB,
@@ -28,7 +29,10 @@ const renderEnvVar = (envVars: EnvVar[]): string => {
   );
 };
 
-const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
+const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
+  if (!vectorDb) {
+    return [];
+  }
   switch (vectorDb) {
     case "mongo":
       return [
@@ -130,84 +134,75 @@ const getVectorDBEnvs = (vectorDb: TemplateVectorDB) => {
   }
 };
 
-export const createBackendEnvFile = async (
-  root: string,
-  opts: {
-    openAiKey?: string;
-    llamaCloudKey?: string;
-    vectorDb?: TemplateVectorDB;
-    model?: string;
-    embeddingModel?: string;
-    framework?: TemplateFramework;
-    dataSources?: TemplateDataSource[];
-    port?: number;
-  },
-) => {
-  // Init env values
-  const envFileName = ".env";
-  const defaultEnvs = [
+const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
+  return [
     {
-      render: true,
+      name: "MODEL_PROVIDER",
+      description: "The provider for the AI models to use.",
+      value: modelConfig.provider,
+    },
+    {
       name: "MODEL",
       description: "The name of LLM model to use.",
-      value: opts.model,
-    },
-    {
-      render: true,
-      name: "OPENAI_API_KEY",
-      description: "The OpenAI API key to use.",
-      value: opts.openAiKey,
-    },
-    {
-      name: "LLAMA_CLOUD_API_KEY",
-      description: `The Llama Cloud API key.`,
-      value: opts.llamaCloudKey,
+      value: modelConfig.model,
     },
     {
       name: "EMBEDDING_MODEL",
       description: "Name of the embedding model to use.",
-      value: opts.embeddingModel,
+      value: modelConfig.embeddingModel,
     },
     {
       name: "EMBEDDING_DIM",
       description: "Dimension of the embedding model to use.",
-      value: 1536,
+      value: modelConfig.dimensions.toString(),
     },
-    // Add vector database environment variables
-    ...(opts.vectorDb ? getVectorDBEnvs(opts.vectorDb) : []),
+    ...(modelConfig.provider === "openai"
+      ? [
+          {
+            name: "OPENAI_API_KEY",
+            description: "The OpenAI API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ]
+      : []),
   ];
-  let envVars: EnvVar[] = [];
-  if (opts.framework === "fastapi") {
-    envVars = [
-      ...defaultEnvs,
-      ...[
-        {
-          name: "APP_HOST",
-          description: "The address to start the backend app.",
-          value: "0.0.0.0",
-        },
-        {
-          name: "APP_PORT",
-          description: "The port to start the backend app.",
-          value: opts.port?.toString() || "8000",
-        },
-        {
-          name: "LLM_TEMPERATURE",
-          description: "Temperature for sampling from the model.",
-        },
-        {
-          name: "LLM_MAX_TOKENS",
-          description: "Maximum number of tokens to generate.",
-        },
-        {
-          name: "TOP_K",
-          description:
-            "The number of similar embeddings to return when retrieving documents.",
-          value: "3",
-        },
-        {
-          name: "SYSTEM_PROMPT",
-          description: `Custom system prompt.
+};
+
+const getFrameworkEnvs = (
+  framework?: TemplateFramework,
+  port?: number,
+): EnvVar[] => {
+  if (framework !== "fastapi") {
+    return [];
+  }
+  return [
+    {
+      name: "APP_HOST",
+      description: "The address to start the backend app.",
+      value: "0.0.0.0",
+    },
+    {
+      name: "APP_PORT",
+      description: "The port to start the backend app.",
+      value: port?.toString() || "8000",
+    },
+    {
+      name: "LLM_TEMPERATURE",
+      description: "Temperature for sampling from the model.",
+    },
+    {
+      name: "LLM_MAX_TOKENS",
+      description: "Maximum number of tokens to generate.",
+    },
+    {
+      name: "TOP_K",
+      description:
+        "The number of similar embeddings to return when retrieving documents.",
+      value: "3",
+    },
+    {
+      name: "SYSTEM_PROMPT",
+      description: `Custom system prompt.
 Example:
 SYSTEM_PROMPT="
 We have provided context information below.
@@ -216,22 +211,35 @@ We have provided context information below.
 ---------------------
 Given this information, please answer the question: {query_str}
 "`,
-        },
-      ],
-    ];
-  } else {
-    const nextJsEnvs = [
-      {
-        name: "NEXT_PUBLIC_MODEL",
-        description: "The LLM model to use (hardcode to front-end artifact).",
-        value: opts.model,
-      },
-    ];
-    envVars = [
-      ...defaultEnvs,
-      ...(opts.framework === "nextjs" ? nextJsEnvs : []),
-    ];
-  }
+    },
+  ];
+};
+
+export const createBackendEnvFile = async (
+  root: string,
+  opts: {
+    llamaCloudKey?: string;
+    vectorDb?: TemplateVectorDB;
+    modelConfig: ModelConfig;
+    framework?: TemplateFramework;
+    dataSources?: TemplateDataSource[];
+    port?: number;
+  },
+) => {
+  // Init env values
+  const envFileName = ".env";
+  const envVars: EnvVar[] = [
+    {
+      name: "LLAMA_CLOUD_API_KEY",
+      description: `The Llama Cloud API key.`,
+      value: opts.llamaCloudKey,
+    },
+    // Add model environment variables
+    ...getModelEnvs(opts.modelConfig),
+    // Add vector database environment variables
+    ...getVectorDBEnvs(opts.vectorDb),
+    ...getFrameworkEnvs(opts.framework, opts.port),
+  ];
   // Render and write env file
   const content = renderEnvVar(envVars);
   await fs.writeFile(path.join(root, envFileName), content);
@@ -242,20 +250,9 @@ export const createFrontendEnvFile = async (
   root: string,
   opts: {
     customApiPath?: string;
-    model?: string;
   },
 ) => {
   const defaultFrontendEnvs = [
-    {
-      name: "MODEL",
-      description: "The OpenAI model to use.",
-      value: opts.model,
-    },
-    {
-      name: "NEXT_PUBLIC_MODEL",
-      description: "The OpenAI model to use (hardcode to front-end artifact).",
-      value: opts.model,
-    },
     {
       name: "NEXT_PUBLIC_CHAT_API",
       description: "The backend API for chat endpoint.",
