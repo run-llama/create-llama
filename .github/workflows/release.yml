@@ -37,7 +37,7 @@ jobs:
       - name: Get changeset status
         id: get-changeset-status
         run: |
-          pnpx changeset status --output .changeset/status.json
+          pnpm changeset status --output .changeset/status.json
           new_version=$(jq -r '.releases[0].newVersion' < .changeset/status.json)
           rm -v .changeset/status.json
           echo "new-version=${new_version}" >> "$GITHUB_OUTPUT"
