@@ -163,6 +163,14 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
+          {
+            name: "LLM_TEMPERATURE",
+            description: "Temperature for sampling from the model.",
+          },
+          {
+            name: "LLM_MAX_TOKENS",
+            description: "Maximum number of tokens to generate.",
+          },
         ]
       : []),
   ];
@@ -186,14 +194,11 @@ const getFrameworkEnvs = (
       description: "The port to start the backend app.",
       value: port?.toString() || "8000",
     },
-    {
-      name: "LLM_TEMPERATURE",
-      description: "Temperature for sampling from the model.",
-    },
-    {
-      name: "LLM_MAX_TOKENS",
-      description: "Maximum number of tokens to generate.",
-    },
+  ];
+};
+
+const getEngineEnvs = (): EnvVar[] => {
+  return [
     {
       name: "TOP_K",
       description:
@@ -236,6 +241,8 @@ export const createBackendEnvFile = async (
     },
     // Add model environment variables
     ...getModelEnvs(opts.modelConfig),
+    // Add engine environment variables
+    ...getEngineEnvs(),
     // Add vector database environment variables
     ...getVectorDBEnvs(opts.vectorDb),
     ...getFrameworkEnvs(opts.framework, opts.port),
