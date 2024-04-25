@@ -135,7 +135,7 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
 };
 
 const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
-  return [
+  const modelEnvs: EnvVar[] = [
     {
       name: "MODEL_PROVIDER",
       description: "The provider for the AI models to use.",
@@ -151,21 +151,55 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
-    {
-      name: "EMBEDDING_DIM",
-      description: "Dimension of the embedding model to use.",
-      value: modelConfig.dimensions.toString(),
-    },
-    ...(modelConfig.provider === "openai"
-      ? [
+  ];
+
+  switch (modelConfig.provider) {
+    case "openai": {
+      modelEnvs.push(
+        ...[
+          {
+            name: "EMBEDDING_DIM",
+            description: "Dimension of the embedding model to use.",
+            value: modelConfig.dimensions?.toString(),
+          },
           {
             name: "OPENAI_API_KEY",
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
-        ]
-      : []),
-  ];
+        ],
+      );
+      break;
+    }
+    case "ollama": {
+      modelEnvs.push(
+        ...[
+          {
+            name: "EMBEDDING_DIM",
+            description: "Dimension of the embedding model to use.",
+            value: modelConfig.dimensions?.toString(),
+          },
+        ],
+      );
+      break;
+    }
+    case "anthropic": {
+      modelEnvs.push(
+        ...[
+          {
+            name: "ANTHROPIC_API_KEY",
+            description: "The Anthropic API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ],
+      );
+      break;
+    }
+    default:
+      break;
+  }
+
+  return modelEnvs;
 };
 
 const getFrameworkEnvs = (

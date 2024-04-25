@@ -2,6 +2,7 @@ import ciInfo from "ci-info";
 import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider } from "../types";
+import { askAnthropicQuestions } from "./anthropic";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions, isOpenAIConfigured } from "./openai";
 
@@ -31,6 +32,7 @@ export async function askModelConfig({
             value: "openai",
           },
           { title: "Ollama", value: "ollama" },
+          { title: "Anthropic", value: "anthropic" },
         ],
         initial: 0,
       },
@@ -43,6 +45,9 @@ export async function askModelConfig({
   switch (modelProvider) {
     case "ollama":
       modelConfig = await askOllamaQuestions({ askModels });
+      break;
+    case "anthropic":
+      modelConfig = await askAnthropicQuestions({ askModels });
       break;
     default:
       modelConfig = await askOpenAIQuestions({

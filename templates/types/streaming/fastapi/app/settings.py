@@ -9,6 +9,8 @@ def init_settings():
         init_openai()
     elif model_provider == "ollama":
         init_ollama()
+    elif model_provider == "anthropic":
+        init_anthropic()
     else:
         raise ValueError(f"Invalid model provider: {model_provider}")
     Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
@@ -42,3 +44,11 @@ def init_openai():
         "dimension": int(dimension) if dimension is not None else None,
     }
     Settings.embed_model = OpenAIEmbedding(**config)
+
+
+def init_anthropic():
+    from llama_index.llms.anthropic import Anthropic
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+    Settings.llm = Anthropic(model=os.getenv("MODEL"))
+    Settings.embed_model = HuggingFaceEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))
