@@ -1,6 +1,4 @@
 import logging
-import os
-
 from llama_index.core.indices import VectorStoreIndex
 from app.engine.vectordb import get_vector_store
 
