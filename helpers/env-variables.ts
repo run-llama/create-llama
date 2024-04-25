@@ -151,6 +151,11 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
+    {
+      name: "EMBEDDING_DIM",
+      description: "Dimension of the embedding model to use.",
+      value: modelConfig.dimensions?.toString(),
+    },
   ];
 
   switch (modelConfig.provider) {
@@ -158,26 +163,9 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       modelEnvs.push(
         ...[
           {
-            name: "EMBEDDING_DIM",
-            description: "Dimension of the embedding model to use.",
-            value: modelConfig.dimensions?.toString(),
-          },
-          {
             name: "OPENAI_API_KEY",
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
-          },
-        ],
-      );
-      break;
-    }
-    case "ollama": {
-      modelEnvs.push(
-        ...[
-          {
-            name: "EMBEDDING_DIM",
-            description: "Dimension of the embedding model to use.",
-            value: modelConfig.dimensions?.toString(),
           },
         ],
       );

@@ -19,15 +19,18 @@ enum HuggingFaceEmbeddingModelType {
   XENOVA_ALL_MPNET_BASE_V2 = "Xenova/all-mpnet-base-v2",
 }
 type ModelData = {
-  quantized: boolean;
+  dimensions: number;
 };
 const EMBEDDING_MODELS: Record<HuggingFaceEmbeddingModelType, ModelData> = {
-  [HuggingFaceEmbeddingModelType.XENOVA_ALL_MINILM_L6_V2]: { quantized: true },
+  [HuggingFaceEmbeddingModelType.XENOVA_ALL_MINILM_L6_V2]: {
+    dimensions: 384,
+  },
   [HuggingFaceEmbeddingModelType.XENOVA_ALL_MPNET_BASE_V2]: {
-    quantized: true,
+    dimensions: 768,
   },
 };
 const DEFAULT_EMBEDDING_MODEL = Object.keys(EMBEDDING_MODELS)[0];
+const DEFAULT_DIMENSIONS = Object.values(EMBEDDING_MODELS)[0].dimensions;
 
 type AnthropicQuestionsParams = {
   apiKey?: string;
@@ -42,7 +45,7 @@ export async function askAnthropicQuestions({
     apiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
-    dimensions: undefined, // ignore dimensions for huggerface embedding models
+    dimensions: DEFAULT_DIMENSIONS,
   };
 
   if (!config.apiKey) {
@@ -85,6 +88,10 @@ export async function askAnthropicQuestions({
       questionHandlers,
     );
     config.embeddingModel = embeddingModel;
+    config.dimensions =
+      EMBEDDING_MODELS[
+        embeddingModel as HuggingFaceEmbeddingModelType
+      ].dimensions;
   }
 
   return config;

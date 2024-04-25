@@ -50,5 +50,20 @@ def init_anthropic():
     from llama_index.llms.anthropic import Anthropic
     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-    Settings.llm = Anthropic(model=os.getenv("MODEL"))
-    Settings.embed_model = HuggingFaceEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))
+    model_map: Dict[str, str] = {
+        "claude-3-opus": "claude-3-opus-20240229",
+        "claude-3-sonnet": "claude-3-sonnet-20240229",
+        "claude-3-haiku": "claude-3-haiku-20240307",
+        "claude-2.1": "claude-2.1",
+        "claude-instant-1.2": "claude-instant-1.2",
+    }
+
+    embed_model_map: Dict[str, str] = {
+        "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+        "all-mpnet-base-v2": "sentence-transformers/all-mpnet-base-v2",
+    }
+
+    Settings.llm = Anthropic(model=model_map[os.getenv("MODEL")])
+    Settings.embed_model = HuggingFaceEmbedding(
+        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
+    )
