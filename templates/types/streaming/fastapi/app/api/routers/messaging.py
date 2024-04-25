@@ -79,14 +79,8 @@ class EventCallbackHandler(BaseCallbackHandler):
         """No-op."""
 
     async def async_event_gen(self) -> AsyncGenerator[CallbackEvent, None]:
-        while True:
-            if not self._aqueue.empty() or not self.is_done:
-                try:
-                    event = await asyncio.wait_for(self._aqueue.get(), timeout=0.1)
-                except asyncio.TimeoutError:
-                    if self.is_done:
-                        break
-                    continue
-                yield event
-            else:
-                break
+        while not self._aqueue.empty() or not self.is_done:
+            try:
+                yield await asyncio.wait_for(self._aqueue.get(), timeout=0.1)
+            except asyncio.TimeoutError:
+                pass
