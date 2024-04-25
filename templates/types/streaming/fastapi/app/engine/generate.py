@@ -9,23 +9,15 @@ from llama_index.core.storage import StorageContext
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.indices import VectorStoreIndex
-from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.storage.docstore import SimpleDocumentStore
-from app.engine.constants import STORAGE_DIR
-from app.engine.loaders import get_documents
+from app.constants import STORAGE_DIR
 from app.settings import init_settings
+from app.engine.loaders import get_documents
+from app.engine.vectordb import get_vector_store
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-
-
-def get_vector_store():
-    if not os.path.exists(STORAGE_DIR):
-        vector_store = SimpleVectorStore()
-        return vector_store
-    else:
-        return SimpleVectorStore.from_persist_dir(STORAGE_DIR, namespace="default")
 
 
 def get_doc_store():
