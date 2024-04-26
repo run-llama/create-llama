@@ -220,20 +220,7 @@ const getFrameworkEnvs = (
       description: "The port to start the backend app.",
       value: port?.toString() || "8000",
     },
-    {
-      name: "LLM_TEMPERATURE",
-      description: "Temperature for sampling from the model.",
-    },
-    {
-      name: "LLM_MAX_TOKENS",
-      description: "Maximum number of tokens to generate.",
-    },
-    {
-      name: "TOP_K",
-      description:
-        "The number of similar embeddings to return when retrieving documents.",
-      value: "3",
-    },
+    // TODO: Once LlamaIndexTS supports string templates, move this to `getEngineEnvs`
     {
       name: "SYSTEM_PROMPT",
       description: `Custom system prompt.
@@ -245,6 +232,17 @@ We have provided context information below.
 ---------------------
 Given this information, please answer the question: {query_str}
 "`,
+    },
+  ];
+};
+
+const getEngineEnvs = (): EnvVar[] => {
+  return [
+    {
+      name: "TOP_K",
+      description:
+        "The number of similar embeddings to return when retrieving documents.",
+      value: "3",
     },
   ];
 };
@@ -270,6 +268,8 @@ export const createBackendEnvFile = async (
     },
     // Add model environment variables
     ...getModelEnvs(opts.modelConfig),
+    // Add engine environment variables
+    ...getEngineEnvs(),
     // Add vector database environment variables
     ...getVectorDBEnvs(opts.vectorDb),
     ...getFrameworkEnvs(opts.framework, opts.port),
