@@ -11,7 +11,7 @@ class CallbackEvent(BaseModel):
     payload: Optional[Dict[str, Any]] = None
     event_id: str = ""
 
-    def get_title(self):
+    def get_title(self) -> str | None:
         # Return as None for the unhandled event types
         # to avoid showing them in the UI
         match self.event_type:
@@ -53,9 +53,9 @@ class EventCallbackHandler(BaseCallbackHandler):
         event_id: str = "",
         **kwargs: Any,
     ) -> str:
-        self._aqueue.put_nowait(
-            CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
-        )
+        event = CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
+        if event.get_title() is not None:
+            self._aqueue.put_nowait(event)
 
     def on_event_end(
         self,
@@ -64,9 +64,9 @@ class EventCallbackHandler(BaseCallbackHandler):
         event_id: str = "",
         **kwargs: Any,
     ) -> None:
-        self._aqueue.put_nowait(
-            CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
-        )
+        event = CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
+        if event.get_title() is not None:
+            self._aqueue.put_nowait(event)
 
     def start_trace(self, trace_id: Optional[str] = None) -> None:
         """No-op."""
