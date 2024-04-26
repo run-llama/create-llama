@@ -142,6 +142,10 @@ const getAdditionalDependencies = (
         name: "llama-index-llms-gemini",
         version: "0.1.7",
       });
+      dependencies.push({
+        name: "llama-index-embeddings-gemini",
+        version: "0.1.6",
+      });
       break;
   }
 

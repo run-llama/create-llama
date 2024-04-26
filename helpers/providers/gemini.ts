@@ -3,22 +3,18 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions";
 
-// TODO: get embedding vector dimensions from the google sdk (currently not supported)
-// Gemini has the same name for the model and the embedding model
-// Get dimensions data from: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models#gemini-models
-const MODELS: Record<
-  string,
-  {
-    dimensions: number;
-  }
-> = {
-  "gemini-pro": { dimensions: 2048 },
-  "gemini-pro-vision": { dimensions: 4096 },
-  // TODO: we can add more models here, but make sure it works for both typescript & python settings too
+const MODELS = ["gemini-1.5-pro-latest", "gemini-pro", "gemini-pro-vision"];
+type ModelData = {
+  dimensions: number;
+};
+const EMBEDDING_MODELS: Record<string, ModelData> = {
+  "embedding-001": { dimensions: 768 },
+  "text-embedding-004": { dimensions: 768 },
 };
 
-const DEFAULT_MODEL = Object.keys(MODELS)[0];
-const DEFAULT_DIMENSIONS = Object.values(MODELS)[0].dimensions;
+const DEFAULT_MODEL = MODELS[0];
+const DEFAULT_EMBEDDING_MODEL = Object.keys(EMBEDDING_MODELS)[0];
+const DEFAULT_DIMENSIONS = Object.values(EMBEDDING_MODELS)[0].dimensions;
 
 type GeminiQuestionsParams = {
   apiKey?: string;
@@ -32,7 +28,7 @@ export async function askGeminiQuestions({
   const config: ModelConfigParams = {
     apiKey,
     model: DEFAULT_MODEL,
-    embeddingModel: DEFAULT_MODEL,
+    embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: DEFAULT_DIMENSIONS,
   };
 
@@ -56,16 +52,26 @@ export async function askGeminiQuestions({
       {
         type: "select",
         name: "model",
-        message:
-          "Which Gemini model would you like to use for llm and embedding?",
-        choices: Object.keys(MODELS).map(toChoice),
+        message: "Which LLM model would you like to use?",
+        choices: MODELS.map(toChoice),
         initial: 0,
       },
       questionHandlers,
     );
     config.model = model;
-    config.embeddingModel = model;
-    config.dimensions = MODELS[model].dimensions;
+
+    const { embeddingModel } = await prompts(
+      {
+        type: "select",
+        name: "embeddingModel",
+        message: "Which embedding model would you like to use?",
+        choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    config.embeddingModel = embeddingModel;
+    config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
   }
 
   return config;

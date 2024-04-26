@@ -76,11 +76,17 @@ def init_gemini():
     from llama_index.embeddings.gemini import GeminiEmbedding
 
     model_map: Dict[str, str] = {
+        "gemini-1.5-pro-latest": "models/gemini-1.5-pro-latest",
         "gemini-pro": "models/gemini-pro",
         "gemini-pro-vision": "models/gemini-pro-vision",
     }
 
-    model_name = model_map[os.getenv("MODEL")]
+    embed_model_map: Dict[str, str] = {
+        "embedding-001": "models/embedding-001",
+        "text-embedding-004": "models/text-embedding-004",
+    }
 
-    Settings.llm = Gemini(model=model_name)
-    Settings.embed_model = GeminiEmbedding(model_name=model_name)
+    Settings.llm = Gemini(model=model_map[os.getenv("MODEL")])
+    Settings.embed_model = GeminiEmbedding(
+        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
+    )
