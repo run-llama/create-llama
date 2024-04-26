@@ -11,6 +11,8 @@ def init_settings():
         init_ollama()
     elif model_provider == "anthropic":
         init_anthropic()
+    elif model_provider == "gemini":
+        init_gemini()
     else:
         raise ValueError(f"Invalid model provider: {model_provider}")
     Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
@@ -67,3 +69,18 @@ def init_anthropic():
     Settings.embed_model = HuggingFaceEmbedding(
         model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
     )
+
+
+def init_gemini():
+    from llama_index.llms.gemini import Gemini
+    from llama_index.embeddings.gemini import GeminiEmbedding
+
+    model_map: Dict[str, str] = {
+        "gemini-pro": "models/gemini-pro",
+        "gemini-pro-vision": "models/gemini-pro-vision",
+    }
+
+    model_name = model_map[os.getenv("MODEL")]
+
+    Settings.llm = Gemini(model=model_name)
+    Settings.embed_model = GeminiEmbedding(model_name=model_name)

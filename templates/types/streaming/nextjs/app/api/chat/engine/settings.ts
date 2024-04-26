@@ -1,5 +1,8 @@
 import {
   Anthropic,
+  GEMINI_MODEL,
+  Gemini,
+  GeminiEmbedding,
   HuggingFaceEmbedding,
   Ollama,
   OllamaEmbedding,
@@ -26,6 +29,9 @@ export const initSettings = async () => {
       break;
     case "anthropic":
       initAnthropic();
+      break;
+    case "gemini":
+      initGemini();
       break;
     default:
       initOpenAI();
@@ -67,5 +73,14 @@ function initAnthropic() {
   });
   Settings.embedModel = new HuggingFaceEmbedding({
     modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
+  });
+}
+
+function initGemini() {
+  Settings.llm = new Gemini({
+    model: process.env.MODEL as GEMINI_MODEL,
+  });
+  Settings.embedModel = new GeminiEmbedding({
+    model: process.env.MODEL as GEMINI_MODEL,
   });
 }

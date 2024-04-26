@@ -183,6 +183,18 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       );
       break;
     }
+    case "gemini": {
+      modelEnvs.push(
+        ...[
+          {
+            name: "GOOGLE_API_KEY",
+            description: "The Google API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ],
+      );
+      break;
+    }
     default:
       break;
   }
