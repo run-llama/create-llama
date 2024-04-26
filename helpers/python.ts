@@ -127,6 +127,16 @@ const getAdditionalDependencies = (
         version: "0.2.2",
       });
       break;
+    case "anthropic":
+      dependencies.push({
+        name: "llama-index-llms-anthropic",
+        version: "0.1.10",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-huggingface",
+        version: "0.2.0",
+      });
+      break;
     case "gemini":
       dependencies.push({
         name: "llama-index-llms-gemini",

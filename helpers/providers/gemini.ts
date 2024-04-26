@@ -41,9 +41,8 @@ export async function askGeminiQuestions({
       {
         type: "text",
         name: "key",
-        message: askModels
-          ? "Please provide your GOOGLE API key (or leave blank to use env variable):"
-          : "Please provide your GOOGLE API key (leave blank to skip):",
+        message:
+          "Please provide your GOOGLE API key (or leave blank to use env variable):",
       },
       questionHandlers,
     );

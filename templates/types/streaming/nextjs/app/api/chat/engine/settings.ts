@@ -81,6 +81,6 @@ function initGemini() {
     model: process.env.MODEL as GEMINI_MODEL,
   });
   Settings.embedModel = new GeminiEmbedding({
-    model: process.env.MODEL as GEMINI_MODEL,
+    model: process.env.EMBEDDING_MODEL as GEMINI_MODEL,
   });
 }
