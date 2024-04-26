@@ -53,9 +53,8 @@ export async function askAnthropicQuestions({
       {
         type: "text",
         name: "key",
-        message: askModels
-          ? "Please provide your ANTHROPIC API key (or leave blank to use ANTHROPIC env variable):"
-          : "Please provide your ANTHROPIC key (leave blank to skip):",
+        message:
+          "Please provide your ANTHROPIC API key (or leave blank to use ANTHROPIC env variable):",
       },
       questionHandlers,
     );

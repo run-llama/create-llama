@@ -135,7 +135,7 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
 };
 
 const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
-  const modelEnvs: EnvVar[] = [
+  return [
     {
       name: "MODEL_PROVIDER",
       description: "The provider for the AI models to use.",
@@ -156,50 +156,42 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Dimension of the embedding model to use.",
       value: modelConfig.dimensions.toString(),
     },
-  ];
-
-  switch (modelConfig.provider) {
-    case "openai": {
-      modelEnvs.push(
-        ...[
+    ...(modelConfig.provider === "openai"
+      ? [
           {
             name: "OPENAI_API_KEY",
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
-        ],
-      );
-      break;
-    }
-    case "anthropic": {
-      modelEnvs.push(
-        ...[
+          {
+            name: "LLM_TEMPERATURE",
+            description: "Temperature for sampling from the model.",
+          },
+          {
+            name: "LLM_MAX_TOKENS",
+            description: "Maximum number of tokens to generate.",
+          },
+        ]
+      : []),
+    ...(modelConfig.provider === "anthropic"
+      ? [
           {
             name: "ANTHROPIC_API_KEY",
             description: "The Anthropic API key to use.",
             value: modelConfig.apiKey,
           },
-        ],
-      );
-      break;
-    }
-    case "gemini": {
-      modelEnvs.push(
-        ...[
+        ]
+      : []),
+    ...(modelConfig.provider === "gemini"
+      ? [
           {
             name: "GOOGLE_API_KEY",
             description: "The Google API key to use.",
             value: modelConfig.apiKey,
           },
-        ],
-      );
-      break;
-    }
-    default:
-      break;
-  }
-
-  return modelEnvs;
+        ]
+      : []),
+  ];
 };
 
 const getFrameworkEnvs = (
