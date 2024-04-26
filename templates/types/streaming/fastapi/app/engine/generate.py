@@ -54,7 +54,7 @@ def generate_datasource():
     ingestion_pipeline.vector_store = vector_store
 
     # Run the ingestion pipeline and store the results
-    nodes = ingestion_pipeline.run(show_progress=True, documents=documents)
+    ingestion_pipeline.run(show_progress=True, documents=documents)
 
     # Default vector store only keeps data in memory, so we need to persist it
     # Can remove if using a different vector store
@@ -63,7 +63,7 @@ def generate_datasource():
     # Persist the docstore to apply ingestion strategy
     docstore.persist(os.path.join(STORAGE_DIR, "docstore.json"))
 
-    logger.info(f"Finished creating new index.")
+    logger.info("Finished creating new index.")
 
 
 if __name__ == "__main__":

@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Use ingestion pipeline for Python 
+Use ingestion pipeline for Python
