@@ -154,7 +154,7 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
     {
       name: "EMBEDDING_DIM",
       description: "Dimension of the embedding model to use.",
-      value: modelConfig.dimensions?.toString(),
+      value: modelConfig.dimensions.toString(),
     },
   ];
 
