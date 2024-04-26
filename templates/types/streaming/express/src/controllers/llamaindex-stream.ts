@@ -5,12 +5,7 @@ import {
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import {
-  Metadata,
-  NodeWithScore,
-  Response,
-  StreamingAgentChatResponse,
-} from "llamaindex";
+import { Metadata, NodeWithScore, Response } from "llamaindex";
 import { appendImageData, appendSourceData } from "./stream-helper";
 
 type ParserOptions = {
@@ -52,19 +47,15 @@ function createParser(
 }
 
 export function LlamaIndexStream(
-  response: StreamingAgentChatResponse | AsyncIterable<Response>,
+  response: AsyncIterable<Response>,
   data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
     parserOptions?: ParserOptions;
   },
 ): { stream: ReadableStream; data: StreamData } {
-  const res =
-    response instanceof StreamingAgentChatResponse
-      ? response.response
-      : response;
   return {
-    stream: createParser(res, data, opts?.parserOptions)
+    stream: createParser(response, data, opts?.parserOptions)
       .pipeThrough(createCallbacksTransformer(opts?.callbacks))
       .pipeThrough(createStreamDataTransformer()),
     data,
