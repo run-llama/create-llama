@@ -9,7 +9,9 @@ export async function createChatEngine() {
     );
   }
   const retriever = index.asRetriever();
-  retriever.similarityTopK = 3;
+  retriever.similarityTopK = process.env.TOP_K
+    ? parseInt(process.env.TOP_K)
+    : 3;
 
   return new ContextChatEngine({
     chatModel: Settings.llm,
