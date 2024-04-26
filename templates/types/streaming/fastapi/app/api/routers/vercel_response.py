@@ -13,8 +13,8 @@ class VercelStreamResponse(StreamingResponse):
 
     @classmethod
     def convert_text(cls, token: str):
-        # Escape newlines to avoid breaking the stream
-        token = token.replace("\n", "\\n")
+        # Escape newlines and double quotes to avoid breaking the stream
+        token = token.replace("\n", "\\n").replace('"', '\\"')
         return f'{cls.TEXT_PREFIX}"{token}"\n'
 
     @classmethod
