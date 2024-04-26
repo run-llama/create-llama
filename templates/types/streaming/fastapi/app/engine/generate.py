@@ -5,10 +5,9 @@ load_dotenv()
 import os
 import logging
 from llama_index.core.settings import Settings
-from llama_index.core.storage import StorageContext
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.indices import VectorStoreIndex
+from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from app.constants import STORAGE_DIR
 from app.settings import init_settings
@@ -36,10 +35,6 @@ def generate_datasource():
     documents = get_documents()
     docstore = get_doc_store()
     vector_store = get_vector_store()
-    storage_context = StorageContext.from_defaults(
-        vector_store=vector_store,
-        docstore=docstore,
-    )
 
     # Create ingestion pipeline
     ingestion_pipeline = IngestionPipeline(
@@ -61,14 +56,14 @@ def generate_datasource():
     # Run the ingestion pipeline and store the results
     nodes = ingestion_pipeline.run(show_progress=True, documents=documents)
 
-    # Create the index
-    index = VectorStoreIndex(
-        nodes=nodes,
-        storage_context=storage_context,
-    )
-    index.storage_context.persist(STORAGE_DIR)
+    # Default vector store only keeps data in memory, so we need to persist it
+    # Can remove if using a different vector store
+    if isinstance(vector_store, SimpleVectorStore):
+        vector_store.persist(os.path.join(STORAGE_DIR, "vector_store.json"))
+    # Persist the docstore to apply ingestion strategy
+    docstore.persist(os.path.join(STORAGE_DIR, "docstore.json"))
 
-    logger.info(f"Finished creating new index. Stored in {STORAGE_DIR}")
+    logger.info(f"Finished creating new index.")
 
 
 if __name__ == "__main__":

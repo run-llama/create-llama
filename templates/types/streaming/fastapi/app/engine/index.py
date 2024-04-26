@@ -6,8 +6,8 @@ logger = logging.getLogger("uvicorn")
 
 
 def get_index():
-    logger.info("Connecting to index from PGVector...")
+    logger.info("Loading the index...")
     store = get_vector_store()
     index = VectorStoreIndex.from_vector_store(store)
-    logger.info("Finished connecting to index from PGVector.")
+    logger.info("Loaded index successfully.")
     return index
