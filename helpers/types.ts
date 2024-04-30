@@ -8,6 +8,7 @@ export type ModelConfig = {
   model: string;
   embeddingModel: string;
   dimensions: number;
+  isConfigured(): boolean;
 };
 export type TemplateType = "streaming" | "community" | "llamapack";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";

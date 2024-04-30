@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: support anthropic and gemini
+Support anthropic and gemini as model providers

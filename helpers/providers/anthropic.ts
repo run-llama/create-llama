@@ -46,6 +46,15 @@ export async function askAnthropicQuestions({
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: DEFAULT_DIMENSIONS,
+    isConfigured(): boolean {
+      if (config.apiKey) {
+        return true;
+      }
+      if (process.env["ANTHROPIC_API_KEY"]) {
+        return true;
+      }
+      return false;
+    },
   };
 
   if (!config.apiKey) {
@@ -54,7 +63,7 @@ export async function askAnthropicQuestions({
         type: "text",
         name: "key",
         message:
-          "Please provide your ANTHROPIC API key (or leave blank to use ANTHROPIC env variable):",
+          "Please provide your Anthropic API key (or leave blank to use ANTHROPIC_API_KEY env variable):",
       },
       questionHandlers,
     );

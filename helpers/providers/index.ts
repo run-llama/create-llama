@@ -5,7 +5,7 @@ import { ModelConfig, ModelProvider } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askGeminiQuestions } from "./gemini";
 import { askOllamaQuestions } from "./ollama";
-import { askOpenAIQuestions, isOpenAIConfigured } from "./openai";
+import { askOpenAIQuestions } from "./openai";
 
 const DEFAULT_MODEL_PROVIDER = "openai";
 
@@ -64,13 +64,4 @@ export async function askModelConfig({
     ...modelConfig,
     provider: modelProvider,
   };
-}
-
-export function isModelConfigured(modelConfig: ModelConfig): boolean {
-  switch (modelConfig.provider) {
-    case "openai":
-      return isOpenAIConfigured(modelConfig);
-    default:
-      return true;
-  }
 }

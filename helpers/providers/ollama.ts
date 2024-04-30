@@ -29,6 +29,9 @@ export async function askOllamaQuestions({
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: EMBEDDING_MODELS[DEFAULT_EMBEDDING_MODEL].dimensions,
+    isConfigured(): boolean {
+      return true;
+    },
   };
 
   // use default model values in CI or if user should not be asked

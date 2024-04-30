@@ -20,6 +20,15 @@ export async function askOpenAIQuestions({
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
+    isConfigured(): boolean {
+      if (config.apiKey) {
+        return true;
+      }
+      if (process.env["OPENAI_API_KEY"]) {
+        return true;
+      }
+      return false;
+    },
   };
 
   if (!config.apiKey) {
@@ -31,7 +40,6 @@ export async function askOpenAIQuestions({
           ? "Please provide your OpenAI API key (or leave blank to use OPENAI_API_KEY env variable):"
           : "Please provide your OpenAI API key (leave blank to skip):",
         validate: (value: string) => {
-          console.log(value);
           if (askModels && !value) {
             if (process.env.OPENAI_API_KEY) {
               return true;
@@ -76,16 +84,6 @@ export async function askOpenAIQuestions({
   }
 
   return config;
-}
-
-export function isOpenAIConfigured(params: ModelConfigParams): boolean {
-  if (params.apiKey) {
-    return true;
-  }
-  if (process.env["OPENAI_API_KEY"]) {
-    return true;
-  }
-  return false;
 }
 
 async function getAvailableModelChoices(

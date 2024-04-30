@@ -30,6 +30,15 @@ export async function askGeminiQuestions({
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: DEFAULT_DIMENSIONS,
+    isConfigured(): boolean {
+      if (config.apiKey) {
+        return true;
+      }
+      if (process.env["GOOGLE_API_KEY"]) {
+        return true;
+      }
+      return false;
+    },
   };
 
   if (!config.apiKey) {
@@ -38,7 +47,7 @@ export async function askGeminiQuestions({
         type: "text",
         name: "key",
         message:
-          "Please provide your GOOGLE API key (or leave blank to use env variable):",
+          "Please provide your Google API key (or leave blank to use GOOGLE_API_KEY env variable):",
       },
       questionHandlers,
     );
