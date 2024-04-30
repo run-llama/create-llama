@@ -53,11 +53,8 @@ export function LlamaIndexStream(
     callbacks?: AIStreamCallbacksAndOptions;
     parserOptions?: ParserOptions;
   },
-): { stream: ReadableStream; data: StreamData } {
-  return {
-    stream: createParser(response, data, opts?.parserOptions)
-      .pipeThrough(createCallbacksTransformer(opts?.callbacks))
-      .pipeThrough(createStreamDataTransformer()),
-    data,
-  };
+): ReadableStream<string> {
+  return createParser(response, data, opts?.parserOptions)
+    .pipeThrough(createCallbacksTransformer(opts?.callbacks))
+    .pipeThrough(createStreamDataTransformer());
 }

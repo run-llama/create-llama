@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
-    const { stream } = LlamaIndexStream(response, vercelStreamData, {
+    const stream = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
         image_url: data?.imageUrl,
       },
