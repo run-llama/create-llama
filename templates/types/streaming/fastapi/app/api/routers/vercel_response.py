@@ -13,9 +13,9 @@ class VercelStreamResponse(StreamingResponse):
 
     @classmethod
     def convert_text(cls, token: str):
-        # Escape newlines to avoid breaking the stream
-        token = token.replace("\n", "\\n")
-        return f'{cls.TEXT_PREFIX}"{token}"\n'
+        # Escape newlines and double quotes to avoid breaking the stream
+        token = json.dumps(token)
+        return f"{cls.TEXT_PREFIX}{token}\n"
 
     @classmethod
     def convert_data(cls, data: dict):
