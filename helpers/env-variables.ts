@@ -173,6 +173,24 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "anthropic"
+      ? [
+          {
+            name: "ANTHROPIC_API_KEY",
+            description: "The Anthropic API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ]
+      : []),
+    ...(modelConfig.provider === "gemini"
+      ? [
+          {
+            name: "GOOGLE_API_KEY",
+            description: "The Google API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ]
+      : []),
   ];
 };
 

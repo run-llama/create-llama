@@ -9,7 +9,6 @@ import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
 import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
-import { isModelConfigured } from "./providers";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
 import { ConfigFileType, writeToolsConfig } from "./tools";
@@ -38,7 +37,7 @@ async function generateContextData(
         ? "poetry run generate"
         : `${packageManager} run generate`,
     )}`;
-    const modelConfigured = isModelConfigured(modelConfig);
+    const modelConfigured = modelConfig.isConfigured();
     const llamaCloudKeyConfigured = useLlamaParse
       ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
       : true;

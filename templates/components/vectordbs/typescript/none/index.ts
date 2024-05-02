@@ -1,8 +1,5 @@
-import {
-  SimpleDocumentStore,
-  storageContextFromDefaults,
-  VectorStoreIndex,
-} from "llamaindex";
+import { SimpleDocumentStore, VectorStoreIndex } from "llamaindex";
+import { storageContextFromDefaults } from "llamaindex/storage/StorageContext";
 import { STORAGE_CACHE_DIR } from "./shared";
 
 export async function getDataSource() {

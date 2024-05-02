@@ -2,8 +2,10 @@ import ciInfo from "ci-info";
 import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider } from "../types";
+import { askAnthropicQuestions } from "./anthropic";
+import { askGeminiQuestions } from "./gemini";
 import { askOllamaQuestions } from "./ollama";
-import { askOpenAIQuestions, isOpenAIConfigured } from "./openai";
+import { askOpenAIQuestions } from "./openai";
 
 const DEFAULT_MODEL_PROVIDER = "openai";
 
@@ -31,6 +33,8 @@ export async function askModelConfig({
             value: "openai",
           },
           { title: "Ollama", value: "ollama" },
+          { title: "Anthropic", value: "anthropic" },
+          { title: "Gemini", value: "gemini" },
         ],
         initial: 0,
       },
@@ -44,6 +48,12 @@ export async function askModelConfig({
     case "ollama":
       modelConfig = await askOllamaQuestions({ askModels });
       break;
+    case "anthropic":
+      modelConfig = await askAnthropicQuestions({ askModels });
+      break;
+    case "gemini":
+      modelConfig = await askGeminiQuestions({ askModels });
+      break;
     default:
       modelConfig = await askOpenAIQuestions({
         openAiKey,
@@ -54,13 +64,4 @@ export async function askModelConfig({
     ...modelConfig,
     provider: modelProvider,
   };
-}
-
-export function isModelConfigured(modelConfig: ModelConfig): boolean {
-  switch (modelConfig.provider) {
-    case "openai":
-      return isOpenAIConfigured(modelConfig);
-    default:
-      return true;
-  }
 }

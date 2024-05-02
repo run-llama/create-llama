@@ -1,13 +1,14 @@
 import { PackageManager } from "../helpers/get-pkg-manager";
 import { Tool } from "./tools";
 
-export type ModelProvider = "openai" | "ollama";
+export type ModelProvider = "openai" | "ollama" | "anthropic" | "gemini";
 export type ModelConfig = {
   provider: ModelProvider;
   apiKey?: string;
   model: string;
   embeddingModel: string;
   dimensions: number;
+  isConfigured(): boolean;
 };
 export type TemplateType = "streaming" | "community" | "llamapack";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";

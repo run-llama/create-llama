@@ -14,7 +14,7 @@ import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
 import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { askModelConfig, isModelConfigured } from "./helpers/providers";
+import { askModelConfig } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
 import { supportedTools, toolsRequireConfig } from "./helpers/tools";
 
@@ -257,7 +257,8 @@ export const askQuestions = async (
           },
         ];
 
-        const modelConfigured = isModelConfigured(program.modelConfig);
+        const modelConfigured =
+          !program.llamapack && program.modelConfig.isConfigured();
         // If using LlamaParse, require LlamaCloud API key
         const llamaCloudKeyConfigured = program.useLlamaParse
           ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
@@ -268,8 +269,7 @@ export const askQuestions = async (
           !hasVectorDb &&
           modelConfigured &&
           llamaCloudKeyConfigured &&
-          !toolsRequireConfig(program.tools) &&
-          !program.llamapack
+          !toolsRequireConfig(program.tools)
         ) {
           actionChoices.push({
             title:
@@ -398,7 +398,6 @@ export const askQuestions = async (
 
   if (program.framework === "express" || program.framework === "fastapi") {
     // if a backend-only framework is selected, ask whether we should create a frontend
-    // (only for streaming backends)
     if (program.frontend === undefined) {
       if (ciInfo.isCI) {
         program.frontend = getPrefOrDefault("frontend");
