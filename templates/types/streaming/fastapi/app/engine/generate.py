@@ -70,10 +70,9 @@ def generate_datasource():
             ),
             store_nodes_override=True,
         )
-        # SimpleDocumentStore keeps the data in memory only - needs to be persisted explicitly
         index.storage_context.persist(STORAGE_DIR)
     else:
-        # Persist the docstore to apply ingestion strategy
+        # SimpleDocumentStore keeps the data in memory only - needs to be persisted explicitly
         docstore.persist(os.path.join(STORAGE_DIR, DEFAULT_PERSIST_FNAME))
 
     logger.info("Finished creating new index.")
