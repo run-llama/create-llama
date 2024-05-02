@@ -11,7 +11,6 @@ from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.storage import StorageContext
 from llama_index.core import VectorStoreIndex
-from llama_index.core.storage.docstore.types import DEFAULT_PERSIST_FNAME
 from app.constants import STORAGE_DIR
 from app.settings import init_settings
 from app.engine.loaders import get_documents
@@ -30,15 +29,7 @@ def get_doc_store():
         return SimpleDocumentStore.from_persist_dir(STORAGE_DIR)
 
 
-def generate_datasource():
-    init_settings()
-    logger.info("Creating new index")
-
-    # load the documents and create the index
-    documents = get_documents()
-    docstore = get_doc_store()
-    vector_store = get_vector_store()
-
+def run_ingestion_pipeline(docstore, vector_store, documents):
     # Create ingestion pipeline
     ingestion_pipeline = IngestionPipeline(
         transformations=[
@@ -59,23 +50,46 @@ def generate_datasource():
     # Run the ingestion pipeline and store the results
     nodes = ingestion_pipeline.run(show_progress=True, documents=documents)
 
-    # SimpleVectorStore keeps the data in memory only - needs to be persisted explicitly
-    # Can be removed if using a different vector store
-    if isinstance(vector_store, SimpleVectorStore):
-        index = VectorStoreIndex(
-            nodes=nodes,
-            storage_context=StorageContext.from_defaults(
-                docstore=docstore,
-                vector_store=vector_store,
-            ),
-            store_nodes_override=True,
-        )
-        index.storage_context.persist(STORAGE_DIR)
-    else:
-        # SimpleDocumentStore keeps the data in memory only - needs to be persisted explicitly
-        docstore.persist(os.path.join(STORAGE_DIR, DEFAULT_PERSIST_FNAME))
+    return nodes
 
-    logger.info("Finished creating new index.")
+
+def persist_storage(docstore, vector_store, nodes):
+    storage_context = StorageContext.from_defaults(
+        docstore=docstore,
+        vector_store=vector_store,
+    )
+    # SimpleVectorStore does not include index by default
+    # so we need to create the index manually
+    # can be removed if using other vector store
+    if isinstance(vector_store, SimpleVectorStore):
+        VectorStoreIndex(
+            nodes=nodes,
+            storage_context=storage_context,
+            store_nodes_override=True,  # Need enable this to store the nodes and index's id
+        )
+    storage_context.persist(STORAGE_DIR)
+
+
+def generate_datasource():
+    init_settings()
+    logger.info("Indexing the data")
+
+    # Get the stores and documents or create new ones
+    documents = get_documents()
+    docstore = get_doc_store()
+    vector_store = get_vector_store()
+
+    # Run the ingestion pipeline
+    nodes = run_ingestion_pipeline(
+        docstore=docstore,
+        vector_store=vector_store,
+        documents=documents,
+    )
+
+    # Build the index and persist storage
+    persist_storage(docstore, vector_store, nodes)
+
+    logger.info("Finished the indexing")
 
 
 if __name__ == "__main__":
