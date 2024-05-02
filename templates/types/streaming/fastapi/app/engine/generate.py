@@ -9,9 +9,9 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.storage.docstore import SimpleDocumentStore
-from llama_index.core.storage.index_store import SimpleIndexStore
 from llama_index.core.storage import StorageContext
 from llama_index.core import VectorStoreIndex
+from llama_index.core.storage.docstore.types import DEFAULT_PERSIST_FNAME
 from app.constants import STORAGE_DIR
 from app.settings import init_settings
 from app.engine.loaders import get_documents
@@ -59,8 +59,8 @@ def generate_datasource():
     # Run the ingestion pipeline and store the results
     nodes = ingestion_pipeline.run(show_progress=True, documents=documents)
 
-    # Default vector store only keeps data in memory, so we need to persist it
-    # Can remove if using a different vector store
+    # SimpleVectorStore keeps the data in memory only - needs to be persisted explicitly
+    # Can be removed if using a different vector store
     if isinstance(vector_store, SimpleVectorStore):
         index = VectorStoreIndex(
             nodes=nodes,
@@ -70,10 +70,11 @@ def generate_datasource():
             ),
             store_nodes_override=True,
         )
+        # SimpleDocumentStore keeps the data in memory only - needs to be persisted explicitly
         index.storage_context.persist(STORAGE_DIR)
     else:
         # Persist the docstore to apply ingestion strategy
-        docstore.persist(os.path.join(STORAGE_DIR, "docstore.json"))
+        docstore.persist(os.path.join(STORAGE_DIR, DEFAULT_PERSIST_FNAME))
 
     logger.info("Finished creating new index.")
 
