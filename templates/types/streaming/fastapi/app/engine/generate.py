@@ -72,7 +72,7 @@ def persist_storage(docstore, vector_store, nodes):
 
 def generate_datasource():
     init_settings()
-    logger.info("Indexing the data")
+    logger.info("Generate index for the provided data")
 
     # Get the stores and documents or create new ones
     documents = get_documents()
@@ -89,7 +89,7 @@ def generate_datasource():
     # Build the index and persist storage
     persist_storage(docstore, vector_store, nodes)
 
-    logger.info("Finished the indexing")
+    logger.info("Finished generating the index")
 
 
 if __name__ == "__main__":
