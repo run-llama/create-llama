@@ -57,14 +57,14 @@ export async function POST(request: NextRequest) {
 
     // Init Vercel AI StreamData
     const vercelStreamData = new StreamData();
-    appendEventData(
-      vercelStreamData,
-      `Retrieving context for query: '${userMessage.content}'`,
-    );
 
     // Setup callback for streaming data before chatting
     Settings.callbackManager.on("retrieve", (data) => {
       const { nodes } = data.detail;
+      appendEventData(
+        vercelStreamData,
+        `Retrieving context for query: '${userMessage.content}'`,
+      );
       appendEventData(
         vercelStreamData,
         `Retrieved ${nodes.length} sources to use as context for the query`,

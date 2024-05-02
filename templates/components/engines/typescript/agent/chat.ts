@@ -1,4 +1,4 @@
-import { BaseTool, OpenAIAgent, QueryEngineTool } from "llamaindex";
+import { BaseToolWithCall, OpenAIAgent, QueryEngineTool } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -6,7 +6,7 @@ import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./shared";
 
 export async function createChatEngine() {
-  let tools: BaseTool[] = [];
+  let tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
