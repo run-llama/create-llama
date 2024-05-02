@@ -1,6 +1,11 @@
 import { initObservability } from "@/app/observability";
 import { Message, StreamData, StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent, Settings } from "llamaindex";
+import {
+  CallbackManager,
+  ChatMessage,
+  MessageContent,
+  Settings,
+} from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
@@ -58,8 +63,9 @@ export async function POST(request: NextRequest) {
     // Init Vercel AI StreamData
     const vercelStreamData = new StreamData();
 
-    // Setup callback for streaming data before chatting
-    Settings.callbackManager.on("retrieve", (data) => {
+    // Setup callbacks
+    const callbackManager = new CallbackManager();
+    callbackManager.on("retrieve", (data) => {
       const { nodes } = data.detail;
       appendEventData(
         vercelStreamData,
@@ -72,10 +78,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
-    const response = await chatEngine.chat({
-      message: userMessageContent,
-      chatHistory: messages as ChatMessage[],
-      stream: true,
+    const response = await Settings.withCallbackManager(callbackManager, () => {
+      return chatEngine.chat({
+        message: userMessageContent,
+        chatHistory: messages as ChatMessage[],
+        stream: true,
+      });
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
