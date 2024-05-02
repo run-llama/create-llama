@@ -73,7 +73,7 @@ def generate_datasource():
         index.storage_context.persist(STORAGE_DIR)
     else:
         # Persist the docstore to apply ingestion strategy
-        docstore.docstore.persist(os.path.join(STORAGE_DIR, "docstore.json"))
+        docstore.persist(os.path.join(STORAGE_DIR, "docstore.json"))
 
     logger.info("Finished creating new index.")
 
