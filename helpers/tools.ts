@@ -47,6 +47,18 @@ export const supportedTools: Tool[] = [
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
   },
+  {
+    display: "Weather",
+    name: "function.weather",
+    dependencies: [],
+    supportedFrameworks: ["express", "nextjs"],
+  },
+  {
+    display: "Math",
+    name: "function.math",
+    dependencies: [],
+    supportedFrameworks: ["express", "nextjs"],
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {
