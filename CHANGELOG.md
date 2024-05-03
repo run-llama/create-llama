@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.1.1
+
+### Patch Changes
+
+- 7bd3ed5: Support Anthropic and Gemini as model providers
+- 7bd3ed5: Support new agents from LITS 0.3
+- cfb5257: Display events (e.g. retrieving nodes) per chat message
+
 ## 0.1.0
 
 ### Minor Changes
