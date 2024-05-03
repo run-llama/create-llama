@@ -27,7 +27,10 @@ def llama_parse_parser():
 def get_file_documents(config: FileLoaderConfig):
     from llama_index.core.readers import SimpleDirectoryReader
 
-    reader = SimpleDirectoryReader(config.data_dir, recursive=True, filename_as_id=True)
+    reader = SimpleDirectoryReader(
+        config.data_dir,
+        recursive=True,
+    )
     if config.use_llama_parse:
         parser = llama_parse_parser()
         reader.file_extractor = {".pdf": parser}
