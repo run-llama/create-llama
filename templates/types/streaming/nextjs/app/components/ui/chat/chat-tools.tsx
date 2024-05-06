@@ -9,7 +9,8 @@ export default function ChatTools({ data }: { data: ToolData }) {
   if (toolOutput.isError) {
     return (
       <div className="border-l-2 border-red-400 pl-2">
-        There was an error when calling the tool {toolCall.name} with input: <br />
+        There was an error when calling the tool {toolCall.name} with input:{" "}
+        <br />
         {JSON.stringify(toolCall.input)}
       </div>
     );
