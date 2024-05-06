@@ -8,6 +8,7 @@ export enum MessageAnnotationType {
   IMAGE = "image",
   SOURCES = "sources",
   EVENTS = "events",
+  TOOLS = "tools",
 }
 
 export type ImageData = {
@@ -30,7 +31,19 @@ export type EventData = {
   isCollapsed: boolean;
 };
 
-export type AnnotationData = ImageData | SourceData | EventData;
+export type ToolData = {
+  toolCall: {
+    id: string;
+    name: string;
+    input: any;
+  };
+  toolOutput: {
+    output: any;
+    isError: boolean;
+  };
+};
+
+export type AnnotationData = ImageData | SourceData | EventData | ToolData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

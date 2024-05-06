@@ -16,6 +16,7 @@ const getGeoLocation = async (location: string): Promise<GeoLocation> => {
 };
 
 const getWeatherByLocation = async (location: string) => {
+  console.log("Tool get_weather_information called with location: ", location);
   const geo = await getGeoLocation(location);
   const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&hourly=temperature_2m`;
   const response = await fetch(apiUrl);
