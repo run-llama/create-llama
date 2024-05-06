@@ -8,7 +8,7 @@ import {
 } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
 import { LlamaIndexStream } from "./llamaindex-stream";
-import { appendEventData } from "./stream-helper";
+import { appendEventData, appendToolData } from "./stream-helper";
 
 const convertMessageContent = (
   textMessage: string,
@@ -63,6 +63,22 @@ export const chat = async (req: Request, res: Response) => {
         vercelStreamData,
         `Retrieved ${nodes.length} sources to use as context for the query`,
       );
+    });
+    callbackManager.on("llm-tool-call", (event) => {
+      console.log("llm-tool-call", event.detail.payload.toolCall);
+      const { name, input } = event.detail.payload.toolCall;
+      const inputString = Object.entries(input)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ");
+      appendEventData(
+        vercelStreamData,
+        `Using tool: '${name}' with inputs: '${inputString}'`,
+      );
+    });
+    callbackManager.on("llm-tool-result", (event) => {
+      console.log("llm-tool-result", event.detail.payload.toolResult);
+      const { toolCall, toolResult } = event.detail.payload;
+      appendToolData(vercelStreamData, toolCall, toolResult);
     });
 
     // Calling LlamaIndex's ChatEngine to get a streamed response

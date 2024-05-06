@@ -1,5 +1,5 @@
 import { StreamData } from "ai";
-import { Metadata, NodeWithScore } from "llamaindex";
+import { Metadata, NodeWithScore, ToolCall, ToolOutput } from "llamaindex";
 
 export function appendImageData(data: StreamData, imageUrl?: string) {
   if (!imageUrl) return;
@@ -35,5 +35,19 @@ export function appendEventData(data: StreamData, title?: string) {
     data: {
       title,
     },
+  });
+}
+
+export function appendToolData(
+  data: StreamData,
+  toolCall: ToolCall,
+  toolOutput: ToolOutput,
+) {
+  data.appendMessageAnnotation({
+    type: "tools",
+    data: {
+      toolCall,
+      toolOutput,
+    } as any,
   });
 }

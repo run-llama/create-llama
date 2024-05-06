@@ -41,13 +41,13 @@ export function appendEventData(data: StreamData, title?: string) {
 export function appendToolData(
   data: StreamData,
   toolCall: ToolCall,
-  toolOuput: ToolOutput,
+  toolOutput: ToolOutput,
 ) {
   data.appendMessageAnnotation({
     type: "tools",
     data: {
       toolCall,
-      toolOuput,
+      toolOutput,
     } as any,
   });
 }
