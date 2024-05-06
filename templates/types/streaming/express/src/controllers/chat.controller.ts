@@ -65,7 +65,6 @@ export const chat = async (req: Request, res: Response) => {
       );
     });
     callbackManager.on("llm-tool-call", (event) => {
-      console.log("llm-tool-call", event.detail.payload.toolCall);
       const { name, input } = event.detail.payload.toolCall;
       const inputString = Object.entries(input)
         .map(([key, value]) => `${key}: ${value}`)
@@ -76,7 +75,6 @@ export const chat = async (req: Request, res: Response) => {
       );
     });
     callbackManager.on("llm-tool-result", (event) => {
-      console.log("llm-tool-result", event.detail.payload.toolResult);
       const { toolCall, toolResult } = event.detail.payload;
       appendToolData(vercelStreamData, toolCall, toolResult);
     });
