@@ -17,13 +17,12 @@ const getGeoLocation = async (location: string): Promise<GeoLocation> => {
 
 const getWeatherByLocation = async (location: string) => {
   console.log(
-    "Calling open-meteo api to get weather information of location: ",
+    "Calling open-meteo api to get weather information of location:",
     location,
   );
   const { latitude, longitude } = await getGeoLocation(location);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code&timezone=${timezone}`;
-  console.log(apiUrl);
   const response = await fetch(apiUrl);
   const data = await response.json();
   return data;
