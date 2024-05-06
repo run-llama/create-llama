@@ -41,5 +41,3 @@ export const getWeatherInformation = FunctionTool.from(
     },
   },
 );
-
-export const tools = [getWeatherInformation];

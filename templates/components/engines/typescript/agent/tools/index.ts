@@ -1,3 +1,3 @@
-import { tools as weatherTools } from "./weather";
+import { getWeatherInformation } from "./weather";
 
-export const tools = [...weatherTools];
+export const tools = [getWeatherInformation];
