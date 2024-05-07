@@ -43,6 +43,7 @@ const getAdditionalDependencies = (
         name: "llama-index-vector-stores-postgres",
         version: "^0.1.1",
       });
+      break;
     }
     case "pinecone": {
       dependencies.push({
