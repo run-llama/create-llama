@@ -1,5 +1,5 @@
 export interface WeatherData {
-  latitute: number;
+  latitude: number;
   longitude: number;
   generationtime_ms: number;
   utc_offset_seconds: number;
