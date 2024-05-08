@@ -1,4 +1,4 @@
-interface WeatherData {
+export interface WeatherData {
   latitute: number;
   longitude: number;
   generationtime_ms: number;

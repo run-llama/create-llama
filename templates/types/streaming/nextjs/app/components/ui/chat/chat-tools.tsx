@@ -1,7 +1,7 @@
 import { ToolData } from "./index";
 import { WeatherCard } from "./widgets/WeatherCard";
 
-// TODO: support display multiple tools later
+// TODO: If needed, add displaying more tool outputs here
 export default function ChatTools({ data }: { data: ToolData }) {
   if (!data) return null;
   const { toolCall, toolOutput } = data;

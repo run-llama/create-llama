@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: add weather widget
+Add support for displaying tool outputs (including weather widget as example)
