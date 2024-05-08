@@ -57,7 +57,7 @@ export const supportedTools: Tool[] = [
   },
   {
     display: "Weather",
-    name: "local.weather",
+    name: "weather",
     dependencies: [],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
