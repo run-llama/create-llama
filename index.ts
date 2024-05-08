@@ -18,6 +18,15 @@ import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
 import { QuestionArgs, askQuestions, onPromptState } from "./questions";
 
+/* Check if the proxy environment variable is set */
+if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
+  /* Load global-agent only if the proxy URL is set */
+  require("global-agent/bootstrap");
+  console.log("Proxy is set up using global-agent.");
+} else {
+  console.log("No proxy configuration found. Continuing without proxy.");
+}
+
 let projectPath: string = "";
 
 const handleSigTerm = () => process.exit(0);
