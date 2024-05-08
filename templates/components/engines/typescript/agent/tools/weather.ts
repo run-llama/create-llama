@@ -28,7 +28,7 @@ const getWeatherByLocation = async (location: string) => {
   return data;
 };
 
-export const getWeatherInformation = FunctionTool.from(
+const getWeatherInformation = FunctionTool.from(
   ({ location }: { location: string }) => getWeatherByLocation(location),
   {
     name: "get_weather_information",
@@ -61,3 +61,5 @@ export const getWeatherInformation = FunctionTool.from(
     },
   },
 );
+
+export const tools = [getWeatherInformation];
