@@ -12,20 +12,15 @@ import { createApp } from "./create-app";
 import { getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
+import { initializeGlobalAgent } from "./helpers/proxy";
 import { runApp } from "./helpers/run-app";
 import { getTools } from "./helpers/tools";
 import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
 import { QuestionArgs, askQuestions, onPromptState } from "./questions";
 
-/* Check if the proxy environment variable is set */
-if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
-  /* Load global-agent only if the proxy URL is set */
-  require("global-agent/bootstrap");
-  console.log("Proxy is set up using global-agent.");
-} else {
-  console.log("No proxy configuration found. Continuing without proxy.");
-}
+// Run the initialization function
+initializeGlobalAgent();
 
 let projectPath: string = "";
 

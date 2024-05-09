@@ -71,9 +71,6 @@ importers:
       picocolors:
         specifier: 1.0.0
         version: 1.0.0
-      pnpm:
-        specifier: 9.0.5
-        version: 9.0.5
       prompts:
         specifier: 2.1.0
         version: 2.1.0
@@ -1464,11 +1461,6 @@ packages:
   playwright@1.44.0:
     resolution: {integrity: sha512-F9b3GUCLQ3Nffrfb6dunPOkE5Mh68tR7zN32L4jCk4FjQamgesGay7/dAAe1WaMEGV04DkdJfcJzjoCKygUaRQ==}
     engines: {node: '>=16'}
-    hasBin: true
-
-  pnpm@9.0.5:
-    resolution: {integrity: sha512-pyJXXBj9eR+e9x44fG4WzAPJDYWbmwmY0EKMoOMiCCizKpbm3nPOo07bwPUIJHcbGmnH6ja4bao7icfm2aPZEg==}
-    engines: {node: '>=18.12'}
     hasBin: true
 
   possible-typed-array-names@1.0.0:
@@ -3502,8 +3494,6 @@ snapshots:
       playwright-core: 1.44.0
     optionalDependencies:
       fsevents: 2.3.2
-
-  pnpm@9.0.5: {}
 
   possible-typed-array-names@1.0.0: {}
 
