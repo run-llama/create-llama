@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Support HTTP proxies by setting GLOBAL_AGENT_HTTP_PROXY env variable
+Support HTTP proxies by setting the GLOBAL_AGENT_HTTP_PROXY env variable
