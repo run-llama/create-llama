@@ -54,7 +54,7 @@ class CallbackEvent(BaseModel):
                     if self._is_output_serializable(source.raw_output):
                         output = source.raw_output
                     else:
-                        output = content
+                        output = source.content
 
                     return {
                         "type": "tools",
