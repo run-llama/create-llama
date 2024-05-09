@@ -1,13 +1,10 @@
 import os
 from llama_index.vector_stores.postgres import PGVectorStore
 from urllib.parse import urlparse
-
-STORAGE_DIR = "storage"
-PGVECTOR_SCHEMA = "public"
-PGVECTOR_TABLE = "llamaindex_embedding"
+from app.engine.constants import PGVECTOR_SCHEMA, PGVECTOR_TABLE
 
 
-def get_vector_store():
+def init_pg_vector_store_from_env():
     original_conn_string = os.environ.get("PG_CONNECTION_STRING")
     if original_conn_string is None or original_conn_string == "":
         raise ValueError("PG_CONNECTION_STRING environment variable is not set.")
@@ -27,5 +24,4 @@ def get_vector_store():
         async_connection_string=async_conn_string,
         schema_name=PGVECTOR_SCHEMA,
         table_name=PGVECTOR_TABLE,
-        embed_dim=int(os.environ.get("EMBEDDING_DIM", 768)),
     )

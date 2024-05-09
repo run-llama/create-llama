@@ -40,10 +40,10 @@ def init_openai():
     }
     Settings.llm = OpenAI(**config)
 
-    dimension = os.getenv("EMBEDDING_DIM")
+    dimensions = os.getenv("EMBEDDING_DIM")
     config = {
         "model": os.getenv("EMBEDDING_MODEL"),
-        "dimension": int(dimension) if dimension is not None else None,
+        "dimensions": int(dimensions) if dimensions is not None else None,
     }
     Settings.embed_model = OpenAIEmbedding(**config)
 

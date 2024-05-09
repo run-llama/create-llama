@@ -217,13 +217,7 @@ const getFrameworkEnvs = (
       name: "SYSTEM_PROMPT",
       description: `Custom system prompt.
 Example:
-SYSTEM_PROMPT="
-We have provided context information below.
----------------------
-{context_str}
----------------------
-Given this information, please answer the question: {query_str}
-"`,
+SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
     },
   ];
 };
