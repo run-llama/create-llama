@@ -1,8 +1,12 @@
 import { BaseToolWithCall } from "llamaindex";
-import { getWeatherInformation } from "./weather";
+import { WeatherTool, WeatherToolParams } from "./weather";
 
-const functionTools: Record<string, BaseToolWithCall[]> = {
-  weather: [getWeatherInformation],
+type ToolCreator = (config: unknown) => BaseToolWithCall;
+
+const toolFactory: Record<string, ToolCreator> = {
+  weather: (config: unknown) => {
+    return new WeatherTool(config as WeatherToolParams);
+  },
 };
 
 export function createLocalTools(
@@ -11,8 +15,10 @@ export function createLocalTools(
   const tools: BaseToolWithCall[] = [];
 
   Object.keys(localConfig).forEach((key) => {
-    if (key in functionTools) {
-      tools.push(...functionTools[key]);
+    if (key in toolFactory) {
+      const toolConfig = localConfig[key];
+      const tool = toolFactory[key](toolConfig);
+      tools.push(tool);
     }
   });
 
