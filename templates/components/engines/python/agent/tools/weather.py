@@ -17,15 +17,18 @@ class OpenMeteoWeather:
         """Get geo location from location name."""
         params = {"name": location, "count": 10, "language": "en", "format": "json"}
         response = requests.get(f"{cls.geo_api}/search", params=params)
-        data = response.json()
-        result = data["results"][0]
-        geo_location = {
-            "id": result["id"],
-            "name": result["name"],
-            "latitude": result["latitude"],
-            "longitude": result["longitude"],
-        }
-        return geo_location
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch geo location: {response.status_code}")
+        else:
+            data = response.json()
+            result = data["results"][0]
+            geo_location = {
+                "id": result["id"],
+                "name": result["name"],
+                "latitude": result["latitude"],
+                "longitude": result["longitude"],
+            }
+            return geo_location
 
     @classmethod
     def get_weather_information(cls, location: str) -> dict:
@@ -59,8 +62,11 @@ class OpenMeteoWeather:
             "timezone": timezone,
         }
         response = requests.get(f"{cls.weather_api}/forecast", params=params)
-        data = response.json()
-        return data
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to fetch weather information: {response.status_code}"
+            )
+        return response.json()
 
 
 tools = [FunctionTool.from_defaults(OpenMeteoWeather.get_weather_information)]

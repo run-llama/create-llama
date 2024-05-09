@@ -19,14 +19,6 @@ class ToolFactory:
     }
 
     @staticmethod
-    def load_module(module: str, attr_name: str):
-        module = importlib.import_module(module)
-        tool = getattr(module, attr_name)
-        if not isinstance(tool, FunctionTool):
-            raise ValueError(f"The module {module} does not contain a valid tool")
-        return tool
-
-    @staticmethod
     def load_tools(tool_type: str, tool_name: str, config: dict) -> list[FunctionTool]:
         source_package = ToolFactory.TOOL_SOURCE_PACKAGE_MAP[tool_type]
         try:
