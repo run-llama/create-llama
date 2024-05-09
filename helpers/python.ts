@@ -24,7 +24,7 @@ interface Dependency {
 const getAdditionalDependencies = (
   modelConfig: ModelConfig,
   vectorDb?: TemplateVectorDB,
-  dataSource?: TemplateDataSource,
+  dataSources?: TemplateDataSource[],
   tools?: Tool[],
 ) => {
   const dependencies: Dependency[] = [];
@@ -72,38 +72,43 @@ const getAdditionalDependencies = (
   }
 
   // Add data source dependencies
-  const dataSourceType = dataSource?.type;
-  switch (dataSourceType) {
-    case "file":
-      dependencies.push({
-        name: "docx2txt",
-        version: "^0.8",
-      });
-      break;
-    case "web":
-      dependencies.push({
-        name: "llama-index-readers-web",
-        version: "^0.1.6",
-      });
-      break;
-    case "db":
-      dependencies.push({
-        name: "llama-index-readers-database",
-        version: "^0.1.3",
-      });
-      dependencies.push({
-        name: "pymysql",
-        version: "^1.1.0",
-        extras: ["rsa"],
-      });
-      dependencies.push({
-        name: "psycopg2",
-        version: "^2.9.9",
-      });
-      break;
+  if (dataSources) {
+    for (const ds of dataSources) {
+      const dsType = ds?.type;
+      switch (dsType) {
+        case "file":
+          dependencies.push({
+            name: "docx2txt",
+            version: "^0.8",
+          });
+          break;
+        case "web":
+          dependencies.push({
+            name: "llama-index-readers-web",
+            version: "^0.1.6",
+          });
+          break;
+        case "db":
+          dependencies.push({
+            name: "llama-index-readers-database",
+            version: "^0.1.3",
+          });
+          dependencies.push({
+            name: "pymysql",
+            version: "^1.1.0",
+            extras: ["rsa"],
+          });
+          dependencies.push({
+            name: "psycopg2",
+            version: "^2.9.9",
+          });
+          break;
+      }
+    }
   }
 
   // Add tools dependencies
+  console.log("Adding tools dependencies");
   tools?.forEach((tool) => {
     tool.dependencies?.forEach((dep) => {
       dependencies.push(dep);
@@ -298,9 +303,14 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "engines", "python", engine),
   });
 
-  const addOnDependencies = dataSources
-    .map((ds) => getAdditionalDependencies(modelConfig, vectorDb, ds, tools))
-    .flat();
+  console.log("Adding additional dependencies");
+
+  const addOnDependencies = getAdditionalDependencies(
+    modelConfig,
+    vectorDb,
+    dataSources,
+    tools,
+  );
 
   if (observability === "opentelemetry") {
     addOnDependencies.push({
