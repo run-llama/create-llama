@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./shared";
-import { getFunctionTools } from "./tools";
+import { createLocalTools } from "./tools";
 
 export async function createChatEngine() {
   const tools: BaseToolWithCall[] = [];
@@ -30,12 +30,12 @@ export async function createChatEngine() {
       await fs.readFile(path.join("config", "tools.json"), "utf8"),
     );
 
-    // add function tools
-    const functionTools = getFunctionTools(config.local);
-    tools.push(...functionTools);
+    // add local tools from the 'tools' folder (if configured)
+    const localTools = createLocalTools(config.local);
+    tools.push(...localTools);
 
-    // add llama tools
-    const llamaTools = await ToolsFactory.createTools(config.llama);
+    // add tools from LlamaIndexTS (if configured)
+    const llamaTools = await ToolsFactory.createTools(config.llamahub);
     tools.push(...llamaTools);
   } catch {}
 

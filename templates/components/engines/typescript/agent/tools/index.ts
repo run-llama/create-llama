@@ -1,11 +1,11 @@
 import { BaseToolWithCall } from "llamaindex";
-import { tools as weatherTools } from "./weather";
+import { getWeatherInformation } from "./weather";
 
 const functionTools: Record<string, BaseToolWithCall[]> = {
-  weather: weatherTools,
+  weather: [getWeatherInformation],
 };
 
-export function getFunctionTools(
+export function createLocalTools(
   localConfig: Record<string, unknown>,
 ): BaseToolWithCall[] {
   const tools: BaseToolWithCall[] = [];

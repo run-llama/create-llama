@@ -1,3 +1,4 @@
+import { JSONValue } from "ai";
 import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 
@@ -35,10 +36,12 @@ export type ToolData = {
   toolCall: {
     id: string;
     name: string;
-    input: any;
+    input: {
+      [key: string]: JSONValue;
+    };
   };
   toolOutput: {
-    output: any;
+    output: JSONValue;
     isError: boolean;
   };
 };
