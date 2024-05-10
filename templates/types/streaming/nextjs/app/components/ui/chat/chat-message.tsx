@@ -7,6 +7,7 @@ import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
+import ChatTools from "./chat-tools";
 import {
   AnnotationData,
   EventData,
@@ -14,6 +15,7 @@ import {
   MessageAnnotation,
   MessageAnnotationType,
   SourceData,
+  ToolData,
 } from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
@@ -52,18 +54,26 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.SOURCES,
   );
+  const toolData = getAnnotationData<ToolData>(
+    annotations,
+    MessageAnnotationType.TOOLS,
+  );
 
   const contents: ContentDisplayConfig[] = [
     {
-      order: -2,
+      order: -3,
       component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
     },
     {
-      order: -1,
+      order: -2,
       component:
         eventData.length > 0 ? (
           <ChatEvents isLoading={isLoading} data={eventData} />
         ) : null,
+    },
+    {
+      order: -1,
+      component: toolData[0] ? <ChatTools data={toolData[0]} /> : null,
     },
     {
       order: 0,

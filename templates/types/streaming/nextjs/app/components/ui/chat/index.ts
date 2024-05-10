@@ -1,3 +1,4 @@
+import { JSONValue } from "ai";
 import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 
@@ -8,6 +9,7 @@ export enum MessageAnnotationType {
   IMAGE = "image",
   SOURCES = "sources",
   EVENTS = "events",
+  TOOLS = "tools",
 }
 
 export type ImageData = {
@@ -30,7 +32,21 @@ export type EventData = {
   isCollapsed: boolean;
 };
 
-export type AnnotationData = ImageData | SourceData | EventData;
+export type ToolData = {
+  toolCall: {
+    id: string;
+    name: string;
+    input: {
+      [key: string]: JSONValue;
+    };
+  };
+  toolOutput: {
+    output: JSONValue;
+    isError: boolean;
+  };
+};
+
+export type AnnotationData = ImageData | SourceData | EventData | ToolData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

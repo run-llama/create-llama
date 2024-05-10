@@ -1,8 +1,9 @@
+import json
 import asyncio
 from typing import AsyncGenerator, Dict, Any, List, Optional
-
 from llama_index.core.callbacks.base import BaseCallbackHandler
 from llama_index.core.callbacks.schema import CBEventType
+from llama_index.core.tools.types import ToolOutput
 from pydantic import BaseModel
 
 
@@ -11,19 +12,73 @@ class CallbackEvent(BaseModel):
     payload: Optional[Dict[str, Any]] = None
     event_id: str = ""
 
-    def get_title(self) -> str | None:
-        # Return as None for the unhandled event types
-        # to avoid showing them in the UI
+    def get_retrieval_message(self) -> dict | None:
+        if self.payload:
+            nodes = self.payload.get("nodes")
+            if nodes:
+                msg = f"Retrieved {len(nodes)} sources to use as context for the query"
+            else:
+                msg = f"Retrieving context for query: '{self.payload.get('query_str')}'"
+            return {
+                "type": "events",
+                "data": {"title": msg},
+            }
+        else:
+            return None
+
+    def get_tool_message(self) -> dict | None:
+        func_call_args = self.payload.get("function_call")
+        if func_call_args is not None and "tool" in self.payload:
+            tool = self.payload.get("tool")
+            return {
+                "type": "events",
+                "data": {
+                    "title": f"Calling tool: {tool.name} with inputs: {func_call_args}",
+                },
+            }
+
+    def _is_output_serializable(self, output: Any) -> bool:
+        try:
+            json.dumps(output)
+            return True
+        except TypeError:
+            return False
+
+    def get_agent_tool_response(self) -> dict | None:
+        response = self.payload.get("response")
+        if response is not None:
+            sources = response.sources
+            for source in sources:
+                # Return the tool response here to include the toolCall information
+                if isinstance(source, ToolOutput):
+                    if self._is_output_serializable(source.raw_output):
+                        output = source.raw_output
+                    else:
+                        output = source.content
+
+                    return {
+                        "type": "tools",
+                        "data": {
+                            "toolOutput": {
+                                "output": output,
+                                "isError": source.is_error,
+                            },
+                            "toolCall": {
+                                "id": None,  # There is no tool id in the ToolOutput
+                                "name": source.tool_name,
+                                "input": source.raw_input,
+                            },
+                        },
+                    }
+
+    def to_response(self):
         match self.event_type:
             case "retrieve":
-                if self.payload:
-                    nodes = self.payload.get("nodes")
-                    if nodes:
-                        return f"Retrieved {len(nodes)} sources to use as context for the query"
-                    else:
-                        return f"Retrieving context for query: '{self.payload.get('query_str')}'"
-                else:
-                    return None
+                return self.get_retrieval_message()
+            case "function_call":
+                return self.get_tool_message()
+            case "agent_step":
+                return self.get_agent_tool_response()
             case _:
                 return None
 
@@ -54,7 +109,7 @@ class EventCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> str:
         event = CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
-        if event.get_title() is not None:
+        if event.to_response() is not None:
             self._aqueue.put_nowait(event)
 
     def on_event_end(
@@ -65,7 +120,7 @@ class EventCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         event = CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
-        if event.get_title() is not None:
+        if event.to_response() is not None:
             self._aqueue.put_nowait(event)
 
     def start_trace(self, trace_id: Optional[str] = None) -> None:
