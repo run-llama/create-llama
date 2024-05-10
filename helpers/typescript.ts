@@ -105,7 +105,7 @@ export const installTSTemplate = async ({
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
   // copy vector db component
-  console.log("\nUsing vector DB:", vectorDb, "\n");
+  console.log("\nUsing vector DB:", vectorDb ?? "none", "\n");
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
