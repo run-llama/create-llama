@@ -15,7 +15,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "ai": "^3.0.21",
     "class-variance-authority": "^0.7.0",
-    "clsx": "^1.2.1",
+    "clsx": "^2.1.1",
     "dotenv": "^16.3.1",
     "llamaindex": "0.3.7",
     "lucide-react": "^0.294.0",
