@@ -18,7 +18,10 @@ async function loadAndIndex() {
   const documents = await getDocuments();
 
   // Connect to Qdrant
-  const vectorStore = new QdrantVectorStore(collectionName, getQdrantClient());
+  const vectorStore = new QdrantVectorStore({
+    collectionName,
+    client: getQdrantClient(),
+  });
 
   const storageContext = await storageContextFromDefaults({ vectorStore });
   await VectorStoreIndex.fromDocuments(documents, {

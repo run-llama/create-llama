@@ -7,7 +7,10 @@ dotenv.config();
 export async function getDataSource() {
   checkRequiredEnvVars();
   const collectionName = process.env.QDRANT_COLLECTION;
-  const store = new QdrantVectorStore(collectionName, getQdrantClient());
+  const store = new QdrantVectorStore({
+    collectionName,
+    client: getQdrantClient(),
+  });
 
   return await VectorStoreIndex.fromVectorStore(store);
 }
