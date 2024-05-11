@@ -9,6 +9,8 @@ export default function webpack(config) {
   config.externals.push({
     "onnxruntime-node": "commonjs onnxruntime-node",
     sharp: "commonjs sharp",
+    // Fixes issue with import errors where modules cannot be found
+    llamaindex: "commonjs llamaindex",
   });
 
   return config;
