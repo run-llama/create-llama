@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.2
+
+### Patch Changes
+
+- 056e376: Add support for displaying tool outputs (including weather widget as example)
+
 ## 0.1.1
 
 ### Patch Changes

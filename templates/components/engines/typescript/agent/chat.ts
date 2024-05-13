@@ -4,9 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
 import { STORAGE_CACHE_DIR } from "./shared";
+import { createLocalTools } from "./tools";
 
 export async function createChatEngine() {
-  let tools: BaseToolWithCall[] = [];
+  const tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
@@ -28,7 +29,14 @@ export async function createChatEngine() {
     const config = JSON.parse(
       await fs.readFile(path.join("config", "tools.json"), "utf8"),
     );
-    tools = tools.concat(await ToolsFactory.createTools(config));
+
+    // add local tools from the 'tools' folder (if configured)
+    const localTools = createLocalTools(config.local);
+    tools.push(...localTools);
+
+    // add tools from LlamaIndexTS (if configured)
+    const llamaTools = await ToolsFactory.createTools(config.llamahub);
+    tools.push(...llamaTools);
   } catch {}
 
   return new OpenAIAgent({

@@ -1,10 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from llama_index.core.chat_engine.types import (
-    BaseChatEngine,
-    StreamingAgentChatResponse,
-)
+from llama_index.core.chat_engine.types import BaseChatEngine
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 from app.engine import get_chat_engine
@@ -109,12 +106,9 @@ async def chat(
         # Yield the events from the event handler
         async def _event_generator():
             async for event in event_handler.async_event_gen():
-                yield VercelStreamResponse.convert_data(
-                    {
-                        "type": "events",
-                        "data": {"title": event.get_title()},
-                    }
-                )
+                event_response = event.to_response()
+                if event_response is not None:
+                    yield VercelStreamResponse.convert_data(event_response)
 
         combine = stream.merge(_text_generator(), _event_generator())
         async with combine.stream() as streamer:

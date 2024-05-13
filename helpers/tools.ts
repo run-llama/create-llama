@@ -5,12 +5,18 @@ import yaml from "yaml";
 import { makeDir } from "./make-dir";
 import { TemplateFramework } from "./types";
 
+export enum ToolType {
+  LLAMAHUB = "llamahub",
+  LOCAL = "local",
+}
+
 export type Tool = {
   display: string;
   name: string;
   config?: Record<string, any>;
   dependencies?: ToolDependencies[];
   supportedFrameworks?: Array<TemplateFramework>;
+  type: ToolType;
 };
 
 export type ToolDependencies = {
@@ -35,6 +41,7 @@ export const supportedTools: Tool[] = [
       },
     ],
     supportedFrameworks: ["fastapi"],
+    type: ToolType.LLAMAHUB,
   },
   {
     display: "Wikipedia",
@@ -46,6 +53,14 @@ export const supportedTools: Tool[] = [
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
+    type: ToolType.LLAMAHUB,
+  },
+  {
+    display: "Weather",
+    name: "weather",
+    dependencies: [],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
+    type: ToolType.LOCAL,
   },
 ];
 
@@ -90,9 +105,19 @@ export const writeToolsConfig = async (
   type: ConfigFileType = ConfigFileType.YAML,
 ) => {
   if (tools.length === 0) return; // no tools selected, no config need
-  const configContent: Record<string, any> = {};
+  const configContent: {
+    [key in ToolType]: Record<string, any>;
+  } = {
+    local: {},
+    llamahub: {},
+  };
   tools.forEach((tool) => {
-    configContent[tool.name] = tool.config ?? {};
+    if (tool.type === ToolType.LLAMAHUB) {
+      configContent.llamahub[tool.name] = tool.config ?? {};
+    }
+    if (tool.type === ToolType.LOCAL) {
+      configContent.local[tool.name] = tool.config ?? {};
+    }
   });
   const configPath = path.join(root, "config");
   await makeDir(configPath);

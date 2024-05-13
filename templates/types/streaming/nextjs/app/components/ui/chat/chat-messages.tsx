@@ -40,9 +40,16 @@ export default function ChatMessages(
         className="flex h-[50vh] flex-col gap-5 divide-y overflow-y-auto pb-4"
         ref={scrollableChatContainerRef}
       >
-        {props.messages.map((m) => (
-          <ChatMessage key={m.id} chatMessage={m} isLoading={props.isLoading} />
-        ))}
+        {props.messages.map((m, i) => {
+          const isLoadingMessage = i === messageLength - 1 && props.isLoading;
+          return (
+            <ChatMessage
+              key={m.id}
+              chatMessage={m}
+              isLoading={isLoadingMessage}
+            />
+          );
+        })}
         {isPending && (
           <div className="flex justify-center items-center pt-10">
             <Loader2 className="h-4 w-4 animate-spin" />
