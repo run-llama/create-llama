@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
-import { QdrantVectorStore, VectorStoreIndex } from "llamaindex";
+import { VectorStoreIndex } from "llamaindex";
+import { QdrantVectorStore } from "llamaindex/storage/vectorStore/QdrantVectorStore";
 import { checkRequiredEnvVars, getQdrantClient } from "./shared";
 
 dotenv.config();

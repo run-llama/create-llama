@@ -1,10 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import {
-  AstraDBVectorStore,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { AstraDBVectorStore } from "llamaindex/storage/vectorStore/AstraDBVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
