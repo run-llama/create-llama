@@ -70,6 +70,20 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "qdrant": {
+      dependencies.push({
+        name: "llama-index-vector-stores-qdrant",
+        version: "^0.2.8",
+      });
+      break;
+    }
+    case "chroma": {
+      dependencies.push({
+        name: "llama-index-vector-stores-chroma",
+        version: "^0.1.8",
+      });
+      break;
+    }
   }
 
   // Add data source dependencies

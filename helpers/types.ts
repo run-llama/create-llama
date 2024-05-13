@@ -20,7 +20,8 @@ export type TemplateVectorDB =
   | "pinecone"
   | "milvus"
   | "astra"
-  | "qdrant";
+  | "qdrant"
+  | "chroma";
 export type TemplatePostInstallAction =
   | "none"
   | "VSCode"

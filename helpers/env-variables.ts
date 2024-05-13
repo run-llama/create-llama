@@ -129,6 +129,27 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
             "Optional API key for authenticating requests to Qdrant.",
         },
       ];
+    case "chroma":
+      return [
+        {
+          name: "CHROMA_COLLECTION",
+          description: "The name of the collection in your Chroma database",
+        },
+        {
+          name: "CHROMA_PATH",
+          description: `The local path to the Chroma database. 
+Specify this if you are using a local Chroma database. 
+Otherwise, use CHROMA_HOST and CHROMA_PORT config below`,
+        },
+        {
+          name: "CHROMA_HOST",
+          description: "The API endpoint for your Chroma database",
+        },
+        {
+          name: "CHROMA_PORT",
+          description: "The port for your Chroma database",
+        },
+      ];
     default:
       return [];
   }
