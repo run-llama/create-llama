@@ -29,8 +29,11 @@ const renderEnvVar = (envVars: EnvVar[]): string => {
   );
 };
 
-const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
-  if (!vectorDb) {
+const getVectorDBEnvs = (
+  vectorDb?: TemplateVectorDB,
+  framework?: TemplateFramework,
+): EnvVar[] => {
+  if (!vectorDb || !framework) {
     return [];
   }
   switch (vectorDb) {
@@ -130,16 +133,10 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
         },
       ];
     case "chroma":
-      return [
+      const envs = [
         {
           name: "CHROMA_COLLECTION",
           description: "The name of the collection in your Chroma database",
-        },
-        {
-          name: "CHROMA_PATH",
-          description: `The local path to the Chroma database. 
-Specify this if you are using a local Chroma database. 
-Otherwise, use CHROMA_HOST and CHROMA_PORT config below`,
         },
         {
           name: "CHROMA_HOST",
@@ -150,6 +147,16 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config below`,
           description: "The port for your Chroma database",
         },
       ];
+      // TS Version doesn't support config local storage path
+      if (framework === "fastapi") {
+        envs.push({
+          name: "CHROMA_PATH",
+          description: `The local path to the Chroma database. 
+Specify this if you are using a local Chroma database. 
+Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
+        });
+      }
+      return envs;
     default:
       return [];
   }
@@ -278,7 +285,7 @@ export const createBackendEnvFile = async (
     // Add engine environment variables
     ...getEngineEnvs(),
     // Add vector database environment variables
-    ...getVectorDBEnvs(opts.vectorDb),
+    ...getVectorDBEnvs(opts.vectorDb, opts.framework),
     ...getFrameworkEnvs(opts.framework, opts.port),
   ];
   // Render and write env file
