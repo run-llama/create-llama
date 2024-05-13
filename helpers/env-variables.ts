@@ -37,9 +37,9 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
     case "mongo":
       return [
         {
-          name: "MONGO_URI",
+          name: "MONGODB_URI",
           description:
-            "For generating a connection URI, see https://docs.timescale.com/use-timescale/latest/services/create-a-service\nThe MongoDB connection URI.",
+            "For generating a connection URI, see https://www.mongodb.com/docs/manual/reference/connection-string/ \nThe MongoDB connection URI.",
         },
         {
           name: "MONGODB_DATABASE",

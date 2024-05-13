@@ -1,6 +1,9 @@
 import os
+import logging
 from llama_parse import LlamaParse
 from pydantic import BaseModel, validator
+
+logger = logging.getLogger(__name__)
 
 
 class FileLoaderConfig(BaseModel):
@@ -27,11 +30,26 @@ def llama_parse_parser():
 def get_file_documents(config: FileLoaderConfig):
     from llama_index.core.readers import SimpleDirectoryReader
 
-    reader = SimpleDirectoryReader(
-        config.data_dir,
-        recursive=True,
-    )
-    if config.use_llama_parse:
-        parser = llama_parse_parser()
-        reader.file_extractor = {".pdf": parser}
-    return reader.load_data()
+    try:
+        reader = SimpleDirectoryReader(
+            config.data_dir,
+            recursive=True,
+            filename_as_id=True,
+        )
+        if config.use_llama_parse:
+            parser = llama_parse_parser()
+            reader.file_extractor = {".pdf": parser}
+        return reader.load_data()
+    except ValueError as e:
+        # Carefully check is get the empty data dir and return as empty document list
+        import sys, traceback
+
+        _, _, exc_traceback = sys.exc_info()
+        function_name = traceback.extract_tb(exc_traceback)[-1].name
+        if function_name == "_add_files":
+            logger.warning(
+                f"Failed to load file documents, error message: {e} . Return as empty document list."
+            )
+            return []
+        else:
+            raise e
