@@ -26,4 +26,5 @@ def get_vector_store():
         async_connection_string=async_conn_string,
         schema_name=PGVECTOR_SCHEMA,
         table_name=PGVECTOR_TABLE,
+        embed_dim=int(os.environ.get("EMBEDDING_DIM", 1024)),
     )
