@@ -1,1 +1,0 @@
-STORAGE_DIR = "storage"

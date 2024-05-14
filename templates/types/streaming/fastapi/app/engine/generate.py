@@ -10,7 +10,6 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.storage import StorageContext
-from app.engine.constants import STORAGE_DIR
 from app.settings import init_settings
 from app.engine.loaders import get_documents
 from app.engine.vectordb import get_vector_store
@@ -19,14 +18,17 @@ from app.engine.vectordb import get_vector_store
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+STORAGE_DIR = os.getenv("STORAGE_DIR", "storage")
+
 
 def get_doc_store():
-    if not os.path.exists(STORAGE_DIR):
-        docstore = SimpleDocumentStore()
-        return docstore
-    else:
-        logger.info(f"Loading existing docstore from {STORAGE_DIR}")
+
+    # If the storage directory is there, load the document store from it.
+    # If not, set up an in-memory document store since we can't load from a directory that doesn't exist.
+    if os.path.exists(STORAGE_DIR):
         return SimpleDocumentStore.from_persist_dir(STORAGE_DIR)
+    else:
+        return SimpleDocumentStore()
 
 
 def run_pipeline(docstore, vector_store, documents):
