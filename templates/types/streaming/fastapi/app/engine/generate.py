@@ -10,7 +10,7 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.storage import StorageContext
-from app.constants import STORAGE_DIR
+from app.engine.constants import STORAGE_DIR
 from app.settings import init_settings
 from app.engine.loaders import get_documents
 from app.engine.vectordb import get_vector_store
