@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.4
+
+### Patch Changes
+
+- 0bc8e75: Use ingestion pipeline for dedicated vector stores (Python only)
+- cb1001d: Add ChromaDB vector store
+
 ## 0.1.3
 
 ### Patch Changes
