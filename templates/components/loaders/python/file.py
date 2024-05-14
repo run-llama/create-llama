@@ -41,9 +41,10 @@ def get_file_documents(config: FileLoaderConfig):
             reader.file_extractor = {".pdf": parser}
         return reader.load_data()
     except ValueError as e:
-        # Carefully check is get the empty data dir and return as empty document list
         import sys, traceback
 
+        # Catch the error if the data dir is empty
+        # and return as empty document list
         _, _, exc_traceback = sys.exc_info()
         function_name = traceback.extract_tb(exc_traceback)[-1].name
         if function_name == "_add_files":
@@ -52,4 +53,5 @@ def get_file_documents(config: FileLoaderConfig):
             )
             return []
         else:
+            # Raise the error if it is not the case of empty data dir
             raise e

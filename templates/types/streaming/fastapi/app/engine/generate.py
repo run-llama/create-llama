@@ -4,7 +4,6 @@ load_dotenv()
 
 import os
 import logging
-import asyncio
 from llama_index.core.settings import Settings
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
