@@ -13,15 +13,11 @@ async function loadAndIndex() {
   const documents = await getDocuments();
 
   // create vector store
-  const chromaHost = process.env.CHROMA_HOST;
-  const chromaPort = parseInt(process.env.CHROMA_PORT || "8000");
-  const chromaUri = chromaHost
-    ? `http://${chromaHost}:${chromaPort}`
-    : undefined;
+  const chromaUri = `http://${process.env.CHROMA_HOST}:${process.env.CHROMA_PORT}`;
 
   const vectorStore = new ChromaVectorStore({
     collectionName: process.env.CHROMA_COLLECTION,
-    chromaClientParams: chromaHost ? { path: chromaUri } : undefined,
+    chromaClientParams: { path: chromaUri },
   });
 
   // create index from all the Documentss and store them in Pinecone
