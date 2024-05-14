@@ -1,10 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import {
-  ChromaVectorStore,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { ChromaVectorStore } from "llamaindex/storage/vectorStore/ChromaVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
