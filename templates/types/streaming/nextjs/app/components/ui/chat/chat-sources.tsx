@@ -1,28 +1,63 @@
-import { PDFViewer, PdfFocusProvider } from "@llamaindex/pdf-viewer";
 import { ArrowUpRightSquare, Check, Copy } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "../button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "../drawer";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../hover-card";
 import { SourceData, SourceNode } from "./index";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
+import PdfDialog from "./widgets/PdfDialog";
 
 const SCORE_THRESHOLD = 0.5;
 
+function SourceNumberButton({ index }: { index: number }) {
+  return (
+    <div className="text-xs w-5 h-5 rounded-full bg-gray-100 mb-2 flex items-center justify-center hover:text-white hover:bg-primary hover:cursor-pointer">
+      {index + 1}
+    </div>
+  );
+}
+
+enum NODE_TYPE {
+  URL,
+  LOCAL_FILE,
+}
+
+function getNodeInfo(node: SourceNode) {
+  if (typeof node.metadata["URL"] === "string") {
+    return {
+      path: node.metadata["URL"],
+      type: NODE_TYPE.URL,
+    };
+  }
+  if (typeof node.metadata["file_path"] === "string") {
+    return {
+      path: node.metadata["file_path"],
+      type: NODE_TYPE.LOCAL_FILE,
+    };
+  }
+  return undefined;
+}
+
 export function ChatSources({ data }: { data: SourceData }) {
   const sources = useMemo(() => {
-    return (
-      data.nodes
-        ?.filter((node) => Object.keys(node.metadata).length > 0)
-        ?.filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
-        .sort((a, b) => (b.score ?? 1) - (a.score ?? 1)) || []
-    );
+    // aggregate nodes by url or file_path (get the highest one by score)
+    const nodePaths = new Set<string>();
+    const uniqueNodes: SourceNode[] = [];
+
+    data.nodes
+      .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
+      .forEach((node) => {
+        const nodeInfo = getNodeInfo(node);
+        if (!nodeInfo) {
+          uniqueNodes.push(node); // Always add nodes with unknown type
+        } else if (!nodePaths.has(nodeInfo.path)) {
+          uniqueNodes.push(node);
+          nodePaths.add(nodeInfo.path);
+        }
+      });
+
+    return uniqueNodes
+      .filter((node) => Object.keys(node.metadata).length > 0)
+      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD);
   }, [data.nodes]);
 
   if (sources.length === 0) return null;
@@ -31,20 +66,31 @@ export function ChatSources({ data }: { data: SourceData }) {
     <div className="space-x-2 text-sm">
       <span className="font-semibold">Sources:</span>
       <div className="inline-flex gap-1 items-center">
-        {sources.map((node: SourceNode, index: number) => (
-          <div key={node.id}>
-            <HoverCard>
-              <HoverCardTrigger>
-                <div className="text-xs w-5 h-5 rounded-full bg-gray-100 mb-2 flex items-center justify-center hover:text-white hover:bg-primary hover:cursor-pointer">
-                  {index + 1}
-                </div>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-[320px]">
-                <NodeInfo node={node} />
-              </HoverCardContent>
-            </HoverCard>
-          </div>
-        ))}
+        {sources.map((node: SourceNode, index: number) => {
+          const nodeInfo = getNodeInfo(node);
+          if (nodeInfo?.path.endsWith(".pdf")) {
+            return (
+              <PdfDialog
+                key={node.id}
+                documentId={node.id}
+                filePath={nodeInfo.path}
+                trigger={<SourceNumberButton index={index} />}
+              />
+            );
+          }
+          return (
+            <div key={node.id}>
+              <HoverCard>
+                <HoverCardTrigger>
+                  <SourceNumberButton index={index} />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-[320px]">
+                  <NodeInfo node={node} />
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -52,105 +98,41 @@ export function ChatSources({ data }: { data: SourceData }) {
 
 function NodeInfo({ node }: { node: SourceNode }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 1000 });
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const nodeInfo = getNodeInfo(node);
 
-  const getFileDataUrl = (filePath: string) => {
-    const filename = filePath.split("\\").pop();
-    const isUsingBackend = !!process.env.NEXT_PUBLIC_CHAT_API;
-    if (isUsingBackend) {
-      const backendOrigin = new URL(process.env.NEXT_PUBLIC_CHAT_API!).origin;
-      return `${backendOrigin}/data/${filename}`;
-    }
-    return `/api/data?query=${filename}`;
-  };
-
-  const viewPdfFile = async (filePath: string) => {
-    const fileUrl = getFileDataUrl(filePath);
-    try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) {
-        throw new Error("Failed to fetch file data");
-      }
-      setIsDrawerOpen(true);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to view file content");
-    }
-  };
-
-  if (typeof node.metadata["URL"] === "string") {
+  if (nodeInfo?.type === NODE_TYPE.URL) {
     // this is a node generated by the web loader, it contains an external URL
     // add a link to view this URL
     return (
       <a
         className="space-x-2 flex items-center my-2 hover:text-blue-900"
-        href={node.metadata["URL"]}
+        href={nodeInfo.path}
         target="_blank"
       >
-        <span>{node.metadata["URL"]}</span>
+        <span>{nodeInfo.path}</span>
         <ArrowUpRightSquare className="w-4 h-4" />
       </a>
     );
   }
 
-  if (typeof node.metadata["file_path"] === "string") {
+  if (nodeInfo?.type === NODE_TYPE.LOCAL_FILE) {
     // this is a node generated by the file loader, it contains file path
     // add a button to copy the path to the clipboard
-    const filePath = node.metadata["file_path"];
-    const isPdf = filePath.endsWith(".pdf"); // only support view detail content for pdf file
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex-1 break-all">{filePath}</span>
-          <Button
-            onClick={() => copyToClipboard(filePath)}
-            size="icon"
-            variant="ghost"
-            className="h-12 w-12 shrink-0"
-          >
-            {isCopied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-
-        {isPdf && (
-          <>
-            <Drawer
-              direction="left"
-              open={isDrawerOpen}
-              onOpenChange={setIsDrawerOpen}
-            >
-              <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
-                <DrawerHeader className="flex justify-between items-center">
-                  <DrawerTitle>PDF Content</DrawerTitle>
-                  <DrawerClose asChild>
-                    <Button variant="outline">Close</Button>
-                  </DrawerClose>
-                </DrawerHeader>
-                <div className="m-4">
-                  <PdfFocusProvider>
-                    <PDFViewer
-                      file={{
-                        id: node.id,
-                        url: getFileDataUrl(filePath),
-                      }}
-                    />
-                  </PdfFocusProvider>
-                </div>
-              </DrawerContent>
-            </Drawer>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => viewPdfFile(filePath)}
-            >
-              View file content
-            </Button>
-          </>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex-1 break-all">{nodeInfo.path}</span>
+        <Button
+          onClick={() => copyToClipboard(nodeInfo.path)}
+          size="icon"
+          variant="ghost"
+          className="h-12 w-12 shrink-0"
+        >
+          {isCopied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     );
   }

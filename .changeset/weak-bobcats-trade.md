@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: display local pdf files
+Display PDF files in source nodes
