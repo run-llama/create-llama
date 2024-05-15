@@ -9,17 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../drawer";
-
-const getFileDataUrl = (filePath: string) => {
-  if (filePath.startsWith("http")) return filePath;
-  const filename = filePath.split("\\").pop();
-  const isUsingBackend = !!process.env.NEXT_PUBLIC_CHAT_API;
-  if (isUsingBackend) {
-    const backendOrigin = new URL(process.env.NEXT_PUBLIC_CHAT_API!).origin;
-    return `${backendOrigin}/data/${filename}`;
-  }
-  return `/api/data?query=${filename}`;
-};
+import { getFileDataUrl } from "../../lib/url";
 
 export interface PdfDialogProps {
   documentId: string;
