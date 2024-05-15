@@ -31,7 +31,7 @@ if (isDevelopment) {
   console.warn("Production CORS origin not set, defaulting to no CORS.");
 }
 
-app.use("/data", express.static("data"));
+app.use("/api/data", express.static("data"));
 app.use(express.text());
 
 app.get("/", (req: Request, res: Response) => {
