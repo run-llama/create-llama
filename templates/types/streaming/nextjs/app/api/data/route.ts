@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ detail: "Missing file query" }, { status: 400 });
   }
 
+  if (query.includes("..")) {
+    return NextResponse.json({ detail: "Invalid file path" }, { status: 400 });
+  }
+
   if (!query.endsWith(".pdf")) {
     return NextResponse.json(
       { detail: "Invalid file type. Support .pdf only" },
