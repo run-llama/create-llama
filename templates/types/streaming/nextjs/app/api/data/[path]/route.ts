@@ -16,13 +16,13 @@ export async function GET(
     return NextResponse.json({ detail: "Missing file slug" }, { status: 400 });
   }
 
-  if (slug.includes("..")) {
+  if (slug.includes("..") || path.isAbsolute(slug) || !slug.startsWith("/")) {
     return NextResponse.json({ detail: "Invalid file path" }, { status: 400 });
   }
 
   try {
-    const pdfPath = path.join(process.cwd(), "data", slug);
-    const blob = await readFile(pdfPath);
+    const filePath = path.join(process.cwd(), "data", slug);
+    const blob = await readFile(filePath);
 
     return new NextResponse(blob, {
       status: 200,
