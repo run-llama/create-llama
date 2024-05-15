@@ -16,7 +16,7 @@ export async function GET(
     return NextResponse.json({ detail: "Missing file slug" }, { status: 400 });
   }
 
-  if (slug.includes("..") || path.isAbsolute(slug) || !slug.startsWith("/")) {
+  if (slug.includes("..") || path.isAbsolute(slug)) {
     return NextResponse.json({ detail: "Invalid file path" }, { status: 400 });
   }
 

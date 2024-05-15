@@ -9,11 +9,11 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../drawer";
-import { getFileDataUrl } from "../../lib/url";
 
 export interface PdfDialogProps {
   documentId: string;
-  filePath: string;
+  path: string;
+  url: string;
   trigger: React.ReactNode;
 }
 
@@ -25,7 +25,16 @@ export default function PdfDialog(props: PdfDialogProps) {
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
             <DrawerTitle>PDF Content</DrawerTitle>
-            <DrawerDescription>File path: {props.filePath}</DrawerDescription>
+            <DrawerDescription>
+              File path:{" "}
+              <a
+                className="hover:text-blue-900"
+                href={props.url}
+                target="_blank"
+              >
+                {props.path}
+              </a>
+            </DrawerDescription>
           </div>
           <DrawerClose asChild>
             <Button variant="outline">Close</Button>
@@ -36,7 +45,7 @@ export default function PdfDialog(props: PdfDialogProps) {
             <PDFViewer
               file={{
                 id: props.documentId,
-                url: getFileDataUrl(props.filePath),
+                url: props.url,
               }}
             />
           </PdfFocusProvider>
