@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.6
+
+### Patch Changes
+
+- 56537a1: Display PDF files in source nodes
+
 ## 0.1.5
 
 ### Patch Changes
