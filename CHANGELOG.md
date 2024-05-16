@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.5
+
+### Patch Changes
+
+- 84db798: feat: support display latex in chat markdown
+
 ## 0.1.4
 
 ### Patch Changes
