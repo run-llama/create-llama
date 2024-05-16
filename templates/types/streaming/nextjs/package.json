@@ -33,7 +33,7 @@
     "supports-color": "^8.1.1",
     "tailwind-merge": "^2.1.0",
     "vaul": "^0.9.1",
-    "@llamaindex/pdf-viewer": "^1.1.0"
+    "@llamaindex/pdf-viewer": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
