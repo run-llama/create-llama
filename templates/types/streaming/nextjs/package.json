@@ -30,6 +30,7 @@
     "remark-code-import": "^1.2.0",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
+    "rehype-katex": "^7.0.0",
     "supports-color": "^8.1.1",
     "tailwind-merge": "^2.1.0"
   },
