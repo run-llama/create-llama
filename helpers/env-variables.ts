@@ -239,14 +239,7 @@ const getFrameworkEnvs = (
       name: "APP_PORT",
       description: "The port to start the backend app.",
       value: port?.toString() || "8000",
-    },
-    // TODO: Once LlamaIndexTS supports string templates, move this to `getEngineEnvs`
-    {
-      name: "SYSTEM_PROMPT",
-      description: `Custom system prompt.
-Example:
-SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
-    },
+    },    
   ];
 };
 
@@ -257,6 +250,12 @@ const getEngineEnvs = (): EnvVar[] => {
       description:
         "The number of similar embeddings to return when retrieving documents.",
       value: "3",
+    },
+    {
+      name: "SYSTEM_PROMPT",
+      description: `Custom system prompt.
+Example:
+SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
     },
   ];
 };
