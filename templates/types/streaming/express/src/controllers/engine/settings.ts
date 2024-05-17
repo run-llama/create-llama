@@ -56,11 +56,17 @@ function initOpenAI() {
 }
 
 function initOllama() {
+  const config = {
+    host: process.env.OLLAMA_BASE_URL ?? "http://localhost:11434",
+  };
+
   Settings.llm = new Ollama({
     model: process.env.MODEL ?? "",
+    config,
   });
   Settings.embedModel = new OllamaEmbedding({
     model: process.env.EMBEDDING_MODEL ?? "",
+    config,
   });
 }
 
