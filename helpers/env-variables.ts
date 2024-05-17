@@ -239,7 +239,7 @@ const getFrameworkEnvs = (
       name: "APP_PORT",
       description: "The port to start the backend app.",
       value: port?.toString() || "8000",
-    },    
+    },
   ];
 };
 
