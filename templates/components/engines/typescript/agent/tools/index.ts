@@ -1,4 +1,5 @@
 import { BaseToolWithCall } from "llamaindex";
+import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { WeatherTool, WeatherToolParams } from "./weather";
 
 type ToolCreator = (config: unknown) => BaseToolWithCall;
@@ -6,6 +7,9 @@ type ToolCreator = (config: unknown) => BaseToolWithCall;
 const toolFactory: Record<string, ToolCreator> = {
   weather: (config: unknown) => {
     return new WeatherTool(config as WeatherToolParams);
+  },
+  interpreter: (config: unknown) => {
+    return new InterpreterTool(config as InterpreterToolParams);
   },
 };
 

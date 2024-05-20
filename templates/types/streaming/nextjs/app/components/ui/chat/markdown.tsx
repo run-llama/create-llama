@@ -5,6 +5,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
+import { replaceAttachmentUrl } from "../lib/url";
 import { CodeBlock } from "./codeblock";
 
 const MemoizedReactMarkdown: FC<Options> = memo(
@@ -28,8 +29,13 @@ const preprocessLaTeX = (content: string) => {
   return inlineProcessedContent;
 };
 
+const preprocessUrl = (content: string) => {
+  return replaceAttachmentUrl(content);
+};
+
 export default function Markdown({ content }: { content: string }) {
   const processedContent = preprocessLaTeX(content);
+  const processedContentWithUrl = preprocessUrl(processedContent);
   return (
     <MemoizedReactMarkdown
       className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words custom-markdown"
@@ -71,7 +77,7 @@ export default function Markdown({ content }: { content: string }) {
         },
       }}
     >
-      {processedContent}
+      {processedContentWithUrl}
     </MemoizedReactMarkdown>
   );
 }

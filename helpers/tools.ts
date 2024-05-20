@@ -62,6 +62,13 @@ export const supportedTools: Tool[] = [
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
   },
+  {
+    display: "Interpreter",
+    name: "interpreter",
+    dependencies: [],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
+    type: ToolType.LOCAL,
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {

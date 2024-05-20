@@ -1,4 +1,5 @@
 import { ToolData } from "./index";
+import { InterpreterCard, InterpreterData } from "./widgets/InterpreterCard";
 import { WeatherCard, WeatherData } from "./widgets/WeatherCard";
 
 // TODO: If needed, add displaying more tool outputs here
@@ -20,6 +21,9 @@ export default function ChatTools({ data }: { data: ToolData }) {
     case "get_weather_information":
       const weatherData = toolOutput.output as unknown as WeatherData;
       return <WeatherCard data={weatherData} />;
+    case "interpreter":
+      const interpreterData = toolOutput.output as unknown as InterpreterData;
+      return <InterpreterCard data={interpreterData} />;
     default:
       return null;
   }
