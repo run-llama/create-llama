@@ -8,8 +8,8 @@ import { questionHandlers } from "../../questions";
 
 const LLMHUB_API_URL = "https://llm-server.llmhub.t-systems.net/";
 
-const DEFAULT_MODEL = "gemini-1.5-pro-latest";
-const DEFAULT_EMBEDDING_MODEL = "text-embedding-004";
+const DEFAULT_MODEL = "gpt-3.5-turbo";
+const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
 export async function askLLMHubQuestions({
   llmHubKey,
