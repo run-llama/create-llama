@@ -6,11 +6,13 @@ import { askAnthropicQuestions } from "./anthropic";
 import { askGeminiQuestions } from "./gemini";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
+import { askLLMHubQuestions } from "./llmhub";
 
-const DEFAULT_MODEL_PROVIDER = "openai";
+const DEFAULT_MODEL_PROVIDER = "llmhub"; // Set LLMHub as the default provider
 
 export type ModelConfigQuestionsParams = {
   openAiKey?: string;
+  llmHubKey?: string;
   askModels: boolean;
 };
 
@@ -19,6 +21,7 @@ export type ModelConfigParams = Omit<ModelConfig, "provider">;
 export async function askModelConfig({
   askModels,
   openAiKey,
+  llmHubKey,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
   if (askModels && !ciInfo.isCI) {
@@ -28,10 +31,8 @@ export async function askModelConfig({
         name: "provider",
         message: "Which model provider would you like to use",
         choices: [
-          {
-            title: "OpenAI",
-            value: "openai",
-          },
+          { title: "LLMHub", value: "llmhub" },  // LLMHub as the first option
+          { title: "OpenAI", value: "openai" },
           { title: "Ollama", value: "ollama" },
           { title: "Anthropic", value: "anthropic" },
           { title: "Gemini", value: "gemini" },
@@ -54,9 +55,12 @@ export async function askModelConfig({
     case "gemini":
       modelConfig = await askGeminiQuestions({ askModels });
       break;
+    case "openai":
+      modelConfig = await askOpenAIQuestions({ openAiKey, askModels });
+      break;
     default:
-      modelConfig = await askOpenAIQuestions({
-        openAiKey,
+      modelConfig = await askLLMHubQuestions({
+        llmHubKey,
         askModels,
       });
   }
