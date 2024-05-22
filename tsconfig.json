@@ -19,7 +19,8 @@
     "index.ts",
     "./helpers",
     "questions.ts",
-    "package.json"
+    "package.json",
+    "types/**/*"
   ],
   "exclude": ["dist"]
 }
