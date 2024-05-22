@@ -2,8 +2,11 @@ import fs from "fs/promises";
 import path from "path";
 import { red } from "picocolors";
 import yaml from "yaml";
+import { EnvVar } from "./env-variables";
 import { makeDir } from "./make-dir";
 import { TemplateFramework } from "./types";
+
+export const TOOL_SYSTEM_PROMPT_ENV_VAR = "TOOL_SYSTEM_PROMPT";
 
 export enum ToolType {
   LLAMAHUB = "llamahub",
@@ -17,6 +20,7 @@ export type Tool = {
   dependencies?: ToolDependencies[];
   supportedFrameworks?: Array<TemplateFramework>;
   type: ToolType;
+  envVars?: EnvVar[];
 };
 
 export type ToolDependencies = {
@@ -42,6 +46,13 @@ export const supportedTools: Tool[] = [
     ],
     supportedFrameworks: ["fastapi"],
     type: ToolType.LLAMAHUB,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for google search tool.",
+        value: `You are a Google search agent. You help users to get information from Google search.`,
+      },
+    ],
   },
   {
     display: "Wikipedia",
@@ -54,6 +65,13 @@ export const supportedTools: Tool[] = [
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LLAMAHUB,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for wiki tool.",
+        value: `You are a Wikipedia agent. You help users to get information from Wikipedia.`,
+      },
+    ],
   },
   {
     display: "Weather",
@@ -61,13 +79,37 @@ export const supportedTools: Tool[] = [
     dependencies: [],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for weather tool.",
+        value: `You are a weather forecast agent. You help users to get the weather forecast for a given location.`,
+      },
+    ],
   },
   {
-    display: "Interpreter",
+    display: "Code Interpreter",
     name: "interpreter",
     dependencies: [],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: "E2B_API_KEY",
+        description:
+          "E2B_API_KEY key is required to run code interpreter tool. Get it here: https://e2b.dev/docs/getting-started/api-key",
+      },
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for code interpreter tool.",
+        value: `You are a Python interpreter.
+        - You are given tasks to complete and you run python code to solve them.
+        - The python code runs in a Jupyter notebook. Every time you call \`interpreter\` tool, the python code is executed in a separate cell. It's okay to make multiple calls to \`interpreter\`.
+        - Display visualizations using matplotlib or any other visualization library directly in the notebook. Shouldn't save the visualizations to a file, just return the base64 encoded data.
+        - You can install any pip package (if it exists) if you need to but the usual packages for data analysis are already preinstalled.
+        - You can run any python code you want in a secure environment.`,
+      },
+    ],
   },
 ];
 

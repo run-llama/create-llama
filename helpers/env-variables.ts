@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { TOOL_SYSTEM_PROMPT_ENV_VAR, Tool } from "./tools";
 import {
   ModelConfig,
   TemplateDataSource,
@@ -7,7 +8,7 @@ import {
   TemplateVectorDB,
 } from "./types";
 
-type EnvVar = {
+export type EnvVar = {
   name?: string;
   description?: string;
   value?: string;
@@ -260,13 +261,50 @@ const getEngineEnvs = (): EnvVar[] => {
         "The number of similar embeddings to return when retrieving documents.",
       value: "3",
     },
-    {
-      name: "SYSTEM_PROMPT",
-      description: `Custom system prompt.
-Example:
-SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
-    },
   ];
+};
+
+const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
+  if (!tools?.length) return [];
+  const toolEnvs: EnvVar[] = [];
+  tools.forEach((tool) => {
+    if (tool.envVars?.length) {
+      toolEnvs.push(
+        // Don't include the system prompt env var here
+        // It should be handled separately by merging with the default system prompt
+        ...tool.envVars.filter(
+          (env) => env.name !== TOOL_SYSTEM_PROMPT_ENV_VAR,
+        ),
+      );
+    }
+  });
+  return toolEnvs;
+};
+
+const getSystemPromptEnv = (tools?: Tool[]): EnvVar => {
+  const defaultSystemPrompt =
+    "You are a helpful assistant who helps users with their questions.";
+
+  // build tool system prompt by merging all tool system prompts
+  let toolSystemPrompt = "";
+  tools?.forEach((tool) => {
+    const toolSystemPromptEnv = tool.envVars?.find(
+      (env) => env.name === TOOL_SYSTEM_PROMPT_ENV_VAR,
+    );
+    if (toolSystemPromptEnv) {
+      toolSystemPrompt += toolSystemPromptEnv.value + "\n";
+    }
+  });
+
+  const systemPrompt = toolSystemPrompt
+    ? `\"${toolSystemPrompt}\"`
+    : defaultSystemPrompt;
+
+  return {
+    name: "SYSTEM_PROMPT",
+    description: "The system prompt for the AI model.",
+    value: systemPrompt,
+  };
 };
 
 export const createBackendEnvFile = async (
@@ -278,6 +316,7 @@ export const createBackendEnvFile = async (
     framework?: TemplateFramework;
     dataSources?: TemplateDataSource[];
     port?: number;
+    tools?: Tool[];
   },
 ) => {
   // Init env values
@@ -295,6 +334,8 @@ export const createBackendEnvFile = async (
     // Add vector database environment variables
     ...getVectorDBEnvs(opts.vectorDb, opts.framework),
     ...getFrameworkEnvs(opts.framework, opts.port),
+    ...getToolEnvs(opts.tools),
+    getSystemPromptEnv(opts.tools),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);

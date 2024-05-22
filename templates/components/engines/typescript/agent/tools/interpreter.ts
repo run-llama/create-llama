@@ -33,20 +33,12 @@ type InterpreterExtraType =
 
 export type InterpreterExtraResult = {
   type: InterpreterExtraType;
-  // url: string;
   filename: string;
 };
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
   name: "interpreter",
-  description: `
-  - You are a Python interpreter.
-  - You are given tasks to complete and you run python code to solve them.
-  - The python code runs in a Jupyter notebook. Every time you call \`interpreter\` tool, the python code is executed in a separate cell. It's okay to make multiple calls to \`interpreter\`.
-  - Display visualizations using matplotlib or any other visualization library directly in the notebook. Shouldn't save the visualizations to a file, just return the base64 encoded data.
-  - You can install any pip package (if it exists) if you need to but the usual packages for data analysis are already preinstalled.
-  - You can run any python code you want in a secure environment.
-  `, // TODO: Add more guide to help AI use data to generate code (eg. wiki tool, google sheet tool data)
+  description: "Execute python code in a Jupyter notebook cell and returns any result, stdout, stderr, display_data, and error.",
   parameters: {
     type: "object",
     properties: {
@@ -163,9 +155,5 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
     return path.join(this.outputDir, filename);
-  }
-
-  private getDataUrl(filename: string): string {
-    return `${this.dataAPI}${filename}`;
   }
 }
