@@ -4,7 +4,5 @@ export async function initializeGlobalAgent() {
     /* Dynamically import global-agent/bootstrap */
     await import("global-agent/bootstrap");
     console.log("Proxy enabled via global-agent.");
-  } else {
-    console.log("No proxy configuration found. Continuing without proxy.");
   }
 }

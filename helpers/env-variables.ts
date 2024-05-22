@@ -224,7 +224,7 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           {
             name: "OLLAMA_BASE_URL",
             description:
-              "The base URL for the Ollama API. Eg: http://localhost:11434",
+              "The base URL for the Ollama API. Eg: http://127.0.0.1:11434",
           },
         ]
       : []),
