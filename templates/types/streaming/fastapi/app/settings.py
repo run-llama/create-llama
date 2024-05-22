@@ -23,8 +23,12 @@ def init_ollama():
     from llama_index.llms.ollama import Ollama
     from llama_index.embeddings.ollama import OllamaEmbedding
 
-    Settings.embed_model = OllamaEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))
-    Settings.llm = Ollama(model=os.getenv("MODEL"))
+    base_url = os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434"
+    Settings.embed_model = OllamaEmbedding(
+        base_url=base_url,
+        model_name=os.getenv("EMBEDDING_MODEL"),
+    )
+    Settings.llm = Ollama(base_url=base_url, model=os.getenv("MODEL"))
 
 
 def init_openai():

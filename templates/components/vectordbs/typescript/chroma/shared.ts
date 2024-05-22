@@ -1,9 +1,4 @@
-const REQUIRED_ENV_VARS = [
-  "MONGODB_URI",
-  "MONGODB_DATABASE",
-  "MONGODB_VECTORS",
-  "MONGODB_VECTOR_INDEX",
-];
+const REQUIRED_ENV_VARS = ["CHROMA_COLLECTION", "CHROMA_HOST", "CHROMA_PORT"];
 
 export function checkRequiredEnvVars() {
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {

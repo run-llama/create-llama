@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 from app.api.routers.chat import chat_router
 from app.settings import init_settings
 from app.observability import init_observability
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI()
@@ -19,7 +20,6 @@ init_settings()
 init_observability()
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
-
 
 if environment == "dev":
     logger = logging.getLogger("uvicorn")
@@ -38,6 +38,8 @@ if environment == "dev":
         return RedirectResponse(url="/docs")
 
 
+if os.path.exists("data"):
+    app.mount("/api/data", StaticFiles(directory="data"), name="static")
 app.include_router(chat_router, prefix="/api/chat")
 
 

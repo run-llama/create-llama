@@ -1,5 +1,30 @@
 # create-llama
 
+## 0.1.6
+
+### Patch Changes
+
+- 56537a1: Display PDF files in source nodes
+
+## 0.1.5
+
+### Patch Changes
+
+- 84db798: feat: support display latex in chat markdown
+
+## 0.1.4
+
+### Patch Changes
+
+- 0bc8e75: Use ingestion pipeline for dedicated vector stores (Python only)
+- cb1001d: Add ChromaDB vector store
+
+## 0.1.3
+
+### Patch Changes
+
+- 416073d: Directly import vector stores to work with NextJS
+
 ## 0.1.2
 
 ### Patch Changes

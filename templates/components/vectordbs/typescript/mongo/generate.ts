@@ -1,10 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import {
-  MongoDBAtlasVectorSearch,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorSearch";
 import { MongoClient } from "mongodb";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
@@ -12,7 +9,7 @@ import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
 
-const mongoUri = process.env.MONGO_URI!;
+const mongoUri = process.env.MONGODB_URI!;
 const databaseName = process.env.MONGODB_DATABASE!;
 const vectorCollectionName = process.env.MONGODB_VECTORS!;
 const indexName = process.env.MONGODB_VECTOR_INDEX;

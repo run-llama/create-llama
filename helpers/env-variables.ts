@@ -29,17 +29,20 @@ const renderEnvVar = (envVars: EnvVar[]): string => {
   );
 };
 
-const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
-  if (!vectorDb) {
+const getVectorDBEnvs = (
+  vectorDb?: TemplateVectorDB,
+  framework?: TemplateFramework,
+): EnvVar[] => {
+  if (!vectorDb || !framework) {
     return [];
   }
   switch (vectorDb) {
     case "mongo":
       return [
         {
-          name: "MONGO_URI",
+          name: "MONGODB_URI",
           description:
-            "For generating a connection URI, see https://docs.timescale.com/use-timescale/latest/services/create-a-service\nThe MongoDB connection URI.",
+            "For generating a connection URI, see https://www.mongodb.com/docs/manual/reference/connection-string/ \nThe MongoDB connection URI.",
         },
         {
           name: "MONGODB_DATABASE",
@@ -129,6 +132,31 @@ const getVectorDBEnvs = (vectorDb?: TemplateVectorDB): EnvVar[] => {
             "Optional API key for authenticating requests to Qdrant.",
         },
       ];
+    case "chroma":
+      const envs = [
+        {
+          name: "CHROMA_COLLECTION",
+          description: "The name of the collection in your Chroma database",
+        },
+        {
+          name: "CHROMA_HOST",
+          description: "The API endpoint for your Chroma database",
+        },
+        {
+          name: "CHROMA_PORT",
+          description: "The port for your Chroma database",
+        },
+      ];
+      // TS Version doesn't support config local storage path
+      if (framework === "fastapi") {
+        envs.push({
+          name: "CHROMA_PATH",
+          description: `The local path to the Chroma database. 
+Specify this if you are using a local Chroma database. 
+Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
+        });
+      }
+      return envs;
     default:
       return [];
   }
@@ -191,6 +219,15 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "ollama"
+      ? [
+          {
+            name: "OLLAMA_BASE_URL",
+            description:
+              "The base URL for the Ollama API. Eg: http://localhost:11434",
+          },
+        ]
+      : []),
   ];
 };
 
@@ -212,13 +249,6 @@ const getFrameworkEnvs = (
       description: "The port to start the backend app.",
       value: port?.toString() || "8000",
     },
-    // TODO: Once LlamaIndexTS supports string templates, move this to `getEngineEnvs`
-    {
-      name: "SYSTEM_PROMPT",
-      description: `Custom system prompt.
-Example:
-SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
-    },
   ];
 };
 
@@ -229,6 +259,12 @@ const getEngineEnvs = (): EnvVar[] => {
       description:
         "The number of similar embeddings to return when retrieving documents.",
       value: "3",
+    },
+    {
+      name: "SYSTEM_PROMPT",
+      description: `Custom system prompt.
+Example:
+SYSTEM_PROMPT="You are a helpful assistant who helps users with their questions."`,
     },
   ];
 };
@@ -257,7 +293,7 @@ export const createBackendEnvFile = async (
     // Add engine environment variables
     ...getEngineEnvs(),
     // Add vector database environment variables
-    ...getVectorDBEnvs(opts.vectorDb),
+    ...getVectorDBEnvs(opts.vectorDb, opts.framework),
     ...getFrameworkEnvs(opts.framework, opts.port),
   ];
   // Render and write env file

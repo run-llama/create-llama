@@ -1,20 +1,20 @@
 {
   "name": "llama-index-express-streaming",
   "version": "1.0.0",
-  "main": "dist/index.mjs",
+  "main": "dist/index.js",
   "scripts": {
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
-    "build": "tsup index.ts --format esm --dts",
-    "start": "node dist/index.mjs",
-    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon -q dist/index.mjs\""
+    "build": "tsup index.ts --format cjs --dts",
+    "start": "node dist/index.js",
+    "dev": "concurrently \"tsup index.ts --format cjs --dts --watch\" \"nodemon -q dist/index.js\""
   },
   "dependencies": {
     "ai": "^3.0.21",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "llamaindex": "0.3.7",
+    "llamaindex": "0.3.9",
     "pdf2json": "3.0.5",
     "ajv": "^8.12.0"
   },

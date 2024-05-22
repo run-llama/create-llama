@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
-import { QdrantVectorStore, VectorStoreIndex } from "llamaindex";
+import { VectorStoreIndex } from "llamaindex";
+import { QdrantVectorStore } from "llamaindex/storage/vectorStore/QdrantVectorStore";
 import { checkRequiredEnvVars, getQdrantClient } from "./shared";
 
 dotenv.config();
@@ -7,7 +8,10 @@ dotenv.config();
 export async function getDataSource() {
   checkRequiredEnvVars();
   const collectionName = process.env.QDRANT_COLLECTION;
-  const store = new QdrantVectorStore(collectionName, getQdrantClient());
+  const store = new QdrantVectorStore({
+    collectionName,
+    client: getQdrantClient(),
+  });
 
   return await VectorStoreIndex.fromVectorStore(store);
 }

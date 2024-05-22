@@ -41,5 +41,6 @@ export async function createChatEngine() {
 
   return new OpenAIAgent({
     tools,
+    systemPrompt: process.env.SYSTEM_PROMPT,
   });
 }

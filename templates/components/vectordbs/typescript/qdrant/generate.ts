@@ -1,10 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import {
-  QdrantVectorStore,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { QdrantVectorStore } from "llamaindex/storage/vectorStore/QdrantVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars, getQdrantClient } from "./shared";
@@ -18,7 +15,10 @@ async function loadAndIndex() {
   const documents = await getDocuments();
 
   // Connect to Qdrant
-  const vectorStore = new QdrantVectorStore(collectionName, getQdrantClient());
+  const vectorStore = new QdrantVectorStore({
+    collectionName,
+    client: getQdrantClient(),
+  });
 
   const storageContext = await storageContextFromDefaults({ vectorStore });
   await VectorStoreIndex.fromDocuments(documents, {
