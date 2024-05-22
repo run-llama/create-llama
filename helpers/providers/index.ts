@@ -8,7 +8,7 @@ import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
 import { askLLMHubQuestions } from "./llmhub";
 
-const DEFAULT_MODEL_PROVIDER = "llmhub"; // Set LLMHub as the default provider
+const DEFAULT_MODEL_PROVIDER = "openai"; 
 
 export type ModelConfigQuestionsParams = {
   openAiKey?: string;
@@ -46,6 +46,9 @@ export async function askModelConfig({
 
   let modelConfig: ModelConfigParams;
   switch (modelProvider) {
+    case "openai":
+      modelConfig = await askLLMHubQuestions({ llmHubKey, askModels });
+      break;
     case "ollama":
       modelConfig = await askOllamaQuestions({ askModels });
       break;
@@ -55,12 +58,10 @@ export async function askModelConfig({
     case "gemini":
       modelConfig = await askGeminiQuestions({ askModels });
       break;
-    case "openai":
-      modelConfig = await askOpenAIQuestions({ openAiKey, askModels });
-      break;
+
     default:
-      modelConfig = await askLLMHubQuestions({
-        llmHubKey,
+      modelConfig = await askOpenAIQuestions({
+        openAiKey,
         askModels,
       });
   }
