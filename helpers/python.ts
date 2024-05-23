@@ -167,6 +167,12 @@ const getAdditionalDependencies = (
         version: "0.1.6",
       });
       break;
+    case "llmhub":
+      dependencies.push({
+        name: "llama-index-agent-openai",
+        version: "0.2.2",
+      });
+      break;
   }
 
   return dependencies;

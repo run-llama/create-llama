@@ -13,6 +13,8 @@ def init_settings():
         init_anthropic()
     elif model_provider == "gemini":
         init_gemini()
+    elif model_provider == "llmhub":
+        init_llmhub()
     else:
         raise ValueError(f"Invalid model provider: {model_provider}")
     Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
@@ -94,3 +96,23 @@ def init_gemini():
     Settings.embed_model = GeminiEmbedding(
         model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
     )
+
+def init_llmhub():
+    from llmhub import TSIEmbedding
+    from llmhub import llm_config_from_env
+    from llmhub import embedding_config_from_env
+    from llama_index.llms.openai_like import OpenAILike
+
+    llm_configs = llm_config_from_env()
+    embedding_configs = embedding_config_from_env()
+
+    Settings.embed_model = TSIEmbedding(**embedding_configs)
+    Settings.llm = OpenAILike(
+        **llm_configs,
+        is_chat_model=True,
+        is_function_calling_model=False,
+        context_window=4096,
+    )
+    Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
+    Settings.chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "20"))
+
