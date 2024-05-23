@@ -57,7 +57,7 @@ function initOpenAI() {
 
 function initOllama() {
   const config = {
-    host: process.env.OLLAMA_BASE_URL ?? "http://localhost:11434",
+    host: process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434",
   };
 
   Settings.llm = new Ollama({

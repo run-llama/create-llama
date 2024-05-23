@@ -12,11 +12,15 @@ import { createApp } from "./create-app";
 import { getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
+import { initializeGlobalAgent } from "./helpers/proxy";
 import { runApp } from "./helpers/run-app";
 import { getTools } from "./helpers/tools";
 import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
 import { QuestionArgs, askQuestions, onPromptState } from "./questions";
+
+// Run the initialization function
+initializeGlobalAgent();
 
 let projectPath: string = "";
 
