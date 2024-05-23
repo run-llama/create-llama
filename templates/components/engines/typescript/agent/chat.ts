@@ -24,11 +24,10 @@ export async function createChatEngine() {
     );
   }
 
+  const configFile = path.join("config", "tools.json");
   try {
     // add tools from config file if it exists
-    const config = JSON.parse(
-      await fs.readFile(path.join("config", "tools.json"), "utf8"),
-    );
+    const config = JSON.parse(await fs.readFile(configFile, "utf8"));
 
     // add local tools from the 'tools' folder (if configured)
     const localTools = createLocalTools(config.local);
@@ -38,8 +37,7 @@ export async function createChatEngine() {
     const llamaTools = await ToolsFactory.createTools(config.llamahub);
     tools.push(...llamaTools);
   } catch (e) {
-    console.error("Error loading tools", e);
-    throw e;
+    console.info(`Could not read ${configFile} file. Using no tools.`);
   }
 
   return new OpenAIAgent({
