@@ -65,7 +65,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     this.metadata = params?.metadata || DEFAULT_META_DATA;
     this.apiKey = params?.apiKey || process.env.E2B_API_KEY;
     this.fileServerURLPrefix =
-      params?.fileServerURLPrefix || process.env.E2B_FILESERVER_URL_PREFIX;
+      params?.fileServerURLPrefix || process.env.FILESERVER_URL_PREFIX;
 
     if (!this.apiKey) {
       throw new Error(
@@ -74,7 +74,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     }
     if (!this.fileServerURLPrefix) {
       throw new Error(
-        "E2B_FILESERVER_URL_PREFIX is required to display file output from sandbox",
+        "FILESERVER_URL_PREFIX is required to display file output from sandbox",
       );
     }
   }
@@ -169,6 +169,6 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   }
 
   private getFileUrl(filename: string): string {
-    return `${this.fileServerURLPrefix}/api/${this.outputDir}/${filename}`;
+    return `${this.fileServerURLPrefix}/${this.outputDir}/${filename}`;
   }
 }
