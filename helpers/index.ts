@@ -148,6 +148,7 @@ export const installTemplate = async (
       framework: props.framework,
       dataSources: props.dataSources,
       port: props.externalPort,
+      tools: props.tools,
     });
 
     if (props.dataSources.length > 0) {

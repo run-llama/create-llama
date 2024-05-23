@@ -38,7 +38,9 @@ export function ChatEvents({
         <CollapsibleContent asChild>
           <div className="mt-4 text-sm space-y-2">
             {data.map((eventItem, index) => (
-              <div key={index}>{eventItem.title}</div>
+              <div className="whitespace-break-spaces" key={index}>
+                {eventItem.title}
+              </div>
             ))}
           </div>
         </CollapsibleContent>

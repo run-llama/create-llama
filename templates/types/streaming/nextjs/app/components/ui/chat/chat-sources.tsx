@@ -7,6 +7,7 @@ import { SourceData, SourceNode } from "./index";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
 import PdfDialog from "./widgets/PdfDialog";
 
+const DATA_SOURCE_FOLDER = "data";
 const SCORE_THRESHOLD = 0.3;
 
 function SourceNumberButton({ index }: { index: number }) {
@@ -42,11 +43,12 @@ function getNodeInfo(node: SourceNode): NodeInfo {
   }
   if (typeof node.metadata["file_path"] === "string") {
     const fileName = node.metadata["file_name"] as string;
+    const filePath = `${DATA_SOURCE_FOLDER}/${fileName}`;
     return {
       id: node.id,
       type: NODE_TYPE.FILE,
       path: node.metadata["file_path"],
-      url: getStaticFileDataUrl(fileName),
+      url: getStaticFileDataUrl(filePath),
     };
   }
 
