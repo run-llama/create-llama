@@ -13,6 +13,6 @@ nextConfig.rewrites = async () => {
       destination: "/api/data/:slug",
     },
   ];
-}
+};
 
 export default nextConfig;

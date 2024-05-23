@@ -41,7 +41,7 @@ export type InterpreterExtraResult = {
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
   name: "interpreter",
   description:
-    "Execute python code in a Jupyter notebook cell and returns any result, stdout, stderr, display_data, and error.",
+    "Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.",
   parameters: {
     type: "object",
     properties: {
