@@ -12,6 +12,7 @@ export type InterpreterParameter = {
 export type InterpreterToolParams = {
   metadata?: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
   apiKey?: string;
+  fileSystemOrigin?: string;
 };
 
 export type InterpreterToolOuput = {
@@ -34,6 +35,7 @@ type InterpreterExtraType =
 export type InterpreterExtraResult = {
   type: InterpreterExtraType;
   filename: string;
+  url: string;
 };
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
@@ -53,23 +55,31 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
 };
 
 export class InterpreterTool implements BaseTool<InterpreterParameter> {
-  // TODO: implement API to get data from tool-output folder
   private readonly outputDir = "tool-output";
   private apiKey?: string;
+  private fileSystemOrigin?: string;
   metadata: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
   codeInterpreter?: CodeInterpreter;
 
   constructor(params?: InterpreterToolParams) {
     this.metadata = params?.metadata || DEFAULT_META_DATA;
     this.apiKey = params?.apiKey || process.env.E2B_API_KEY;
-  }
+    this.fileSystemOrigin =
+      params?.fileSystemOrigin || process.env.E2B_FILESYSTEM_ORIGIN;
 
-  public async initInterpreter() {
     if (!this.apiKey) {
       throw new Error(
         "E2B_API_KEY key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key",
       );
     }
+    if (!this.fileSystemOrigin) {
+      throw new Error(
+        "E2B_FILESYSTEM_ORIGIN is required to display file output from sandbox",
+      );
+    }
+  }
+
+  public async initInterpreter() {
     if (!this.codeInterpreter) {
       this.codeInterpreter = await CodeInterpreter.create({
         apiKey: this.apiKey,
@@ -119,7 +129,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
           output.push({
             type: ext as InterpreterExtraType,
             filename,
-            // url: this.getDataUrl(filename),
+            url: this.getFileUrl(filename),
           });
         }
       }
@@ -156,5 +166,9 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
     return path.join(this.outputDir, filename);
+  }
+
+  private getFileUrl(filename: string): string {
+    return `${this.fileSystemOrigin}/api/tool-output/${filename}`;
   }
 }

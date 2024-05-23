@@ -37,7 +37,10 @@ export async function createChatEngine() {
     // add tools from LlamaIndexTS (if configured)
     const llamaTools = await ToolsFactory.createTools(config.llamahub);
     tools.push(...llamaTools);
-  } catch {}
+  } catch (e) {
+    console.error("Error loading tools", e);
+    throw e;
+  }
 
   return new OpenAIAgent({
     tools,

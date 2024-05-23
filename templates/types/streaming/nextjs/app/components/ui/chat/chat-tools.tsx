@@ -20,10 +20,6 @@ export default function ChatTools({ data }: { data: ToolData }) {
     case "get_weather_information":
       const weatherData = toolOutput.output as unknown as WeatherData;
       return <WeatherCard data={weatherData} />;
-    // We will support displaying interpreter output later
-    // case "interpreter":
-    //   const interpreterData = toolOutput.output as unknown as InterpreterData;
-    //   return <InterpreterCard data={interpreterData} />;
     default:
       return null;
   }

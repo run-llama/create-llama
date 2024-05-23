@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
 /**
- * This API is to get file data from ./data folder
+ * This API is to get file data from allowed folders
  * It receives path slug and response file data like serve static file
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { path: string } },
 ) {
   const slug = params.path;
@@ -21,7 +21,11 @@ export async function GET(
   }
 
   try {
-    const filePath = path.join(process.cwd(), "data", slug);
+    let retrivedFolder = "data"; // default folder
+    if (request.url.includes("/api/tool-output/")) {
+      retrivedFolder = "tool-output";
+    }
+    const filePath = path.join(process.cwd(), retrivedFolder, slug);
     const blob = await readFile(filePath);
 
     return new NextResponse(blob, {

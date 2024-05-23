@@ -100,6 +100,11 @@ export const supportedTools: Tool[] = [
           "E2B_API_KEY key is required to run code interpreter tool. Get it here: https://e2b.dev/docs/getting-started/api-key",
       },
       {
+        name: "E2B_FILESYSTEM_ORIGIN",
+        description:
+          "E2B_FILESYSTEM_ORIGIN is the origin of the filesystem server. It's ussually the same as your backend origin. Example: http://localhost:3000",
+      },
+      {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
         description: "System prompt for code interpreter tool.",
         value: `You are a Python interpreter.
@@ -107,7 +112,8 @@ export const supportedTools: Tool[] = [
         - The python code runs in a Jupyter notebook. Every time you call \`interpreter\` tool, the python code is executed in a separate cell. It's okay to make multiple calls to \`interpreter\`.
         - Display visualizations using matplotlib or any other visualization library directly in the notebook. Shouldn't save the visualizations to a file, just return the base64 encoded data.
         - You can install any pip package (if it exists) if you need to but the usual packages for data analysis are already preinstalled.
-        - You can run any python code you want in a secure environment.`,
+        - You can run any python code you want in a secure environment.
+        - Use absolute url from result to display images or any other media.`,
       },
     ],
   },

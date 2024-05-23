@@ -32,6 +32,7 @@ if (isDevelopment) {
 }
 
 app.use("/api/data", express.static("data"));
+app.use("/api/tool-output", express.static("tool-output"));
 app.use(express.text());
 
 app.get("/", (req: Request, res: Response) => {

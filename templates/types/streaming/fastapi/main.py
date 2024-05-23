@@ -40,6 +40,8 @@ if environment == "dev":
 
 if os.path.exists("data"):
     app.mount("/api/data", StaticFiles(directory="data"), name="static")
+
+app.mount("/api/tool-output", StaticFiles(directory="tool-output"), name="static")
 app.include_router(chat_router, prefix="/api/chat")
 
 
