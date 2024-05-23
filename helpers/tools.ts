@@ -100,9 +100,9 @@ export const supportedTools: Tool[] = [
           "E2B_API_KEY key is required to run code interpreter tool. Get it here: https://e2b.dev/docs/getting-started/api-key",
       },
       {
-        name: "E2B_FILESYSTEM_ORIGIN",
+        name: "E2B_FILESERVER_URL_PREFIX",
         description:
-          "E2B_FILESYSTEM_ORIGIN is the origin of the filesystem server. It's ussually the same as your backend origin. Example: http://localhost:3000",
+        "E2B_FILESERVER_URL_PREFIX is the origin of the filesystem server. It's usually the same as your backend origin. Example: http://localhost:3000",
       },
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,

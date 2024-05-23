@@ -65,7 +65,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     this.metadata = params?.metadata || DEFAULT_META_DATA;
     this.apiKey = params?.apiKey || process.env.E2B_API_KEY;
     this.fileSystemOrigin =
-      params?.fileSystemOrigin || process.env.E2B_FILESYSTEM_ORIGIN;
+      params?.fileSystemOrigin || process.env.E2B_FILESERVER_URL_PREFIX;
 
     if (!this.apiKey) {
       throw new Error(
@@ -74,7 +74,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     }
     if (!this.fileSystemOrigin) {
       throw new Error(
-        "E2B_FILESYSTEM_ORIGIN is required to display file output from sandbox",
+        "E2B_FILESERVER_URL_PREFIX is required to display file output from sandbox",
       );
     }
   }
@@ -169,6 +169,6 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   }
 
   private getFileUrl(filename: string): string {
-    return `${this.fileSystemOrigin}/api/tool-output/${filename}`;
+    return `${this.fileSystemOrigin}/api/${this.outputDir}/${filename}`;
   }
 }
