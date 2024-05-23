@@ -2,8 +2,16 @@ import { useState } from "react";
 import { Button } from "../button";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
+import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
+
+type UploadedCsv = {
+  content: string;
+  filename: string;
+  filesize: number;
+  raw: File;
+};
 
 export default function ChatInput(
   props: Pick<
@@ -19,6 +27,7 @@ export default function ChatInput(
   },
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadedCsv, setUploadedCsv] = useState<UploadedCsv>();
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (imageUrl) {
@@ -26,6 +35,13 @@ export default function ChatInput(
         data: { imageUrl: imageUrl },
       });
       setImageUrl(null);
+      return;
+    }
+    if (uploadedCsv) {
+      props.handleSubmit(e, {
+        data: { csvContent: uploadedCsv.content },
+      });
+      setUploadedCsv(undefined);
       return;
     }
     props.handleSubmit(e);
@@ -43,10 +59,28 @@ export default function ChatInput(
     setImageUrl(base64);
   };
 
+  const handleUploadCsvFile = async (file: File) => {
+    const content = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+    setUploadedCsv({
+      content,
+      filename: file.name,
+      filesize: file.size,
+      raw: file,
+    });
+  };
+
   const handleUploadFile = async (file: File) => {
     try {
       if (props.multiModal && file.type.startsWith("image/")) {
         return await handleUploadImageFile(file);
+      }
+      if (props.multiModal && file.type === "text/csv") {
+        return await handleUploadCsvFile(file);
       }
       props.onFileUpload?.(file);
     } catch (error: any) {
@@ -61,6 +95,13 @@ export default function ChatInput(
     >
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
+      )}
+      {uploadedCsv && (
+        <UploadCsvPreview
+          filename={uploadedCsv.filename}
+          filesize={uploadedCsv.filesize}
+          onRemove={() => setUploadedCsv(undefined)}
+        />
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Input

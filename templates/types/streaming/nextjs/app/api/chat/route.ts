@@ -4,7 +4,7 @@ import { ChatMessage, MessageContent, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import { LlamaIndexStream } from "./llamaindex-stream";
+import { DataParserOptions, LlamaIndexStream } from "./llamaindex-stream";
 import { createCallbackManager } from "./stream-helper";
 
 initObservability();
@@ -15,27 +15,42 @@ export const dynamic = "force-dynamic";
 
 const convertMessageContent = (
   textMessage: string,
-  imageUrl: string | undefined,
+  additionalData?: DataParserOptions,
 ): MessageContent => {
-  if (!imageUrl) return textMessage;
-  return [
-    {
-      type: "text",
-      text: textMessage,
-    },
-    {
-      type: "image_url",
-      image_url: {
-        url: imageUrl,
+  if (additionalData?.imageUrl) {
+    return [
+      {
+        type: "text",
+        text: textMessage,
       },
-    },
-  ];
+      {
+        type: "image_url",
+        image_url: {
+          url: additionalData?.imageUrl,
+        },
+      },
+    ];
+  }
+
+  if (additionalData?.csvContent) {
+    const csvContent =
+      "Use the following CSV data:\n" +
+      "```csv\n" +
+      additionalData.csvContent +
+      "\n```";
+    return `${csvContent}\n\n${textMessage}`;
+  }
+
+  return textMessage;
 };
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data: any } = body;
+    const {
+      messages,
+      data,
+    }: { messages: Message[]; data: DataParserOptions | undefined } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -50,10 +65,7 @@ export async function POST(request: NextRequest) {
     const chatEngine = await createChatEngine();
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
-    const userMessageContent = convertMessageContent(
-      userMessage.content,
-      data?.imageUrl,
-    );
+    const userMessageContent = convertMessageContent(userMessage.content, data);
 
     // Init Vercel AI StreamData
     const vercelStreamData = new StreamData();
@@ -73,7 +85,8 @@ export async function POST(request: NextRequest) {
     // Transform LlamaIndex stream to Vercel/AI format
     const stream = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
-        image_url: data?.imageUrl,
+        imageUrl: data?.imageUrl,
+        csvContent: data?.csvContent,
       },
     });
 

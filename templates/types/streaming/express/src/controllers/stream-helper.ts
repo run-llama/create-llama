@@ -17,6 +17,16 @@ export function appendImageData(data: StreamData, imageUrl?: string) {
   });
 }
 
+export function appendCsvData(data: StreamData, csvContent?: string) {
+  if (!csvContent) return;
+  data.appendMessageAnnotation({
+    type: "csv",
+    data: {
+      content: csvContent,
+    },
+  });
+}
+
 export function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],

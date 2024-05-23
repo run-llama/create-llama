@@ -6,6 +6,7 @@ export { type ChatHandler } from "./chat.interface";
 export { ChatInput, ChatMessages };
 
 export enum MessageAnnotationType {
+  CSV = "csv",
   IMAGE = "image",
   SOURCES = "sources",
   EVENTS = "events",
@@ -14,6 +15,10 @@ export enum MessageAnnotationType {
 
 export type ImageData = {
   url: string;
+};
+
+export type CsvData = {
+  content: string;
 };
 
 export type SourceNode = {
@@ -46,7 +51,7 @@ export type ToolData = {
   };
 };
 
-export type AnnotationData = ImageData | SourceData | EventData | ToolData;
+export type AnnotationData = ImageData | CsvData | SourceData | EventData | ToolData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

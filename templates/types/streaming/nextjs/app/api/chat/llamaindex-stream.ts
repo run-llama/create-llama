@@ -13,20 +13,25 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import { appendImageData, appendSourceData } from "./stream-helper";
+import {
+  appendCsvData,
+  appendImageData,
+  appendSourceData,
+} from "./stream-helper";
 
 type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
   | Response;
 
-type ParserOptions = {
-  image_url?: string;
+export type DataParserOptions = {
+  imageUrl?: string;
+  csvContent?: string;
 };
 
 function createParser(
   res: AsyncIterable<LlamaIndexResponse>,
   data: StreamData,
-  opts?: ParserOptions,
+  opts?: DataParserOptions,
 ) {
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
@@ -34,7 +39,8 @@ function createParser(
   let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
     start() {
-      appendImageData(data, opts?.image_url);
+      appendImageData(data, opts?.imageUrl);
+      appendCsvData(data, opts?.csvContent);
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
@@ -72,7 +78,7 @@ export function LlamaIndexStream(
   data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
-    parserOptions?: ParserOptions;
+    parserOptions?: DataParserOptions;
   },
 ): ReadableStream<Uint8Array> {
   return createParser(response, data, opts?.parserOptions)
