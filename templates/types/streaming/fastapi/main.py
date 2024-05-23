@@ -38,10 +38,8 @@ if environment == "dev":
         return RedirectResponse(url="/docs")
 
 
-if os.path.exists("data"):
-    app.mount("/api/data", StaticFiles(directory="data"), name="static")
-
-app.mount("/api/tool-output", StaticFiles(directory="tool-output"), name="static")
+app.mount("/api/files/data", StaticFiles(directory="data"), name="data-static")
+app.mount("/api/files/tool-output", StaticFiles(directory="tool-output"), name="tool-output-static")
 app.include_router(chat_router, prefix="/api/chat")
 
 
