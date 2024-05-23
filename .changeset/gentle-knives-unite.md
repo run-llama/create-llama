@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: implement interpreter tool
+Add interpreter tool for TS using e2b.dev

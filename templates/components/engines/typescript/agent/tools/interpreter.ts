@@ -12,7 +12,7 @@ export type InterpreterParameter = {
 export type InterpreterToolParams = {
   metadata?: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
   apiKey?: string;
-  fileSystemOrigin?: string;
+  fileServerURLPrefix?: string;
 };
 
 export type InterpreterToolOuput = {
@@ -57,22 +57,22 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
 export class InterpreterTool implements BaseTool<InterpreterParameter> {
   private readonly outputDir = "tool-output";
   private apiKey?: string;
-  private fileSystemOrigin?: string;
+  private fileServerURLPrefix?: string;
   metadata: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
   codeInterpreter?: CodeInterpreter;
 
   constructor(params?: InterpreterToolParams) {
     this.metadata = params?.metadata || DEFAULT_META_DATA;
     this.apiKey = params?.apiKey || process.env.E2B_API_KEY;
-    this.fileSystemOrigin =
-      params?.fileSystemOrigin || process.env.E2B_FILESERVER_URL_PREFIX;
+    this.fileServerURLPrefix =
+      params?.fileServerURLPrefix || process.env.E2B_FILESERVER_URL_PREFIX;
 
     if (!this.apiKey) {
       throw new Error(
         "E2B_API_KEY key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key",
       );
     }
-    if (!this.fileSystemOrigin) {
+    if (!this.fileServerURLPrefix) {
       throw new Error(
         "E2B_FILESERVER_URL_PREFIX is required to display file output from sandbox",
       );
@@ -169,6 +169,6 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   }
 
   private getFileUrl(filename: string): string {
-    return `${this.fileSystemOrigin}/api/${this.outputDir}/${filename}`;
+    return `${this.fileServerURLPrefix}/api/${this.outputDir}/${filename}`;
   }
 }

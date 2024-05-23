@@ -37,9 +37,8 @@ if environment == "dev":
     async def redirect_to_docs():
         return RedirectResponse(url="/docs")
 
-
-app.mount("/api/files/data", StaticFiles(directory="data"), name="data-static")
-app.mount("/api/files/tool-output", StaticFiles(directory="tool-output"), name="tool-output-static")
+if os.path.exists("data"):
+    app.mount("/api/files/data", StaticFiles(directory="data"), name="data-static")
 app.include_router(chat_router, prefix="/api/chat")
 
 
