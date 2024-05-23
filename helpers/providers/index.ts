@@ -46,7 +46,7 @@ export async function askModelConfig({
 
   let modelConfig: ModelConfigParams;
   switch (modelProvider) {
-    case "openai":
+    case "llmhub":
       modelConfig = await askLLMHubQuestions({ llmHubKey, askModels });
       break;
     case "ollama":
