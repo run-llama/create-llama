@@ -64,9 +64,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         working-directory: .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: playwright-report-${{ github.run_number }}
+          name: playwright-report
           path: ./playwright-report/
           retention-days: 30
