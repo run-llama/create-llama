@@ -28,15 +28,7 @@ export async function GET(
   }
 
   try {
-<<<<<<< HEAD:templates/types/streaming/nextjs/app/api/files/[...slug]/route.ts
     const filePath = path.join(process.cwd(), folder, path.join(...pathTofile));
-=======
-    let retrivedFolder = "data"; // default folder
-    if (request.url.includes("/api/tool-output/")) {
-      retrivedFolder = "tool-output";
-    }
-    const filePath = path.join(process.cwd(), retrivedFolder, slug);
->>>>>>> 5aaeee0 (refactor: use local file system, use absolute resource url):templates/types/streaming/nextjs/app/api/data/[path]/route.ts
     const blob = await readFile(filePath);
 
     return new NextResponse(blob, {
