@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.8
+
+### Patch Changes
+
+- cd50a33: Add interpreter tool for TS using e2b.dev
+
 ## 0.1.7
 
 ### Patch Changes
