@@ -21,11 +21,11 @@ export async function GET(
   }
 
   try {
-    let retrivedFolder = "data"; // default folder
+    let retrievedFolder = "data"; // default folder
     if (request.url.includes("/api/tool-output/")) {
-      retrivedFolder = "tool-output";
+      retrievedFolder = "tool-output";
     }
-    const filePath = path.join(process.cwd(), retrivedFolder, slug);
+    const filePath = path.join(process.cwd(), retrievedFolder, slug);
     const blob = await readFile(filePath);
 
     return new NextResponse(blob, {
