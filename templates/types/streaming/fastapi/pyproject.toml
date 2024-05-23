@@ -16,6 +16,7 @@ python-dotenv = "^1.0.0"
 aiostream = "^0.5.2"
 llama-index = "0.10.28"
 llama-index-core = "0.10.28"
+cachetools = "^5.3.3"
 
 [build-system]
 requires = ["poetry-core"]

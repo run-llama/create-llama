@@ -25,7 +25,7 @@ def init_ollama():
     from llama_index.llms.ollama import Ollama
     from llama_index.embeddings.ollama import OllamaEmbedding
 
-    base_url = os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434"
+    base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
     Settings.embed_model = OllamaEmbedding(
         base_url=base_url,
         model_name=os.getenv("EMBEDDING_MODEL"),

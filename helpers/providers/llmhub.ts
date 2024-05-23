@@ -1,20 +1,15 @@
 import ciInfo from "ci-info";
+import got from "got";
+import ora from "ora";
+import { red } from "picocolors";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions";
+import { questionHandlers } from "../../questions";
 
-const MODELS = ["gemini-1.5-pro-latest", "gemini-pro", "gemini-pro-vision"];
-type ModelData = {
-  dimensions: number;
-};
-const EMBEDDING_MODELS: Record<string, ModelData> = {
-  "embedding-001": { dimensions: 768 },
-  "text-embedding-004": { dimensions: 768 },
-};
+const LLMHUB_API_URL = "https://llm-server.llmhub.t-systems.net/";
 
-const DEFAULT_MODEL = MODELS[0];
-const DEFAULT_EMBEDDING_MODEL = Object.keys(EMBEDDING_MODELS)[0];
-const DEFAULT_DIMENSIONS = Object.values(EMBEDDING_MODELS)[0].dimensions;
+const DEFAULT_MODEL = "gpt-3.5-turbo";
+const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
 type LLMHubQuestionsParams = {
   apiKey?: string;
@@ -29,12 +24,12 @@ export async function askLLMHubQuestions({
     apiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
-    dimensions: DEFAULT_DIMENSIONS,
+    dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
     isConfigured(): boolean {
       if (config.apiKey) {
         return true;
       }
-      if (process.env["T_SYSTEMS_LLMHUB_API_KEY"]) {
+      if (process.env["LLMHUB_API_KEY"]) {
         return true;
       }
       return false;
@@ -46,12 +41,22 @@ export async function askLLMHubQuestions({
       {
         type: "text",
         name: "key",
-        message:
-          "Please provide your T-System's LLM Hub key (or leave blank to use T_SYSTEMS_LLMHUB_API_KEY env variable):",
+        message: askModels
+          ? "Please provide your LLMHub API key (or leave blank to use LLMHUB_API_KEY env variable):"
+          : "Please provide your LLMHub API key (leave blank to skip):",
+        validate: (value: string) => {
+          if (askModels && !value) {
+            if (process.env.LLMHUB_API_KEY) {
+              return true;
+            }
+            return "LLMHUB_API_KEY env variable is not set - key is required";
+          }
+          return true;
+        },
       },
       questionHandlers,
     );
-    config.apiKey = key || process.env.T_SYSTEMS_LLMHUB_API_KEY;
+    config.apiKey = key || process.env.LLMHUB_API_KEY;
   }
 
   // use default model values in CI or if user should not be asked
@@ -62,7 +67,7 @@ export async function askLLMHubQuestions({
         type: "select",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: MODELS.map(toChoice),
+        choices: await getAvailableModelChoices(false, config.apiKey),
         initial: 0,
       },
       questionHandlers,
@@ -74,14 +79,70 @@ export async function askLLMHubQuestions({
         type: "select",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
+        choices: await getAvailableModelChoices(true, config.apiKey),
         initial: 0,
       },
       questionHandlers,
     );
     config.embeddingModel = embeddingModel;
-    config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
+    config.dimensions = getDimensions(embeddingModel);
   }
 
   return config;
+}
+
+async function getAvailableModelChoices(
+  selectEmbedding: boolean,
+  apiKey?: string,
+) {
+  if (!apiKey) {
+    throw new Error("Need LLMHub key to retrieve model choices");
+  }
+  const isLLMModel = (modelId: string) => {
+    return modelId.startsWith("gemini");
+  };
+
+  const isEmbeddingModel = (modelId: string) => {
+    return modelId.includes("embedding");
+  };
+
+  const spinner = ora("Fetching available models").start();
+  try {
+    const response = await got(`${LLMHUB_API_URL}/models`, {
+      headers: {
+        Authorization: "Bearer " + apiKey,
+      },
+      timeout: 5000,
+      responseType: "json",
+    });
+    const data: any = await response.body;
+    spinner.stop();
+    return data.data
+      .filter((model: any) =>
+        selectEmbedding ? isEmbeddingModel(model.id) : isLLMModel(model.id),
+      )
+      .map((el: any) => {
+        return {
+          title: el.id,
+          value: el.id,
+        };
+      });
+  } catch (error) {
+    spinner.stop();
+    if ((error as any).response?.statusCode === 401) {
+      console.log(
+        red(
+          "Invalid LLMHub API key provided! Please provide a valid key and try again!",
+        ),
+      );
+    } else {
+      console.log(red("Request failed: " + error));
+    }
+    process.exit(1);
+  }
+}
+
+function getDimensions(modelName: string) {
+  // Assuming dimensions similar to OpenAI for simplicity. Update if different.
+  return modelName === "text-embedding-004" ? 768 : 1536;
 }

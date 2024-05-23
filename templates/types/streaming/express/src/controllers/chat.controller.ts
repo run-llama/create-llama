@@ -64,9 +64,8 @@ export const chat = async (req: Request, res: Response) => {
         image_url: data?.imageUrl,
       },
     });
-    const processedStream = stream.pipeThrough(vercelStreamData.stream);
 
-    return streamToResponse(processedStream, res);
+    return streamToResponse(stream, res, {}, vercelStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({

@@ -11,14 +11,16 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "outDir": "./lib",
-    "tsBuildInfoFile": "./lib/.tsbuildinfo"
+    "tsBuildInfoFile": "./lib/.tsbuildinfo",
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": [
     "create-app.ts",
     "index.ts",
     "./helpers",
     "questions.ts",
-    "package.json"
+    "package.json",
+    "types/**/*"
   ],
   "exclude": ["dist"]
 }

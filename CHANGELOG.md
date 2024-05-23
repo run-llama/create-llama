@@ -1,5 +1,15 @@
 # create-llama
 
+## 0.1.7
+
+### Patch Changes
+
+- 260d37a: Add system prompt env variable for TS
+- bbd5b8d: Fix postgres connection leaking issue
+- bb53425: Support HTTP proxies by setting the GLOBAL_AGENT_HTTP_PROXY env variable
+- 69c2e16: Fix streaming for Express
+- 7873bfb: Update Ollama provider to run with the base URL from the environment variable
+
 ## 0.1.6
 
 ### Patch Changes

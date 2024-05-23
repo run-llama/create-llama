@@ -29,14 +29,11 @@ export async function askModelConfig({
         name: "provider",
         message: "Which model provider would you like to use",
         choices: [
-          {
-            title: "OpenAI",
-            value: "openai",
-          },
+          { title: "OpenAI", value: "openai" },
           { title: "Ollama", value: "ollama" },
           { title: "Anthropic", value: "anthropic" },
           { title: "Gemini", value: "gemini" },
-          { title: "T-Systems LLMHub", value: "llmhub" },
+          { title: "T-Systems", value: "t-systems" },
         ],
         initial: 0,
       },
@@ -56,7 +53,7 @@ export async function askModelConfig({
     case "gemini":
       modelConfig = await askGeminiQuestions({ askModels });
       break;
-    case "llmhub":
+    case "t-systems":
       modelConfig = await askLLMHubQuestions({ askModels });
       break;
     default:
