@@ -1,11 +1,11 @@
-const STORAGE_FOLDER = "data";
+const staticFileAPI = "/api/files";
 
-export const getStaticFileDataUrl = (filename: string) => {
+export const getStaticFileDataUrl = (filePath: string) => {
   const isUsingBackend = !!process.env.NEXT_PUBLIC_CHAT_API;
-  const fileUrl = `/api/${STORAGE_FOLDER}/${filename}`;
+  const fileUrl = `${staticFileAPI}/${filePath}`;
   if (isUsingBackend) {
     const backendOrigin = new URL(process.env.NEXT_PUBLIC_CHAT_API!).origin;
-    return `${backendOrigin}/${fileUrl}`;
+    return `${backendOrigin}${fileUrl}`;
   }
   return fileUrl;
 };
