@@ -276,6 +276,12 @@ const getEngineEnvs = (): EnvVar[] => {
         "The number of similar embeddings to return when retrieving documents.",
       value: "3",
     },
+    {
+      name: "STREAM_TIMEOUT",
+      description:
+        "The time in milliseconds to wait for the stream to return a response.",
+      value: "60000",
+    },
   ];
 };
 

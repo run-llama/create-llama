@@ -9,7 +9,7 @@ import {
   LlamaIndexStream,
   convertMessageContent,
 } from "./llamaindex-stream";
-import { createCallbackManager } from "./stream-helper";
+import { createCallbackManager, createStreamTimeout } from "./stream-helper";
 
 initObservability();
 initSettings();
@@ -18,6 +18,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  // Init Vercel AI StreamData and timeout
+  const vercelStreamData = new StreamData();
+  const streamTimeout = createStreamTimeout(vercelStreamData);
+
   try {
     const body = await request.json();
     const {
@@ -39,9 +43,6 @@ export async function POST(request: NextRequest) {
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(userMessage.content, data);
-
-    // Init Vercel AI StreamData
-    const vercelStreamData = new StreamData();
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
@@ -75,5 +76,7 @@ export async function POST(request: NextRequest) {
         status: 500,
       },
     );
+  } finally {
+    clearTimeout(streamTimeout);
   }
 }
