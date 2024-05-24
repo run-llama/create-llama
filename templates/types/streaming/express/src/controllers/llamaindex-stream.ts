@@ -6,6 +6,7 @@ import {
   type AIStreamCallbacksAndOptions,
 } from "ai";
 import {
+  MessageContent,
   Metadata,
   NodeWithScore,
   Response,
@@ -26,6 +27,37 @@ type LlamaIndexResponse =
 export type DataParserOptions = {
   imageUrl?: string;
   csvContent?: string;
+};
+
+export const convertMessageContent = (
+  textMessage: string,
+  additionalData?: DataParserOptions,
+): MessageContent => {
+  if (additionalData?.imageUrl) {
+    return [
+      {
+        type: "text",
+        text: textMessage,
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: additionalData?.imageUrl,
+        },
+      },
+    ];
+  }
+
+  if (additionalData?.csvContent) {
+    const csvContent =
+      "Use the following CSV data:\n" +
+      "```csv\n" +
+      additionalData.csvContent +
+      "\n```";
+    return `${csvContent}\n\n${textMessage}`;
+  }
+
+  return textMessage;
 };
 
 function createParser(

@@ -1,10 +1,14 @@
 import { initObservability } from "@/app/observability";
 import { Message, StreamData, StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent, Settings } from "llamaindex";
+import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import { DataParserOptions, LlamaIndexStream } from "./llamaindex-stream";
+import {
+  DataParserOptions,
+  LlamaIndexStream,
+  convertMessageContent,
+} from "./llamaindex-stream";
 import { createCallbackManager } from "./stream-helper";
 
 initObservability();
@@ -12,37 +16,6 @@ initSettings();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const convertMessageContent = (
-  textMessage: string,
-  additionalData?: DataParserOptions,
-): MessageContent => {
-  if (additionalData?.imageUrl) {
-    return [
-      {
-        type: "text",
-        text: textMessage,
-      },
-      {
-        type: "image_url",
-        image_url: {
-          url: additionalData?.imageUrl,
-        },
-      },
-    ];
-  }
-
-  if (additionalData?.csvContent) {
-    const csvContent =
-      "Use the following CSV data:\n" +
-      "```csv\n" +
-      additionalData.csvContent +
-      "\n```";
-    return `${csvContent}\n\n${textMessage}`;
-  }
-
-  return textMessage;
-};
 
 export async function POST(request: NextRequest) {
   try {

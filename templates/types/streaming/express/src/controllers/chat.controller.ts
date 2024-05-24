@@ -1,41 +1,13 @@
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent, Settings } from "llamaindex";
+import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
-import { DataParserOptions, LlamaIndexStream } from "./llamaindex-stream";
+import {
+  DataParserOptions,
+  LlamaIndexStream,
+  convertMessageContent,
+} from "./llamaindex-stream";
 import { createCallbackManager } from "./stream-helper";
-
-const convertMessageContent = (
-  textMessage: string,
-  additionalData?: DataParserOptions,
-): MessageContent => {
-  console.log({ additionalData });
-  if (additionalData?.imageUrl) {
-    return [
-      {
-        type: "text",
-        text: textMessage,
-      },
-      {
-        type: "image_url",
-        image_url: {
-          url: additionalData?.imageUrl,
-        },
-      },
-    ];
-  }
-
-  if (additionalData?.csvContent) {
-    const csvContent =
-      "Use the following CSV data:\n" +
-      "```csv\n" +
-      additionalData.csvContent +
-      "\n```";
-    return `${csvContent}\n\n${textMessage}`;
-  }
-
-  return textMessage;
-};
 
 export const chat = async (req: Request, res: Response) => {
   try {

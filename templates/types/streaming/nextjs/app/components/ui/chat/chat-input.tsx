@@ -10,7 +10,6 @@ type UploadedCsv = {
   content: string;
   filename: string;
   filesize: number;
-  raw: File;
 };
 
 export default function ChatInput(
@@ -70,16 +69,15 @@ export default function ChatInput(
       content,
       filename: file.name,
       filesize: file.size,
-      raw: file,
     });
   };
 
   const handleUploadFile = async (file: File) => {
     try {
-      if (props.multiModal && file.type.startsWith("image/")) {
+      if (file.type.startsWith("image/")) {
         return await handleUploadImageFile(file);
       }
-      if (props.multiModal && file.type === "text/csv") {
+      if (file.type === "text/csv") {
         return await handleUploadCsvFile(file);
       }
       props.onFileUpload?.(file);

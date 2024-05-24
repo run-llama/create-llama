@@ -48,3 +48,15 @@ e2e/cache
 
 # build artifacts
 create-llama-*.tgz
+
+my-app/
+my-app1/
+my-app2/
+my-app3/
+my-app4/
+my-app5/
+my-app6/
+my-app7/
+my-app8/
+my-app9/
+my-app10/
