@@ -51,7 +51,12 @@ export type ToolData = {
   };
 };
 
-export type AnnotationData = ImageData | CsvData | SourceData | EventData | ToolData;
+export type AnnotationData =
+  | ImageData
+  | CsvData
+  | SourceData
+  | EventData
+  | ToolData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

@@ -8,6 +8,7 @@ import { ChatEvents } from "./chat-events";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import ChatTools from "./chat-tools";
+import CsvContent from "./csv-content";
 import {
   AnnotationData,
   CsvData,
@@ -20,7 +21,6 @@ import {
 } from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
-import CsvContent from "./csv-content";
 
 type ContentDisplayConfig = {
   order: number;

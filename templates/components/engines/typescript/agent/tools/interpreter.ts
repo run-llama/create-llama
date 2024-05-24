@@ -167,18 +167,8 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     }
     return path.join(this.outputDir, filename);
   }
-<<<<<<< HEAD
-<<<<<<< HEAD
 
   private getFileUrl(filename: string): string {
     return `${this.fileServerURLPrefix}/${this.outputDir}/${filename}`;
   }
-=======
->>>>>>> 54f971e (build tool system prompt)
-=======
-
-  private getFileUrl(filename: string): string {
-    return `${this.fileSystemOrigin}/api/tool-output/${filename}`;
-  }
->>>>>>> 5aaeee0 (refactor: use local file system, use absolute resource url)
 }
