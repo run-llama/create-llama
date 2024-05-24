@@ -17,7 +17,12 @@ export default function UploadCsvPreview({
     <div className="p-2 w-80 bg-secondary rounded-lg text-sm relative">
       <div className="flex flex-row items-center gap-2">
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
-          <Image className="h-full w-auto" priority src={SheetIcon} alt="SheetIcon" />
+          <Image
+            className="h-full w-auto"
+            priority
+            src={SheetIcon}
+            alt="SheetIcon"
+          />
         </div>
         <div className="overflow-hidden">
           <div className="truncate font-semibold">
