@@ -2,7 +2,6 @@ import { Check, Copy } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "../button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../hover-card";
-import { getStaticFileDataUrl } from "../lib/url";
 import { SourceData, SourceNode } from "./index";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
 import PdfDialog from "./widgets/PdfDialog";
@@ -33,12 +32,11 @@ type NodeInfo = {
 
 function getNodeInfo(node: SourceNode): NodeInfo {
   if (typeof node.metadata["URL"] === "string") {
-    const url = node.metadata["URL"];
     return {
       id: node.id,
       type: NODE_TYPE.URL,
-      path: url,
-      url,
+      path: node.url,
+      url: node.url,
     };
   }
   if (typeof node.metadata["file_path"] === "string") {
@@ -47,8 +45,8 @@ function getNodeInfo(node: SourceNode): NodeInfo {
     return {
       id: node.id,
       type: NODE_TYPE.FILE,
-      path: node.metadata["file_path"],
-      url: getStaticFileDataUrl(filePath),
+      path: filePath,
+      url: node.url,
     };
   }
 
@@ -125,7 +123,7 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
           <span>{nodeInfo.path}</span>
         </a>
         <Button
-          onClick={() => copyToClipboard(nodeInfo.path!)}
+          onClick={() => copyToClipboard(nodeInfo.url!)}
           size="icon"
           variant="ghost"
           className="h-12 w-12 shrink-0"

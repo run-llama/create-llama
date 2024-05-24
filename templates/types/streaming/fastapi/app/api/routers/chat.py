@@ -1,3 +1,4 @@
+import os
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -38,14 +39,25 @@ class _SourceNodes(BaseModel):
     metadata: Dict[str, Any]
     score: Optional[float]
     text: str
+    url: Optional[str]
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
+        metadata = source_node.node.metadata
+        url = metadata.get("URL")
+        
+        if not url:
+            file_name = metadata.get("file_name")
+            if file_name:
+                file_server_url_prefix = os.getenv("FILESERVER_URL_PREFIX", "")
+                url = f"{file_server_url_prefix}/data/{file_name}"
+
         return cls(
             id=source_node.node.node_id,
-            metadata=source_node.node.metadata,
+            metadata=metadata,
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
+            url=url
         )
 
     @classmethod
