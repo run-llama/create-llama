@@ -1,10 +1,14 @@
 import json
 import asyncio
+import logging
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from llama_index.core.callbacks.base import BaseCallbackHandler
 from llama_index.core.callbacks.schema import CBEventType
 from llama_index.core.tools.types import ToolOutput
 from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 class CallbackEvent(BaseModel):
@@ -72,15 +76,19 @@ class CallbackEvent(BaseModel):
                     }
 
     def to_response(self):
-        match self.event_type:
-            case "retrieve":
-                return self.get_retrieval_message()
-            case "function_call":
-                return self.get_tool_message()
-            case "agent_step":
-                return self.get_agent_tool_response()
-            case _:
-                return None
+        try:
+            match self.event_type:
+                case "retrieve":
+                    return self.get_retrieval_message()
+                case "function_call":
+                    return self.get_tool_message()
+                case "agent_step":
+                    return self.get_agent_tool_response()
+                case _:
+                    return None
+        except Exception as e:
+            logger.error(f"Error in converting event to response: {e}")
+            return None
 
 
 class EventCallbackHandler(BaseCallbackHandler):
