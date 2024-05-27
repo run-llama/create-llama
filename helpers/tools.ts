@@ -90,8 +90,13 @@ export const supportedTools: Tool[] = [
   {
     display: "Code Interpreter",
     name: "interpreter",
-    dependencies: [],
-    supportedFrameworks: ["express", "nextjs"],
+    dependencies: [
+      {
+        name: "e2b_code_interpreter",
+        version: "0.0.7",
+      },
+    ],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
     envVars: [
       {
