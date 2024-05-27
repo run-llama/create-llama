@@ -48,9 +48,11 @@ class _SourceNodes(BaseModel):
         
         if not url:
             file_name = metadata.get("file_name")
-            if file_name:
-                file_server_url_prefix = os.getenv("FILESERVER_URL_PREFIX", "")
-                url = f"{file_server_url_prefix}/data/{file_name}"
+            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+            if not url_prefix:
+                print("Warning: FILESERVER_URL_PREFIX not set in environment variables")
+            if file_name and url_prefix:
+                url = f"{url_prefix}/data/{file_name}"
 
         return cls(
             id=source_node.node.node_id,

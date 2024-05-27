@@ -21,9 +21,14 @@ function getNodeUrl(metadata: Metadata) {
   const url = metadata["URL"];
   if (url) return url;
   const fileName = metadata["file_name"];
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    console.warn(
+      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
+    );
+    return undefined;
+  }
   if (fileName) {
-    const fileServerUrlPrefix = process.env.FILESERVER_URL_PREFIX || "";
-    return `${fileServerUrlPrefix}/data/${fileName}`;
+    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
   }
   return undefined;
 }
