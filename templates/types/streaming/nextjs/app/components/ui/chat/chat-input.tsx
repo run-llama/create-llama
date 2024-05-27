@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CsvData } from ".";
 import { Button } from "../button";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
 import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
+import ChatResources from "./chat-resources";
 import { ChatHandler } from "./chat.interface";
-
-type UploadedCsv = {
-  content: string;
-  filename: string;
-  filesize: number;
-};
 
 export default function ChatInput(
   props: Pick<
@@ -21,10 +17,23 @@ export default function ChatInput(
     | "onFileError"
     | "handleSubmit"
     | "handleInputChange"
-  >,
+  > & {
+    resources: {
+      csv: Array<CsvData>;
+    };
+  },
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploadedCsv, setUploadedCsv] = useState<UploadedCsv>();
+  const [uploadedCsv, setUploadedCsv] = useState<CsvData>();
+  const [inputResources, setInputResources] = useState<
+    Array<CsvData & { selected: boolean }>
+  >([]);
+
+  useEffect(() => {
+    setInputResources(
+      props.resources.csv.map((data) => ({ ...data, selected: true })),
+    );
+  }, [props.resources]);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (imageUrl) {
@@ -34,13 +43,24 @@ export default function ChatInput(
       setImageUrl(null);
       return;
     }
+    // if users upload a new csv file, we will send it to backend
     if (uploadedCsv) {
       props.handleSubmit(e, {
-        data: { csvContent: uploadedCsv.content },
+        data: { uploadedCsv },
       });
       setUploadedCsv(undefined);
       return;
     }
+
+    // if  users upload a new csv file, we can reuse provided csv resources
+    const attachCsv = inputResources.filter((r) => r.selected)[0];
+    if (attachCsv) {
+      props.handleSubmit(e, {
+        data: { uploadedCsv: attachCsv },
+      });
+      return;
+    }
+
     props.handleSubmit(e);
   };
 
@@ -84,11 +104,24 @@ export default function ChatInput(
     }
   };
 
+  const removeResource = (index: number) => {
+    setInputResources((resources) => {
+      const newResources = [...resources];
+      newResources[index].selected = false;
+      return newResources;
+    });
+  };
+
   return (
     <form
       onSubmit={onSubmit}
       className="rounded-xl bg-white p-4 shadow-xl space-y-4"
     >
+      <ChatResources
+        isLoading={props.isLoading}
+        resources={inputResources}
+        removeResource={removeResource}
+      />
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
       )}

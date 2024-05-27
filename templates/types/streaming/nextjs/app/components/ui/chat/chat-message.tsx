@@ -10,7 +10,6 @@ import { ChatSources } from "./chat-sources";
 import ChatTools from "./chat-tools";
 import CsvContent from "./csv-content";
 import {
-  AnnotationData,
   CsvData,
   EventData,
   ImageData,
@@ -18,6 +17,7 @@ import {
   MessageAnnotationType,
   SourceData,
   ToolData,
+  getAnnotationData,
 } from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
@@ -26,13 +26,6 @@ type ContentDisplayConfig = {
   order: number;
   component: JSX.Element | null;
 };
-
-function getAnnotationData<T extends AnnotationData>(
-  annotations: MessageAnnotation[],
-  type: MessageAnnotationType,
-): T[] {
-  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
-}
 
 function ChatMessageContent({
   message,

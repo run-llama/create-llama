@@ -15,6 +15,7 @@ import {
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
 import {
+  UploadedCsv,
   appendCsvData,
   appendImageData,
   appendSourceData,
@@ -26,7 +27,7 @@ type LlamaIndexResponse =
 
 export type DataParserOptions = {
   imageUrl?: string;
-  csvContent?: string;
+  uploadedCsv?: UploadedCsv;
 };
 
 export const convertMessageContent = (
@@ -48,11 +49,11 @@ export const convertMessageContent = (
     ];
   }
 
-  if (additionalData?.csvContent) {
+  if (additionalData?.uploadedCsv) {
     const csvContent =
       "Use the following CSV data:\n" +
       "```csv\n" +
-      additionalData.csvContent +
+      additionalData.uploadedCsv.content +
       "\n```";
     return `${csvContent}\n\n${textMessage}`;
   }
@@ -72,7 +73,7 @@ function createParser(
   return new ReadableStream<string>({
     start() {
       appendImageData(data, opts?.imageUrl);
-      appendCsvData(data, opts?.csvContent);
+      appendCsvData(data, opts?.uploadedCsv);
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();

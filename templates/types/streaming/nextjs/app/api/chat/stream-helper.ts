@@ -17,13 +17,17 @@ export function appendImageData(data: StreamData, imageUrl?: string) {
   });
 }
 
-export function appendCsvData(data: StreamData, csvContent?: string) {
-  if (!csvContent) return;
+export type UploadedCsv = {
+  content: string;
+  filename: string;
+  filesize: number;
+};
+
+export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
+  if (!uploadedCsv) return;
   data.appendMessageAnnotation({
     type: "csv",
-    data: {
-      content: csvContent,
-    },
+    data: uploadedCsv,
   });
 }
 
