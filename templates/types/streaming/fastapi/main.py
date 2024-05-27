@@ -41,8 +41,8 @@ if environment == "dev":
 # Mount the data files to serve the file viewer
 if os.path.exists("data"):
     app.mount("/api/files/data", StaticFiles(directory="data"), name="data-static")
-# Mount the tool output files
-if os.path.exists("config/tools.yaml"):
+# Mount the output files from tools
+if os.path.exists("tool-output"):
     app.mount(
         "/api/files/tool-output",
         StaticFiles(directory="tool-output"),

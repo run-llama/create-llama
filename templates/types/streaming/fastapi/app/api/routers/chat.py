@@ -93,7 +93,13 @@ async def chat(
 
     event_handler = EventCallbackHandler()
     chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
-    response = await chat_engine.astream_chat(last_message_content, messages)
+    try:
+        response = await chat_engine.astream_chat(last_message_content, messages)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in chat engine: {e}",
+        )
 
     async def content_generator():
         # Yield the text response

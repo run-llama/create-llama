@@ -32,11 +32,6 @@ class E2BCodeInterpreter:
         self.api_key = api_key
         self.filesever_url_prefix = filesever_url_prefix
 
-    def code_interpret(
-        self, code_interpreter: CodeInterpreter, code: str
-    ) -> Tuple[List, List]:
-        pass
-
     def get_output_path(self, filename: str) -> str:
         # if output directory doesn't exist, create it
         if not os.path.exists(self.output_dir):
@@ -48,8 +43,12 @@ class E2BCodeInterpreter:
         buffer = base64.b64decode(base64_data)
         output_path = self.get_output_path(filename)
 
-        with open(output_path, "wb") as file:
-            file.write(buffer)
+        try:
+            with open(output_path, "wb") as file:
+                file.write(buffer)
+        except IOError as e:
+            logger.error(f"Failed to write to file {output_path}: {str(e)}")
+            raise e
 
         logger.info(f"Saved file to {output_path}")
 
@@ -89,7 +88,7 @@ class E2BCodeInterpreter:
 
         return output
 
-    def interpret(self, code: str) -> Dict:
+    def interpret(self, code: str) -> E2BToolOutput:
         with CodeInterpreter(api_key=self.api_key) as interpreter:
             logger.info(
                 f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
@@ -106,7 +105,7 @@ class E2BCodeInterpreter:
                     output = E2BToolOutput(
                         is_error=False, logs=exec.logs, results=results
                     )
-            return output.dict()
+            return output
 
 
 def code_interpret(code: str) -> Dict:
@@ -127,7 +126,8 @@ def code_interpret(code: str) -> Dict:
     interpreter = E2BCodeInterpreter(
         api_key=api_key, filesever_url_prefix=filesever_url_prefix
     )
-    return interpreter.interpret(code)
+    output = interpreter.interpret(code)
+    return output.dict()
 
 
 # Specify as functions tools to be loaded by the ToolFactory
