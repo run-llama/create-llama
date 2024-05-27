@@ -38,16 +38,15 @@ if environment == "dev":
         return RedirectResponse(url="/docs")
 
 
+def mount_static_files(directory, path):
+    if os.path.exists(directory):
+        app.mount(path, StaticFiles(directory=directory), name=f"{directory}-static")
+
+
 # Mount the data files to serve the file viewer
-if os.path.exists("data"):
-    app.mount("/api/files/data", StaticFiles(directory="data"), name="data-static")
+mount_static_files("data", "/api/files/data")
 # Mount the output files from tools
-if os.path.exists("tool-output"):
-    app.mount(
-        "/api/files/tool-output",
-        StaticFiles(directory="tool-output"),
-        name="tool-output-static",
-    )
+mount_static_files("tool-output", "/api/files/tool-output")
 
 app.include_router(chat_router, prefix="/api/chat")
 
