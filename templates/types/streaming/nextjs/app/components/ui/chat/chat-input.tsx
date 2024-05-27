@@ -21,9 +21,7 @@ export default function ChatInput(
     | "onFileError"
     | "handleSubmit"
     | "handleInputChange"
-  > & {
-    multiModal?: boolean;
-  },
+  >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploadedCsv, setUploadedCsv] = useState<UploadedCsv>();
