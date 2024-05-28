@@ -159,7 +159,6 @@ export const writeToolsConfig = async (
   tools: Tool[] = [],
   type: ConfigFileType = ConfigFileType.YAML,
 ) => {
-  if (tools.length === 0) return; // no tools selected, no config need
   const configContent: {
     [key in ToolType]: Record<string, any>;
   } = {
