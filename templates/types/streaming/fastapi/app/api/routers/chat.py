@@ -1,4 +1,5 @@
 import os
+import logging
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -50,7 +51,8 @@ class _SourceNodes(BaseModel):
             file_name = metadata.get("file_name")
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
-                print("Warning: FILESERVER_URL_PREFIX not set in environment variables")
+                logger = logging.getLogger("uvicorn")
+                logger.warning("Warning: FILESERVER_URL_PREFIX not set in environment variables")
             if file_name and url_prefix:
                 url = f"{url_prefix}/data/{file_name}"
 
