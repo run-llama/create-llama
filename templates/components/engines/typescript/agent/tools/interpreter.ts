@@ -15,7 +15,7 @@ export type InterpreterToolParams = {
   fileServerURLPrefix?: string;
 };
 
-export type InterpreterToolOuput = {
+export type InterpreterToolOutput = {
   isError: boolean;
   logs: Logs;
   extraResult: InterpreterExtraResult[];
@@ -88,7 +88,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     return this.codeInterpreter;
   }
 
-  public async codeInterpret(code: string): Promise<InterpreterToolOuput> {
+  public async codeInterpret(code: string): Promise<InterpreterToolOutput> {
     console.log(
       `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${code}\n${"=".repeat(50)}`,
     );
@@ -96,7 +96,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     const exec = await interpreter.notebook.execCell(code);
     if (exec.error) console.error("[Code Interpreter error]", exec.error);
     const extraResult = await this.getExtraResult(exec.results[0]);
-    const result: InterpreterToolOuput = {
+    const result: InterpreterToolOutput = {
       isError: !!exec.error,
       logs: exec.logs,
       extraResult,
@@ -104,7 +104,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     return result;
   }
 
-  async call(input: InterpreterParameter): Promise<InterpreterToolOuput> {
+  async call(input: InterpreterParameter): Promise<InterpreterToolOutput> {
     const result = await this.codeInterpret(input.code);
     await this.codeInterpreter?.close();
     return result;
