@@ -13,6 +13,7 @@ from aiostream import stream
 
 chat_router = r = APIRouter()
 
+logger = logging.getLogger("uvicorn")
 
 class _Message(BaseModel):
     role: MessageRole
@@ -51,7 +52,6 @@ class _SourceNodes(BaseModel):
             file_name = metadata.get("file_name")
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
-                logger = logging.getLogger("uvicorn")
                 logger.warning("Warning: FILESERVER_URL_PREFIX not set in environment variables")
             if file_name and url_prefix:
                 url = f"{url_prefix}/data/{file_name}"
