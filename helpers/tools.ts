@@ -90,8 +90,13 @@ export const supportedTools: Tool[] = [
   {
     display: "Code Interpreter",
     name: "interpreter",
-    dependencies: [],
-    supportedFrameworks: ["express", "nextjs"],
+    dependencies: [
+      {
+        name: "e2b_code_interpreter",
+        version: "0.0.7",
+      },
+    ],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
     envVars: [
       {
@@ -154,7 +159,6 @@ export const writeToolsConfig = async (
   tools: Tool[] = [],
   type: ConfigFileType = ConfigFileType.YAML,
 ) => {
-  if (tools.length === 0) return; // no tools selected, no config need
   const configContent: {
     [key in ToolType]: Record<string, any>;
   } = {

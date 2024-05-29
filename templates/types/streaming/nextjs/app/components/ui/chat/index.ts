@@ -28,6 +28,7 @@ export type SourceNode = {
   metadata: Record<string, unknown>;
   score?: number;
   text: string;
+  url?: string;
 };
 
 export type SourceData = {

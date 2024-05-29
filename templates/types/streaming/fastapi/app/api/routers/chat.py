@@ -1,3 +1,5 @@
+import os
+import logging
 from pydantic import BaseModel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -11,6 +13,7 @@ from aiostream import stream
 
 chat_router = r = APIRouter()
 
+logger = logging.getLogger("uvicorn")
 
 class _Message(BaseModel):
     role: MessageRole
@@ -38,14 +41,27 @@ class _SourceNodes(BaseModel):
     metadata: Dict[str, Any]
     score: Optional[float]
     text: str
+    url: Optional[str]
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
+        metadata = source_node.node.metadata
+        url = metadata.get("URL")
+        
+        if not url:
+            file_name = metadata.get("file_name")
+            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+            if not url_prefix:
+                logger.warning("Warning: FILESERVER_URL_PREFIX not set in environment variables")
+            if file_name and url_prefix:
+                url = f"{url_prefix}/data/{file_name}"
+
         return cls(
             id=source_node.node.node_id,
-            metadata=source_node.node.metadata,
+            metadata=metadata,
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
+            url=url
         )
 
     @classmethod
@@ -93,7 +109,13 @@ async def chat(
 
     event_handler = EventCallbackHandler()
     chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
-    response = await chat_engine.astream_chat(last_message_content, messages)
+    try:
+        response = await chat_engine.astream_chat(last_message_content, messages)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in chat engine: {e}",
+        )
 
     async def content_generator():
         # Yield the text response

@@ -43,6 +43,7 @@ export function appendSourceData(
         ...node.node.toMutableJSON(),
         id: node.node.id_,
         score: node.score ?? null,
+        url: getNodeUrl(node.node.metadata),
       })),
     },
   });
