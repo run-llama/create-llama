@@ -10,6 +10,7 @@ export interface ChatResourcesProps {
 }
 
 export default function ChatResources(props: ChatResourcesProps) {
+  if (!props.resources.length) return null;
   return (
     <div className="flex gap-4 text-sm">
       {props.resources.map((data, index) => {

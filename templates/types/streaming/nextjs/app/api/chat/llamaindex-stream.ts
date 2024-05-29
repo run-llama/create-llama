@@ -34,19 +34,21 @@ export const convertMessageContent = (
   textMessage: string,
   additionalData?: DataParserOptions,
 ): MessageContent => {
+  if (!additionalData) return textMessage;
+  const content: MessageContent = [
+    {
+      type: "text",
+      text: textMessage,
+    }
+  ];
   if (additionalData?.imageUrl) {
-    return [
-      {
-        type: "text",
-        text: textMessage,
-      },
+    content.push(
       {
         type: "image_url",
         image_url: {
           url: additionalData?.imageUrl,
         },
-      },
-    ];
+      });
   }
 
   if (additionalData?.uploadedCsv) {
@@ -55,10 +57,13 @@ export const convertMessageContent = (
       "```csv\n" +
       additionalData.uploadedCsv.content +
       "\n```";
-    return `${csvContent}\n\n${textMessage}`;
+    content.push({
+      type: "text",
+      text: `${csvContent}\n\n${textMessage}`
+    });
   }
 
-  return textMessage;
+  return content;
 };
 
 function createParser(
