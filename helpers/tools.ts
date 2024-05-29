@@ -117,6 +117,50 @@ export const supportedTools: Tool[] = [
       },
     ],
   },
+  {
+    display: "OpenAPI",
+    name: "openapi.OpenAPIToolSpec",
+    dependencies: [
+      {
+        name: "llama-index-tools-openapi",
+        version: "0.1.3",
+      },
+      {
+        name: "jsonschema",
+        version: "^4.22.0",
+      },
+    ],
+    config: {
+      url: "The URL of the OpenAPI schema",
+    },
+    supportedFrameworks: ["fastapi"],
+    type: ToolType.LLAMAHUB,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for openapi tool.",
+        value: `You can use the provided OpenAPI schema to see the available endpoints to make requests with the HTTP Request tool.`,
+      },
+    ],
+  },
+  {
+    display: "HTTP Request",
+    name: "requests.RequestsToolSpec",
+    dependencies: [],
+    supportedFrameworks: ["fastapi"],
+    type: ToolType.LLAMAHUB,
+    config: {
+      domain_headers:
+        "A mapping of domain to its headers. Example: example.com: {}",
+    },
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for openapi tool.",
+        value: `You can make HTTP requests to the provided domain.`,
+      },
+    ],
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {
