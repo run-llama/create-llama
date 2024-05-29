@@ -12,6 +12,7 @@ export default function ChatSection() {
     handleInputChange,
     reload,
     stop,
+    append,
   } = useChat({
     api: process.env.NEXT_PUBLIC_CHAT_API,
     headers: {
@@ -31,6 +32,7 @@ export default function ChatSection() {
         isLoading={isLoading}
         reload={reload}
         stop={stop}
+        append={append}
       />
       <ChatInput
         input={input}
