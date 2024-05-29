@@ -17,18 +17,20 @@ export function appendImageData(data: StreamData, imageUrl?: string) {
   });
 }
 
-export type UploadedCsv = {
-  content: string;
-  filename: string;
-  filesize: number;
-};
-
-export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
-  if (!uploadedCsv) return;
-  data.appendMessageAnnotation({
-    type: "csv",
-    data: uploadedCsv,
-  });
+function getNodeUrl(metadata: Metadata) {
+  const url = metadata["URL"];
+  if (url) return url;
+  const fileName = metadata["file_name"];
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    console.warn(
+      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
+    );
+    return undefined;
+  }
+  if (fileName) {
+    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
+  }
+  return undefined;
 }
 
 export function appendSourceData(
@@ -118,4 +120,18 @@ export function createCallbackManager(stream: StreamData) {
   });
 
   return callbackManager;
+}
+
+export type UploadedCsv = {
+  content: string;
+  filename: string;
+  filesize: number;
+};
+
+export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
+  if (!uploadedCsv) return;
+  data.appendMessageAnnotation({
+    type: "csv",
+    data: uploadedCsv,
+  });
 }
