@@ -1,7 +1,8 @@
 import os
 import yaml
+import json
 import importlib
-
+from cachetools import cached, LRUCache
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 from llama_index.core.tools.function_tool import FunctionTool
 
@@ -19,6 +20,14 @@ class ToolFactory:
     }
 
     @staticmethod
+    @cached(
+        LRUCache(maxsize=100),
+        key=lambda tool_type, tool_name, config: (
+            tool_type,
+            tool_name,
+            json.dumps(config, sort_keys=True),
+        ),
+    )
     def load_tools(tool_type: str, tool_name: str, config: dict) -> list[FunctionTool]:
         source_package = ToolFactory.TOOL_SOURCE_PACKAGE_MAP[tool_type]
         try:
