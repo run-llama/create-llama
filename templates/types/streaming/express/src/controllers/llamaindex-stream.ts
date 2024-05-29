@@ -39,16 +39,15 @@ export const convertMessageContent = (
     {
       type: "text",
       text: textMessage,
-    }
+    },
   ];
   if (additionalData?.imageUrl) {
-    content.push(
-      {
-        type: "image_url",
-        image_url: {
-          url: additionalData?.imageUrl,
-        },
-      });
+    content.push({
+      type: "image_url",
+      image_url: {
+        url: additionalData?.imageUrl,
+      },
+    });
   }
 
   if (additionalData?.uploadedCsv) {
@@ -59,7 +58,7 @@ export const convertMessageContent = (
       "\n```";
     content.push({
       type: "text",
-      text: `${csvContent}\n\n${textMessage}`
+      text: `${csvContent}\n\n${textMessage}`,
     });
   }
 
