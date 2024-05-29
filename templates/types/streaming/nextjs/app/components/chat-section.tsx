@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { ChatInput, ChatMessages, getInputResources } from "./ui/chat";
+import { ChatInput, ChatMessages } from "./ui/chat";
 
 export default function ChatSection() {
   const {
@@ -37,7 +37,7 @@ export default function ChatSection() {
         handleSubmit={handleSubmit}
         handleInputChange={handleInputChange}
         isLoading={isLoading}
-        resources={getInputResources(messages)}
+        messages={messages}
       />
     </div>
   );

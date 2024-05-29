@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CsvData } from ".";
+import { CsvData, getInputResources } from ".";
 import { Button } from "../button";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
@@ -17,11 +17,8 @@ export default function ChatInput(
     | "onFileError"
     | "handleSubmit"
     | "handleInputChange"
-  > & {
-    resources: {
-      csv: Array<CsvData>;
-    };
-  },
+    | "messages"
+  >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploadedCsv, setUploadedCsv] = useState<CsvData>();
@@ -30,10 +27,11 @@ export default function ChatInput(
   >([]);
 
   useEffect(() => {
+    const resources = getInputResources(props.messages);
     setInputResources(
-      props.resources.csv.map((data) => ({ ...data, selected: true })),
+      resources.csv.map((data) => ({ ...data, selected: true })),
     );
-  }, [props.resources]);
+  }, [props.messages]);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (imageUrl) {
