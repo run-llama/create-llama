@@ -50,7 +50,7 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
                 )
             spec = yaml.safe_load(response.text)
         elif uri.startswith("file"):
-            filepath = uri[7:]  # Remove the 'file://' scheme
+            filepath = urlparse(uri).path
             with open(filepath, "r") as file:
                 spec = yaml.safe_load(file)
         else:
