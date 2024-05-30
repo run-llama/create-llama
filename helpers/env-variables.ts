@@ -185,6 +185,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Dimension of the embedding model to use.",
       value: modelConfig.dimensions.toString(),
     },
+    {
+      name: "CONVERSATION_STARTERS",
+      description: "The questions to help users get started (multi-line).",
+      value:
+        '"\nWhat is the weather today?\nWhat is the capital of France?\nWhat is the largest mammal in the world?\nWhat is the largest planet in the solar system?\n"',
+    },
     ...(modelConfig.provider === "openai"
       ? [
           {
@@ -264,14 +270,6 @@ const getFrameworkEnvs = (
         },
       ],
     );
-  }
-  if (framework === "nextjs") {
-    result.push({
-      name: "NEXT_PUBLIC_CONVERSATION_STARTERS",
-      description: "The questions to help users get started (multi-line).",
-      value:
-        '"\nWhat is the weather today?\nWhat is the capital of France?\nWhat is the largest mammal in the world?\nWhat is the largest planet in the solar system?\n"',
-    });
   }
   return result;
 };

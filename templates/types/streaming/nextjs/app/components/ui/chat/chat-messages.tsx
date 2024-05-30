@@ -5,6 +5,7 @@ import { Button } from "../button";
 import ChatActions from "./chat-actions";
 import ChatMessage from "./chat-message";
 import { ChatHandler } from "./chat.interface";
+import { useConfig } from "./use-config";
 
 export default function ChatMessages(
   props: Pick<
@@ -12,6 +13,7 @@ export default function ChatMessages(
     "messages" | "isLoading" | "reload" | "stop" | "append"
   >,
 ) {
+  const { starterQuestions } = useConfig();
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
   const messageLength = props.messages.length;
   const lastMessage = props.messages[messageLength - 1];
@@ -33,9 +35,6 @@ export default function ChatMessages(
   // that stream response is not yet received from the server,
   // so we show a loading indicator to give a better UX.
   const isPending = props.isLoading && !isLastMessageFromAssistant;
-
-  const starterQuestions =
-    process.env.NEXT_PUBLIC_CONVERSATION_STARTERS?.trim().split("\n") || [];
 
   useEffect(() => {
     scrollToBottom();
@@ -71,7 +70,7 @@ export default function ChatMessages(
           showStop={showStop}
         />
       </div>
-      {!messageLength && starterQuestions.length && props.append && (
+      {!messageLength && starterQuestions?.length && props.append && (
         <div className="absolute bottom-6 left-0 w-full">
           <div className="grid grid-cols-2 gap-2 mx-20">
             {starterQuestions.map((question, i) => (
