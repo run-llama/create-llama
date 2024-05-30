@@ -2,8 +2,10 @@
 
 import { useChat } from "ai/react";
 import { ChatInput, ChatMessages } from "./ui/chat";
+import { useConfig } from "./ui/chat/use-config";
 
 export default function ChatSection() {
+  const { chatAPI } = useConfig();
   const {
     messages,
     input,
@@ -14,7 +16,7 @@ export default function ChatSection() {
     stop,
     append,
   } = useChat({
-    api: process.env.NEXT_PUBLIC_CHAT_API,
+    api: chatAPI,
     headers: {
       "Content-Type": "application/json", // using JSON because of vercel/ai 2.2.26
     },
