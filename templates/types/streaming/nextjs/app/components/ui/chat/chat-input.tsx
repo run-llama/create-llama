@@ -115,11 +115,13 @@ export default function ChatInput(
       onSubmit={onSubmit}
       className="rounded-xl bg-white p-4 shadow-xl space-y-4"
     >
-      <ChatResources
-        isLoading={props.isLoading}
-        resources={inputResources}
-        removeResource={removeResource}
-      />
+      {!uploadedCsv && (
+        <ChatResources
+          isLoading={props.isLoading}
+          resources={inputResources}
+          removeResource={removeResource}
+        />
+      )}
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
       )}
