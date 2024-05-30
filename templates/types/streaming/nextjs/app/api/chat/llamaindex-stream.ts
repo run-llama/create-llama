@@ -6,6 +6,7 @@ import {
   type AIStreamCallbacksAndOptions,
 } from "ai";
 import {
+  MessageContent,
   Metadata,
   NodeWithScore,
   Response,
@@ -13,20 +14,61 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import { appendImageData, appendSourceData } from "./stream-helper";
+import {
+  UploadedCsv,
+  appendCsvData,
+  appendImageData,
+  appendSourceData,
+} from "./stream-helper";
 
 type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
   | Response;
 
-type ParserOptions = {
-  image_url?: string;
+export type DataParserOptions = {
+  imageUrl?: string;
+  uploadedCsv?: UploadedCsv;
+};
+
+export const convertMessageContent = (
+  textMessage: string,
+  additionalData?: DataParserOptions,
+): MessageContent => {
+  if (!additionalData) return textMessage;
+  const content: MessageContent = [
+    {
+      type: "text",
+      text: textMessage,
+    },
+  ];
+  if (additionalData?.imageUrl) {
+    content.push({
+      type: "image_url",
+      image_url: {
+        url: additionalData?.imageUrl,
+      },
+    });
+  }
+
+  if (additionalData?.uploadedCsv) {
+    const csvContent =
+      "Use the following CSV data:\n" +
+      "```csv\n" +
+      additionalData.uploadedCsv.content +
+      "\n```";
+    content.push({
+      type: "text",
+      text: `${csvContent}\n\n${textMessage}`,
+    });
+  }
+
+  return content;
 };
 
 function createParser(
   res: AsyncIterable<LlamaIndexResponse>,
   data: StreamData,
-  opts?: ParserOptions,
+  opts?: DataParserOptions,
 ) {
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
@@ -34,7 +76,8 @@ function createParser(
   let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
     start() {
-      appendImageData(data, opts?.image_url);
+      appendImageData(data, opts?.imageUrl);
+      appendCsvData(data, opts?.uploadedCsv);
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
@@ -72,7 +115,7 @@ export function LlamaIndexStream(
   data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
-    parserOptions?: ParserOptions;
+    parserOptions?: DataParserOptions;
   },
 ): ReadableStream<Uint8Array> {
   return createParser(response, data, opts?.parserOptions)

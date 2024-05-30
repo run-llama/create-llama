@@ -82,6 +82,15 @@ export function appendToolData(
   });
 }
 
+export function createStreamTimeout(stream: StreamData) {
+  const timeout = Number(process.env.STREAM_TIMEOUT ?? 1000 * 60 * 5); // default to 5 minutes
+  const t = setTimeout(() => {
+    appendEventData(stream, `Stream timed out after ${timeout / 1000} seconds`);
+    stream.close();
+  }, timeout);
+  return t;
+}
+
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
@@ -111,4 +120,18 @@ export function createCallbackManager(stream: StreamData) {
   });
 
   return callbackManager;
+}
+
+export type UploadedCsv = {
+  content: string;
+  filename: string;
+  filesize: number;
+};
+
+export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
+  if (!uploadedCsv) return;
+  data.appendMessageAnnotation({
+    type: "csv",
+    data: uploadedCsv,
+  });
 }

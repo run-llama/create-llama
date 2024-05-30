@@ -8,14 +8,16 @@ import { ChatEvents } from "./chat-events";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import ChatTools from "./chat-tools";
+import CsvContent from "./csv-content";
 import {
-  AnnotationData,
+  CsvData,
   EventData,
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
   SourceData,
   ToolData,
+  getAnnotationData,
 } from "./index";
 import Markdown from "./markdown";
 import { useCopyToClipboard } from "./use-copy-to-clipboard";
@@ -24,13 +26,6 @@ type ContentDisplayConfig = {
   order: number;
   component: JSX.Element | null;
 };
-
-function getAnnotationData<T extends AnnotationData>(
-  annotations: MessageAnnotation[],
-  type: MessageAnnotationType,
-): T[] {
-  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
-}
 
 function ChatMessageContent({
   message,
@@ -45,6 +40,10 @@ function ChatMessageContent({
   const imageData = getAnnotationData<ImageData>(
     annotations,
     MessageAnnotationType.IMAGE,
+  );
+  const csvData = getAnnotationData<CsvData>(
+    annotations,
+    MessageAnnotationType.CSV,
   );
   const eventData = getAnnotationData<EventData>(
     annotations,
@@ -61,15 +60,19 @@ function ChatMessageContent({
 
   const contents: ContentDisplayConfig[] = [
     {
-      order: -3,
+      order: -4,
       component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
     },
     {
-      order: -2,
+      order: -3,
       component:
         eventData.length > 0 ? (
           <ChatEvents isLoading={isLoading} data={eventData} />
         ) : null,
+    },
+    {
+      order: -2,
+      component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
     },
     {
       order: -1,

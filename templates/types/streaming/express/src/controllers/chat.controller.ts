@@ -1,32 +1,23 @@
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage, MessageContent, Settings } from "llamaindex";
+import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
-import { LlamaIndexStream } from "./llamaindex-stream";
-import { createCallbackManager } from "./stream-helper";
-
-const convertMessageContent = (
-  textMessage: string,
-  imageUrl: string | undefined,
-): MessageContent => {
-  if (!imageUrl) return textMessage;
-  return [
-    {
-      type: "text",
-      text: textMessage,
-    },
-    {
-      type: "image_url",
-      image_url: {
-        url: imageUrl,
-      },
-    },
-  ];
-};
+import {
+  DataParserOptions,
+  LlamaIndexStream,
+  convertMessageContent,
+} from "./llamaindex-stream";
+import { createCallbackManager, createStreamTimeout } from "./stream-helper";
 
 export const chat = async (req: Request, res: Response) => {
+  // Init Vercel AI StreamData and timeout
+  const vercelStreamData = new StreamData();
+  const streamTimeout = createStreamTimeout(vercelStreamData);
   try {
-    const { messages, data }: { messages: Message[]; data: any } = req.body;
+    const {
+      messages,
+      data,
+    }: { messages: Message[]; data: DataParserOptions | undefined } = req.body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return res.status(400).json({
@@ -38,13 +29,7 @@ export const chat = async (req: Request, res: Response) => {
     const chatEngine = await createChatEngine();
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
-    const userMessageContent = convertMessageContent(
-      userMessage.content,
-      data?.imageUrl,
-    );
-
-    // Init Vercel AI StreamData
-    const vercelStreamData = new StreamData();
+    const userMessageContent = convertMessageContent(userMessage.content, data);
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
@@ -61,7 +46,8 @@ export const chat = async (req: Request, res: Response) => {
     // Return a stream, which can be consumed by the Vercel/AI client
     const stream = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
-        image_url: data?.imageUrl,
+        imageUrl: data?.imageUrl,
+        uploadedCsv: data?.uploadedCsv,
       },
     });
 
@@ -71,5 +57,7 @@ export const chat = async (req: Request, res: Response) => {
     return res.status(500).json({
       detail: (error as Error).message,
     });
+  } finally {
+    clearTimeout(streamTimeout);
   }
 };
