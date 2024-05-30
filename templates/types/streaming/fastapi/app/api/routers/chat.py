@@ -179,10 +179,8 @@ async def chat_request(
 
 @r.get("/config")
 async def chat_config() -> _ChatConfig:
+    starter_questions = None
     conversation_starters = os.getenv("CONVERSATION_STARTERS")
-    starter_questions = (
-        conversation_starters.strip().split("\n") if conversation_starters else None
-    )
-    return {
-        "starterQuestions": starter_questions,
-    }
+    if conversation_starters and conversation_starters.strip():
+        starter_questions = conversation_starters.strip().split("\n")
+    return _ChatConfig(starterQuestions=starter_questions)
