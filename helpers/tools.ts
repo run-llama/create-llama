@@ -118,8 +118,8 @@ export const supportedTools: Tool[] = [
     ],
   },
   {
-    display: "OpenAPI",
-    name: "openapi.OpenAPIToolSpec",
+    display: "OpenAPI action",
+    name: "openapi_action.OpenAPIActionToolSpec",
     dependencies: [
       {
         name: "llama-index-tools-openapi",
@@ -129,35 +129,21 @@ export const supportedTools: Tool[] = [
         name: "jsonschema",
         version: "^4.22.0",
       },
-    ],
-    config: {
-      url: "The URL of the OpenAPI schema",
-    },
-    supportedFrameworks: ["fastapi"],
-    type: ToolType.LLAMAHUB,
-    envVars: [
       {
-        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for openapi tool.",
-        value: `You can use the provided OpenAPI schema to see the available endpoints to make requests with the HTTP Request tool.`,
+        name: "llama-index-tools-requests",
+        version: "0.1.3",
       },
     ],
-  },
-  {
-    display: "HTTP Request",
-    name: "requests.RequestsToolSpec",
-    dependencies: [],
-    supportedFrameworks: ["fastapi"],
-    type: ToolType.LLAMAHUB,
     config: {
-      domain_headers:
-        "A mapping of domain to its headers. Example: example.com: {}",
+      openapi_uri: "The URL or file path of the OpenAPI schema",
     },
+    supportedFrameworks: ["fastapi"],
+    type: ToolType.LOCAL,
     envVars: [
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for openapi tool.",
-        value: `You can make HTTP requests to the provided domain.`,
+        description: "System prompt for openapi action tool.",
+        value: `You are an OpenAPI action agent. You help users to make requests to the provided OpenAPI schema.`,
       },
     ],
   },
