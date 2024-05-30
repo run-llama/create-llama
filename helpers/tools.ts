@@ -143,7 +143,8 @@ export const supportedTools: Tool[] = [
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
         description: "System prompt for openapi action tool.",
-        value: `You are an OpenAPI action agent. You help users to make requests to the provided OpenAPI schema.`,
+        value:
+          "You are an OpenAPI action agent. You help users to make requests to the provided OpenAPI schema.",
       },
     ],
   },

@@ -1,4 +1,3 @@
-import inspect
 from typing import Dict, List, Tuple
 from llama_index.tools.openapi import OpenAPIToolSpec
 from llama_index.tools.requests import RequestsToolSpec
@@ -43,17 +42,30 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
         if uri.startswith("http"):
             import requests
 
-            response = requests.get(uri).text
-            spec = yaml.safe_load(response)
+            response = requests.get(uri)
+            if response.status_code != 200:
+                raise ValueError(
+                    "Could not initialize OpenAPIActionToolSpec: "
+                    f"Failed to load OpenAPI spec from {uri}, status code: {response.status_code}"
+                )
+            spec = yaml.safe_load(response.text)
         elif uri.startswith("file"):
             filepath = uri[7:]  # Remove the 'file://' scheme
             with open(filepath, "r") as file:
                 spec = yaml.safe_load(file)
         else:
             raise ValueError(
-                "Could not initialize OpenAPIActionToolSpec because invalid OpenAPI URI provided. "
+                "Could not initialize OpenAPIActionToolSpec: Invalid OpenAPI URI provided. "
                 "Only HTTP and file path are supported."
             )
         # Add the servers to the whitelist
-        servers = [urlparse(server["url"]).netloc for server in spec.get("servers", [])]
+        try:
+            servers = [
+                urlparse(server["url"]).netloc for server in spec.get("servers", [])
+            ]
+        except KeyError as e:
+            raise ValueError(
+                "Could not initialize OpenAPIActionToolSpec: Invalid OpenAPI spec provided. "
+                "Could not get `servers` from the spec."
+            ) from e
         return spec, servers
