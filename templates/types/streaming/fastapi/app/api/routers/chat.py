@@ -15,6 +15,7 @@ chat_router = r = APIRouter()
 
 logger = logging.getLogger("uvicorn")
 
+
 class _Message(BaseModel):
     role: MessageRole
     content: str
@@ -47,12 +48,14 @@ class _SourceNodes(BaseModel):
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
         url = metadata.get("URL")
-        
+
         if not url:
             file_name = metadata.get("file_name")
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
-                logger.warning("Warning: FILESERVER_URL_PREFIX not set in environment variables")
+                logger.warning(
+                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
+                )
             if file_name and url_prefix:
                 url = f"{url_prefix}/data/{file_name}"
 
@@ -61,7 +64,7 @@ class _SourceNodes(BaseModel):
             metadata=metadata,
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
-            url=url
+            url=url,
         )
 
     @classmethod
@@ -168,3 +171,14 @@ async def chat_request(
         result=_Message(role=MessageRole.ASSISTANT, content=response.response),
         nodes=_SourceNodes.from_source_nodes(response.source_nodes),
     )
+
+
+@r.get("/config")
+async def chat_config():
+    conversation_starters = os.getenv("CONVERSATION_STARTERS")
+    starter_questions = (
+        conversation_starters.strip().split("\n") if conversation_starters else None
+    )
+    return {
+        "starterQuestions": starter_questions,
+    }
