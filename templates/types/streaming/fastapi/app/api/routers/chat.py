@@ -77,6 +77,10 @@ class _Result(BaseModel):
     nodes: List[_SourceNodes]
 
 
+class _ChatConfig(BaseModel):
+    starterQuestions: Optional[List[str]]
+
+
 async def parse_chat_data(data: _ChatData) -> Tuple[str, List[ChatMessage]]:
     # check preconditions and get last message
     if len(data.messages) == 0:
@@ -174,7 +178,7 @@ async def chat_request(
 
 
 @r.get("/config")
-async def chat_config():
+async def chat_config() -> _ChatConfig:
     conversation_starters = os.getenv("CONVERSATION_STARTERS")
     starter_questions = (
         conversation_starters.strip().split("\n") if conversation_starters else None
