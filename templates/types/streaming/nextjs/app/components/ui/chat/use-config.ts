@@ -7,7 +7,7 @@ export interface ChatConfig {
 }
 
 export function useConfig() {
-  const API_ROUTE = "/api/config";
+  const API_ROUTE = "/api/chat/config";
   const [config, setConfig] = useState<ChatConfig>({});
 
   const configAPI = useMemo(() => {
