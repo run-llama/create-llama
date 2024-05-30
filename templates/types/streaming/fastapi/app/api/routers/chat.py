@@ -1,6 +1,7 @@
 import os
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine
@@ -78,7 +79,21 @@ class _Result(BaseModel):
 
 
 class _ChatConfig(BaseModel):
-    starterQuestions: Optional[List[str]]
+    starter_questions: Optional[List[str]] = Field(
+        default=None,
+        description="List of starter questions",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "starterQuestions": [
+                    "What standards for letters exist?",
+                    "What are the requirements for a letter to be considered a letter?",
+                ]
+            }
+        }
+        alias_generator = to_camel
 
 
 async def parse_chat_data(data: _ChatData) -> Tuple[str, List[ChatMessage]]:
