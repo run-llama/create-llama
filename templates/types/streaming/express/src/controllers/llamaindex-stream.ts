@@ -27,7 +27,7 @@ type LlamaIndexResponse =
 
 export type DataParserOptions = {
   imageUrl?: string;
-  uploadedCsv?: UploadedCsv;
+  csvFiles?: UploadedCsv[];
 };
 
 export const convertMessageContent = (
@@ -50,12 +50,12 @@ export const convertMessageContent = (
     });
   }
 
-  if (additionalData?.uploadedCsv) {
+  if (additionalData?.csvFiles?.length) {
+    const rawContents = additionalData.csvFiles.map((csv) => {
+      return "```csv\n" + csv.content + "\n```";
+    });
     const csvContent =
-      "Use the following CSV data:\n" +
-      "```csv\n" +
-      additionalData.uploadedCsv.content +
-      "\n```";
+      "Use data from following CSV raw contents:\n" + rawContents.join("\n\n");
     content.push({
       type: "text",
       text: `${csvContent}\n\n${textMessage}`,
@@ -77,7 +77,7 @@ function createParser(
   return new ReadableStream<string>({
     start() {
       appendImageData(data, opts?.imageUrl);
-      appendCsvData(data, opts?.uploadedCsv);
+      appendCsvData(data, opts?.csvFiles);
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();

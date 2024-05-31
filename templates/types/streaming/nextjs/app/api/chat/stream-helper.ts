@@ -126,12 +126,15 @@ export type UploadedCsv = {
   content: string;
   filename: string;
   filesize: number;
+  id: string;
 };
 
-export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
-  if (!uploadedCsv) return;
+export function appendCsvData(data: StreamData, csvFiles?: UploadedCsv[]) {
+  if (!csvFiles) return;
   data.appendMessageAnnotation({
     type: "csv",
-    data: uploadedCsv,
+    data: {
+      csvFiles,
+    },
   });
 }

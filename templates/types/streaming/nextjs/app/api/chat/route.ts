@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const stream = LlamaIndexStream(response, vercelStreamData, {
       parserOptions: {
         imageUrl: data?.imageUrl,
-        uploadedCsv: data?.uploadedCsv,
+        csvFiles: data?.csvFiles,
       },
     });
 

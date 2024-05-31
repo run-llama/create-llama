@@ -1,4 +1,4 @@
-import { JSONValue, Message } from "ai";
+import { JSONValue } from "ai";
 import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 
@@ -17,10 +17,15 @@ export type ImageData = {
   url: string;
 };
 
-export type CsvData = {
+export type UploadedCsv = {
   content: string;
   filename: string;
   filesize: number;
+  id: string;
+};
+
+export type CsvData = {
+  csvFiles: UploadedCsv[];
 };
 
 export type SourceNode = {
@@ -72,32 +77,3 @@ export function getAnnotationData<T extends AnnotationData>(
 ): T[] {
   return annotations.filter((a) => a.type === type).map((a) => a.data as T);
 }
-
-// this function is used to get the additional resources for a message
-// it filters the annotations of a message and returns the unique resources
-// currently only CSV resources are supported
-export const getInputResources = (
-  messages: Message[],
-): {
-  csv: Array<CsvData>;
-} => {
-  const csvResources: CsvData[] = [];
-  messages.forEach((message) => {
-    if (message.annotations) {
-      const csvData = getAnnotationData<CsvData>(
-        message.annotations as MessageAnnotation[],
-        MessageAnnotationType.CSV,
-      );
-      csvData.forEach((data) => {
-        if (
-          csvResources.findIndex((r) => r.filename === data.filename) === -1
-        ) {
-          csvResources.push(data);
-        }
-      });
-    }
-  });
-  return {
-    csv: csvResources,
-  };
-};
