@@ -4,13 +4,13 @@ import { Message } from "ai";
 import { useEffect, useMemo, useState } from "react";
 import {
   CsvData,
+  CsvFile,
   MessageAnnotation,
   MessageAnnotationType,
-  UploadedCsv,
   getAnnotationData,
 } from ".";
 
-interface FrontendCSVData extends UploadedCsv {
+interface FrontendCSVData extends CsvFile {
   type: "available" | "new_upload";
 }
 
@@ -27,7 +27,7 @@ export function useCsv(messages: Message[]) {
     setAvailableFiles(items.map((data) => ({ ...data, type: "available" })));
   }, [messages]);
 
-  const csvEqual = (a: UploadedCsv, b: UploadedCsv) => {
+  const csvEqual = (a: CsvFile, b: CsvFile) => {
     if (a.id === b.id) return true;
     if (a.filename === b.filename && a.filesize === b.filesize) return true;
     return false;
@@ -35,8 +35,8 @@ export function useCsv(messages: Message[]) {
 
   // Get available csv files from annotations chat history
   // returns the unique csv files by id
-  const getAvailableCsvFiles = (messages: Message[]): Array<UploadedCsv> => {
-    const docHash: Record<string, UploadedCsv> = {};
+  const getAvailableCsvFiles = (messages: Message[]): Array<CsvFile> => {
+    const docHash: Record<string, CsvFile> = {};
     messages.forEach((message) => {
       if (message.annotations) {
         const csvData = getAnnotationData<CsvData>(
@@ -55,7 +55,7 @@ export function useCsv(messages: Message[]) {
     return Object.values(docHash);
   };
 
-  const uploadNew = (file: UploadedCsv) => {
+  const uploadNew = (file: CsvFile) => {
     const existedCsv = files.find((f) => csvEqual(f, file));
     if (!existedCsv) {
       setUploadedFiles((prev) => [...prev, { ...file, type: "new_upload" }]);

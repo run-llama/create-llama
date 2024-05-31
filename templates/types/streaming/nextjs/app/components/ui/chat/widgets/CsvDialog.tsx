@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { UploadedCsv } from "..";
+import { CsvFile } from "..";
 import SheetIcon from "../../../ui/icons/sheet.svg";
 import { Button } from "../../button";
 import {
@@ -13,7 +13,7 @@ import {
 } from "../../drawer";
 
 export interface CsvDialogProps {
-  csv: UploadedCsv;
+  csv: CsvFile;
 }
 
 export default function CsvDialog(props: CsvDialogProps) {
@@ -51,7 +51,7 @@ export default function CsvDialog(props: CsvDialogProps) {
             <Button variant="outline">Close</Button>
           </DrawerClose>
         </DrawerHeader>
-        <div className="m-4">
+        <div className="m-4 max-h-[80%] overflow-auto">
           <pre className="bg-secondary rounded-md p-4 block text-sm">
             {content}
           </pre>

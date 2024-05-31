@@ -17,7 +17,7 @@ export type ImageData = {
   url: string;
 };
 
-export type UploadedCsv = {
+export type CsvFile = {
   content: string;
   filename: string;
   filesize: number;
@@ -25,7 +25,7 @@ export type UploadedCsv = {
 };
 
 export type CsvData = {
-  csvFiles: UploadedCsv[];
+  csvFiles: CsvFile[];
 };
 
 export type SourceNode = {

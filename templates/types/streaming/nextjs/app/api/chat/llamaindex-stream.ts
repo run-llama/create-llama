@@ -15,7 +15,7 @@ import {
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
 import {
-  UploadedCsv,
+  CsvFile,
   appendCsvData,
   appendImageData,
   appendSourceData,
@@ -27,7 +27,7 @@ type LlamaIndexResponse =
 
 export type DataParserOptions = {
   imageUrl?: string;
-  csvFiles?: UploadedCsv[];
+  csvFiles?: CsvFile[];
 };
 
 export const convertMessageContent = (
