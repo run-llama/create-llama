@@ -5,7 +5,7 @@ import { Button } from "../button";
 import ChatActions from "./chat-actions";
 import ChatMessage from "./chat-message";
 import { ChatHandler } from "./chat.interface";
-import { useConfig } from "./use-config";
+import { useClientConfig } from "./use-config";
 
 export default function ChatMessages(
   props: Pick<
@@ -13,7 +13,7 @@ export default function ChatMessages(
     "messages" | "isLoading" | "reload" | "stop" | "append"
   >,
 ) {
-  const { starterQuestions } = useConfig();
+  const { starterQuestions } = useClientConfig();
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
   const messageLength = props.messages.length;
   const lastMessage = props.messages[messageLength - 1];

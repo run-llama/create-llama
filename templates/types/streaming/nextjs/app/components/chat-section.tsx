@@ -2,10 +2,10 @@
 
 import { useChat } from "ai/react";
 import { ChatInput, ChatMessages } from "./ui/chat";
-import { useConfig } from "./ui/chat/use-config";
+import { useClientConfig } from "./ui/chat/use-config";
 
 export default function ChatSection() {
-  const { chatAPI } = useConfig();
+  const { chatAPI } = useClientConfig();
   const {
     messages,
     input,

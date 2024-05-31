@@ -7,7 +7,7 @@ export interface ChatConfig {
   starterQuestions?: string[];
 }
 
-export function useConfig() {
+export function useClientConfig() {
   const API_ROUTE = "/api/chat/config";
   const chatAPI = process.env.NEXT_PUBLIC_CHAT_API;
   const [config, setConfig] = useState<ChatConfig>({
