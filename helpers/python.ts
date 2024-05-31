@@ -160,7 +160,7 @@ const getAdditionalDependencies = (
     case "gemini":
       dependencies.push({
         name: "llama-index-llms-gemini",
-        version: "0.1.7",
+        version: "0.1.10",
       });
       dependencies.push({
         name: "llama-index-embeddings-gemini",
