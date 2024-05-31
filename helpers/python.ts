@@ -144,7 +144,7 @@ const getAdditionalDependencies = (
     case "openai":
       dependencies.push({
         name: "llama-index-agent-openai",
-        version: "0.2.2",
+        version: "0.2.6",
       });
       break;
     case "anthropic":
