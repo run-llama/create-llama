@@ -19,6 +19,9 @@ export default function ChatMessages({
   isLoading?: boolean;
   stop?: () => void;
   reload?: () => void;
+  append?: (
+    message: Message | Omit<Message, "id">,
+  ) => Promise<string | null | undefined>;
 }) {
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
 

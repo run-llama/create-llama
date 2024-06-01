@@ -185,6 +185,10 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Dimension of the embedding model to use.",
       value: modelConfig.dimensions.toString(),
     },
+    {
+      name: "CONVERSATION_STARTERS",
+      description: "The questions to help users get started (multi-line).",
+    },
     ...(modelConfig.provider === "openai"
       ? [
           {

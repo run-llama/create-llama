@@ -1,6 +1,7 @@
 import os
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine
@@ -14,6 +15,7 @@ from aiostream import stream
 chat_router = r = APIRouter()
 
 logger = logging.getLogger("uvicorn")
+
 
 class _Message(BaseModel):
     role: MessageRole
@@ -47,12 +49,14 @@ class _SourceNodes(BaseModel):
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
         url = metadata.get("URL")
-        
+
         if not url:
             file_name = metadata.get("file_name")
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
-                logger.warning("Warning: FILESERVER_URL_PREFIX not set in environment variables")
+                logger.warning(
+                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
+                )
             if file_name and url_prefix:
                 url = f"{url_prefix}/data/{file_name}"
 
@@ -61,7 +65,7 @@ class _SourceNodes(BaseModel):
             metadata=metadata,
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
-            url=url
+            url=url,
         )
 
     @classmethod
@@ -72,6 +76,24 @@ class _SourceNodes(BaseModel):
 class _Result(BaseModel):
     result: _Message
     nodes: List[_SourceNodes]
+
+
+class _ChatConfig(BaseModel):
+    starter_questions: Optional[List[str]] = Field(
+        default=None,
+        description="List of starter questions",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "starterQuestions": [
+                    "What standards for letters exist?",
+                    "What are the requirements for a letter to be considered a letter?",
+                ]
+            }
+        }
+        alias_generator = to_camel
 
 
 async def parse_chat_data(data: _ChatData) -> Tuple[str, List[ChatMessage]]:
@@ -168,3 +190,12 @@ async def chat_request(
         result=_Message(role=MessageRole.ASSISTANT, content=response.response),
         nodes=_SourceNodes.from_source_nodes(response.source_nodes),
     )
+
+
+@r.get("/config")
+async def chat_config() -> _ChatConfig:
+    starter_questions = None
+    conversation_starters = os.getenv("CONVERSATION_STARTERS")
+    if conversation_starters and conversation_starters.strip():
+        starter_questions = conversation_starters.strip().split("\n")
+    return _ChatConfig(starterQuestions=starter_questions)
