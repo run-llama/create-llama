@@ -14,7 +14,6 @@ export interface ChatInputProps {
   /** Form submission handler to automatically reset input and append a user message  */
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
-  multiModal?: boolean;
   messages: Message[];
 }
 

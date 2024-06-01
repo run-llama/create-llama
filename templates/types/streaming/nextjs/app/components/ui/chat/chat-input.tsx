@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
-import { CsvData, getInputResources } from ".";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
 import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
-import ChatResources from "./chat-resources";
 import { ChatHandler } from "./chat.interface";
+import { useCsv } from "./use-csv";
 
 export default function ChatInput(
   props: Pick<
@@ -21,17 +22,9 @@ export default function ChatInput(
   >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploadedCsv, setUploadedCsv] = useState<CsvData>();
-  const [inputResources, setInputResources] = useState<
-    Array<CsvData & { selected: boolean }>
-  >([]);
-
-  useEffect(() => {
-    const resources = getInputResources(props.messages);
-    setInputResources(
-      resources.csv.map((data) => ({ ...data, selected: true })),
-    );
-  }, [props.messages]);
+  const { files, uploadNew, removeFile, resetUploadedFiles } = useCsv(
+    props.messages,
+  );
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (imageUrl) {
@@ -41,21 +34,12 @@ export default function ChatInput(
       setImageUrl(null);
       return;
     }
-    // if users upload a new csv file, we will send it to backend
-    if (uploadedCsv) {
-      props.handleSubmit(e, {
-        data: { uploadedCsv },
-      });
-      setUploadedCsv(undefined);
-      return;
-    }
 
-    // if  users upload a new csv file, we can reuse provided csv resources
-    const attachCsv = inputResources.filter((r) => r.selected)[0];
-    if (attachCsv) {
+    if (files.length > 0) {
       props.handleSubmit(e, {
-        data: { uploadedCsv: attachCsv },
+        data: { csvFiles: files },
       });
+      resetUploadedFiles();
       return;
     }
 
@@ -81,11 +65,15 @@ export default function ChatInput(
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
-    setUploadedCsv({
+    const isSuccess = uploadNew({
+      id: uuidv4(),
       content,
       filename: file.name,
       filesize: file.size,
     });
+    if (!isSuccess) {
+      alert("File already exists in the list.");
+    }
   };
 
   const handleUploadFile = async (file: File) => {
@@ -102,33 +90,37 @@ export default function ChatInput(
     }
   };
 
-  const removeResource = (index: number) => {
-    setInputResources((resources) => {
-      const newResources = [...resources];
-      newResources[index].selected = false;
-      return newResources;
-    });
-  };
-
   return (
     <form
       onSubmit={onSubmit}
       className="rounded-xl bg-white p-4 shadow-xl space-y-4"
     >
-      <ChatResources
-        isLoading={props.isLoading}
-        resources={inputResources}
-        removeResource={removeResource}
-      />
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
       )}
-      {uploadedCsv && (
-        <UploadCsvPreview
-          filename={uploadedCsv.filename}
-          filesize={uploadedCsv.filesize}
-          onRemove={() => setUploadedCsv(undefined)}
-        />
+      {files.length > 0 && (
+        <div className="flex gap-4 w-full overflow-auto py-2">
+          {props.isLoading ? (
+            <div className="flex gap-2 items-center">
+              <Loader2 className="h-4 w-4 animate-spin" />{" "}
+              <span>Handling csv files...</span>
+            </div>
+          ) : (
+            <>
+              {files.map((csv) => {
+                return (
+                  <UploadCsvPreview
+                    key={csv.id}
+                    filename={csv.filename}
+                    filesize={csv.filesize}
+                    onRemove={() => removeFile(csv)}
+                    isNew={csv.type === "new_upload"}
+                  />
+                );
+              })}
+            </>
+          )}
+        </div>
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Input

@@ -122,16 +122,19 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-export type UploadedCsv = {
+export type CsvFile = {
   content: string;
   filename: string;
   filesize: number;
+  id: string;
 };
 
-export function appendCsvData(data: StreamData, uploadedCsv?: UploadedCsv) {
-  if (!uploadedCsv) return;
+export function appendCsvData(data: StreamData, csvFiles?: CsvFile[]) {
+  if (!csvFiles) return;
   data.appendMessageAnnotation({
     type: "csv",
-    data: uploadedCsv,
+    data: {
+      csvFiles,
+    },
   });
 }
