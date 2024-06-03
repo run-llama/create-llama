@@ -1,7 +1,6 @@
 import os
 import logging
 
-from typing import Dict
 from aiostream import stream
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine

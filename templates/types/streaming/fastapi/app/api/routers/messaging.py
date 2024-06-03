@@ -1,8 +1,13 @@
+import os
+import logging
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
+
+
+logger = logging.getLogger("uvicorn")
 
 
 class Message(BaseModel):
