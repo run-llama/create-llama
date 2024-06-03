@@ -1,145 +1,54 @@
 import os
 import logging
-from pydantic import BaseModel, Field
-from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict, Tuple
+
+from typing import Dict
+from aiostream import stream
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.llms import MessageRole
 from app.engine import get_chat_engine
 from app.api.routers.vercel_response import VercelStreamResponse
-from app.api.routers.messaging import EventCallbackHandler
-from aiostream import stream
+from app.api.routers.events import EventCallbackHandler
+from app.api.routers.messaging import (
+    ChatData,
+    ChatConfig,
+    SourceNodes,
+    Result,
+    Message,
+)
 
 chat_router = r = APIRouter()
 
 logger = logging.getLogger("uvicorn")
 
 
-class _Message(BaseModel):
-    role: MessageRole
-    content: str
-
-
-class _ChatData(BaseModel):
-    messages: List[_Message]
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "What standards for letters exist?",
-                    }
-                ]
-            }
-        }
-
-
-class _SourceNodes(BaseModel):
-    id: str
-    metadata: Dict[str, Any]
-    score: Optional[float]
-    text: str
-    url: Optional[str]
-
-    @classmethod
-    def from_source_node(cls, source_node: NodeWithScore):
-        metadata = source_node.node.metadata
-        url = metadata.get("URL")
-
-        if not url:
-            file_name = metadata.get("file_name")
-            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-            if not url_prefix:
-                logger.warning(
-                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-                )
-            if file_name and url_prefix:
-                url = f"{url_prefix}/data/{file_name}"
-
-        return cls(
-            id=source_node.node.node_id,
-            metadata=metadata,
-            score=source_node.score,
-            text=source_node.node.text,  # type: ignore
-            url=url,
-        )
-
-    @classmethod
-    def from_source_nodes(cls, source_nodes: List[NodeWithScore]):
-        return [cls.from_source_node(node) for node in source_nodes]
-
-
-class _Result(BaseModel):
-    result: _Message
-    nodes: List[_SourceNodes]
-
-
-class _ChatConfig(BaseModel):
-    starter_questions: Optional[List[str]] = Field(
-        default=None,
-        description="List of starter questions",
-    )
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "starterQuestions": [
-                    "What standards for letters exist?",
-                    "What are the requirements for a letter to be considered a letter?",
-                ]
-            }
-        }
-        alias_generator = to_camel
-
-
-async def parse_chat_data(data: _ChatData) -> Tuple[str, List[ChatMessage]]:
-    # check preconditions and get last message
-    if len(data.messages) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No messages provided",
-        )
-    last_message = data.messages.pop()
-    if last_message.role != MessageRole.USER:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Last message must be from user",
-        )
-    # convert messages coming from the request to type ChatMessage
-    messages = [
-        ChatMessage(
-            role=m.role,
-            content=m.content,
-        )
-        for m in data.messages
-    ]
-    return last_message.content, messages
-
-
 # streaming endpoint - delete if not needed
 @r.post("")
 async def chat(
     request: Request,
-    data: _ChatData,
+    data: ChatData,
     chat_engine: BaseChatEngine = Depends(get_chat_engine),
 ):
-    last_message_content, messages = await parse_chat_data(data)
+    last_message_content = data.get_last_message_content()
+    messages = data.get_history_messages()
 
     event_handler = EventCallbackHandler()
     chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
     try:
         response = await chat_engine.astream_chat(last_message_content, messages)
     except Exception as e:
+        logger.error(f"Error in chat engine: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error in chat engine: {e}",
-        )
+        ) from e
 
     async def content_generator():
+        # Yield the additional data
+        if data.data is not None:
+            for data_response in data.get_additional_data_response():
+                yield VercelStreamResponse.convert_data(data_response)
+
         # Yield the text response
         async def _text_generator():
             async for token in response.async_response_gen():
@@ -167,7 +76,7 @@ async def chat(
                 "type": "sources",
                 "data": {
                     "nodes": [
-                        _SourceNodes.from_source_node(node).dict()
+                        SourceNodes.from_source_node(node).dict()
                         for node in response.source_nodes
                     ]
                 },
@@ -180,22 +89,23 @@ async def chat(
 # non-streaming endpoint - delete if not needed
 @r.post("/request")
 async def chat_request(
-    data: _ChatData,
+    data: ChatData,
     chat_engine: BaseChatEngine = Depends(get_chat_engine),
-) -> _Result:
-    last_message_content, messages = await parse_chat_data(data)
+) -> Result:
+    last_message_content = data.get_last_message_content()
+    messages = data.get_history_messages()
 
     response = await chat_engine.achat(last_message_content, messages)
-    return _Result(
-        result=_Message(role=MessageRole.ASSISTANT, content=response.response),
-        nodes=_SourceNodes.from_source_nodes(response.source_nodes),
+    return Result(
+        result=Message(role=MessageRole.ASSISTANT, content=response.response),
+        nodes=SourceNodes.from_source_nodes(response.source_nodes),
     )
 
 
 @r.get("/config")
-async def chat_config() -> _ChatConfig:
+async def chat_config() -> ChatConfig:
     starter_questions = None
     conversation_starters = os.getenv("CONVERSATION_STARTERS")
     if conversation_starters and conversation_starters.strip():
         starter_questions = conversation_starters.strip().split("\n")
-    return _ChatConfig(starterQuestions=starter_questions)
+    return ChatConfig(starterQuestions=starter_questions)
