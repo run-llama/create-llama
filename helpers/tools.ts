@@ -137,7 +137,7 @@ export const supportedTools: Tool[] = [
     config: {
       openapi_uri: "The URL or file path of the OpenAPI schema",
     },
-    supportedFrameworks: ["fastapi"],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
     envVars: [
       {

@@ -1,9 +1,10 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
+import { OpenAPIActionToolSpec } from "./openapi-action";
 import { WeatherTool, WeatherToolParams } from "./weather";
 
-type ToolCreator = (config: unknown) => BaseToolWithCall;
+type ToolCreator = (config: unknown) => BaseToolWithCall[];
 
 export async function createTools(toolConfig: {
   local: Record<string, unknown>;
@@ -18,10 +19,21 @@ export async function createTools(toolConfig: {
 
 const toolFactory: Record<string, ToolCreator> = {
   weather: (config: unknown) => {
-    return new WeatherTool(config as WeatherToolParams);
+    return [new WeatherTool(config as WeatherToolParams)];
   },
   interpreter: (config: unknown) => {
-    return new InterpreterTool(config as InterpreterToolParams);
+    return [new InterpreterTool(config as InterpreterToolParams)];
+  },
+  "openapi_action.OpenAPIActionToolSpec": (config: unknown) => {
+    const { openapi_uri, domain_headers } = config as {
+      openapi_uri: string;
+      domain_headers: Record<string, Record<string, string>>;
+    };
+    const openAPIActionTool = new OpenAPIActionToolSpec(
+      openapi_uri,
+      domain_headers,
+    );
+    return openAPIActionTool.toToolFunctions();
   },
 };
 
@@ -34,7 +46,7 @@ function createLocalTools(
     if (key in toolFactory) {
       const toolConfig = localConfig[key];
       const tool = toolFactory[key](toolConfig);
-      tools.push(tool);
+      tools.push(...tool);
     }
   });
 
