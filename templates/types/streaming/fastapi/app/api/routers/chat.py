@@ -8,7 +8,7 @@ from llama_index.core.llms import MessageRole
 from app.engine import get_chat_engine
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.api.routers.events import EventCallbackHandler
-from app.api.routers.messaging import (
+from app.api.routers.models import (
     ChatData,
     ChatConfig,
     SourceNodes,
@@ -36,7 +36,7 @@ async def chat(
     try:
         response = await chat_engine.astream_chat(last_message_content, messages)
     except Exception as e:
-        logger.error(f"Error in chat engine: {str(e)}")
+        logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error in chat engine: {e}",
