@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add OpenAPI action tool
+Add OpenAPI action tool for FastAPI
