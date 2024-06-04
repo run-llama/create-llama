@@ -173,9 +173,15 @@ export const getTools = (toolsName: string[]): Tool[] => {
   return tools;
 };
 
+export const toolRequiresConfig = (tool: Tool): boolean => {
+  const hasConfig = Object.keys(tool.config || {}).length > 0;
+  const hasEmptyEnvVar = tool.envVars?.some((envVar) => !envVar.value) ?? false;
+  return hasConfig || hasEmptyEnvVar;
+};
+
 export const toolsRequireConfig = (tools?: Tool[]): boolean => {
   if (tools) {
-    return tools?.some((tool) => Object.keys(tool.config || {}).length > 0);
+    return tools?.some(toolRequiresConfig);
   }
   return false;
 };
