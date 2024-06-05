@@ -1,6 +1,6 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
 import axios, { AxiosResponse } from "axios";
-import { FunctionTool } from "llamaindex";
+import { FunctionTool, JSONValue } from "llamaindex";
 
 interface DomainHeaders {
   [key: string]: { [header: string]: string };
@@ -28,7 +28,7 @@ export class OpenAPIActionToolSpec {
 
   private readonly GET_REQUEST_SPEC = {
     name: "get_request",
-    description: "Use this to GET content from a website.",
+    description: "Use this to GET content from an url.",
     parameters: {
       type: "object",
       properties: {
@@ -47,7 +47,7 @@ export class OpenAPIActionToolSpec {
 
   private readonly POST_REQUEST_SPEC = {
     name: "post_request",
-    description: "Use this to POST content to a website.",
+    description: "Use this to POST content to an url.",
     parameters: {
       type: "object",
       properties: {
@@ -66,7 +66,7 @@ export class OpenAPIActionToolSpec {
 
   private readonly PATCH_REQUEST_SPEC = {
     name: "patch_request",
-    description: "Use this to PATCH content to a website.",
+    description: "Use this to PATCH content to an url.",
     parameters: {
       type: "object",
       properties: {
@@ -101,7 +101,7 @@ export class OpenAPIActionToolSpec {
     }
   }
 
-  async getRequest(input: { url: string; params: object }): Promise<any> {
+  async getRequest(input: { url: string; params: object }): Promise<JSONValue> {
     if (!this.validUrl(input.url)) {
       return this.INVALID_URL_PROMPT;
     }
@@ -112,11 +112,11 @@ export class OpenAPIActionToolSpec {
       });
       return res.data;
     } catch (error) {
-      return error;
+      return error as JSONValue;
     }
   }
 
-  async postRequest(input: { url: string; data: object }): Promise<any> {
+  async postRequest(input: { url: string; data: object }): Promise<JSONValue> {
     if (!this.validUrl(input.url)) {
       return this.INVALID_URL_PROMPT;
     }
@@ -126,11 +126,11 @@ export class OpenAPIActionToolSpec {
       });
       return res.data;
     } catch (error) {
-      return error;
+      return error as JSONValue;
     }
   }
 
-  async patchRequest(input: { url: string; data: object }): Promise<any> {
+  async patchRequest(input: { url: string; data: object }): Promise<JSONValue> {
     if (!this.validUrl(input.url)) {
       return this.INVALID_URL_PROMPT;
     }
@@ -140,7 +140,7 @@ export class OpenAPIActionToolSpec {
       });
       return res.data;
     } catch (error) {
-      return error;
+      return error as JSONValue;
     }
   }
 
