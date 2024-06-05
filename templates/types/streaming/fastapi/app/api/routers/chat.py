@@ -43,11 +43,6 @@ async def chat(
         ) from e
 
     async def content_generator():
-        # Yield the additional data
-        if data.data is not None:
-            for data_response in data.get_additional_data_response():
-                yield VercelStreamResponse.convert_data(data_response)
-
         # Yield the text response
         async def _text_generator():
             async for token in response.async_response_gen():

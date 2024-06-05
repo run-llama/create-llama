@@ -51,19 +51,6 @@ class DataParserOptions(BaseModel):
                 [f"```csv\n{csv_file.content}\n```" for csv_file in self.csv_files]
             )
 
-    def to_response_data(self) -> list[dict] | None:
-        output = []
-        if self.csv_files is not None and len(self.csv_files) > 0:
-            output.append(
-                {
-                    "type": "csv",
-                    "data": {
-                        "csvFiles": [csv_file.dict() for csv_file in self.csv_files]
-                    },
-                }
-            )
-        return output if len(output) > 0 else None
-
 
 class ChatData(BaseModel):
     data: DataParserOptions | None = Field(
@@ -106,12 +93,6 @@ class ChatData(BaseModel):
             ChatMessage(role=message.role, content=message.content)
             for message in self.messages[:-1]
         ]
-
-    def get_additional_data_response(self) -> list[dict] | None:
-        """
-        Get the additional data
-        """
-        return self.data.to_response_data()
 
     def is_last_message_from_user(self) -> bool:
         return self.messages[-1].role == MessageRole.USER
