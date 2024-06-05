@@ -25,7 +25,6 @@ import { useCopyToClipboard } from "./use-copy-to-clipboard";
 type ContentDisplayConfig = {
   order: number;
   component: JSX.Element | null;
-  isHidden?: boolean;
 };
 
 function ChatMessageContent({
@@ -63,7 +62,6 @@ function ChatMessageContent({
     {
       order: 1,
       component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
-      isHidden: message.role === "assistant",
     },
     {
       order: -3,
@@ -75,7 +73,6 @@ function ChatMessageContent({
     {
       order: 2,
       component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
-      isHidden: message.role === "assistant",
     },
     {
       order: -1,
@@ -95,10 +92,9 @@ function ChatMessageContent({
     <div className="flex-1 gap-4 flex flex-col">
       {contents
         .sort((a, b) => a.order - b.order)
-        .map((content, index) => {
-          if (content.isHidden) return null;
-          return <Fragment key={index}>{content.component}</Fragment>;
-        })}
+        .map((content, index) => (
+          <Fragment key={index}>{content.component}</Fragment>
+        ))}
     </div>
   );
 }

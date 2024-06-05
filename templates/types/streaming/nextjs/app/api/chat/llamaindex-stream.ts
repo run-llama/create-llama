@@ -14,12 +14,7 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import {
-  CsvFile,
-  appendCsvData,
-  appendImageData,
-  appendSourceData,
-} from "./stream-helper";
+import { CsvFile, appendSourceData } from "./stream-helper";
 
 type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
@@ -75,10 +70,6 @@ function createParser(
 
   let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
-    start() {
-      appendImageData(data, opts?.imageUrl);
-      appendCsvData(data, opts?.csvFiles);
-    },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
       if (done) {
