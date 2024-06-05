@@ -15,6 +15,7 @@ export interface ChatInputProps {
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
   messages: Message[];
+  setInput?: (input: string) => void;
 }
 
 export default function ChatInput(props: ChatInputProps) {

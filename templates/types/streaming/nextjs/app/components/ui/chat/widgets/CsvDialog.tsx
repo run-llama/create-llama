@@ -14,6 +14,7 @@ import {
 
 export interface CsvDialogProps {
   csv: CsvFile;
+  trigger?: JSX.Element;
 }
 
 export default function CsvDialog(props: CsvDialogProps) {
@@ -22,22 +23,26 @@ export default function CsvDialog(props: CsvDialogProps) {
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
-        <div
-          className="border-2 border-green-700 py-1.5 px-3 rounded-lg flex gap-2 items-center cursor-pointer text-sm hover:bg-green-700 hover:text-white transition-colors duration-200 ease-in-out"
-          key={filename}
-        >
-          <div className="h-4 w-4 shrink-0 rounded-md">
-            <Image
-              className="h-full w-auto"
-              priority
-              src={SheetIcon}
-              alt="SheetIcon"
-            />
+        {props.trigger ? (
+          <div className="cursor-pointer">{props.trigger}</div>
+        ) : (
+          <div
+            className="border-2 border-green-700 py-1.5 px-3 rounded-lg flex gap-2 items-center cursor-pointer text-sm hover:bg-green-700 hover:text-white transition-colors duration-200 ease-in-out"
+            key={filename}
+          >
+            <div className="h-4 w-4 shrink-0 rounded-md">
+              <Image
+                className="h-full w-auto"
+                priority
+                src={SheetIcon}
+                alt="SheetIcon"
+              />
+            </div>
+            <span>
+              {filename} - {fileSizeInKB} KB
+            </span>
           </div>
-          <span>
-            {filename} - {fileSizeInKB} KB
-          </span>
-        </div>
+        )}
       </DrawerTrigger>
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">

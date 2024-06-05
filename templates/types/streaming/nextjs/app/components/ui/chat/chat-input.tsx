@@ -1,6 +1,8 @@
+import { JSONValue } from "ai";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { MessageAnnotation, MessageAnnotationType } from ".";
 import { Button } from "../button";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
@@ -8,6 +10,7 @@ import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useCsv } from "./use-csv";
+import CsvDialog from "./widgets/CsvDialog";
 
 export default function ChatInput(
   props: Pick<
@@ -19,6 +22,8 @@ export default function ChatInput(
     | "handleSubmit"
     | "handleInputChange"
     | "messages"
+    | "setInput"
+    | "append"
   >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -26,23 +31,61 @@ export default function ChatInput(
     props.messages,
   );
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const getAttachments = () => {
+    if (!imageUrl && files.length === 0) return undefined;
+    const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
-      props.handleSubmit(e, {
-        data: { imageUrl: imageUrl },
+      annotations.push({
+        type: MessageAnnotationType.IMAGE,
+        data: { url: imageUrl },
       });
-      setImageUrl(null);
-      return;
     }
-
     if (files.length > 0) {
-      props.handleSubmit(e, {
-        data: { csvFiles: files },
+      annotations.push({
+        type: MessageAnnotationType.CSV,
+        data: {
+          csvFiles: files.map((file) => ({
+            id: file.id,
+            content: file.content,
+            filename: file.filename,
+            filesize: file.filesize,
+            type: "available",
+          })),
+        },
       });
-      resetUploadedFiles();
+    }
+    return annotations as JSONValue[];
+  };
+
+  // default submit function does not handle including annotations in the message
+  // so we need to use append function to submit new message with annotations
+  const submitWithAttachment = (
+    e: React.FormEvent<HTMLFormElement>,
+    attachments: JSONValue[] | undefined,
+  ) => {
+    e.preventDefault();
+    props.append!(
+      {
+        content: props.input,
+        role: "user",
+        createdAt: new Date(),
+        annotations: attachments,
+      },
+      {
+        data: { imageUrl, csvFiles: files },
+      },
+    );
+    setImageUrl(null);
+    resetUploadedFiles();
+    props.setInput!("");
+  };
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const attachments = getAttachments();
+    if (attachments) {
+      submitWithAttachment(e, attachments);
       return;
     }
-
     props.handleSubmit(e);
   };
 
@@ -109,12 +152,18 @@ export default function ChatInput(
             <>
               {files.map((csv) => {
                 return (
-                  <UploadCsvPreview
+                  <CsvDialog
                     key={csv.id}
-                    filename={csv.filename}
-                    filesize={csv.filesize}
-                    onRemove={() => removeFile(csv)}
-                    isNew={csv.type === "new_upload"}
+                    csv={csv}
+                    trigger={
+                      <UploadCsvPreview
+                        key={csv.id}
+                        filename={csv.filename}
+                        filesize={csv.filesize}
+                        onRemove={() => removeFile(csv)}
+                        isNew={csv.type === "new_upload"}
+                      />
+                    }
                   />
                 );
               })}
@@ -135,7 +184,7 @@ export default function ChatInput(
           onFileUpload={handleUploadFile}
           onFileError={props.onFileError}
         />
-        <Button type="submit" disabled={props.isLoading}>
+        <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
         </Button>
       </div>
