@@ -1,5 +1,5 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-import axios, { AxiosResponse } from "axios";
+import got, { SearchParameters } from "got";
 import { FunctionTool, JSONValue } from "llamaindex";
 
 interface DomainHeaders {
@@ -106,11 +106,13 @@ export class OpenAPIActionToolSpec {
       return this.INVALID_URL_PROMPT;
     }
     try {
-      const res: AxiosResponse = await axios.get(input.url, {
-        headers: this.getHeadersForUrl(input.url),
-        params: input.params,
-      });
-      return res.data;
+      const data = await got
+        .get(input.url, {
+          headers: this.getHeadersForUrl(input.url),
+          searchParams: input.params as SearchParameters,
+        })
+        .json();
+      return data as JSONValue;
     } catch (error) {
       return error as JSONValue;
     }
@@ -121,10 +123,11 @@ export class OpenAPIActionToolSpec {
       return this.INVALID_URL_PROMPT;
     }
     try {
-      const res: AxiosResponse = await axios.post(input.url, input.data, {
+      const res = await got.post(input.url, {
         headers: this.getHeadersForUrl(input.url),
+        json: input.data,
       });
-      return res.data;
+      return res.body as JSONValue;
     } catch (error) {
       return error as JSONValue;
     }
@@ -135,10 +138,11 @@ export class OpenAPIActionToolSpec {
       return this.INVALID_URL_PROMPT;
     }
     try {
-      const res = await axios.patch(input.url, input.data, {
+      const res = await got.patch(input.url, {
         headers: this.getHeadersForUrl(input.url),
+        json: input.data,
       });
-      return res.data;
+      return res.body as JSONValue;
     } catch (error) {
       return error as JSONValue;
     }
