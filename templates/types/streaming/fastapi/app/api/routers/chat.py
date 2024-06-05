@@ -33,58 +33,56 @@ async def chat(
 
     event_handler = EventCallbackHandler()
     chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
+
+    async def content_generator():
+        # Yield the additional data
+        if data.data is not None:
+            for data_response in data.get_additional_data_response():
+                yield VercelStreamResponse.convert_data(data_response)
+
+        # Yield the text response
+        async def _chat_response_generator():
+            response = await chat_engine.astream_chat(last_message_content, messages)
+            async for token in response.async_response_gen():
+                yield VercelStreamResponse.convert_text(token)
+            # the text_generator is the leading stream, once it's finished, also finish the event stream
+            event_handler.is_done = True
+
+            # Yield the source nodes
+            yield VercelStreamResponse.convert_data(
+                {
+                    "type": "sources",
+                    "data": {
+                        "nodes": [
+                            SourceNodes.from_source_node(node).dict()
+                            for node in response.source_nodes
+                        ]
+                    },
+                }
+            )
+
+        # Yield the events from the event handler
+        async def _event_generator():
+            async for event in event_handler.async_event_gen():
+                event_response = event.to_response()
+                if event_response is not None:
+                    yield VercelStreamResponse.convert_data(event_response)
+
+        combine = stream.merge(_chat_response_generator(), _event_generator())
+        is_stream_started = False
+        async with combine.stream() as streamer:
+            async for output in streamer:
+                if not is_stream_started:
+                    is_stream_started = True
+                    # Stream a blank message to start the stream
+                    yield VercelStreamResponse.convert_text("")
+
+                yield output
+
+                if await request.is_disconnected():
+                    break
+
     try:
-
-        async def content_generator():
-            # Yield the additional data
-            if data.data is not None:
-                for data_response in data.get_additional_data_response():
-                    yield VercelStreamResponse.convert_data(data_response)
-
-            # Yield the text response
-            async def _chat_response_generator():
-                response = await chat_engine.astream_chat(
-                    last_message_content, messages
-                )
-                async for token in response.async_response_gen():
-                    yield VercelStreamResponse.convert_text(token)
-                # the text_generator is the leading stream, once it's finished, also finish the event stream
-                event_handler.is_done = True
-
-                # Yield the source nodes
-                yield VercelStreamResponse.convert_data(
-                    {
-                        "type": "sources",
-                        "data": {
-                            "nodes": [
-                                SourceNodes.from_source_node(node).dict()
-                                for node in response.source_nodes
-                            ]
-                        },
-                    }
-                )
-
-            # Yield the events from the event handler
-            async def _event_generator():
-                async for event in event_handler.async_event_gen():
-                    event_response = event.to_response()
-                    if event_response is not None:
-                        yield VercelStreamResponse.convert_data(event_response)
-
-            combine = stream.merge(_chat_response_generator(), _event_generator())
-            is_stream_started = False
-            async with combine.stream() as streamer:
-                async for item in streamer:
-                    if not is_stream_started:
-                        is_stream_started = True
-                        # Stream a blank message to start the stream
-                        yield VercelStreamResponse.convert_text("")
-
-                    yield item
-
-                    if await request.is_disconnected():
-                        break
-
         return VercelStreamResponse(content=content_generator())
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
