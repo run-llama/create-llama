@@ -10,7 +10,6 @@ import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useCsv } from "./use-csv";
-import CsvDialog from "./widgets/CsvDialog";
 
 export default function ChatInput(
   props: Pick<
@@ -125,6 +124,10 @@ export default function ChatInput(
         return await handleUploadImageFile(file);
       }
       if (file.type === "text/csv") {
+        if (files.length > 0) {
+          alert("You can only upload one csv file at a time.");
+          return;
+        }
         return await handleUploadCsvFile(file);
       }
       props.onFileUpload?.(file);
@@ -152,18 +155,11 @@ export default function ChatInput(
             <>
               {files.map((csv) => {
                 return (
-                  <CsvDialog
+                  <UploadCsvPreview
                     key={csv.id}
                     csv={csv}
-                    trigger={
-                      <UploadCsvPreview
-                        key={csv.id}
-                        filename={csv.filename}
-                        filesize={csv.filesize}
-                        onRemove={() => removeFile(csv)}
-                        isNew={csv.type === "new_upload"}
-                      />
-                    }
+                    onRemove={() => removeFile(csv)}
+                    isNew={csv.type === "new_upload"}
                   />
                 );
               })}
