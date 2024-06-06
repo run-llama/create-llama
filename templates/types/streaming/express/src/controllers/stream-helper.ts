@@ -7,16 +7,6 @@ import {
   ToolOutput,
 } from "llamaindex";
 
-export function appendImageData(data: StreamData, imageUrl?: string) {
-  if (!imageUrl) return;
-  data.appendMessageAnnotation({
-    type: "image",
-    data: {
-      url: imageUrl,
-    },
-  });
-}
-
 function getNodeUrl(metadata: Metadata) {
   const url = metadata["URL"];
   if (url) return url;
@@ -128,13 +118,3 @@ export type CsvFile = {
   filesize: number;
   id: string;
 };
-
-export function appendCsvData(data: StreamData, csvFiles?: CsvFile[]) {
-  if (!csvFiles) return;
-  data.appendMessageAnnotation({
-    type: "csv",
-    data: {
-      csvFiles,
-    },
-  });
-}

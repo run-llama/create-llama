@@ -15,6 +15,7 @@ export default function ChatSection() {
     reload,
     stop,
     append,
+    setInput,
   } = useChat({
     api: chatAPI,
     headers: {
@@ -42,6 +43,8 @@ export default function ChatSection() {
         handleInputChange={handleInputChange}
         isLoading={isLoading}
         messages={messages}
+        append={append}
+        setInput={setInput}
       />
     </div>
   );

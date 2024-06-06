@@ -35,11 +35,6 @@ async def chat(
     chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 
     async def content_generator():
-        # Yield the additional data
-        if data.data is not None:
-            for data_response in data.get_additional_data_response():
-                yield VercelStreamResponse.convert_data(data_response)
-
         # Yield the text response
         async def _chat_response_generator():
             response = await chat_engine.astream_chat(last_message_content, messages)

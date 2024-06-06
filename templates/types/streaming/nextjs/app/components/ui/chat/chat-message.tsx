@@ -60,7 +60,7 @@ function ChatMessageContent({
 
   const contents: ContentDisplayConfig[] = [
     {
-      order: -4,
+      order: 1,
       component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
     },
     {
@@ -71,7 +71,7 @@ function ChatMessageContent({
         ) : null,
     },
     {
-      order: -2,
+      order: 2,
       component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
     },
     {
@@ -83,7 +83,7 @@ function ChatMessageContent({
       component: <Markdown content={message.content} />,
     },
     {
-      order: 1,
+      order: 3,
       component: sourceData[0] ? <ChatSources data={sourceData[0]} /> : null,
     },
   ];
