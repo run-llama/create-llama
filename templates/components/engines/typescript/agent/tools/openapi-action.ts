@@ -1,5 +1,5 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-import got, { SearchParameters } from "got";
+import got from "got";
 import { FunctionTool, JSONValue } from "llamaindex";
 
 interface DomainHeaders {
@@ -111,7 +111,7 @@ export class OpenAPIActionToolSpec {
       const data = await got
         .get(input.url, {
           headers: this.getHeadersForUrl(input.url),
-          searchParams: input.params as SearchParameters,
+          searchParams: input.params as URLSearchParams,
         })
         .json();
       return data as JSONValue;
