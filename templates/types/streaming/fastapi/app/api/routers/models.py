@@ -1,5 +1,6 @@
 import os
 import logging
+import tempfile
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict
@@ -21,6 +22,29 @@ class CsvFile(BaseModel):
     filesize: int
     id: str
     type: str
+    local_file_path: Optional[str] = None
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        # Write the content to a temporary file
+        saved_path = self.write_to_temp_file(self.content)
+        self.local_file_path = saved_path
+
+    @staticmethod
+    def write_to_temp_file(file_content: str) -> str:
+        """
+        Write the content to a temporary file and return the file path
+        """
+        csv_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv")
+        csv_file.write(file_content)
+        file_path = csv_file.name
+        return file_path
+
+    def __del__(self):
+        # Remove the temporary file once the object is deleted
+        if self.local_file_path:
+            os.remove(self.local_file_path)
 
 
 class DataParserOptions(BaseModel):
@@ -47,9 +71,14 @@ class DataParserOptions(BaseModel):
 
     def to_raw_content(self) -> str:
         if self.csv_files is not None and len(self.csv_files) > 0:
-            return "Use data from following CSV raw contents" + "\n".join(
-                [f"```csv\n{csv_file.content}\n```" for csv_file in self.csv_files]
-            )
+            saved_path = self.csv_files[0].local_file_path
+            content = self.csv_files[0].content
+            csv_meta = {
+                "local_file_path": saved_path,
+                "example_data": content[: min(200, len(content))],
+            }
+
+            return f"Provided CSV file metadata:\n{csv_meta}"
 
     def to_response_data(self) -> list[dict] | None:
         output = []
