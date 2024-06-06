@@ -47,7 +47,7 @@ function initOpenAI() {
     model: process.env.MODEL ?? "gpt-3.5-turbo",
     maxTokens: process.env.LLM_MAX_TOKENS
       ? Number(process.env.LLM_MAX_TOKENS)
-      : 512,
+      : undefined,
   });
   Settings.embedModel = new OpenAIEmbedding({
     model: process.env.EMBEDDING_MODEL,
