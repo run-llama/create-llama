@@ -63,17 +63,12 @@ export default function ChatInput(
     attachments: JSONValue[] | undefined,
   ) => {
     e.preventDefault();
-    props.append!(
-      {
-        content: props.input,
-        role: "user",
-        createdAt: new Date(),
-        annotations: attachments,
-      },
-      {
-        data: { imageUrl, csvFiles: files },
-      },
-    );
+    props.append!({
+      content: props.input,
+      role: "user",
+      createdAt: new Date(),
+      annotations: attachments,
+    });
     setImageUrl(null);
     resetUploadedFiles();
     props.setInput!("");
