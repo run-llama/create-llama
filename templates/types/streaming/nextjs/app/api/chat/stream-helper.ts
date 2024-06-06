@@ -1,4 +1,5 @@
 import { StreamData } from "ai";
+import fs from "fs";
 import {
   CallbackManager,
   Metadata,
@@ -6,6 +7,7 @@ import {
   ToolCall,
   ToolOutput,
 } from "llamaindex";
+import tmp from "tmp";
 
 export function appendImageData(data: StreamData, imageUrl?: string) {
   if (!imageUrl) return;
@@ -127,6 +129,7 @@ export type CsvFile = {
   filename: string;
   filesize: number;
   id: string;
+  localFilePath: string;
 };
 
 export function appendCsvData(data: StreamData, csvFiles?: CsvFile[]) {
@@ -137,4 +140,11 @@ export function appendCsvData(data: StreamData, csvFiles?: CsvFile[]) {
       csvFiles,
     },
   });
+}
+
+export function writeTempCsvFiles(csvFiles: CsvFile[]) {
+  const csvFile = csvFiles[0];
+  const tmpFile = tmp.fileSync({ postfix: ".csv" });
+  fs.writeFileSync(tmpFile.name, csvFile.content);
+  return tmpFile;
 }

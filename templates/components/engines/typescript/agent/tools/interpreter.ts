@@ -7,6 +7,7 @@ import path from "node:path";
 
 export type InterpreterParameter = {
   code: string;
+  localFilePath: string;
 };
 
 export type InterpreterToolParams = {
@@ -34,20 +35,31 @@ type InterpreterExtraType =
 
 export type InterpreterExtraResult = {
   type: InterpreterExtraType;
+  content?: string;
   filename: string;
   url: string;
 };
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
   name: "interpreter",
-  description:
-    "Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.",
+  description: `Use this tool to analyze the provided data in a sandbox environment.
+    The tool will:
+        1. Upload the provided file from local to the sandbox. The uploaded file path will be /home/user/{filename}
+        2. Execute python code in a Jupyter notebook cell to analyze the uploaded file in the sandbox.
+        3. Get the result from the code in stdout, stderr, display_data, and error.
+    You must to provide the code and the provided file path to run this tool.
+    Your code should read the file from the sandbox path /home/user/{filename}.
+    `,
   parameters: {
     type: "object",
     properties: {
       code: {
         type: "string",
         description: "The python code to execute in a single cell.",
+      },
+      localFilePath: {
+        type: "string",
+        description: "The local file path to upload to the sandbox.",
       },
     },
     required: ["code"],
@@ -88,11 +100,22 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     return this.codeInterpreter;
   }
 
-  public async codeInterpret(code: string): Promise<InterpreterToolOutput> {
+  public async codeInterpret(
+    code: string,
+    localFilePath: string,
+  ): Promise<InterpreterToolOutput> {
+    const interpreter = await this.initInterpreter();
+    // Upload file to sandbox
+    console.log(`Uploading file ${localFilePath} to sandbox`);
+    const fileBuffer = fs.readFileSync(localFilePath);
+    const fileName = path.basename(localFilePath);
+    await interpreter.uploadFile(fileBuffer, fileName);
+    console.log(`Uploaded file ${fileName} to sandbox`);
+
+    // Execute code in sandbox
     console.log(
       `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${code}\n${"=".repeat(50)}`,
     );
-    const interpreter = await this.initInterpreter();
     const exec = await interpreter.notebook.execCell(code);
     if (exec.error) console.error("[Code Interpreter error]", exec.error);
     const extraResult = await this.getExtraResult(exec.results[0]);
@@ -105,7 +128,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   }
 
   async call(input: InterpreterParameter): Promise<InterpreterToolOutput> {
-    const result = await this.codeInterpret(input.code);
+    const result = await this.codeInterpret(input.code, input.localFilePath);
     await this.codeInterpreter?.close();
     return result;
   }
@@ -119,17 +142,25 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     try {
       const formats = res.formats(); // formats available for the result. Eg: ['png', ...]
       const base64DataArr = formats.map((f) => res[f as keyof Result]); // get base64 data for each format
+      console.log("data", base64DataArr);
 
       // save base64 data to file and return the url
       for (let i = 0; i < formats.length; i++) {
         const ext = formats[i];
         const base64Data = base64DataArr[i];
-        if (ext && base64Data) {
+        if (ext === "png" && base64Data) {
           const { filename } = this.saveToDisk(base64Data, ext);
           output.push({
             type: ext as InterpreterExtraType,
             filename,
             url: this.getFileUrl(filename),
+          });
+        } else {
+          output.push({
+            type: ext as InterpreterExtraType,
+            content: base64Data,
+            filename: `output.${ext}`,
+            url: "",
           });
         }
       }

@@ -14,11 +14,13 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
+import path from "path";
 import {
   CsvFile,
   appendCsvData,
   appendImageData,
   appendSourceData,
+  writeTempCsvFiles,
 } from "./stream-helper";
 
 type LlamaIndexResponse =
@@ -51,14 +53,22 @@ export const convertMessageContent = (
   }
 
   if (additionalData?.csvFiles?.length) {
-    const rawContents = additionalData.csvFiles.map((csv) => {
-      return "```csv\n" + csv.content + "\n```";
-    });
+    const tmpFile = writeTempCsvFiles(additionalData.csvFiles);
+    // Get a few lines of the CSV file as sample content
+    const sampleContent = additionalData.csvFiles
+      .map((csv) => csv.content.split("\n").slice(1, 4).join("\n"))
+      .join("\n\n");
+    const metadata = {
+      localFilePath: tmpFile.name,
+      sampleContent: sampleContent,
+      sandboxFilePath: `/home/user/${path.basename(tmpFile.name)}`,
+    };
     const csvContent =
-      "Use data from following CSV raw contents:\n" + rawContents.join("\n\n");
+      "Provided CSV file metadata:\n" + JSON.stringify(metadata, null, 2);
+    console.log(csvContent);
     content.push({
       type: "text",
-      text: `${csvContent}\n\n${textMessage}`,
+      text: `${textMessage}\n\n${csvContent}`,
     });
   }
 
