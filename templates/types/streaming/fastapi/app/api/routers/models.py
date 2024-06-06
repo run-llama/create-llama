@@ -72,10 +72,12 @@ class DataParserOptions(BaseModel):
     def to_raw_content(self) -> str:
         if self.csv_files is not None and len(self.csv_files) > 0:
             saved_path = self.csv_files[0].local_file_path
+            saved_file_name = os.path.basename(saved_path)
             content = self.csv_files[0].content
             csv_meta = {
                 "local_file_path": saved_path,
                 "example_data": content[: min(200, len(content))],
+                "sandbox_file_path": f"/home/user/{saved_file_name}",
             }
 
             return f"Provided CSV file metadata:\n{csv_meta}"
