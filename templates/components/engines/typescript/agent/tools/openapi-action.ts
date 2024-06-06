@@ -14,12 +14,17 @@ export class OpenAPIActionToolSpec {
     name: "load_openapi_spec",
     description:
       "Use this function to load defined spec first before making requests.",
+  } as const;
+
+  private readonly LOAD_OPENAPI_SPEC_FROM_URL = {
+    name: "load_openapi_spec_from_url",
+    description: "Use this function to load openapi spec from user input url",
     parameters: {
       type: "object",
       properties: {
         url: {
           type: "string",
-          description: "The URL of the OpenAPI spec",
+          description: "The URL of the OpenAPI spec ",
         },
       },
       required: ["url"],
@@ -88,9 +93,22 @@ export class OpenAPIActionToolSpec {
     public domainHeaders: DomainHeaders = {},
   ) {}
 
-  async loadOpenapiSpec(input: { url: string }): Promise<any> {
+  async loadOpenapiSpec(): Promise<any> {
     try {
-      const api = (await SwaggerParser.validate(input.url)) as any;
+      const api = (await SwaggerParser.validate(this.openapi_uri)) as any;
+      return {
+        servers: api.servers,
+        description: api.info.description,
+        endpoints: api.paths,
+      };
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async loadOpenapiSpecFromUrl({ url }: { url: string }): Promise<any> {
+    try {
+      const api = (await SwaggerParser.validate(url)) as any;
       return {
         servers: api.servers,
         description: api.info.description,
@@ -150,9 +168,10 @@ export class OpenAPIActionToolSpec {
 
   public toToolFunctions = () => {
     return [
+      FunctionTool.from(() => this.loadOpenapiSpec(), this.LOAD_OPENAPI_SPEC),
       FunctionTool.from(
-        (input: { url: string }) => this.loadOpenapiSpec(input),
-        this.LOAD_OPENAPI_SPEC,
+        (input: { url: string }) => this.loadOpenapiSpecFromUrl(input),
+        this.LOAD_OPENAPI_SPEC_FROM_URL,
       ),
       FunctionTool.from(
         (input: { url: string; params: object }) => this.getRequest(input),
