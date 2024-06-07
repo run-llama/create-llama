@@ -39,16 +39,19 @@ class AnnotationData(BaseModel):
         }
         alias_generator = to_camel
 
-    def to_raw_content(self) -> str:
-        if self.csv_files is not None and len(self.csv_files) > 0:
-            return "Use data from following CSV raw contents\n" + "\n".join(
-                [f"```csv\n{csv_file.content}\n```" for csv_file in self.csv_files]
-            )
-
 
 class Annotation(BaseModel):
     type: str
     data: AnnotationData
+
+    def to_content(self) -> str:
+        if self.type == "csv":
+            csv_files = self.data.csv_files
+            if csv_files is not None and len(csv_files) > 0:
+                return "Use data from following CSV raw contents\n" + "\n".join(
+                    [f"```csv\n{csv_file.content}\n```" for csv_file in csv_files]
+                )
+        raise ValueError(f"Unsupported annotation type: {self.type}")
 
 
 class Message(BaseModel):
@@ -89,10 +92,9 @@ class ChatData(BaseModel):
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
                 annotation_contents = (
-                    annotation.data.to_raw_content()
-                    for annotation in message.annotations
+                    annotation.to_content() for annotation in message.annotations
                 )
-                annotation_text = "\n".join(filter(None, annotation_contents))
+                annotation_text = "\n".join(annotation_contents)
                 message_content = f"{message_content}\n{annotation_text}"
                 break
         return message_content

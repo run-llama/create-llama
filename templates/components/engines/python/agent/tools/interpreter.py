@@ -123,6 +123,9 @@ class E2BCodeInterpreter:
 def code_interpret(code: str) -> Dict:
     """
     Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.
+
+    Parameters:
+        code (str): The python code to be executed in a single cell.
     """
     api_key = os.getenv("E2B_API_KEY")
     filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
