@@ -2,17 +2,12 @@ import os
 import logging
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Any
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 
 
 logger = logging.getLogger("uvicorn")
-
-
-class Message(BaseModel):
-    role: MessageRole
-    content: str
 
 
 class CsvFile(BaseModel):
@@ -23,7 +18,7 @@ class CsvFile(BaseModel):
     type: str
 
 
-class DataParserOptions(BaseModel):
+class AnnotationData(BaseModel):
     csv_files: List[CsvFile] | None = Field(
         default=None,
         description="List of CSV files",
@@ -47,15 +42,23 @@ class DataParserOptions(BaseModel):
 
     def to_raw_content(self) -> str:
         if self.csv_files is not None and len(self.csv_files) > 0:
-            return "Use data from following CSV raw contents" + "\n".join(
+            return "Use data from following CSV raw contents\n" + "\n".join(
                 [f"```csv\n{csv_file.content}\n```" for csv_file in self.csv_files]
             )
 
 
+class Annotation(BaseModel):
+    type: str
+    data: AnnotationData
+
+
+class Message(BaseModel):
+    role: MessageRole
+    content: str
+    annotations: List[Annotation] | None = None
+
+
 class ChatData(BaseModel):
-    data: DataParserOptions | None = Field(
-        default=None,
-    )
     messages: List[Message]
 
     class Config:
@@ -80,9 +83,20 @@ class ChatData(BaseModel):
         """
         Get the content of the last message along with the data content if available
         """
-        message_content = self.messages[-1].content
-        if self.data:
-            message_content += "\n" + self.data.to_raw_content()
+        if len(self.messages) == 0:
+            raise ValueError("There is not any message in the chat")
+        last_message = self.messages[-1]
+        message_content = last_message.content
+        for message in reversed(self.messages):
+            if message.role == MessageRole.USER and message.annotations is not None:
+                annotation_text = "\n".join(
+                    [
+                        annotation.data.to_raw_content()
+                        for annotation in message.annotations
+                    ]
+                )
+                message_content = f"{message_content}\n{annotation_text}"
+                break
         return message_content
 
     def get_history_messages(self) -> List[Message]:
