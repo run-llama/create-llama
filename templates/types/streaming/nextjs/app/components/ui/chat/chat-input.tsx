@@ -65,12 +65,6 @@ export default function ChatInput(
       createdAt: new Date(),
       annotations: attachments,
     });
-    if (imageUrl) {
-      setImageUrl(null);
-    }
-    if (csvFiles.length > 0) {
-      reset();
-    }
     props.setInput!("");
   };
 
@@ -78,6 +72,8 @@ export default function ChatInput(
     const attachments = getAttachments();
     if (attachments) {
       submitWithAttachment(e, attachments);
+      imageUrl && setImageUrl(null);
+      csvFiles.length && reset();
       return;
     }
     props.handleSubmit(e);
