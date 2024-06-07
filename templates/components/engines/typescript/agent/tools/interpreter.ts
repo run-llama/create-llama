@@ -107,8 +107,11 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
 
   async call(input: InterpreterParameter): Promise<InterpreterToolOutput> {
     const result = await this.codeInterpret(input.code);
-    await this.codeInterpreter?.close();
     return result;
+  }
+
+  async close() {
+    await this.codeInterpreter?.close();
   }
 
   private async getExtraResult(
