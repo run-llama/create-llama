@@ -8,7 +8,7 @@ import { questionHandlers } from "../../questions";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
-const DEFAULT_MODEL = "gpt-3.5-turbo";
+const DEFAULT_MODEL = "gpt-4o";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
 export async function askOpenAIQuestions({
