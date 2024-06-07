@@ -1,31 +1,10 @@
 "use client";
 
-import { Message } from "ai";
-import { useEffect, useMemo, useState } from "react";
-import {
-  CsvData,
-  CsvFile,
-  MessageAnnotation,
-  MessageAnnotationType,
-  getAnnotationData,
-} from ".";
+import { useState } from "react";
+import { CsvFile } from ".";
 
-interface FrontendCSVData extends CsvFile {
-  type: "available" | "new_upload";
-}
-
-export function useCsv(messages: Message[]) {
-  const [availableFiles, setAvailableFiles] = useState<FrontendCSVData[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<FrontendCSVData[]>([]);
-
-  const files = useMemo(() => {
-    return [...availableFiles, ...uploadedFiles];
-  }, [availableFiles, uploadedFiles]);
-
-  useEffect(() => {
-    const items = getAvailableCsvFiles(messages);
-    setAvailableFiles(items.map((data) => ({ ...data, type: "available" })));
-  }, [messages]);
+export function useCsv() {
+  const [files, setFiles] = useState<CsvFile[]>([]);
 
   const csvEqual = (a: CsvFile, b: CsvFile) => {
     if (a.id === b.id) return true;
@@ -33,53 +12,22 @@ export function useCsv(messages: Message[]) {
     return false;
   };
 
-  // Get available csv files from annotations chat history
-  // returns the unique csv files by id
-  const getAvailableCsvFiles = (messages: Message[]): Array<CsvFile> => {
-    const docHash: Record<string, CsvFile> = {};
-    messages.forEach((message) => {
-      if (message.annotations) {
-        const csvData = getAnnotationData<CsvData>(
-          message.annotations as MessageAnnotation[],
-          MessageAnnotationType.CSV,
-        );
-        csvData.forEach((data) => {
-          data.csvFiles.forEach((file) => {
-            if (!docHash[file.id]) {
-              docHash[file.id] = file;
-            }
-          });
-        });
-      }
-    });
-    return Object.values(docHash);
-  };
-
-  const uploadNew = (file: CsvFile) => {
+  const upload = (file: CsvFile) => {
     const existedCsv = files.find((f) => csvEqual(f, file));
     if (!existedCsv) {
-      setUploadedFiles((prev) => [...prev, { ...file, type: "new_upload" }]);
+      setFiles((prev) => [...prev, file]);
       return true;
     }
     return false;
   };
 
-  const removeFile = (file: FrontendCSVData) => {
-    if (file.type === "new_upload") {
-      setUploadedFiles((prev) => prev.filter((f) => f.id !== file.id));
-    } else {
-      setAvailableFiles((prev) => prev.filter((f) => f.id !== file.id));
-    }
+  const remove = (file: CsvFile) => {
+    setFiles((prev) => prev.filter((f) => f.id !== file.id));
   };
 
-  const resetUploadedFiles = () => {
-    setUploadedFiles([]);
+  const reset = () => {
+    setFiles([]);
   };
 
-  return {
-    files,
-    uploadNew,
-    removeFile,
-    resetUploadedFiles,
-  };
+  return { files, upload, remove, reset };
 }

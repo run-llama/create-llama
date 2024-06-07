@@ -17,7 +17,6 @@ import { cn } from "./lib/utils";
 export interface UploadCsvPreviewProps {
   csv: CsvFile;
   onRemove?: () => void;
-  isNew?: boolean;
 }
 
 export default function UploadCsvPreview(props: UploadCsvPreviewProps) {
@@ -52,7 +51,7 @@ export default function UploadCsvPreview(props: UploadCsvPreviewProps) {
 }
 
 function CSVSummaryCard(props: UploadCsvPreviewProps) {
-  const { onRemove, isNew, csv } = props;
+  const { onRemove, csv } = props;
   return (
     <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">
       <div className="flex flex-row items-center gap-2">
@@ -70,11 +69,6 @@ function CSVSummaryCard(props: UploadCsvPreviewProps) {
           </div>
           <div className="truncate text-token-text-tertiary flex items-center gap-2">
             <span>Spreadsheet</span>
-            {isNew && (
-              <span className="px-2 py-0.5 bg-red-400 text-white text-xs rounded-2xl">
-                new
-              </span>
-            )}
           </div>
         </div>
       </div>
