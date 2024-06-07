@@ -1,5 +1,4 @@
 import { JSONValue } from "ai";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { MessageAnnotation, MessageAnnotationType } from ".";
@@ -26,12 +25,15 @@ export default function ChatInput(
   >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const { files, uploadNew, removeFile, resetUploadedFiles } = useCsv(
-    props.messages,
-  );
+  const {
+    uploadedFiles: uploadedCsvFiles,
+    uploadNew,
+    removeFile,
+    resetUploadedFiles,
+  } = useCsv();
 
   const getAttachments = () => {
-    if (!imageUrl && files.length === 0) return undefined;
+    if (!imageUrl && uploadedCsvFiles.length === 0) return undefined;
     const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
       annotations.push({
@@ -39,11 +41,11 @@ export default function ChatInput(
         data: { url: imageUrl },
       });
     }
-    if (files.length > 0) {
+    if (uploadedCsvFiles.length > 0) {
       annotations.push({
         type: MessageAnnotationType.CSV,
         data: {
-          csvFiles: files.map((file) => ({
+          csvFiles: uploadedCsvFiles.map((file) => ({
             id: file.id,
             content: file.content,
             filename: file.filename,
@@ -119,7 +121,7 @@ export default function ChatInput(
         return await handleUploadImageFile(file);
       }
       if (file.type === "text/csv") {
-        if (files.length > 0) {
+        if (uploadedCsvFiles.length > 0) {
           alert("You can only upload one csv file at a time.");
           return;
         }
@@ -139,27 +141,17 @@ export default function ChatInput(
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
       )}
-      {files.length > 0 && (
+      {uploadedCsvFiles.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {props.isLoading ? (
-            <div className="flex gap-2 items-center">
-              <Loader2 className="h-4 w-4 animate-spin" />{" "}
-              <span>Handling csv files...</span>
-            </div>
-          ) : (
-            <>
-              {files.map((csv) => {
-                return (
-                  <UploadCsvPreview
-                    key={csv.id}
-                    csv={csv}
-                    onRemove={() => removeFile(csv)}
-                    isNew={csv.type === "new_upload"}
-                  />
-                );
-              })}
-            </>
-          )}
+          {uploadedCsvFiles.map((csv) => {
+            return (
+              <UploadCsvPreview
+                key={csv.id}
+                csv={csv}
+                onRemove={() => removeFile(csv)}
+              />
+            );
+          })}
         </div>
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
