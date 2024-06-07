@@ -27,7 +27,7 @@ export default function ChatInput(
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const { files: csvFiles, upload, remove, reset } = useCsv();
 
-  const getAttachments = () => {
+  const getAnnotations = () => {
     if (!imageUrl && csvFiles.length === 0) return undefined;
     const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
@@ -54,24 +54,24 @@ export default function ChatInput(
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
-  const submitWithAttachment = (
+  const handleSubmitWithAnnotations = (
     e: React.FormEvent<HTMLFormElement>,
-    attachments: JSONValue[] | undefined,
+    annotations: JSONValue[] | undefined,
   ) => {
     e.preventDefault();
     props.append!({
       content: props.input,
       role: "user",
       createdAt: new Date(),
-      annotations: attachments,
+      annotations,
     });
     props.setInput!("");
   };
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    const attachments = getAttachments();
-    if (attachments) {
-      submitWithAttachment(e, attachments);
+    const annotations = getAnnotations();
+    if (annotations) {
+      handleSubmitWithAnnotations(e, annotations);
       imageUrl && setImageUrl(null);
       csvFiles.length && reset();
       return;
