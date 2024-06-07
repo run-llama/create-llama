@@ -15,7 +15,6 @@ class CsvFile(BaseModel):
     filename: str
     filesize: int
     id: str
-    type: str
 
 
 class AnnotationData(BaseModel):
@@ -89,12 +88,11 @@ class ChatData(BaseModel):
         message_content = last_message.content
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
-                annotation_text = "\n".join(
-                    [
-                        annotation.data.to_raw_content()
-                        for annotation in message.annotations
-                    ]
+                annotation_contents = (
+                    annotation.data.to_raw_content()
+                    for annotation in message.annotations
                 )
+                annotation_text = "\n".join(filter(None, annotation_contents))
                 message_content = f"{message_content}\n{annotation_text}"
                 break
         return message_content
