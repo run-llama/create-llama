@@ -25,15 +25,10 @@ export default function ChatInput(
   >,
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const {
-    uploadedFiles: uploadedCsvFiles,
-    uploadNew,
-    removeFile,
-    resetUploadedFiles,
-  } = useCsv();
+  const { files: csvFiles, upload, remove, reset } = useCsv();
 
   const getAttachments = () => {
-    if (!imageUrl && uploadedCsvFiles.length === 0) return undefined;
+    if (!imageUrl && csvFiles.length === 0) return undefined;
     const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
       annotations.push({
@@ -41,16 +36,15 @@ export default function ChatInput(
         data: { url: imageUrl },
       });
     }
-    if (uploadedCsvFiles.length > 0) {
+    if (csvFiles.length > 0) {
       annotations.push({
         type: MessageAnnotationType.CSV,
         data: {
-          csvFiles: uploadedCsvFiles.map((file) => ({
+          csvFiles: csvFiles.map((file) => ({
             id: file.id,
             content: file.content,
             filename: file.filename,
             filesize: file.filesize,
-            type: "available",
           })),
         },
       });
@@ -71,8 +65,12 @@ export default function ChatInput(
       createdAt: new Date(),
       annotations: attachments,
     });
-    setImageUrl(null);
-    resetUploadedFiles();
+    if (imageUrl) {
+      setImageUrl(null);
+    }
+    if (csvFiles.length > 0) {
+      reset();
+    }
     props.setInput!("");
   };
 
@@ -104,7 +102,7 @@ export default function ChatInput(
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
-    const isSuccess = uploadNew({
+    const isSuccess = upload({
       id: uuidv4(),
       content,
       filename: file.name,
@@ -121,7 +119,7 @@ export default function ChatInput(
         return await handleUploadImageFile(file);
       }
       if (file.type === "text/csv") {
-        if (uploadedCsvFiles.length > 0) {
+        if (csvFiles.length > 0) {
           alert("You can only upload one csv file at a time.");
           return;
         }
@@ -141,14 +139,14 @@ export default function ChatInput(
       {imageUrl && (
         <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
       )}
-      {uploadedCsvFiles.length > 0 && (
+      {csvFiles.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {uploadedCsvFiles.map((csv) => {
+          {csvFiles.map((csv) => {
             return (
               <UploadCsvPreview
                 key={csv.id}
                 csv={csv}
-                onRemove={() => removeFile(csv)}
+                onRemove={() => remove(csv)}
               />
             );
           })}

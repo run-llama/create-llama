@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CsvFile } from ".";
 
 export function useCsv() {
-  const [uploadedFiles, setUploadedFiles] = useState<CsvFile[]>([]);
+  const [files, setFiles] = useState<CsvFile[]>([]);
 
   const csvEqual = (a: CsvFile, b: CsvFile) => {
     if (a.id === b.id) return true;
@@ -12,27 +12,22 @@ export function useCsv() {
     return false;
   };
 
-  const uploadNew = (file: CsvFile) => {
-    const existedCsv = uploadedFiles.find((f) => csvEqual(f, file));
+  const upload = (file: CsvFile) => {
+    const existedCsv = files.find((f) => csvEqual(f, file));
     if (!existedCsv) {
-      setUploadedFiles((prev) => [...prev, file]);
+      setFiles((prev) => [...prev, file]);
       return true;
     }
     return false;
   };
 
-  const removeFile = (file: CsvFile) => {
-    setUploadedFiles((prev) => prev.filter((f) => f.id !== file.id));
+  const remove = (file: CsvFile) => {
+    setFiles((prev) => prev.filter((f) => f.id !== file.id));
   };
 
-  const resetUploadedFiles = () => {
-    setUploadedFiles([]);
+  const reset = () => {
+    setFiles([]);
   };
 
-  return {
-    uploadedFiles,
-    uploadNew,
-    removeFile,
-    resetUploadedFiles,
-  };
+  return { files, upload, remove, reset };
 }
