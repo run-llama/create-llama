@@ -30,7 +30,7 @@ export type ToolDependencies = {
 
 export const supportedTools: Tool[] = [
   {
-    display: "Google Search (configuration required after installation)",
+    display: "Google Search",
     name: "google.GoogleSearchToolSpec",
     config: {
       engine:
