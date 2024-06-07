@@ -81,7 +81,7 @@ class ChatData(BaseModel):
 
     def get_last_message_content(self) -> str:
         """
-        Get the content of the last message along with the data content if available
+        Get the content of the last message along with the data content if available. Fallback to use data content from previous messages
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
