@@ -108,6 +108,7 @@ class E2BCodeInterpreter:
             exec = interpreter.notebook.exec_cell(code)
 
             if exec.error:
+                logger.error("Error when executing code", exec.error)
                 output = E2BToolOutput(is_error=True, logs=exec.logs, results=[])
             else:
                 if len(exec.results) == 0:
