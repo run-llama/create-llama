@@ -1,4 +1,5 @@
 import {
+  JSONValue,
   StreamData,
   createCallbacksTransformer,
   createStreamDataTransformer,
@@ -7,6 +8,7 @@ import {
 } from "ai";
 import {
   MessageContent,
+  MessageContentDetail,
   Metadata,
   NodeWithScore,
   Response,
@@ -20,42 +22,66 @@ type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
   | Response;
 
-export type DataParserOptions = {
-  imageUrl?: string;
-  csvFiles?: CsvFile[];
-};
-
 export const convertMessageContent = (
-  textMessage: string,
-  additionalData?: DataParserOptions,
+  content: string,
+  annotations?: JSONValue[],
 ): MessageContent => {
-  if (!additionalData) return textMessage;
-  const content: MessageContent = [
+  if (!annotations) return content;
+  return [
     {
       type: "text",
-      text: textMessage,
+      text: content,
     },
+    ...convertAnnotations(annotations),
   ];
-  if (additionalData?.imageUrl) {
-    content.push({
-      type: "image_url",
-      image_url: {
-        url: additionalData?.imageUrl,
-      },
-    });
-  }
+};
 
-  if (additionalData?.csvFiles?.length) {
-    const rawContents = additionalData.csvFiles.map((csv) => {
-      return "```csv\n" + csv.content + "\n```";
-    });
-    const csvContent =
-      "Use data from following CSV raw contents:\n" + rawContents.join("\n\n");
-    content.push({
-      type: "text",
-      text: `${csvContent}\n\n${textMessage}`,
-    });
-  }
+const convertAnnotations = (
+  annotations: JSONValue[],
+): MessageContentDetail[] => {
+  const content: MessageContentDetail[] = [];
+  annotations.forEach((annotation: JSONValue) => {
+    // first skip invalid annotation
+    if (
+      !(
+        annotation &&
+        typeof annotation === "object" &&
+        "type" in annotation &&
+        "data" in annotation &&
+        annotation.data &&
+        typeof annotation.data === "object"
+      )
+    ) {
+      console.log(
+        "Client sent invalid annotation. Missing data and type",
+        annotation,
+      );
+      return;
+    }
+    const { type, data } = annotation;
+    // convert image
+    if (type === "image" && "url" in data && typeof data.url === "string") {
+      content.push({
+        type: "image_url",
+        image_url: {
+          url: data.url,
+        },
+      });
+    }
+    // convert CSV files to text
+    if (type === "csv" && "csvFiles" in data && Array.isArray(data.csvFiles)) {
+      const rawContents = data.csvFiles.map((csv) => {
+        return "```csv\n" + (csv as CsvFile).content + "\n```";
+      });
+      const csvContent =
+        "Use data from following CSV raw contents:\n" +
+        rawContents.join("\n\n");
+      content.push({
+        type: "text",
+        text: csvContent,
+      });
+    }
+  });
 
   return content;
 };
@@ -63,7 +89,6 @@ export const convertMessageContent = (
 function createParser(
   res: AsyncIterable<LlamaIndexResponse>,
   data: StreamData,
-  opts?: DataParserOptions,
 ) {
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
@@ -106,10 +131,9 @@ export function LlamaIndexStream(
   data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;
-    parserOptions?: DataParserOptions;
   },
 ): ReadableStream<Uint8Array> {
-  return createParser(response, data, opts?.parserOptions)
+  return createParser(response, data)
     .pipeThrough(createCallbacksTransformer(opts?.callbacks))
     .pipeThrough(createStreamDataTransformer());
 }
