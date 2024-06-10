@@ -81,23 +81,23 @@ export default function ChatInput(
 
   const onRemovePreviewImage = () => setImageUrl(null);
 
-  const handleUploadImageFile = async (file: File) => {
-    const base64 = await new Promise<string>((resolve, reject) => {
+  const readRawContent = async (file: File): Promise<string> => {
+    const raw = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
+    return raw;
+  };
+
+  const handleUploadImageFile = async (file: File) => {
+    const base64 = await readRawContent(file);
     setImageUrl(base64);
   };
 
   const handleUploadCsvFile = async (file: File) => {
-    const content = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsText(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
+    const content = await readRawContent(file);
     const isSuccess = upload({
       id: uuidv4(),
       content,
