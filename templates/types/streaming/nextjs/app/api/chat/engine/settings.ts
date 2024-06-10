@@ -45,7 +45,9 @@ export const initSettings = async () => {
 function initOpenAI() {
   Settings.llm = new OpenAI({
     model: process.env.MODEL ?? "gpt-3.5-turbo",
-    maxTokens: 512,
+    maxTokens: process.env.LLM_MAX_TOKENS
+      ? Number(process.env.LLM_MAX_TOKENS)
+      : undefined,
   });
   Settings.embedModel = new OpenAIEmbedding({
     model: process.env.EMBEDDING_MODEL,

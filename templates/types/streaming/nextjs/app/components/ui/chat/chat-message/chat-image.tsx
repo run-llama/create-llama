@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { type ImageData } from "./index";
+import { type ImageData } from "../index";
 
 export function ChatImage({ data }: { data: ImageData }) {
   return (

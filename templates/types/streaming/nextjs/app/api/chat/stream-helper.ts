@@ -7,14 +7,20 @@ import {
   ToolOutput,
 } from "llamaindex";
 
-export function appendImageData(data: StreamData, imageUrl?: string) {
-  if (!imageUrl) return;
-  data.appendMessageAnnotation({
-    type: "image",
-    data: {
-      url: imageUrl,
-    },
-  });
+function getNodeUrl(metadata: Metadata) {
+  const url = metadata["URL"];
+  if (url) return url;
+  const fileName = metadata["file_name"];
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    console.warn(
+      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
+    );
+    return undefined;
+  }
+  if (fileName) {
+    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
+  }
+  return undefined;
 }
 
 export function appendSourceData(
@@ -29,6 +35,7 @@ export function appendSourceData(
         ...node.node.toMutableJSON(),
         id: node.node.id_,
         score: node.score ?? null,
+        url: getNodeUrl(node.node.metadata),
       })),
     },
   });
@@ -65,6 +72,15 @@ export function appendToolData(
   });
 }
 
+export function createStreamTimeout(stream: StreamData) {
+  const timeout = Number(process.env.STREAM_TIMEOUT ?? 1000 * 60 * 5); // default to 5 minutes
+  const t = setTimeout(() => {
+    appendEventData(stream, `Stream timed out after ${timeout / 1000} seconds`);
+    stream.close();
+  }, timeout);
+  return t;
+}
+
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
@@ -95,3 +111,10 @@ export function createCallbackManager(stream: StreamData) {
 
   return callbackManager;
 }
+
+export type CsvFile = {
+  content: string;
+  filename: string;
+  filesize: number;
+  id: string;
+};

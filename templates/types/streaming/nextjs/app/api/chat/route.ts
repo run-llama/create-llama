@@ -1,11 +1,11 @@
 import { initObservability } from "@/app/observability";
 import { Message, StreamData, StreamingTextResponse } from "ai";
-import { ChatMessage, MessageContent, Settings } from "llamaindex";
+import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import { LlamaIndexStream } from "./llamaindex-stream";
-import { createCallbackManager } from "./stream-helper";
+import { LlamaIndexStream, convertMessageContent } from "./llamaindex-stream";
+import { createCallbackManager, createStreamTimeout } from "./stream-helper";
 
 initObservability();
 initSettings();
@@ -13,29 +13,14 @@ initSettings();
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const convertMessageContent = (
-  textMessage: string,
-  imageUrl: string | undefined,
-): MessageContent => {
-  if (!imageUrl) return textMessage;
-  return [
-    {
-      type: "text",
-      text: textMessage,
-    },
-    {
-      type: "image_url",
-      image_url: {
-        url: imageUrl,
-      },
-    },
-  ];
-};
-
 export async function POST(request: NextRequest) {
+  // Init Vercel AI StreamData and timeout
+  const vercelStreamData = new StreamData();
+  const streamTimeout = createStreamTimeout(vercelStreamData);
+
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data: any } = body;
+    const { messages }: { messages: Message[] } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -49,14 +34,24 @@ export async function POST(request: NextRequest) {
 
     const chatEngine = await createChatEngine();
 
+    let annotations = userMessage.annotations;
+    if (!annotations) {
+      // the user didn't send any new annotations with the last message
+      // so use the annotations from the last user message that has annotations
+      // REASON: GPT4 doesn't consider MessageContentDetail from previous messages, only strings
+      annotations = messages
+        .slice()
+        .reverse()
+        .find(
+          (message) => message.role === "user" && message.annotations,
+        )?.annotations;
+    }
+
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
       userMessage.content,
-      data?.imageUrl,
+      annotations,
     );
-
-    // Init Vercel AI StreamData
-    const vercelStreamData = new StreamData();
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
@@ -71,11 +66,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
-    const stream = LlamaIndexStream(response, vercelStreamData, {
-      parserOptions: {
-        image_url: data?.imageUrl,
-      },
-    });
+    const stream = LlamaIndexStream(response, vercelStreamData);
 
     // Return a StreamingTextResponse, which can be consumed by the Vercel/AI client
     return new StreamingTextResponse(stream, {}, vercelStreamData);
@@ -89,5 +80,7 @@ export async function POST(request: NextRequest) {
         status: 500,
       },
     );
+  } finally {
+    clearTimeout(streamTimeout);
   }
 }

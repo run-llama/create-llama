@@ -171,6 +171,11 @@ export const installTemplate = async (
         );
       }
     }
+
+    // Create tool-output directory
+    if (props.tools && props.tools.length > 0) {
+      await fsExtra.mkdir(path.join(props.root, "tool-output"));
+    }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
     await createFrontendEnvFile(props.root, {

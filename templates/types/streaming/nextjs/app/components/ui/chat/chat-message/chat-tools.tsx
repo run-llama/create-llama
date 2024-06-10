@@ -1,5 +1,5 @@
-import { ToolData } from "./index";
-import { WeatherCard, WeatherData } from "./widgets/WeatherCard";
+import { ToolData } from "../index";
+import { WeatherCard, WeatherData } from "../widgets/WeatherCard";
 
 // TODO: If needed, add displaying more tool outputs here
 export default function ChatTools({ data }: { data: ToolData }) {

@@ -12,7 +12,6 @@ import {
 
 export interface PdfDialogProps {
   documentId: string;
-  path: string;
   url: string;
   trigger: React.ReactNode;
 }
@@ -26,13 +25,13 @@ export default function PdfDialog(props: PdfDialogProps) {
           <div className="space-y-2">
             <DrawerTitle>PDF Content</DrawerTitle>
             <DrawerDescription>
-              File path:{" "}
+              File URL:{" "}
               <a
                 className="hover:text-blue-900"
                 href={props.url}
                 target="_blank"
               >
-                {props.path}
+                {props.url}
               </a>
             </DrawerDescription>
           </div>

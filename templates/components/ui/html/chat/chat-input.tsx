@@ -1,5 +1,7 @@
 "use client";
 
+import { Message } from "./chat-messages";
+
 export interface ChatInputProps {
   /** The current value of the input */
   input?: string;
@@ -12,7 +14,8 @@ export interface ChatInputProps {
   /** Form submission handler to automatically reset input and append a user message  */
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
-  multiModal?: boolean;
+  messages: Message[];
+  setInput?: (input: string) => void;
 }
 
 export default function ChatInput(props: ChatInputProps) {

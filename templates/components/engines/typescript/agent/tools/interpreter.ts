@@ -15,7 +15,7 @@ export type InterpreterToolParams = {
   fileServerURLPrefix?: string;
 };
 
-export type InterpreterToolOuput = {
+export type InterpreterToolOutput = {
   isError: boolean;
   logs: Logs;
   extraResult: InterpreterExtraResult[];
@@ -34,8 +34,9 @@ type InterpreterExtraType =
 
 export type InterpreterExtraResult = {
   type: InterpreterExtraType;
-  filename: string;
-  url: string;
+  content?: string;
+  filename?: string;
+  url?: string;
 };
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
@@ -88,7 +89,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     return this.codeInterpreter;
   }
 
-  public async codeInterpret(code: string): Promise<InterpreterToolOuput> {
+  public async codeInterpret(code: string): Promise<InterpreterToolOutput> {
     console.log(
       `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${code}\n${"=".repeat(50)}`,
     );
@@ -96,7 +97,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     const exec = await interpreter.notebook.execCell(code);
     if (exec.error) console.error("[Code Interpreter error]", exec.error);
     const extraResult = await this.getExtraResult(exec.results[0]);
-    const result: InterpreterToolOuput = {
+    const result: InterpreterToolOutput = {
       isError: !!exec.error,
       logs: exec.logs,
       extraResult,
@@ -104,10 +105,13 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     return result;
   }
 
-  async call(input: InterpreterParameter): Promise<InterpreterToolOuput> {
+  async call(input: InterpreterParameter): Promise<InterpreterToolOutput> {
     const result = await this.codeInterpret(input.code);
-    await this.codeInterpreter?.close();
     return result;
+  }
+
+  async close() {
+    await this.codeInterpreter?.close();
   }
 
   private async getExtraResult(
@@ -118,23 +122,34 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
 
     try {
       const formats = res.formats(); // formats available for the result. Eg: ['png', ...]
-      const base64DataArr = formats.map((f) => res[f as keyof Result]); // get base64 data for each format
+      const results = formats.map((f) => res[f as keyof Result]); // get base64 data for each format
 
       // save base64 data to file and return the url
       for (let i = 0; i < formats.length; i++) {
         const ext = formats[i];
-        const base64Data = base64DataArr[i];
-        if (ext && base64Data) {
-          const { filename } = this.saveToDisk(base64Data, ext);
-          output.push({
-            type: ext as InterpreterExtraType,
-            filename,
-            url: this.getFileUrl(filename),
-          });
+        const data = results[i];
+        switch (ext) {
+          case "png":
+          case "jpeg":
+          case "svg":
+          case "pdf":
+            const { filename } = this.saveToDisk(data, ext);
+            output.push({
+              type: ext as InterpreterExtraType,
+              filename,
+              url: this.getFileUrl(filename),
+            });
+            break;
+          default:
+            output.push({
+              type: ext as InterpreterExtraType,
+              content: data,
+            });
+            break;
         }
       }
     } catch (error) {
-      console.error("Error when saving data to disk", error);
+      console.error("Error when parsing e2b response", error);
     }
 
     return output;

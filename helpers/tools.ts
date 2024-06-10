@@ -30,7 +30,7 @@ export type ToolDependencies = {
 
 export const supportedTools: Tool[] = [
   {
-    display: "Google Search (configuration required after installation)",
+    display: "Google Search",
     name: "google.GoogleSearchToolSpec",
     config: {
       engine:
@@ -90,8 +90,13 @@ export const supportedTools: Tool[] = [
   {
     display: "Code Interpreter",
     name: "interpreter",
-    dependencies: [],
-    supportedFrameworks: ["express", "nextjs"],
+    dependencies: [
+      {
+        name: "e2b_code_interpreter",
+        version: "0.0.7",
+      },
+    ],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
     envVars: [
       {
@@ -109,6 +114,37 @@ export const supportedTools: Tool[] = [
         - You can install any pip package (if it exists) if you need to but the usual packages for data analysis are already preinstalled.
         - You can run any python code you want in a secure environment.
         - Use absolute url from result to display images or any other media.`,
+      },
+    ],
+  },
+  {
+    display: "OpenAPI action",
+    name: "openapi_action.OpenAPIActionToolSpec",
+    dependencies: [
+      {
+        name: "llama-index-tools-openapi",
+        version: "0.1.3",
+      },
+      {
+        name: "jsonschema",
+        version: "^4.22.0",
+      },
+      {
+        name: "llama-index-tools-requests",
+        version: "0.1.3",
+      },
+    ],
+    config: {
+      openapi_uri: "The URL or file path of the OpenAPI schema",
+    },
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for openapi action tool.",
+        value:
+          "You are an OpenAPI action agent. You help users to make requests to the provided OpenAPI schema.",
       },
     ],
   },
@@ -137,9 +173,15 @@ export const getTools = (toolsName: string[]): Tool[] => {
   return tools;
 };
 
+export const toolRequiresConfig = (tool: Tool): boolean => {
+  const hasConfig = Object.keys(tool.config || {}).length > 0;
+  const hasEmptyEnvVar = tool.envVars?.some((envVar) => !envVar.value) ?? false;
+  return hasConfig || hasEmptyEnvVar;
+};
+
 export const toolsRequireConfig = (tools?: Tool[]): boolean => {
   if (tools) {
-    return tools?.some((tool) => Object.keys(tool.config || {}).length > 0);
+    return tools?.some(toolRequiresConfig);
   }
   return false;
 };
@@ -154,7 +196,6 @@ export const writeToolsConfig = async (
   tools: Tool[] = [],
   type: ConfigFileType = ConfigFileType.YAML,
 ) => {
-  if (tools.length === 0) return; // no tools selected, no config need
   const configContent: {
     [key in ToolType]: Record<string, any>;
   } = {

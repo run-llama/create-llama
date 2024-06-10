@@ -185,6 +185,10 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Dimension of the embedding model to use.",
       value: modelConfig.dimensions.toString(),
     },
+    {
+      name: "CONVERSATION_STARTERS",
+      description: "The questions to help users get started (multi-line).",
+    },
     ...(modelConfig.provider === "openai"
       ? [
           {
@@ -284,6 +288,12 @@ const getEngineEnvs = (): EnvVar[] => {
       description:
         "The number of similar embeddings to return when retrieving documents.",
       value: "3",
+    },
+    {
+      name: "STREAM_TIMEOUT",
+      description:
+        "The time in milliseconds to wait for the stream to return a response.",
+      value: "60000",
     },
   ];
 };

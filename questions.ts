@@ -16,7 +16,11 @@ import { templatesDir } from "./helpers/dir";
 import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { askModelConfig } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
-import { supportedTools, toolsRequireConfig } from "./helpers/tools";
+import {
+  supportedTools,
+  toolRequiresConfig,
+  toolsRequireConfig,
+} from "./helpers/tools";
 
 export type QuestionArgs = Omit<
   InstallAppArgs,
@@ -652,7 +656,7 @@ export const askQuestions = async (
         t.supportedFrameworks?.includes(program.framework),
       );
       const toolChoices = options.map((tool) => ({
-        title: tool.display,
+        title: `${tool.display}${toolRequiresConfig(tool) ? "" : " (no config needed)"}`,
         value: tool.name,
       }));
       const { toolsName } = await prompts({

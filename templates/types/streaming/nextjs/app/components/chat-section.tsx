@@ -2,8 +2,10 @@
 
 import { useChat } from "ai/react";
 import { ChatInput, ChatMessages } from "./ui/chat";
+import { useClientConfig } from "./ui/chat/hooks/use-config";
 
 export default function ChatSection() {
+  const { chatAPI } = useClientConfig();
   const {
     messages,
     input,
@@ -12,8 +14,10 @@ export default function ChatSection() {
     handleInputChange,
     reload,
     stop,
+    append,
+    setInput,
   } = useChat({
-    api: process.env.NEXT_PUBLIC_CHAT_API,
+    api: chatAPI,
     headers: {
       "Content-Type": "application/json", // using JSON because of vercel/ai 2.2.26
     },
@@ -31,13 +35,16 @@ export default function ChatSection() {
         isLoading={isLoading}
         reload={reload}
         stop={stop}
+        append={append}
       />
       <ChatInput
         input={input}
         handleSubmit={handleSubmit}
         handleInputChange={handleInputChange}
         isLoading={isLoading}
-        multiModal={true}
+        messages={messages}
+        append={append}
+        setInput={setInput}
       />
     </div>
   );
