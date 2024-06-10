@@ -2,13 +2,8 @@ import { Check, Copy } from "lucide-react";
 
 import { Message } from "ai";
 import { Fragment } from "react";
-import { Button } from "../button";
-import ChatAvatar from "./chat-avatar";
-import { ChatEvents } from "./chat-events";
-import { ChatImage } from "./chat-image";
-import { ChatSources } from "./chat-sources";
-import ChatTools from "./chat-tools";
-import CsvContent from "./csv-content";
+import { Button } from "../../button";
+import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
   CsvData,
   EventData,
@@ -18,9 +13,14 @@ import {
   SourceData,
   ToolData,
   getAnnotationData,
-} from "./index";
+} from "../index";
+import ChatAvatar from "./chat-avatar";
+import { ChatEvents } from "./chat-events";
+import { ChatImage } from "./chat-image";
+import { ChatSources } from "./chat-sources";
+import ChatTools from "./chat-tools";
+import CsvContent from "./csv-content";
 import Markdown from "./markdown";
-import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
 type ContentDisplayConfig = {
   order: number;

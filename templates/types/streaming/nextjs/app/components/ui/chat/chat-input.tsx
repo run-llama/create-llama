@@ -8,7 +8,7 @@ import { Input } from "../input";
 import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
-import { useCsv } from "./use-csv";
+import { useCsv } from "./hooks/use-csv";
 
 export default function ChatInput(
   props: Pick<

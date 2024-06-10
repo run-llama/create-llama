@@ -5,7 +5,7 @@ import { Button } from "../button";
 import ChatActions from "./chat-actions";
 import ChatMessage from "./chat-message";
 import { ChatHandler } from "./chat.interface";
-import { useClientConfig } from "./use-config";
+import { useClientConfig } from "./hooks/use-config";
 
 export default function ChatMessages(
   props: Pick<

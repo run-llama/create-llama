@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CsvFile } from ".";
+import { CsvFile } from "../chat";
 
 export function useCsv() {
   const [files, setFiles] = useState<CsvFile[]>([]);
