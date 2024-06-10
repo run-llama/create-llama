@@ -84,7 +84,11 @@ export default function ChatInput(
   const readRawContent = async (file: File): Promise<string> => {
     const raw = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      if (file.type.startsWith("image/")) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
