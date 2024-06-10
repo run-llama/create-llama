@@ -81,8 +81,8 @@ export default function ChatInput(
 
   const onRemovePreviewImage = () => setImageUrl(null);
 
-  const readRawContent = async (file: File): Promise<string> => {
-    const raw = await new Promise<string>((resolve, reject) => {
+  const readContent = async (file: File): Promise<string> => {
+    const content = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       if (file.type.startsWith("image/")) {
         reader.readAsDataURL(file);
@@ -92,16 +92,16 @@ export default function ChatInput(
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
-    return raw;
+    return content;
   };
 
   const handleUploadImageFile = async (file: File) => {
-    const base64 = await readRawContent(file);
+    const base64 = await readContent(file);
     setImageUrl(base64);
   };
 
   const handleUploadCsvFile = async (file: File) => {
-    const content = await readRawContent(file);
+    const content = await readContent(file);
     const isSuccess = upload({
       id: uuidv4(),
       content,
