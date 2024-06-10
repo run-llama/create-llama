@@ -1,5 +1,5 @@
-import { CsvData } from "../index";
 import UploadCsvPreview from "../../upload-csv-preview";
+import { CsvData } from "../index";
 
 export default function CsvContent({ data }: { data: CsvData }) {
   if (!data.csvFiles.length) return null;
