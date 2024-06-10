@@ -1,10 +1,14 @@
 import { Check, Copy } from "lucide-react";
 import { useMemo } from "react";
-import { Button } from "../button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../hover-card";
-import { SourceData } from "./index";
-import { useCopyToClipboard } from "./use-copy-to-clipboard";
-import PdfDialog from "./widgets/PdfDialog";
+import { Button } from "../../button";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../../hover-card";
+import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
+import { SourceData } from "../index";
+import PdfDialog from "../widgets/PdfDialog";
 
 const SCORE_THRESHOLD = 0.3;
 

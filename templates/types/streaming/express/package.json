@@ -7,7 +7,7 @@
     "format:write": "prettier --ignore-unknown --write .",
     "build": "tsup index.ts --format cjs --dts",
     "start": "node dist/index.js",
-    "dev": "concurrently \"tsup index.ts --format cjs --dts --watch\" \"nodemon -q dist/index.js\""
+    "dev": "concurrently \"tsup index.ts --format cjs --dts --watch\" \"nodemon --watch dist/index.js\""
   },
   "dependencies": {
     "ai": "^3.0.21",

@@ -8,7 +8,7 @@ import { Input } from "../input";
 import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
-import { useCsv } from "./use-csv";
+import { useCsv } from "./hooks/use-csv";
 
 export default function ChatInput(
   props: Pick<
@@ -81,23 +81,27 @@ export default function ChatInput(
 
   const onRemovePreviewImage = () => setImageUrl(null);
 
-  const handleUploadImageFile = async (file: File) => {
-    const base64 = await new Promise<string>((resolve, reject) => {
+  const readContent = async (file: File): Promise<string> => {
+    const content = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      if (file.type.startsWith("image/")) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
+    return content;
+  };
+
+  const handleUploadImageFile = async (file: File) => {
+    const base64 = await readContent(file);
     setImageUrl(base64);
   };
 
   const handleUploadCsvFile = async (file: File) => {
-    const content = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsText(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
+    const content = await readContent(file);
     const isSuccess = upload({
       id: uuidv4(),
       content,
