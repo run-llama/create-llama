@@ -3,7 +3,7 @@ import logging
 import base64
 import uuid
 from pydantic import BaseModel
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from llama_index.core.tools import FunctionTool
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 
 class InterpreterExtraResult(BaseModel):
     type: str
-    filename: str
-    url: str
+    content: Optional[str] = None
+    filename: Optional[str] = None
+    url: Optional[str] = None
 
 
 class E2BToolOutput(BaseModel):
@@ -72,19 +73,30 @@ class E2BCodeInterpreter:
 
         try:
             formats = result.formats()
-            base64_data_arr = [result[format] for format in formats]
+            results = [result[format] for format in formats]
 
-            for ext, base64_data in zip(formats, base64_data_arr):
-                if ext and base64_data:
-                    result = self.save_to_disk(base64_data, ext)
-                    filename = result["filename"]
-                    output.append(
-                        InterpreterExtraResult(
-                            type=ext, filename=filename, url=self.get_file_url(filename)
+            for ext, data in zip(formats, results):
+                match ext:
+                    case "png" | "svg" | "jpeg" | "pdf":
+                        result = self.save_to_disk(data, ext)
+                        filename = result["filename"]
+                        output.append(
+                            InterpreterExtraResult(
+                                type=ext,
+                                filename=filename,
+                                url=self.get_file_url(filename),
+                            )
                         )
-                    )
+                    case _:
+                        output.append(
+                            InterpreterExtraResult(
+                                type=ext,
+                                content=data,
+                            )
+                        )
         except Exception as error:
-            logger.error("Error when saving data to disk", error)
+            logger.exception(error, exc_info=True)
+            logger.error("Error when parsing output from E2b interpreter tool", error)
 
         return output
 
@@ -96,7 +108,8 @@ class E2BCodeInterpreter:
             exec = interpreter.notebook.exec_cell(code)
 
             if exec.error:
-                output = E2BToolOutput(is_error=True, logs=[exec.error])
+                logger.error("Error when executing code", exec.error)
+                output = E2BToolOutput(is_error=True, logs=exec.logs, results=[])
             else:
                 if len(exec.results) == 0:
                     output = E2BToolOutput(is_error=False, logs=exec.logs, results=[])
@@ -111,6 +124,9 @@ class E2BCodeInterpreter:
 def code_interpret(code: str) -> Dict:
     """
     Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.
+
+    Parameters:
+        code (str): The python code to be executed in a single cell.
     """
     api_key = os.getenv("E2B_API_KEY")
     filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")

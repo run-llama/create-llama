@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.1.9
+
+### Patch Changes
+
+- a42fa53: Add CSV upload
+- 563b51d: Fix Vercel streaming (python) to stream data events instantly
+- d60b3c5: Add E2B code interpreter tool for FastAPI
+- 956538e: Add OpenAPI action tool for FastAPI
+
 ## 0.1.8
 
 ### Patch Changes

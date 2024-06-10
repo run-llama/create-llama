@@ -4,11 +4,7 @@ import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import {
-  DataParserOptions,
-  LlamaIndexStream,
-  convertMessageContent,
-} from "./llamaindex-stream";
+import { LlamaIndexStream, convertMessageContent } from "./llamaindex-stream";
 import { createCallbackManager, createStreamTimeout } from "./stream-helper";
 
 initObservability();
@@ -24,10 +20,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const {
-      messages,
-      data,
-    }: { messages: Message[]; data: DataParserOptions | undefined } = body;
+    const { messages }: { messages: Message[] } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -41,8 +34,24 @@ export async function POST(request: NextRequest) {
 
     const chatEngine = await createChatEngine();
 
+    let annotations = userMessage.annotations;
+    if (!annotations) {
+      // the user didn't send any new annotations with the last message
+      // so use the annotations from the last user message that has annotations
+      // REASON: GPT4 doesn't consider MessageContentDetail from previous messages, only strings
+      annotations = messages
+        .slice()
+        .reverse()
+        .find(
+          (message) => message.role === "user" && message.annotations,
+        )?.annotations;
+    }
+
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
-    const userMessageContent = convertMessageContent(userMessage.content, data);
+    const userMessageContent = convertMessageContent(
+      userMessage.content,
+      annotations,
+    );
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
@@ -57,12 +66,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
-    const stream = LlamaIndexStream(response, vercelStreamData, {
-      parserOptions: {
-        imageUrl: data?.imageUrl,
-        csvFiles: data?.csvFiles,
-      },
-    });
+    const stream = LlamaIndexStream(response, vercelStreamData);
 
     // Return a StreamingTextResponse, which can be consumed by the Vercel/AI client
     return new StreamingTextResponse(stream, {}, vercelStreamData);

@@ -30,7 +30,7 @@ export type ToolDependencies = {
 
 export const supportedTools: Tool[] = [
   {
-    display: "Google Search (configuration required after installation)",
+    display: "Google Search",
     name: "google.GoogleSearchToolSpec",
     config: {
       engine:
@@ -173,9 +173,15 @@ export const getTools = (toolsName: string[]): Tool[] => {
   return tools;
 };
 
+export const toolRequiresConfig = (tool: Tool): boolean => {
+  const hasConfig = Object.keys(tool.config || {}).length > 0;
+  const hasEmptyEnvVar = tool.envVars?.some((envVar) => !envVar.value) ?? false;
+  return hasConfig || hasEmptyEnvVar;
+};
+
 export const toolsRequireConfig = (tools?: Tool[]): boolean => {
   if (tools) {
-    return tools?.some((tool) => Object.keys(tool.config || {}).length > 0);
+    return tools?.some(toolRequiresConfig);
   }
   return false;
 };

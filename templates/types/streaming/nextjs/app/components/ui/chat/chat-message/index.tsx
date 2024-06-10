@@ -2,13 +2,8 @@ import { Check, Copy } from "lucide-react";
 
 import { Message } from "ai";
 import { Fragment } from "react";
-import { Button } from "../button";
-import ChatAvatar from "./chat-avatar";
-import { ChatEvents } from "./chat-events";
-import { ChatImage } from "./chat-image";
-import { ChatSources } from "./chat-sources";
-import ChatTools from "./chat-tools";
-import CsvContent from "./csv-content";
+import { Button } from "../../button";
+import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
   CsvData,
   EventData,
@@ -18,9 +13,14 @@ import {
   SourceData,
   ToolData,
   getAnnotationData,
-} from "./index";
+} from "../index";
+import ChatAvatar from "./chat-avatar";
+import { ChatEvents } from "./chat-events";
+import { ChatImage } from "./chat-image";
+import { ChatSources } from "./chat-sources";
+import ChatTools from "./chat-tools";
+import CsvContent from "./csv-content";
 import Markdown from "./markdown";
-import { useCopyToClipboard } from "./use-copy-to-clipboard";
 
 type ContentDisplayConfig = {
   order: number;
@@ -60,7 +60,7 @@ function ChatMessageContent({
 
   const contents: ContentDisplayConfig[] = [
     {
-      order: -4,
+      order: 1,
       component: imageData[0] ? <ChatImage data={imageData[0]} /> : null,
     },
     {
@@ -71,7 +71,7 @@ function ChatMessageContent({
         ) : null,
     },
     {
-      order: -2,
+      order: 2,
       component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
     },
     {
@@ -83,7 +83,7 @@ function ChatMessageContent({
       component: <Markdown content={message.content} />,
     },
     {
-      order: 1,
+      order: 3,
       component: sourceData[0] ? <ChatSources data={sourceData[0]} /> : null,
     },
   ];

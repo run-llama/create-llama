@@ -2,7 +2,7 @@
 
 import { useChat } from "ai/react";
 import { ChatInput, ChatMessages } from "./ui/chat";
-import { useClientConfig } from "./ui/chat/use-config";
+import { useClientConfig } from "./ui/chat/hooks/use-config";
 
 export default function ChatSection() {
   const { chatAPI } = useClientConfig();
@@ -15,6 +15,7 @@ export default function ChatSection() {
     reload,
     stop,
     append,
+    setInput,
   } = useChat({
     api: chatAPI,
     headers: {
@@ -42,6 +43,8 @@ export default function ChatSection() {
         handleInputChange={handleInputChange}
         isLoading={isLoading}
         messages={messages}
+        append={append}
+        setInput={setInput}
       />
     </div>
   );
