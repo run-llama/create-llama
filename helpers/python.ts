@@ -172,6 +172,10 @@ const getAdditionalDependencies = (
         name: "llama-index-agent-openai",
         version: "0.2.2",
       });
+      dependencies.push({
+        name: "llama-index-llms-openai-like",
+        version: "0.1.3",
+      });
       break;
   }
 

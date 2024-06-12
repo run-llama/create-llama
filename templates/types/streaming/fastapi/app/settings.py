@@ -130,9 +130,9 @@ def init_gemini():
     )
 
 def init_llmhub():
-    from llmhub import TSIEmbedding
-    from llmhub import llm_config_from_env
-    from llmhub import embedding_config_from_env
+    from .llmhub import TSIEmbedding
+    from .llmhub import llm_config_from_env
+    from .llmhub import embedding_config_from_env
     from llama_index.llms.openai_like import OpenAILike
 
     llm_configs = llm_config_from_env()
