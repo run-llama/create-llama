@@ -23,15 +23,20 @@ def init_settings():
 
 
 def init_ollama():
-    from llama_index.llms.ollama import Ollama
+    from llama_index.llms.ollama.base import Ollama, DEFAULT_REQUEST_TIMEOUT
     from llama_index.embeddings.ollama import OllamaEmbedding
 
     base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
+    request_timeout = float(
+        os.getenv("OLLAMA_REQUEST_TIMEOUT", DEFAULT_REQUEST_TIMEOUT)
+    )
     Settings.embed_model = OllamaEmbedding(
         base_url=base_url,
         model_name=os.getenv("EMBEDDING_MODEL"),
     )
-    Settings.llm = Ollama(base_url=base_url, model=os.getenv("MODEL"))
+    Settings.llm = Ollama(
+        base_url=base_url, model=os.getenv("MODEL"), request_timeout=request_timeout
+    )
 
 
 def init_openai():
