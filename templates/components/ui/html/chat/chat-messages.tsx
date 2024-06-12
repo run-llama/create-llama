@@ -24,6 +24,7 @@ export default function ChatMessages({
   ) => Promise<string | null | undefined>;
 }) {
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
+  const lastMessage = messages[messages.length - 1];
 
   const scrollToBottom = () => {
     if (scrollableChatContainerRef.current) {
@@ -34,14 +35,14 @@ export default function ChatMessages({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length]);
+  }, [messages.length, lastMessage]);
 
   return (
-    <div className="w-full max-w-5xl p-4 bg-white rounded-xl shadow-xl">
-      <div
-        className="flex flex-col gap-5 divide-y h-[50vh] overflow-auto"
-        ref={scrollableChatContainerRef}
-      >
+    <div
+      className="flex-1 w-full max-w-5xl p-4 bg-white rounded-xl shadow-xl overflow-auto"
+      ref={scrollableChatContainerRef}
+    >
+      <div className="flex flex-col gap-5 divide-y">
         {messages.map((m: Message) => (
           <ChatItem key={m.id} {...m} />
         ))}
