@@ -41,11 +41,11 @@ export default function ChatMessages(
   }, [messageLength, lastMessage]);
 
   return (
-    <div className="w-full rounded-xl bg-white p-4 shadow-xl pb-0 relative">
-      <div
-        className="flex h-[50vh] flex-col gap-5 divide-y overflow-y-auto pb-4"
-        ref={scrollableChatContainerRef}
-      >
+    <div
+      className="flex-1 w-full rounded-xl bg-white p-4 shadow-xl relative overflow-y-auto"
+      ref={scrollableChatContainerRef}
+    >
+      <div className="flex flex-col gap-5 divide-y">
         {props.messages.map((m, i) => {
           const isLoadingMessage = i === messageLength - 1 && props.isLoading;
           return (
@@ -62,14 +62,16 @@ export default function ChatMessages(
           </div>
         )}
       </div>
-      <div className="flex justify-end py-4">
-        <ChatActions
-          reload={props.reload}
-          stop={props.stop}
-          showReload={showReload}
-          showStop={showStop}
-        />
-      </div>
+      {(showReload || showStop) && (
+        <div className="flex justify-end py-4">
+          <ChatActions
+            reload={props.reload}
+            stop={props.stop}
+            showReload={showReload}
+            showStop={showStop}
+          />
+        </div>
+      )}
       {!messageLength && starterQuestions?.length && props.append && (
         <div className="absolute bottom-6 left-0 w-full">
           <div className="grid grid-cols-2 gap-2 mx-20">
