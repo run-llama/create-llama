@@ -6,10 +6,30 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers } from "../../questions";
 
-const LLMHUB_API_URL = "https://llm-server.llmhub.t-systems.net/";
+const LLMHUB_API_URL = "https://llm-server.llmhub.t-systems.net/v2";
 
 const DEFAULT_MODEL = "gpt-3.5-turbo";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
+
+const LLMHUB_MODELS = [
+  "gpt-35-turbo",
+  "gpt-4-32k-1",
+  "gpt-4-32k-canada",
+  "gpt-4-32k-france",
+  "gpt-4-turbo-128k-france",
+  "Llama2-70b-Instruct",
+  "Llama-3-70B-Instruct",
+  "Mixtral-8x7B-Instruct-v0.1",
+  "mistral-large-32k-france",
+  "CodeLlama-2",
+];
+const LLMHUB_EMBEDDING_MODELS = [
+  "text-embedding-ada-002",
+  "text-embedding-ada-002-france",
+  "jina-embeddings-v2-base-de",
+  "jina-embeddings-v2-base-code",
+  "text-embedding-bge-m3",
+];
 
 type LLMHubQuestionsParams = {
   apiKey?: string;
@@ -99,11 +119,11 @@ async function getAvailableModelChoices(
     throw new Error("Need LLMHub key to retrieve model choices");
   }
   const isLLMModel = (modelId: string) => {
-    return modelId.startsWith("gemini");
+    return LLMHUB_MODELS.includes(modelId);
   };
 
   const isEmbeddingModel = (modelId: string) => {
-    return modelId.includes("embedding");
+    return LLMHUB_EMBEDDING_MODELS.includes(modelId);
   };
 
   const spinner = ora("Fetching available models").start();
