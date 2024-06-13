@@ -31,7 +31,7 @@ class ToolFactory:
                 return tool_spec.to_tool_list()
             else:
                 module = importlib.import_module(f"{source_package}.{tool_name}")
-                tools = getattr(module, "get_tools")()
+                tools = module.get_tools()
                 if not all(isinstance(tool, FunctionTool) for tool in tools):
                     raise ValueError(
                         f"The module {module} does not contain valid tools"
