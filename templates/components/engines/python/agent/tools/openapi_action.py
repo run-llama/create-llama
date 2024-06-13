@@ -12,10 +12,15 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
     """
 
     spec_functions = OpenAPIToolSpec.spec_functions + RequestsToolSpec.spec_functions
+    # Cached parsed specs by URI
+    _specs: Dict[str, Tuple[Dict, List[str]]] = {}
 
     def __init__(self, openapi_uri: str, domain_headers: dict = {}, **kwargs):
-        # Load the OpenAPI spec
-        openapi_spec, servers = self.load_openapi_spec(openapi_uri)
+        if openapi_uri not in self._specs:
+            openapi_spec, servers = self._load_openapi_spec(openapi_uri)
+            self._specs[openapi_uri] = (openapi_spec, servers)
+        else:
+            openapi_spec, servers = self._specs[openapi_uri]
 
         # Add the servers to the domain headers if they are not already present
         for server in servers:
@@ -26,7 +31,7 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
         RequestsToolSpec.__init__(self, domain_headers)
 
     @staticmethod
-    def load_openapi_spec(uri: str) -> Tuple[Dict, List[str]]:
+    def _load_openapi_spec(uri: str) -> Tuple[Dict, List[str]]:
         """
         Load an OpenAPI spec from a URI.
 
