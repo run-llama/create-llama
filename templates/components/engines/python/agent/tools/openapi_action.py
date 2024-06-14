@@ -15,7 +15,9 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
     # Cached parsed specs by URI
     _specs: Dict[str, Tuple[Dict, List[str]]] = {}
 
-    def __init__(self, openapi_uri: str, domain_headers: dict = {}, **kwargs):
+    def __init__(self, openapi_uri: str, domain_headers: dict = None, **kwargs):
+        if domain_headers is None:
+            domain_headers = {}
         if openapi_uri not in self._specs:
             openapi_spec, servers = self._load_openapi_spec(openapi_uri)
             self._specs[openapi_uri] = (openapi_spec, servers)
