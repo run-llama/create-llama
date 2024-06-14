@@ -69,4 +69,5 @@ class OpenMeteoWeather:
         return response.json()
 
 
-tools = [FunctionTool.from_defaults(OpenMeteoWeather.get_weather_information)]
+def get_tools():
+    return [FunctionTool.from_defaults(OpenMeteoWeather.get_weather_information)]

@@ -29,9 +29,23 @@ class E2BCodeInterpreter:
 
     output_dir = "tool-output"
 
-    def __init__(self, api_key: str, filesever_url_prefix: str):
-        self.api_key = api_key
+    def __init__(self):
+        api_key = os.getenv("E2B_API_KEY")
+        filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if not api_key:
+            raise ValueError(
+                "E2B_API_KEY key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key"
+            )
+        if not filesever_url_prefix:
+            raise ValueError(
+                "FILESERVER_URL_PREFIX is required to display file output from sandbox"
+            )
+
         self.filesever_url_prefix = filesever_url_prefix
+        self.interpreter = CodeInterpreter(api_key=api_key)
+
+    def __del__(self):
+        self.interpreter.close()
 
     def get_output_path(self, filename: str) -> str:
         # if output directory doesn't exist, create it
@@ -101,50 +115,28 @@ class E2BCodeInterpreter:
         return output
 
     def interpret(self, code: str) -> E2BToolOutput:
-        with CodeInterpreter(api_key=self.api_key) as interpreter:
-            logger.info(
-                f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
-            )
-            exec = interpreter.notebook.exec_cell(code)
+        """
+        Execute python code in a Jupyter notebook cell, the toll will return result, stdout, stderr, display_data, and error.
 
-            if exec.error:
-                logger.error("Error when executing code", exec.error)
-                output = E2BToolOutput(is_error=True, logs=exec.logs, results=[])
+        Parameters:
+            code (str): The python code to be executed in a single cell.
+        """
+        logger.info(
+            f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
+        )
+        exec = self.interpreter.notebook.exec_cell(code)
+
+        if exec.error:
+            logger.error("Error when executing code", exec.error)
+            output = E2BToolOutput(is_error=True, logs=exec.logs, results=[])
+        else:
+            if len(exec.results) == 0:
+                output = E2BToolOutput(is_error=False, logs=exec.logs, results=[])
             else:
-                if len(exec.results) == 0:
-                    output = E2BToolOutput(is_error=False, logs=exec.logs, results=[])
-                else:
-                    results = self.parse_result(exec.results[0])
-                    output = E2BToolOutput(
-                        is_error=False, logs=exec.logs, results=results
-                    )
-            return output
+                results = self.parse_result(exec.results[0])
+                output = E2BToolOutput(is_error=False, logs=exec.logs, results=results)
+        return output
 
 
-def code_interpret(code: str) -> Dict:
-    """
-    Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.
-
-    Parameters:
-        code (str): The python code to be executed in a single cell.
-    """
-    api_key = os.getenv("E2B_API_KEY")
-    filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-    if not api_key:
-        raise ValueError(
-            "E2B_API_KEY key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key"
-        )
-    if not filesever_url_prefix:
-        raise ValueError(
-            "FILESERVER_URL_PREFIX is required to display file output from sandbox"
-        )
-
-    interpreter = E2BCodeInterpreter(
-        api_key=api_key, filesever_url_prefix=filesever_url_prefix
-    )
-    output = interpreter.interpret(code)
-    return output.dict()
-
-
-# Specify as functions tools to be loaded by the ToolFactory
-tools = [FunctionTool.from_defaults(code_interpret)]
+def get_tools():
+    return [FunctionTool.from_defaults(E2BCodeInterpreter().interpret)]
