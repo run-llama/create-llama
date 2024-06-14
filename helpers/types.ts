@@ -1,7 +1,7 @@
 import { PackageManager } from "../helpers/get-pkg-manager";
 import { Tool } from "./tools";
 
-export type ModelProvider = "openai" | "ollama" | "anthropic" | "gemini";
+export type ModelProvider = "openai" | "groq" | "ollama" | "anthropic" | "gemini";
 export type ModelConfig = {
   provider: ModelProvider;
   apiKey?: string;

@@ -3,6 +3,7 @@ import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
+import { askAnthropicQuestions } from "./groq";
 import { askGeminiQuestions } from "./gemini";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
@@ -32,6 +33,7 @@ export async function askModelConfig({
             title: "OpenAI",
             value: "openai",
           },
+          { title: "Groq", value: "groq" },
           { title: "Ollama", value: "ollama" },
           { title: "Anthropic", value: "anthropic" },
           { title: "Gemini", value: "gemini" },
@@ -47,6 +49,9 @@ export async function askModelConfig({
   switch (modelProvider) {
     case "ollama":
       modelConfig = await askOllamaQuestions({ askModels });
+      break;
+    case "groq":
+      modelConfig = await askGroqQuestions({ askModels });
       break;
     case "anthropic":
       modelConfig = await askAnthropicQuestions({ askModels });
