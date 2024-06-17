@@ -5,12 +5,14 @@ import {
   Gemini,
   GeminiEmbedding,
   OpenAI,
+  Groq,
   OpenAIEmbedding,
   Settings,
 } from "llamaindex";
 import { HuggingFaceEmbedding } from "llamaindex/embeddings/HuggingFaceEmbedding";
 import { OllamaEmbedding } from "llamaindex/embeddings/OllamaEmbedding";
 import { ALL_AVAILABLE_ANTHROPIC_MODELS } from "llamaindex/llm/anthropic";
+import { ALL_AVAILABLE_GROQ_MODELS } from "llamaindex/llm/groq";
 import { Ollama } from "llamaindex/llm/ollama";
 
 const CHUNK_SIZE = 512;
@@ -27,6 +29,9 @@ export const initSettings = async () => {
   switch (process.env.MODEL_PROVIDER) {
     case "ollama":
       initOllama();
+      break;
+    case "groq":
+      initGroq();
       break;
     case "anthropic":
       initAnthropic();
@@ -79,6 +84,21 @@ function initAnthropic() {
   };
   Settings.llm = new Anthropic({
     model: process.env.MODEL as keyof typeof ALL_AVAILABLE_ANTHROPIC_MODELS,
+  });
+  Settings.embedModel = new HuggingFaceEmbedding({
+    modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
+  });
+}
+
+
+function initGroq() {
+  // To review
+  const embedModelMap: Record<string, string> = {
+    "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
+    "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
+  };
+  Settings.llm = new Groq({
+    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_GROQ_MODELS,
   });
   Settings.embedModel = new HuggingFaceEmbedding({
     modelType: embedModelMap[process.env.EMBEDDING_MODEL!],

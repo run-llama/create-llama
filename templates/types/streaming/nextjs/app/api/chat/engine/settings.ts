@@ -28,6 +28,9 @@ export const initSettings = async () => {
     case "ollama":
       initOllama();
       break;
+    case "groq":
+      initGroq();
+      break;
     case "anthropic":
       initAnthropic();
       break;
@@ -68,6 +71,19 @@ function initOllama() {
   Settings.embedModel = new OllamaEmbedding({
     model: process.env.EMBEDDING_MODEL ?? "",
     config,
+  });
+}
+
+function initGroq() {
+  const embedModelMap: Record<string, string> = {
+    "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
+    "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
+  };
+  Settings.llm = new Groq({
+    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_GROQ_MODELS,
+  });
+  Settings.embedModel = new HuggingFaceEmbedding({
+    modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
   });
 }
 

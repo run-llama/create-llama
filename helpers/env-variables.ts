@@ -215,6 +215,15 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "groq"
+      ? [
+          {
+            name: "GROQ_API_KEY",
+            description: "The Groq API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ]
+      : []),
     ...(modelConfig.provider === "gemini"
       ? [
           {
