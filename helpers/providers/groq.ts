@@ -10,8 +10,7 @@ const MODELS = [
 ];
 const DEFAULT_MODEL = MODELS[0];
 
-// TODO: get embedding vector dimensions from the anthropic sdk (currently not supported)
-// Use huggingface embedding models for now
+// Use huggingface embedding models for now as Groq doesn't support embedding models
 enum HuggingFaceEmbeddingModelType {
   XENOVA_ALL_MINILM_L6_V2 = "all-MiniLM-L6-v2",
   XENOVA_ALL_MPNET_BASE_V2 = "all-mpnet-base-v2",
