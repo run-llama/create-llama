@@ -55,6 +55,26 @@ export const supportedTools: Tool[] = [
     ],
   },
   {
+    display: "DuckDuckGo Search",
+    name: "duckduckgo.DuckDuckGoSearchToolSpec",
+    dependencies: [
+      {
+        name: "llama-index-tools-duckduckgo",
+        version: "0.1.1",
+      },
+    ],
+    supportedFrameworks: ["fastapi"],
+    type: ToolType.LLAMAHUB,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for DuckDuckGo search tool.",
+        value:
+          "You are a DuckDuckGo search agent. You can use information from DuckDuckGo search to answer user questions.",
+      },
+    ],
+  },
+  {
     display: "Wikipedia",
     name: "wikipedia.WikipediaToolSpec",
     dependencies: [
