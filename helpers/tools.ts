@@ -63,14 +63,15 @@ export const supportedTools: Tool[] = [
         version: "0.1.1",
       },
     ],
-    supportedFrameworks: ["fastapi"],
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
     type: ToolType.LLAMAHUB,
     envVars: [
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
         description: "System prompt for DuckDuckGo search tool.",
-        value:
-          "You are a DuckDuckGo search agent. You can use information from DuckDuckGo search to answer user questions.",
+        value: `You are a DuckDuckGo search agent. 
+You can use the duckduckgo search tool to get information from the web to answer user questions.
+For better results, you can specify the region parameter to get results from a specific region but it's optional.`,
       },
     ],
   },
