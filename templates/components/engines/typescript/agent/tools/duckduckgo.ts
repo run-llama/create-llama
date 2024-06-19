@@ -12,7 +12,7 @@ export type DuckDuckGoToolParams = {
 };
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<DuckDuckGoParameter>> = {
-  name: "duckduckgo.DuckDuckGoSearchToolSpec",
+  name: "duckduckgo",
   description: "Use this function to search for any query in DuckDuckGo.",
   parameters: {
     type: "object",
@@ -47,7 +47,7 @@ export class DuckDuckGoSearchTool implements BaseTool<DuckDuckGoParameter> {
 
   async call(input: DuckDuckGoParameter) {
     const { query, region } = input;
-    const options = { region } ?? {};
+    const options = region ? { region } : {};
     const searchResults = await search(query, options);
 
     return searchResults.results.map((result) => {

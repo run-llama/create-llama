@@ -36,7 +36,7 @@ const toolFactory: Record<string, ToolCreator> = {
     );
     return await openAPIActionTool.toToolFunctions();
   },
-  "duckduckgo.DuckDuckGoSearchToolSpec": async (config: unknown) => {
+  duckduckgo: async (config: unknown) => {
     return [new DuckDuckGoSearchTool(config as DuckDuckGoToolParams)];
   },
 };
