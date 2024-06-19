@@ -92,14 +92,21 @@ function initAnthropic() {
 
 
 function initGroq() {
-  // To review
   const embedModelMap: Record<string, string> = {
     "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
     "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
   };
+
+  const modelMap: Record<string, string> = {
+        "llama3-8b": "llama3-8b-8192",
+        "llama3-70b": "llama3-70b-8192",
+        "mixtral-8x7b": "mixtral-8x7b-32768",
+  }
+
   Settings.llm = new Groq({
-    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_GROQ_MODELS,
+    model: modelMap[process.env.MODEL!],
   });
+
   Settings.embedModel = new HuggingFaceEmbedding({
     modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
   });
