@@ -82,10 +82,10 @@ function initGroq() {
   };
 
   const modelMap: Record<string, string> = {
-        "llama3-8b": "llama3-8b-8192",
-        "llama3-70b": "llama3-70b-8192",
-        "mixtral-8x7b": "mixtral-8x7b-32768",
-  }
+    "llama3-8b": "llama3-8b-8192",
+    "llama3-70b": "llama3-70b-8192",
+    "mixtral-8x7b": "mixtral-8x7b-32768",
+  };
 
   Settings.llm = new Groq({
     model: modelMap[process.env.MODEL!],

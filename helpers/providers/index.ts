@@ -3,8 +3,8 @@ import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
-import { askGroqQuestions } from "./groq";
 import { askGeminiQuestions } from "./gemini";
+import { askGroqQuestions } from "./groq";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
 

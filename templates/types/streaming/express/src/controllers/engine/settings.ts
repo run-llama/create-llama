@@ -4,15 +4,14 @@ import {
   GEMINI_MODEL,
   Gemini,
   GeminiEmbedding,
-  OpenAI,
   Groq,
+  OpenAI,
   OpenAIEmbedding,
   Settings,
 } from "llamaindex";
 import { HuggingFaceEmbedding } from "llamaindex/embeddings/HuggingFaceEmbedding";
 import { OllamaEmbedding } from "llamaindex/embeddings/OllamaEmbedding";
 import { ALL_AVAILABLE_ANTHROPIC_MODELS } from "llamaindex/llm/anthropic";
-import { ALL_AVAILABLE_GROQ_MODELS } from "llamaindex/llm/groq";
 import { Ollama } from "llamaindex/llm/ollama";
 
 const CHUNK_SIZE = 512;
@@ -90,7 +89,6 @@ function initAnthropic() {
   });
 }
 
-
 function initGroq() {
   const embedModelMap: Record<string, string> = {
     "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
@@ -98,10 +96,10 @@ function initGroq() {
   };
 
   const modelMap: Record<string, string> = {
-        "llama3-8b": "llama3-8b-8192",
-        "llama3-70b": "llama3-70b-8192",
-        "mixtral-8x7b": "mixtral-8x7b-32768",
-  }
+    "llama3-8b": "llama3-8b-8192",
+    "llama3-70b": "llama3-70b-8192",
+    "mixtral-8x7b": "mixtral-8x7b-32768",
+  };
 
   Settings.llm = new Groq({
     model: modelMap[process.env.MODEL!],
