@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.1.11
+
+### Patch Changes
+
+- 48b96ff: Add DuckDuckGo search tool
+- 9c9decb: Reuse function tool instances and improve e2b interpreter tool for Python
+- 02ed277: Add Groq as a model provider
+- 0748f2e: Remove hard-coded Gemini supported models
+
 ## 0.1.10
 
 ### Patch Changes
