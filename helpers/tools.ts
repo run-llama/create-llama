@@ -55,6 +55,29 @@ export const supportedTools: Tool[] = [
     ],
   },
   {
+    // For python app, we will use a local DuckDuckGo search tool (instead of DuckDuckGo search tool in LlamaHub)
+    // to get the same results as the TS app.
+    display: "DuckDuckGo Search",
+    name: "duckduckgo",
+    dependencies: [
+      {
+        name: "duckduckgo-search",
+        version: "6.1.7",
+      },
+    ],
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for DuckDuckGo search tool.",
+        value: `You are a DuckDuckGo search agent. 
+You can use the duckduckgo search tool to get information from the web to answer user questions.
+For better results, you can specify the region parameter to get results from a specific region but it's optional.`,
+      },
+    ],
+  },
+  {
     display: "Wikipedia",
     name: "wikipedia.WikipediaToolSpec",
     dependencies: [
