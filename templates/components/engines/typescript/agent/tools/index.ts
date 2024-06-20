@@ -40,7 +40,7 @@ const toolFactory: Record<string, ToolCreator> = {
   duckduckgo: async (config: unknown) => {
     return [new DuckDuckGoSearchTool(config as DuckDuckGoToolParams)];
   },
-  "img_gen": async (config: unknown) => {
+  img_gen: async (config: unknown) => {
     return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
   },
 };
