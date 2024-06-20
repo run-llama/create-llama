@@ -164,6 +164,10 @@ export default function ChatInput(
         <FileUploader
           onFileUpload={handleUploadFile}
           onFileError={props.onFileError}
+          config={{
+            allowedExtensions: ["jpg", "png", "jpeg", "csv"],
+            disabled: props.isLoading,
+          }}
         />
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
