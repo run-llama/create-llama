@@ -1,5 +1,5 @@
 import type { JSONSchemaType } from "ajv";
-import FormData from "form-data";
+import { FormData } from "formdata-node";
 import fs from "fs";
 import got from "got";
 import { BaseTool, ToolMetadata } from "llamaindex";
