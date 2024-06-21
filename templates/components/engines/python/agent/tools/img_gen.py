@@ -4,7 +4,6 @@ import logging
 import requests
 from typing import Optional
 from pydantic import BaseModel, Field
-from pydantic.alias_generators import to_camel
 from llama_index.core.tools import FunctionTool
 
 logger = logging.getLogger(__name__)
@@ -33,12 +32,12 @@ class ImageGeneratorTool:
     def __init__(self, api_key: str = None):
         if not api_key:
             api_key = os.getenv("STABILITY_API_KEY")
-        if api_key is None:
+        self._api_key = api_key
+        self.fileserver_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if self._api_key is None:
             raise ValueError(
                 "STABILITY_API_KEY key is required to run image generator. Get it here: https://platform.stability.ai/account/keys"
             )
-        self._api_key = api_key
-        self.fileserver_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if self.fileserver_url_prefix is None:
             raise ValueError("FILESERVER_URL_PREFIX is required.")
 
@@ -97,5 +96,5 @@ class ImageGeneratorTool:
             )
 
 
-def get_tools():
-    return [FunctionTool.from_defaults(ImageGeneratorTool().generate_image)]
+def get_tools(**kwargs):
+    return [FunctionTool.from_defaults(ImageGeneratorTool(**kwargs).generate_image)]
