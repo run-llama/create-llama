@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.12
+
+### Patch Changes
+
+- aa69014: Fix NextJS for TS 5.2
+
 ## 0.1.11
 
 ### Patch Changes
