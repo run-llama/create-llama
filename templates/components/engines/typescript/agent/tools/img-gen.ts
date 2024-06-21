@@ -1,9 +1,10 @@
 import type { JSONSchemaType } from "ajv";
-import FormData from "form-data";
+import { FormData } from "formdata-node";
 import fs from "fs";
 import got from "got";
 import { BaseTool, ToolMetadata } from "llamaindex";
 import path from "node:path";
+import { Readable } from "stream";
 
 export type ImgGeneratorParameter = {
   prompt: string;
@@ -73,7 +74,11 @@ export class ImgGeneratorTool implements BaseTool<ImgGeneratorParameter> {
     form.append("output_format", this.IMG_OUTPUT_FORMAT);
     const buffer = await got
       .post(this.IMG_GEN_API, {
-        body: form,
+        // Not sure why it shows an type error when passing form to body
+        // Although I follow document: https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#body
+        // Tt still works fine, so I make casting to unknown to avoid the typescript warning
+        // Found a similar issue: https://github.com/sindresorhus/got/discussions/1877
+        body: form as unknown as Buffer | Readable | string,
         headers: {
           Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
           Accept: "image/*",

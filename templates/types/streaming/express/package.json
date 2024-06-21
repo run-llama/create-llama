@@ -1,13 +1,19 @@
 {
   "name": "llama-index-express-streaming",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "exports": "./index.js",
+  "types": "./index.d.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
-    "build": "tsup index.ts --format cjs --dts",
+    "build": "tsup index.ts --format esm --dts",
     "start": "node dist/index.js",
-    "dev": "concurrently \"tsup index.ts --format cjs --dts --watch\" \"nodemon --watch dist/index.js\""
+    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\"",
+    "generate": "tsx src\\controllers\\engine\\generate.ts"
   },
   "dependencies": {
     "ai": "^3.0.21",
@@ -19,9 +25,9 @@
     "pdf2json": "3.0.5",
     "ajv": "^8.12.0",
     "@e2b/code-interpreter": "^0.0.5",
-    "got": "10.7.0",
+    "got": "^14.4.1",
     "@apidevtools/swagger-parser": "^10.1.0",
-    "form-data": "^4.0.0"
+    "formdata-node": "^6.0.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.16",
