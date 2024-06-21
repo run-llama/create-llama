@@ -41,7 +41,15 @@ class ImageGeneratorTool:
         if self.fileserver_url_prefix is None:
             raise ValueError("FILESERVER_URL_PREFIX is required.")
 
+    def _prepare_output_dir(self):
+        """
+        Create the output directory if it doesn't exist
+        """
+        if not os.path.exists(self._IMG_OUTPUT_DIR):
+            os.makedirs(self._IMG_OUTPUT_DIR, exist_ok=True)
+
     def _save_image(self, image_data: bytes):
+        self._prepare_output_dir()
         filename = f"{uuid.uuid4()}.{self._IMG_OUTPUT_FORMAT}"
         output_path = os.path.join(self._IMG_OUTPUT_DIR, filename)
         with open(output_path, "wb") as f:
