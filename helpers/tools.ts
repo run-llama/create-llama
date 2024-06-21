@@ -173,7 +173,7 @@ For better results, you can specify the region parameter to get results from a s
   {
     display: "Image Generator",
     name: "img_gen",
-    supportedFrameworks: ["express", "nextjs"],
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
     envVars: [
       {
