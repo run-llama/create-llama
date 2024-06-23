@@ -19,15 +19,6 @@ class ToolFactory:
         ToolType.LOCAL: "app.engine.tools",
     }
 
-    @staticmethod
-    @cached(
-        LRUCache(maxsize=100),
-        key=lambda tool_type, tool_name, config: (
-            tool_type,
-            tool_name,
-            json.dumps(config, sort_keys=True),
-        ),
-    )
     def load_tools(tool_type: str, tool_name: str, config: dict) -> list[FunctionTool]:
         source_package = ToolFactory.TOOL_SOURCE_PACKAGE_MAP[tool_type]
         try:
@@ -40,7 +31,7 @@ class ToolFactory:
                 return tool_spec.to_tool_list()
             else:
                 module = importlib.import_module(f"{source_package}.{tool_name}")
-                tools = getattr(module, "tools")
+                tools = module.get_tools()
                 if not all(isinstance(tool, FunctionTool) for tool in tools):
                     raise ValueError(
                         f"The module {module} does not contain valid tools"

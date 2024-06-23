@@ -1,54 +1,53 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
-import { OpenAPIActionToolSpec } from "./openapi-action";
+import { OpenAPIActionTool } from "./openapi-action";
 import { WeatherTool, WeatherToolParams } from "./weather";
 
-type ToolCreator = (config: unknown) => BaseToolWithCall[];
+type ToolCreator = (config: unknown) => Promise<BaseToolWithCall[]>;
 
 export async function createTools(toolConfig: {
   local: Record<string, unknown>;
   llamahub: any;
 }): Promise<BaseToolWithCall[]> {
   // add local tools from the 'tools' folder (if configured)
-  const tools = createLocalTools(toolConfig.local);
+  const tools = await createLocalTools(toolConfig.local);
   // add tools from LlamaIndexTS (if configured)
   tools.push(...(await ToolsFactory.createTools(toolConfig.llamahub)));
   return tools;
 }
 
 const toolFactory: Record<string, ToolCreator> = {
-  weather: (config: unknown) => {
+  weather: async (config: unknown) => {
     return [new WeatherTool(config as WeatherToolParams)];
   },
-  interpreter: (config: unknown) => {
+  interpreter: async (config: unknown) => {
     return [new InterpreterTool(config as InterpreterToolParams)];
   },
-  "openapi_action.OpenAPIActionToolSpec": (config: unknown) => {
+  "openapi_action.OpenAPIActionToolSpec": async (config: unknown) => {
     const { openapi_uri, domain_headers } = config as {
       openapi_uri: string;
       domain_headers: Record<string, Record<string, string>>;
     };
-    const openAPIActionTool = new OpenAPIActionToolSpec(
+    const openAPIActionTool = new OpenAPIActionTool(
       openapi_uri,
       domain_headers,
     );
-    return openAPIActionTool.toToolFunctions();
+    return await openAPIActionTool.toToolFunctions();
   },
 };
 
-function createLocalTools(
+async function createLocalTools(
   localConfig: Record<string, unknown>,
-): BaseToolWithCall[] {
+): Promise<BaseToolWithCall[]> {
   const tools: BaseToolWithCall[] = [];
 
-  Object.keys(localConfig).forEach((key) => {
+  for (const [key, toolConfig] of Object.entries(localConfig)) {
     if (key in toolFactory) {
-      const toolConfig = localConfig[key];
-      const tool = toolFactory[key](toolConfig);
-      tools.push(...tool);
+      const newTools = await toolFactory[key](toolConfig);
+      tools.push(...newTools);
     }
-  });
+  }
 
   return tools;
 }

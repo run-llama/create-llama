@@ -26,15 +26,20 @@ def init_settings():
 
 
 def init_ollama():
-    from llama_index.llms.ollama import Ollama
+    from llama_index.llms.ollama.base import Ollama, DEFAULT_REQUEST_TIMEOUT
     from llama_index.embeddings.ollama import OllamaEmbedding
 
     base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
+    request_timeout = float(
+        os.getenv("OLLAMA_REQUEST_TIMEOUT", DEFAULT_REQUEST_TIMEOUT)
+    )
     Settings.embed_model = OllamaEmbedding(
         base_url=base_url,
         model_name=os.getenv("EMBEDDING_MODEL"),
     )
-    Settings.llm = Ollama(base_url=base_url, model=os.getenv("MODEL"))
+    Settings.llm = Ollama(
+        base_url=base_url, model=os.getenv("MODEL"), request_timeout=request_timeout
+    )
 
 
 def init_openai():
@@ -113,11 +118,11 @@ def init_gemini():
     from llama_index.llms.gemini import Gemini
     from llama_index.embeddings.gemini import GeminiEmbedding
 
-    model_map: Dict[str, str] = {
-        "gemini-1.5-pro-latest": "models/gemini-1.5-pro-latest",
-        "gemini-pro": "models/gemini-pro",
-        "gemini-pro-vision": "models/gemini-pro-vision",
-    }
+    model_name = f"models/{os.getenv('MODEL')}"
+    embed_model_name = f"models/{os.getenv('EMBEDDING_MODEL')}"
+
+    Settings.llm = Gemini(model=model_name)
+    Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
 
     embed_model_map: Dict[str, str] = {
         "embedding-001": "models/embedding-001",

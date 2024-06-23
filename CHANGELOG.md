@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.1.10
+
+### Patch Changes
+
+- 9112d08: Add OpenAPI tool for Typescript
+- 8f03f8d: Add OLLAMA_REQUEST_TIMEOUT variable to config Ollama timeout (Python)
+- 8f03f8d: Apply nest_asyncio for llama parse
+
 ## 0.1.9
 
 ### Patch Changes

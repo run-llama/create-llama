@@ -656,7 +656,7 @@ export const askQuestions = async (
         t.supportedFrameworks?.includes(program.framework),
       );
       const toolChoices = options.map((tool) => ({
-        title: `${tool.display}${toolRequiresConfig(tool) ? "" : " (no config needed)"}`,
+        title: `${tool.display}${toolRequiresConfig(tool) ? " (needs configuration)" : ""}`,
         value: tool.name,
       }));
       const { toolsName } = await prompts({

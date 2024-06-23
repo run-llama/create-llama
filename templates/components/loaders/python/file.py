@@ -23,7 +23,12 @@ def llama_parse_parser():
             "LLAMA_CLOUD_API_KEY environment variable is not set. "
             "Please set it in .env file or in your shell environment then run again!"
         )
-    parser = LlamaParse(result_type="markdown", verbose=True, language="en")
+    parser = LlamaParse(
+        result_type="markdown",
+        verbose=True,
+        language="en",
+        ignore_errors=False,
+    )
     return parser
 
 
@@ -32,15 +37,19 @@ def get_file_documents(config: FileLoaderConfig):
 
     try:
         reader = SimpleDirectoryReader(
-            config.data_dir,
-            recursive=True,
-            filename_as_id=True,
+            config.data_dir, recursive=True, filename_as_id=True, raise_on_error=True
         )
         if config.use_llama_parse:
+            # LlamaParse is async first,
+            # so we need to use nest_asyncio to run it in sync mode
+            import nest_asyncio
+
+            nest_asyncio.apply()
+
             parser = llama_parse_parser()
             reader.file_extractor = {".pdf": parser}
         return reader.load_data()
-    except ValueError as e:
+    except Exception as e:
         import sys, traceback
 
         # Catch the error if the data dir is empty
