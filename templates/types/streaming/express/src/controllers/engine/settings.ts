@@ -4,6 +4,7 @@ import {
   GEMINI_MODEL,
   Gemini,
   GeminiEmbedding,
+  Groq,
   OpenAI,
   OpenAIEmbedding,
   Settings,
@@ -27,6 +28,9 @@ export const initSettings = async () => {
   switch (process.env.MODEL_PROVIDER) {
     case "ollama":
       initOllama();
+      break;
+    case "groq":
+      initGroq();
       break;
     case "anthropic":
       initAnthropic();
@@ -80,6 +84,27 @@ function initAnthropic() {
   Settings.llm = new Anthropic({
     model: process.env.MODEL as keyof typeof ALL_AVAILABLE_ANTHROPIC_MODELS,
   });
+  Settings.embedModel = new HuggingFaceEmbedding({
+    modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
+  });
+}
+
+function initGroq() {
+  const embedModelMap: Record<string, string> = {
+    "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
+    "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
+  };
+
+  const modelMap: Record<string, string> = {
+    "llama3-8b": "llama3-8b-8192",
+    "llama3-70b": "llama3-70b-8192",
+    "mixtral-8x7b": "mixtral-8x7b-32768",
+  };
+
+  Settings.llm = new Groq({
+    model: modelMap[process.env.MODEL!],
+  });
+
   Settings.embedModel = new HuggingFaceEmbedding({
     modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
   });

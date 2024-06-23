@@ -3,6 +3,7 @@ import { Tool } from "./tools";
 
 export type ModelProvider =
   | "openai"
+  | "groq"
   | "ollama"
   | "anthropic"
   | "gemini"

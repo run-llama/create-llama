@@ -1,5 +1,6 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
+import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
 import { WeatherTool, WeatherToolParams } from "./weather";
@@ -34,6 +35,9 @@ const toolFactory: Record<string, ToolCreator> = {
       domain_headers,
     );
     return await openAPIActionTool.toToolFunctions();
+  },
+  duckduckgo: async (config: unknown) => {
+    return [new DuckDuckGoSearchTool(config as DuckDuckGoToolParams)];
   },
 };
 

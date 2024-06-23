@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+
 from llama_index.core.settings import Settings
 
 
@@ -8,6 +9,8 @@ def init_settings():
     match model_provider:
         case "openai":
             init_openai()
+        case "groq":
+            init_groq()
         case "ollama":
             init_ollama()
         case "anthropic":
@@ -26,8 +29,8 @@ def init_settings():
 
 
 def init_ollama():
-    from llama_index.llms.ollama.base import Ollama, DEFAULT_REQUEST_TIMEOUT
     from llama_index.embeddings.ollama import OllamaEmbedding
+    from llama_index.llms.ollama.base import DEFAULT_REQUEST_TIMEOUT, Ollama
 
     base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
     request_timeout = float(
@@ -43,9 +46,9 @@ def init_ollama():
 
 
 def init_openai():
-    from llama_index.llms.openai import OpenAI
-    from llama_index.embeddings.openai import OpenAIEmbedding
     from llama_index.core.constants import DEFAULT_TEMPERATURE
+    from llama_index.embeddings.openai import OpenAIEmbedding
+    from llama_index.llms.openai import OpenAI
 
     max_tokens = os.getenv("LLM_MAX_TOKENS")
     config = {
@@ -64,9 +67,9 @@ def init_openai():
 
 
 def init_azure_openai():
-    from llama_index.llms.azure_openai import AzureOpenAI
-    from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
     from llama_index.core.constants import DEFAULT_TEMPERATURE
+    from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
+    from llama_index.llms.azure_openai import AzureOpenAI
 
     llm_deployment = os.getenv("AZURE_OPENAI_LLM_DEPLOYMENT")
     embedding_deployment = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
@@ -91,9 +94,30 @@ def init_azure_openai():
     Settings.embed_model = AzureOpenAIEmbedding(**embedding_config)
 
 
-def init_anthropic():
-    from llama_index.llms.anthropic import Anthropic
+def init_groq():
     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    from llama_index.llms.groq import Groq
+
+    model_map: Dict[str, str] = {
+        "llama3-8b": "llama3-8b-8192",
+        "llama3-70b": "llama3-70b-8192",
+        "mixtral-8x7b": "mixtral-8x7b-32768",
+    }
+
+    embed_model_map: Dict[str, str] = {
+        "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+        "all-mpnet-base-v2": "sentence-transformers/all-mpnet-base-v2",
+    }
+
+    Settings.llm = Groq(model=model_map[os.getenv("MODEL")])
+    Settings.embed_model = HuggingFaceEmbedding(
+        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
+    )
+
+
+def init_anthropic():
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    from llama_index.llms.anthropic import Anthropic
 
     model_map: Dict[str, str] = {
         "claude-3-opus": "claude-3-opus-20240229",
@@ -115,8 +139,8 @@ def init_anthropic():
 
 
 def init_gemini():
-    from llama_index.llms.gemini import Gemini
     from llama_index.embeddings.gemini import GeminiEmbedding
+    from llama_index.llms.gemini import Gemini
 
     model_name = f"models/{os.getenv('MODEL')}"
     embed_model_name = f"models/{os.getenv('EMBEDDING_MODEL')}"
