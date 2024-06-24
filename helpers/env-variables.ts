@@ -248,6 +248,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
             name: "T_SYSTEMS_LLMHUB_BASE_URL",
             description:
               "The base URL for the T-Systems LLM Hub API. Eg: http://localhost:11434",
+            value: modelConfig.apiBase,
+          },
+          {
+            name: "T_SYSTEMS_LLMHUB_API_KEY",
+            description: "API Key for T-System's AI Foundation Model (LLMHUB)",
+            value: modelConfig.apiKey,
           },
         ]
       : []),

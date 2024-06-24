@@ -41,6 +41,7 @@ export async function askLLMHubQuestions({
   apiKey,
 }: LLMHubQuestionsParams): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
+    apiBase: LLMHUB_API_URL,
     apiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,

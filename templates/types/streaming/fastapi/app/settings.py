@@ -19,7 +19,7 @@ def init_settings():
             init_gemini()
         case "azure-openai":
             init_azure_openai()
-        case "llmhub":
+        case "t-systems":
             init_llmhub()
         case _:
             raise ValueError(f"Invalid model provider: {model_provider}")

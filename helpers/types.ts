@@ -10,6 +10,7 @@ export type ModelProvider =
   | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
+  apiBase?: string;
   apiKey?: string;
   model: string;
   embeddingModel: string;
