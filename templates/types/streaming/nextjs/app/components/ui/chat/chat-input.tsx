@@ -7,8 +7,10 @@ import FileUploader from "../file-uploader";
 import { Input } from "../input";
 import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
+import UploadPdfPreview from "../upload-pdf-preview";
 import { ChatHandler } from "./chat.interface";
 import { useCsv } from "./hooks/use-csv";
+import { usePdf } from "./hooks/use-pdf ";
 
 export default function ChatInput(
   props: Pick<
@@ -26,9 +28,10 @@ export default function ChatInput(
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const { files: csvFiles, upload, remove, reset } = useCsv();
+  const { pdf, setPdf, uploadAndEmbed } = usePdf();
 
   const getAnnotations = () => {
-    if (!imageUrl && csvFiles.length === 0) return undefined;
+    if (!imageUrl && csvFiles.length === 0 && !pdf) return undefined;
     const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
       annotations.push({
@@ -46,6 +49,22 @@ export default function ChatInput(
             filename: file.filename,
             filesize: file.filesize,
           })),
+        },
+      });
+    }
+    if (pdf) {
+      annotations.push({
+        type: MessageAnnotationType.PDF,
+        data: {
+          pdfFiles: [
+            {
+              id: pdf.id,
+              content: pdf.content,
+              filename: pdf.filename,
+              filesize: pdf.filesize,
+              embeddings: pdf.embeddings,
+            },
+          ],
         },
       });
     }
@@ -74,6 +93,7 @@ export default function ChatInput(
       handleSubmitWithAnnotations(e, annotations);
       imageUrl && setImageUrl(null);
       csvFiles.length && reset();
+      pdf && setPdf(null);
       return;
     }
     props.handleSubmit(e);
@@ -84,7 +104,7 @@ export default function ChatInput(
   const readContent = async (file: File): Promise<string> => {
     const content = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      if (file.type.startsWith("image/")) {
+      if (file.type.startsWith("image/") || file.type === "application/pdf") {
         reader.readAsDataURL(file);
       } else {
         reader.readAsText(file);
@@ -113,6 +133,16 @@ export default function ChatInput(
     }
   };
 
+  const handleUploadPdfFile = async (file: File) => {
+    const base64 = await readContent(file);
+    await uploadAndEmbed({
+      id: uuidv4(),
+      filename: file.name,
+      filesize: file.size,
+      pdfBase64: base64,
+    });
+  };
+
   const handleUploadFile = async (file: File) => {
     try {
       if (file.type.startsWith("image/")) {
@@ -124,6 +154,13 @@ export default function ChatInput(
           return;
         }
         return await handleUploadCsvFile(file);
+      }
+      if (file.type === "application/pdf") {
+        if (pdf) {
+          alert("You can only upload one pdf file at a time.");
+          return;
+        }
+        return await handleUploadPdfFile(file);
       }
       props.onFileUpload?.(file);
     } catch (error: any) {
@@ -152,6 +189,7 @@ export default function ChatInput(
           })}
         </div>
       )}
+      {pdf && <UploadPdfPreview pdf={pdf} onRemove={() => setPdf(null)} />}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Input
           autoFocus

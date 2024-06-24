@@ -3,6 +3,7 @@ import { Check, Copy } from "lucide-react";
 import { Message } from "ai";
 import { Fragment } from "react";
 import { Button } from "../../button";
+import UploadPdfPreview from "../../upload-pdf-preview";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
   CsvData,
@@ -10,6 +11,7 @@ import {
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
+  PDFData,
   SourceData,
   ToolData,
   getAnnotationData,
@@ -45,6 +47,10 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.CSV,
   );
+  const pdfData = getAnnotationData<PDFData>(
+    annotations,
+    MessageAnnotationType.PDF,
+  );
   const eventData = getAnnotationData<EventData>(
     annotations,
     MessageAnnotationType.EVENTS,
@@ -73,6 +79,10 @@ function ChatMessageContent({
     {
       order: 2,
       component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
+    },
+    {
+      order: 3,
+      component: pdfData[0] ? <UploadPdfPreview pdf={pdfData[0].pdfFiles[0]} /> : null,
     },
     {
       order: -1,

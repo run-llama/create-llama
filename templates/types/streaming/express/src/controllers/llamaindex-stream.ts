@@ -16,7 +16,7 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import { CsvFile, appendSourceData } from "./stream-helper";
+import { CsvFile, PdfFile, appendSourceData } from "./stream-helper";
 
 type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
@@ -79,6 +79,18 @@ const convertAnnotations = (
       content.push({
         type: "text",
         text: csvContent,
+      });
+    }
+    // convert PDF files to text
+    if (type === "pdf" && "pdfFiles" in data && Array.isArray(data.pdfFiles)) {
+      const pdfContent = data.pdfFiles
+        .map((pdf) => {
+          return "```pdf\n" + (pdf as PdfFile).content + "\n```";
+        })
+        .join("\n\n");
+      content.push({
+        type: "text",
+        text: pdfContent,
       });
     }
   });

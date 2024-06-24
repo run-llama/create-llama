@@ -118,3 +118,16 @@ export type CsvFile = {
   filesize: number;
   id: string;
 };
+
+export type TextEmbedding = {
+  text: string;
+  embedding: number[];
+};
+
+export type PdfFile = {
+  id: string;
+  content: string;
+  filename: string;
+  filesize: number;
+  embeddings: TextEmbedding[];
+};

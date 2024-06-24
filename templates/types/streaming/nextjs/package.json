@@ -39,7 +39,8 @@
     "@e2b/code-interpreter": "^0.0.5",
     "uuid": "^9.0.1",
     "got": "10.7.0",
-    "@apidevtools/swagger-parser": "^10.1.0"
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
@@ -57,6 +58,7 @@
     "tailwindcss": "^3.3.6",
     "tsx": "^4.7.2",
     "typescript": "^5.3.2",
-    "@types/uuid": "^9.0.8"
+    "@types/uuid": "^9.0.8",
+    "@types/pdf-parse": "^1.1.4"
   }
 }
