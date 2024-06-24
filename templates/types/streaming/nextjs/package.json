@@ -38,8 +38,9 @@
     "@llamaindex/pdf-viewer": "^1.1.1",
     "@e2b/code-interpreter": "^0.0.5",
     "uuid": "^9.0.1",
-    "got": "10.7.0",
-    "@apidevtools/swagger-parser": "^10.1.0"
+    "got": "^14.4.1",
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "formdata-node": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",

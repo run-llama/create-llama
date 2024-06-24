@@ -170,6 +170,24 @@ For better results, you can specify the region parameter to get results from a s
       },
     ],
   },
+  {
+    display: "Image Generator",
+    name: "img_gen",
+    supportedFrameworks: ["fastapi", "express", "nextjs"],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: "STABILITY_API_KEY",
+        description:
+          "STABILITY_API_KEY key is required to run image generator. Get it here: https://platform.stability.ai/account/keys",
+      },
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for image generator tool.",
+        value: `You are an image generator agent. You help users to generate images using the Stability API.`,
+      },
+    ],
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {
