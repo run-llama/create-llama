@@ -12,8 +12,7 @@
     "format:write": "prettier --ignore-unknown --write .",
     "build": "tsup index.ts --format esm --dts",
     "start": "node dist/index.js",
-    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\"",
-    "generate": "tsx src\\controllers\\engine\\generate.ts"
+    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\""
   },
   "dependencies": {
     "ai": "^3.0.21",
