@@ -32,5 +32,5 @@ def duckduckgo_search(
     return results
 
 
-def get_tools():
+def get_tools(**kwargs):
     return [FunctionTool.from_defaults(duckduckgo_search)]

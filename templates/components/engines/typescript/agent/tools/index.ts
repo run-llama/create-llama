@@ -1,6 +1,7 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
+import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
 import { WeatherTool, WeatherToolParams } from "./weather";
@@ -38,6 +39,9 @@ const toolFactory: Record<string, ToolCreator> = {
   },
   duckduckgo: async (config: unknown) => {
     return [new DuckDuckGoSearchTool(config as DuckDuckGoToolParams)];
+  },
+  img_gen: async (config: unknown) => {
+    return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
   },
 };
 

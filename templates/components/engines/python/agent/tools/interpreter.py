@@ -29,8 +29,9 @@ class E2BCodeInterpreter:
 
     output_dir = "tool-output"
 
-    def __init__(self):
-        api_key = os.getenv("E2B_API_KEY")
+    def __init__(self, api_key: str = None):
+        if api_key is None:
+            api_key = os.getenv("E2B_API_KEY")
         filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if not api_key:
             raise ValueError(
@@ -138,5 +139,5 @@ class E2BCodeInterpreter:
         return output
 
 
-def get_tools():
-    return [FunctionTool.from_defaults(E2BCodeInterpreter().interpret)]
+def get_tools(**kwargs):
+    return [FunctionTool.from_defaults(E2BCodeInterpreter(**kwargs).interpret)]
