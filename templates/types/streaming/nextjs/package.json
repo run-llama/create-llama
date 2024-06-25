@@ -39,6 +39,7 @@
     "remark-math": "^5.1.1",
     "supports-color": "^8.1.1",
     "tailwind-merge": "^2.1.0",
+    "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
     "vaul": "^0.9.1"
   },
