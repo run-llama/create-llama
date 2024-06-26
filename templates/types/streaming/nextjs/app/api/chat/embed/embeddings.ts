@@ -1,32 +1,27 @@
-import { Document, MetadataMode, Settings, SimpleNodeParser } from "llamaindex";
+import {
+  Document,
+  IngestionPipeline,
+  MetadataMode,
+  Settings,
+  SimpleNodeParser,
+} from "llamaindex";
 import pdf from "pdf-parse";
 
 export async function splitAndEmbed(content: string) {
-  // const document = new Document({ text: content, id_: "123" });
-  // const pipeline = new IngestionPipeline({
-  //   transformations: [
-  //     new SimpleNodeParser({
-  //       chunkSize: Settings.chunkSize,
-  //       chunkOverlap: Settings.chunkOverlap,
-  //     }),
-  //     Settings.embedModel,
-  //   ],
-  // });
-  // const nodes = await pipeline.run({ documents: [document] });
-  // return nodes;
-
-  const nodeParser = new SimpleNodeParser({
-    chunkSize: Settings.chunkSize,
-    chunkOverlap: Settings.chunkOverlap,
+  const document = new Document({ text: content });
+  const pipeline = new IngestionPipeline({
+    transformations: [
+      new SimpleNodeParser({
+        chunkSize: Settings.chunkSize,
+        chunkOverlap: Settings.chunkOverlap,
+      }),
+      Settings.embedModel,
+    ],
   });
-  const nodes = nodeParser.getNodesFromDocuments([
-    new Document({ text: content }),
-  ]);
-  const texts = nodes.map((node) => node.getContent(MetadataMode.EMBED));
-  const embeddings = await Settings.embedModel.getTextEmbeddingsBatch(texts);
+  const nodes = await pipeline.run({ documents: [document] });
   return nodes.map((node, i) => ({
     text: node.getContent(MetadataMode.NONE),
-    embedding: embeddings[i],
+    embedding: node.embedding,
   }));
 }
 
