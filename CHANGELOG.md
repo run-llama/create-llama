@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.14
+
+### Patch Changes
+
+- f2c3389: chore: update to llamaindex 0.4.3
+- 5093b37: Remove non-working file selectors for Linux
+
 ## 0.1.13
 
 ### Patch Changes
