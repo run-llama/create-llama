@@ -1,6 +1,7 @@
 import { FileText, XCircleIcon } from "lucide-react";
+import Image from "next/image";
+import SheetIcon from "../ui/icons/sheet.svg";
 import { Button } from "./button";
-import { PdfFile } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -12,26 +13,76 @@ import {
 } from "./drawer";
 import { cn } from "./lib/utils";
 
-export interface UploadPdfPreviewProps {
-  pdf: PdfFile;
+interface FilePreviewProps {
+  file: {
+    filename: string;
+    filesize: number;
+    content: string;
+  };
   onRemove?: () => void;
 }
 
-export default function UploadPdfPreview(props: UploadPdfPreviewProps) {
-  const { filename, filesize, content } = props.pdf;
+interface FileContentPreviewProps extends FilePreviewProps {
+  title: string;
+  card: {
+    icon: React.ReactNode;
+    name: string;
+  };
+}
 
-  // TODO: replace by PdfDialog later when we save PDF file in backend
+const UploadCsvIcon = () => (
+  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
+    <Image className="h-full w-auto" priority src={SheetIcon} alt="SheetIcon" />
+  </div>
+);
+
+const UploadPdfIcon = () => (
+  <FileText className="w-6 h-6 text-red-500" />
+);
+
+export function CsvPreview(props: FilePreviewProps) {
+  const { file, onRemove } = props;
+  return (
+    <FileContentPreview
+      file={file}
+      title="Csv Raw Content"
+      card={{
+        icon: <UploadCsvIcon />,
+        name: "Spreadsheet",
+      }}
+      onRemove={onRemove}
+    />
+  );
+}
+
+export function PdfPreview(props: FilePreviewProps) {
+  const { file, onRemove } = props;
+  return (
+    <FileContentPreview
+      file={file}
+      title="PDF Raw Content"
+      card={{
+        icon: <UploadPdfIcon />,
+        name: "PDF File",
+      }}
+      onRemove={onRemove}
+    />
+  );
+}
+
+function FileContentPreview(props: FileContentPreviewProps) {
+  const { filename, filesize, content } = props.file;
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
         <div>
-          <PDFSummaryCard {...props} />
+          <PreviewCard {...props} />
         </div>
       </DrawerTrigger>
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
-            <DrawerTitle>Pdf Raw Content</DrawerTitle>
+            <DrawerTitle>{props.title}</DrawerTitle>
             <DrawerDescription>
               {filename} ({inKB(filesize)} KB)
             </DrawerDescription>
@@ -50,18 +101,18 @@ export default function UploadPdfPreview(props: UploadPdfPreviewProps) {
   );
 }
 
-function PDFSummaryCard(props: UploadPdfPreviewProps) {
-  const { onRemove, pdf } = props;
+function PreviewCard(props: FileContentPreviewProps) {
+  const { onRemove, file } = props;
   return (
     <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">
       <div className="flex flex-row items-center gap-2">
-        <FileText className="w-6 h-6 text-red-500" />
+        {props.card.icon}
         <div className="overflow-hidden">
           <div className="truncate font-semibold">
-            {pdf.filename} ({inKB(pdf.filesize)} KB)
+            {file.filename} ({inKB(file.filesize)} KB)
           </div>
           <div className="truncate text-token-text-tertiary flex items-center gap-2">
-            <span>PDF File</span>
+            <span>{props.card.name}</span>
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@ import { Check, Copy } from "lucide-react";
 import { Message } from "ai";
 import { Fragment } from "react";
 import { Button } from "../../button";
-import UploadPdfPreview from "../../upload-pdf-preview";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
   CsvData,
@@ -18,10 +17,10 @@ import {
 } from "../index";
 import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
+import { CsvFileContent, PdfFileContent } from "./chat-files";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import ChatTools from "./chat-tools";
-import CsvContent from "./csv-content";
 import Markdown from "./markdown";
 
 type ContentDisplayConfig = {
@@ -78,13 +77,11 @@ function ChatMessageContent({
     },
     {
       order: 2,
-      component: csvData[0] ? <CsvContent data={csvData[0]} /> : null,
+      component: csvData[0] ? <CsvFileContent data={csvData[0]} /> : null,
     },
     {
       order: 3,
-      component: pdfData[0] ? (
-        <UploadPdfPreview pdf={pdfData[0].pdfFiles[0]} />
-      ) : null,
+      component: pdfData[0] ? <PdfFileContent data={pdfData[0]} /> : null,
     },
     {
       order: -1,

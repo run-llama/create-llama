@@ -3,11 +3,10 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { MessageAnnotation, MessageAnnotationType } from ".";
 import { Button } from "../button";
+import { CsvPreview, PdfPreview } from "../file-content-preview";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
-import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
-import UploadPdfPreview from "../upload-pdf-preview";
 import { ChatHandler } from "./chat.interface";
 import { useCsv } from "./hooks/use-csv";
 import { usePdf } from "./hooks/use-pdf ";
@@ -178,18 +177,12 @@ export default function ChatInput(
       )}
       {csvFiles.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {csvFiles.map((csv) => {
-            return (
-              <UploadCsvPreview
-                key={csv.id}
-                csv={csv}
-                onRemove={() => remove(csv)}
-              />
-            );
-          })}
+          {csvFiles.map((csv) => (
+            <CsvPreview key={csv.id} file={csv} onRemove={() => remove(csv)} />
+          ))}
         </div>
       )}
-      {pdf && <UploadPdfPreview pdf={pdf} onRemove={() => setPdf(null)} />}
+      {pdf && <PdfPreview file={pdf} onRemove={() => setPdf(null)} />}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Input
           autoFocus
