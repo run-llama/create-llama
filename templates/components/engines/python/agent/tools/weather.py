@@ -69,5 +69,5 @@ class OpenMeteoWeather:
         return response.json()
 
 
-def get_tools():
+def get_tools(**kwargs):
     return [FunctionTool.from_defaults(OpenMeteoWeather.get_weather_information)]

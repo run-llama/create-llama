@@ -136,24 +136,30 @@ export const getDataSourceChoices = (
       value: "none",
     });
     choices.push({
-      title: "Use an example PDF",
+      title:
+        process.platform !== "linux"
+          ? "Use an example PDF"
+          : "Use an example PDF (you can add your own data files later)",
       value: "exampleFile",
     });
   }
 
-  choices.push(
-    {
-      title: `Use local files (${supportedContextFileTypes.join(", ")})`,
-      value: "file",
-    },
-    {
-      title:
-        process.platform === "win32"
-          ? "Use a local folder"
-          : "Use local folders",
-      value: "folder",
-    },
-  );
+  // Linux has many distros so we won't support file/folder picker for now
+  if (process.platform !== "linux") {
+    choices.push(
+      {
+        title: `Use local files (${supportedContextFileTypes.join(", ")})`,
+        value: "file",
+      },
+      {
+        title:
+          process.platform === "win32"
+            ? "Use a local folder"
+            : "Use local folders",
+        value: "folder",
+      },
+    );
+  }
 
   if (framework === "fastapi") {
     choices.push({
