@@ -2,6 +2,7 @@
 
 import { JSONValue } from "llamaindex";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { DocumentFile, MessageAnnotation, MessageAnnotationType } from "..";
 import { useClientConfig } from "./use-config";
 
@@ -10,14 +11,14 @@ export function useFile() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [files, setFiles] = useState<DocumentFile[]>([]);
 
-  const fileEqual = (a: DocumentFile, b: DocumentFile) => {
+  const docEqual = (a: DocumentFile, b: DocumentFile) => {
     if (a.id === b.id) return true;
     if (a.filename === b.filename && a.filesize === b.filesize) return true;
     return false;
   };
 
-  const upload = (file: DocumentFile) => {
-    const existedFile = files.find((f) => fileEqual(f, file));
+  const addDoc = (file: DocumentFile) => {
+    const existedFile = files.find((f) => docEqual(f, file));
     if (!existedFile) {
       setFiles((prev) => [...prev, file]);
       return true;
@@ -25,7 +26,7 @@ export function useFile() {
     return false;
   };
 
-  const remove = (file: DocumentFile) => {
+  const removeDoc = (file: DocumentFile) => {
     setFiles((prev) => prev.filter((f) => f.id !== file.id));
   };
 
@@ -52,21 +53,6 @@ export function useFile() {
     return data;
   };
 
-  const uploadPdf = async (pdf: {
-    id: string;
-    filename: string;
-    filesize: number;
-    pdfBase64: string;
-  }) => {
-    const { pdfBase64, ...rest } = pdf;
-    const pdfDetail = await getPdfDetail(pdfBase64);
-    return upload({
-      filetype: "pdf",
-      ...rest,
-      ...pdfDetail,
-    });
-  };
-
   const getAnnotations = () => {
     const annotations: MessageAnnotation[] = [];
     if (imageUrl) {
@@ -84,17 +70,65 @@ export function useFile() {
     return annotations as JSONValue[];
   };
 
+  const readContent = async (input: {
+    file: File;
+    asUrl?: boolean;
+  }): Promise<string> => {
+    const { file, asUrl } = input;
+    const content = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      if (asUrl) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+    return content;
+  };
+
+  const uploadFile = async (file: File) => {
+    if (file.type.startsWith("image/")) {
+      const base64 = await readContent({ file, asUrl: true });
+      return setImageUrl(base64);
+    }
+    switch (file.type) {
+      case "text/csv": {
+        const content = await readContent({ file });
+        return addDoc({
+          id: uuidv4(),
+          filetype: "csv",
+          filename: file.name,
+          filesize: file.size,
+          content,
+        });
+      }
+      case "application/pdf": {
+        const base64 = await readContent({ file, asUrl: true });
+        const pdfDetail = await getPdfDetail(base64);
+        return addDoc({
+          id: uuidv4(),
+          filetype: "pdf",
+          filename: file.name,
+          filesize: file.size,
+          content: pdfDetail.content,
+          embeddings: pdfDetail.embeddings,
+        });
+      }
+    }
+  };
+
   const alreadyUploaded = imageUrl || files.length > 0;
 
   return {
-    files,
-    upload,
-    remove,
-    reset,
-    uploadPdf,
     imageUrl,
     setImageUrl,
+    files,
+    removeDoc,
+    reset,
     getAnnotations,
     alreadyUploaded,
+    uploadFile,
   };
 }

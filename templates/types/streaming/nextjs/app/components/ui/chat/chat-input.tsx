@@ -1,5 +1,4 @@
 import { JSONValue } from "ai";
-import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
@@ -25,11 +24,10 @@ export default function ChatInput(
   const {
     imageUrl,
     setImageUrl,
+    uploadFile,
     files,
-    upload,
-    remove,
+    removeDoc,
     reset,
-    uploadPdf,
     getAnnotations,
     alreadyUploaded,
   } = useFile();
@@ -59,64 +57,13 @@ export default function ChatInput(
     props.handleSubmit(e);
   };
 
-  const readContent = async (file: File): Promise<string> => {
-    const content = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      if (file.type.startsWith("image/") || file.type === "application/pdf") {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
-      }
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-    return content;
-  };
-
-  const handleUploadImageFile = async (file: File) => {
-    const base64 = await readContent(file);
-    setImageUrl(base64);
-  };
-
-  const handleUploadCsvFile = async (file: File) => {
-    const content = await readContent(file);
-    const isSuccess = upload({
-      id: uuidv4(),
-      content,
-      filename: file.name,
-      filesize: file.size,
-      filetype: "csv",
-    });
-    if (!isSuccess) {
-      alert("File already exists in the list.");
-    }
-  };
-
-  const handleUploadPdfFile = async (file: File) => {
-    const base64 = await readContent(file);
-    await uploadPdf({
-      id: uuidv4(),
-      filename: file.name,
-      filesize: file.size,
-      pdfBase64: base64,
-    });
-  };
-
   const handleUploadFile = async (file: File) => {
     if (alreadyUploaded) {
       alert("You can only upload one file at a time.");
       return;
     }
     try {
-      if (file.type.startsWith("image/")) {
-        return await handleUploadImageFile(file);
-      }
-      if (file.type === "text/csv") {
-        return await handleUploadCsvFile(file);
-      }
-      if (file.type === "application/pdf") {
-        return await handleUploadPdfFile(file);
-      }
+      await uploadFile(file);
       props.onFileUpload?.(file);
     } catch (error: any) {
       props.onFileError?.(error.message);
@@ -137,7 +84,7 @@ export default function ChatInput(
             <DocumentPreview
               key={file.id}
               file={file}
-              onRemove={() => remove(file)}
+              onRemove={() => removeDoc(file)}
             />
           ))}
         </div>
