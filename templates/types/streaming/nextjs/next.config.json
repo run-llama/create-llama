@@ -3,10 +3,6 @@
     "outputFileTracingIncludes": {
       "/*": ["./cache/**/*"]
     },
-    "serverComponentsExternalPackages": [
-      "sharp",
-      "onnxruntime-node",
-      "pdf-parse"
-    ]
+    "serverComponentsExternalPackages": ["sharp", "onnxruntime-node"]
   }
 }
