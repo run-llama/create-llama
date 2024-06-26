@@ -82,7 +82,9 @@ function ChatMessageContent({
     },
     {
       order: 3,
-      component: pdfData[0] ? <UploadPdfPreview pdf={pdfData[0].pdfFiles[0]} /> : null,
+      component: pdfData[0] ? (
+        <UploadPdfPreview pdf={pdfData[0].pdfFiles[0]} />
+      ) : null,
     },
     {
       order: -1,
