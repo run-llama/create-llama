@@ -151,5 +151,19 @@ export async function createApp({
     );
   }
 
+  if (
+    dataSources.some((dataSource) => dataSource.type === "file") &&
+    process.platform === "linux"
+  ) {
+    console.log(
+      yellow(
+        `You can add your own data files to ${terminalLink(
+          "data",
+          `file://${root}/data`,
+        )} folder manually.`,
+      ),
+    );
+  }
+
   console.log();
 }

@@ -7,20 +7,11 @@ import {
   type AIStreamCallbacksAndOptions,
 } from "ai";
 import {
+  EngineResponse,
   MessageContent,
   MessageContentDetail,
-  Metadata,
-  NodeWithScore,
-  Response,
-  ToolCallLLMMessageOptions,
 } from "llamaindex";
-
-import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import { ContentFile, appendSourceData } from "./stream-helper";
-
-type LlamaIndexResponse =
-  | AgentStreamChatResponse<ToolCallLLMMessageOptions>
-  | Response;
+import { ContentFile } from "./stream-helper";
 
 export const convertMessageContent = (
   content: string,
@@ -90,39 +81,19 @@ const convertAnnotations = (
   return content;
 };
 
-function createParser(
-  res: AsyncIterable<LlamaIndexResponse>,
-  data: StreamData,
-) {
+function createParser(res: AsyncIterable<EngineResponse>, data: StreamData) {
   const it = res[Symbol.asyncIterator]();
   const trimStartOfStream = trimStartOfStreamHelper();
 
-  let sourceNodes: NodeWithScore<Metadata>[] | undefined;
   return new ReadableStream<string>({
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
       if (done) {
-        if (sourceNodes) {
-          appendSourceData(data, sourceNodes);
-        }
         controller.close();
         data.close();
         return;
       }
-
-      let delta;
-      if (value instanceof Response) {
-        // handle Response type
-        if (value.sourceNodes) {
-          // get source nodes from the first response
-          sourceNodes = value.sourceNodes;
-        }
-        delta = value.response ?? "";
-      } else {
-        // handle other types
-        delta = value.response.delta;
-      }
-      const text = trimStartOfStream(delta ?? "");
+      const text = trimStartOfStream(value.delta ?? "");
       if (text) {
         controller.enqueue(text);
       }
@@ -131,7 +102,7 @@ function createParser(
 }
 
 export function LlamaIndexStream(
-  response: AsyncIterable<LlamaIndexResponse>,
+  response: AsyncIterable<EngineResponse>,
   data: StreamData,
   opts?: {
     callbacks?: AIStreamCallbacksAndOptions;

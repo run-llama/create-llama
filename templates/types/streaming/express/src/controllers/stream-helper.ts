@@ -84,8 +84,9 @@ export function createStreamTimeout(stream: StreamData) {
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
-  callbackManager.on("retrieve", (data) => {
-    const { nodes, query } = data.detail;
+  callbackManager.on("retrieve-end", (data) => {
+    const { nodes, query } = data.detail.payload;
+    appendSourceData(stream, nodes);
     appendEventData(stream, `Retrieving context for query: '${query}'`);
     appendEventData(
       stream,
