@@ -1,11 +1,9 @@
-from llama_index.llms.openai import OpenAI
-from llama_index.llms.openai_like import OpenAILike
 from llama_index.embeddings.openai import OpenAIEmbedding
 from typing import Dict
 import os
 
-DEFAULT_MODEL = "gpt-3.5-turbo";
-DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
+DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 
 class TSIEmbedding(OpenAIEmbedding):
     def __init__(self, **kwargs):
