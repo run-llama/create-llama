@@ -19,7 +19,10 @@ export interface FileContentPreviewProps {
   onRemove?: () => void;
 }
 
-export function FileContentPreview({ file, onRemove }: FileContentPreviewProps) {
+export function FileContentPreview({
+  file,
+  onRemove,
+}: FileContentPreviewProps) {
   if (file.filetype === "csv") {
     return (
       <PreviewDialog
