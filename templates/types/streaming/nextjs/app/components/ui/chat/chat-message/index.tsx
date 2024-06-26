@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
-  ContentFileData,
+  DocumentFileData,
   EventData,
   ImageData,
   MessageAnnotation,
@@ -41,7 +41,7 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.IMAGE,
   );
-  const contentFileData = getAnnotationData<ContentFileData>(
+  const contentFileData = getAnnotationData<DocumentFileData>(
     annotations,
     MessageAnnotationType.CONTENT_FILE,
   );

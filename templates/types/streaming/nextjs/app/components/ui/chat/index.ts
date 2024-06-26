@@ -24,7 +24,7 @@ export type TextEmbedding = {
 
 export type ContentFileType = "csv" | "pdf" | "txt" | "docx";
 
-export type ContentFile = {
+export type DocumentFile = {
   id: string;
   content: string;
   filename: string;
@@ -33,8 +33,8 @@ export type ContentFile = {
   embeddings?: TextEmbedding[];
 };
 
-export type ContentFileData = {
-  files: ContentFile[];
+export type DocumentFileData = {
+  files: DocumentFile[];
 };
 
 export type SourceNode = {
@@ -70,7 +70,7 @@ export type ToolData = {
 
 export type AnnotationData =
   | ImageData
-  | ContentFileData
+  | DocumentFileData
   | SourceData
   | EventData
   | ToolData;

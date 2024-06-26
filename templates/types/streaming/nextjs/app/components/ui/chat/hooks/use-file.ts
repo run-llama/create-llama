@@ -2,21 +2,21 @@
 
 import { JSONValue } from "llamaindex";
 import { useState } from "react";
-import { ContentFile, MessageAnnotation, MessageAnnotationType } from "..";
+import { DocumentFile, MessageAnnotation, MessageAnnotationType } from "..";
 import { useClientConfig } from "./use-config";
 
 export function useFile() {
   const { backend } = useClientConfig();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [files, setFiles] = useState<ContentFile[]>([]);
+  const [files, setFiles] = useState<DocumentFile[]>([]);
 
-  const fileEqual = (a: ContentFile, b: ContentFile) => {
+  const fileEqual = (a: DocumentFile, b: DocumentFile) => {
     if (a.id === b.id) return true;
     if (a.filename === b.filename && a.filesize === b.filesize) return true;
     return false;
   };
-
-  const upload = (file: ContentFile) => {
+  
+  const upload = (file: DocumentFile) => {
     const existedFile = files.find((f) => fileEqual(f, file));
     if (!existedFile) {
       setFiles((prev) => [...prev, file]);
@@ -25,7 +25,7 @@ export function useFile() {
     return false;
   };
 
-  const remove = (file: ContentFile) => {
+  const remove = (file: DocumentFile) => {
     setFiles((prev) => prev.filter((f) => f.id !== file.id));
   };
 
@@ -36,7 +36,7 @@ export function useFile() {
 
   const getPdfDetail = async (
     pdfBase64: string,
-  ): Promise<Pick<ContentFile, "content" | "embeddings">> => {
+  ): Promise<Pick<DocumentFile, "content" | "embeddings">> => {
     const embedAPI = `${backend}/api/chat/embed`;
     const response = await fetch(embedAPI, {
       method: "POST",

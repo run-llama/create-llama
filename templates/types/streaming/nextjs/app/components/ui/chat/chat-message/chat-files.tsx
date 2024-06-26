@@ -1,7 +1,7 @@
 import { FileContentPreview } from "../../file-content-preview";
-import { ContentFileData } from "../index";
+import { DocumentFileData } from "../index";
 
-export function ChatFiles({ data }: { data: ContentFileData }) {
+export function ChatFiles({ data }: { data: DocumentFileData }) {
   if (!data.files.length) return null;
   return (
     <div className="flex gap-2 items-center">

@@ -5,7 +5,7 @@ import PdfIcon from "../ui/icons/pdf.svg";
 import SheetIcon from "../ui/icons/sheet.svg";
 import TxtIcon from "../ui/icons/txt.svg";
 import { Button } from "./button";
-import { ContentFile, ContentFileType } from "./chat";
+import { DocumentFile, ContentFileType } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -18,7 +18,7 @@ import {
 import { cn } from "./lib/utils";
 
 export interface FileContentPreviewProps {
-  file: ContentFile;
+  file: DocumentFile;
   onRemove?: () => void;
 }
 

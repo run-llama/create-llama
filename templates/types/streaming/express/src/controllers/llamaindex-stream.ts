@@ -11,7 +11,7 @@ import {
   MessageContent,
   MessageContentDetail,
 } from "llamaindex";
-import { ContentFile } from "./stream-helper";
+import { DocumentFile } from "./stream-helper";
 
 export const convertMessageContent = (
   content: string,
@@ -66,7 +66,7 @@ const convertAnnotations = (
       Array.isArray(data.files)
     ) {
       const rawContents = data.files.map((file) => {
-        const { filetype, content } = file as ContentFile;
+        const { filetype, content } = file as DocumentFile;
         return "```" + `${filetype}\n${content}\n` + "```";
       });
       const fileContent =
