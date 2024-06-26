@@ -1,7 +1,7 @@
 import { JSONValue } from "ai";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
-import { FileContentPreview } from "../file-content-preview";
+import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
 import UploadImagePreview from "../upload-image-preview";
@@ -134,7 +134,7 @@ export default function ChatInput(
       {files.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
           {files.map((file) => (
-            <FileContentPreview
+            <DocumentPreview
               key={file.id}
               file={file}
               onRemove={() => remove(file)}

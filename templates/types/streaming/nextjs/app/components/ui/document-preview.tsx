@@ -5,7 +5,7 @@ import PdfIcon from "../ui/icons/pdf.svg";
 import SheetIcon from "../ui/icons/sheet.svg";
 import TxtIcon from "../ui/icons/txt.svg";
 import { Button } from "./button";
-import { DocumentFile, ContentFileType } from "./chat";
+import { ContentFileType, DocumentFile } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -17,12 +17,12 @@ import {
 } from "./drawer";
 import { cn } from "./lib/utils";
 
-export interface FileContentPreviewProps {
+export interface DocumentPreviewProps {
   file: DocumentFile;
   onRemove?: () => void;
 }
 
-export function FileContentPreview(props: FileContentPreviewProps) {
+export function DocumentPreview(props: DocumentPreviewProps) {
   const { filename, filesize, content, filetype } = props.file;
   return (
     <Drawer direction="left">
@@ -60,7 +60,7 @@ const FileIcon: Record<ContentFileType, string> = {
   txt: TxtIcon,
 };
 
-function PreviewCard(props: FileContentPreviewProps) {
+function PreviewCard(props: DocumentPreviewProps) {
   const { onRemove, file } = props;
   return (
     <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">
