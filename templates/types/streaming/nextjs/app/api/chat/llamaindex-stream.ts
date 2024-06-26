@@ -65,21 +65,26 @@ const convertAnnotations = (
       "files" in data &&
       Array.isArray(data.files)
     ) {
-      const rawContents = data.files.map((file) => {
-        const { filetype, content } = file as DocumentFile;
-        return "```" + `${filetype}\n${content}\n` + "```";
-      });
-      const fileContent =
-        `Use data from following raw contents:\n` + rawContents.join("\n\n");
       content.push({
         type: "text",
-        text: fileContent,
+        text: getDocFileContext(data.files as DocumentFile[]),
       });
     }
   });
 
   return content;
 };
+
+// TODO: we must get here the relevant context based on the embeddings by comparing
+// it with the user's query
+function getDocFileContext(files: DocumentFile[]): string {
+  const rawContents = files.map((file) => {
+    const { nodes } = file;
+    const context = nodes?.map((node) => node.text).join("\n");
+    return "```" + `${context}\n` + "```";
+  });
+  return `Use the following context:\n` + rawContents.join("\n\n");
+}
 
 function createParser(res: AsyncIterable<EngineResponse>, data: StreamData) {
   const it = res[Symbol.asyncIterator]();

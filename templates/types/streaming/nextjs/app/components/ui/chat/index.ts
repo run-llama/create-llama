@@ -17,7 +17,8 @@ export type ImageData = {
   url: string;
 };
 
-export type TextEmbedding = {
+// this is subset of LlamaIndex's TextNode
+export type TextNode = {
   text: string;
   embedding: number[];
 };
@@ -26,11 +27,13 @@ export type ContentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFile = {
   id: string;
-  content: string;
   filename: string;
   filesize: number;
   filetype: ContentFileType;
-  embeddings?: TextEmbedding[];
+  // a document either has the whole content or the content is split into TextNodes
+  // TODO: better separate into two types or use union type
+  content?: string;
+  nodes?: TextNode[];
 };
 
 export type DocumentFileData = {

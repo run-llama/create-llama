@@ -3,7 +3,12 @@
 import { JSONValue } from "llamaindex";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { DocumentFile, MessageAnnotation, MessageAnnotationType } from "..";
+import {
+  DocumentFile,
+  MessageAnnotation,
+  MessageAnnotationType,
+  TextNode,
+} from "..";
 import { useClientConfig } from "./use-config";
 
 export function useFile() {
@@ -35,9 +40,7 @@ export function useFile() {
     files.length && setFiles([]);
   };
 
-  const getPdfDetail = async (
-    pdfBase64: string,
-  ): Promise<Pick<DocumentFile, "content" | "embeddings">> => {
+  const getTextNodes = async (base64: string): Promise<TextNode[]> => {
     const embedAPI = `${backend}/api/chat/embed`;
     const response = await fetch(embedAPI, {
       method: "POST",
@@ -45,12 +48,11 @@ export function useFile() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        pdf: pdfBase64,
+        base64,
       }),
     });
     if (!response.ok) throw new Error("Failed to get pdf detail");
-    const data = await response.json();
-    return data;
+    return await response.json();
   };
 
   const getAnnotations = () => {
@@ -106,14 +108,13 @@ export function useFile() {
       }
       case "application/pdf": {
         const base64 = await readContent({ file, asUrl: true });
-        const pdfDetail = await getPdfDetail(base64);
+        const nodes = await getTextNodes(base64);
         return addDoc({
           id: uuidv4(),
           filetype: "pdf",
           filename: file.name,
           filesize: file.size,
-          content: pdfDetail.content,
-          embeddings: pdfDetail.embeddings,
+          nodes,
         });
       }
     }

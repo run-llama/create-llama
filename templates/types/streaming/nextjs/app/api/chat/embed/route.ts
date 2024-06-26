@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "../engine/settings";
-import { getPdfDetail } from "./embeddings";
+import { readAndSplitDocument } from "./embeddings";
 
 initSettings();
 
 export async function POST(request: NextRequest) {
   try {
-    const { pdf }: { pdf: string } = await request.json();
-    if (!pdf) {
+    const { base64 }: { base64: string } = await request.json();
+    if (!base64) {
       return NextResponse.json(
-        { error: "pdf is required in the request body" },
+        { error: "base64 is required in the request body" },
         { status: 400 },
       );
     }
-    const pdfDetail = await getPdfDetail(pdf);
-    return NextResponse.json(pdfDetail);
+    return NextResponse.json(await readAndSplitDocument(base64));
   } catch (error) {
     console.error("[Embed API]", error);
     return NextResponse.json(
