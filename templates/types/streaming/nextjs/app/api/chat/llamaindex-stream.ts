@@ -16,7 +16,7 @@ import {
 } from "llamaindex";
 
 import { AgentStreamChatResponse } from "llamaindex/agent/base";
-import { CsvFile, PdfFile, appendSourceData } from "./stream-helper";
+import { ContentFile, appendSourceData } from "./stream-helper";
 
 type LlamaIndexResponse =
   | AgentStreamChatResponse<ToolCallLLMMessageOptions>
@@ -68,29 +68,21 @@ const convertAnnotations = (
         },
       });
     }
-    // convert CSV files to text
-    if (type === "csv" && "csvFiles" in data && Array.isArray(data.csvFiles)) {
-      const rawContents = data.csvFiles.map((csv) => {
-        return "```csv\n" + (csv as CsvFile).content + "\n```";
+    // convert files to text
+    if (
+      type === "content_file" &&
+      "files" in data &&
+      Array.isArray(data.files)
+    ) {
+      const rawContents = data.files.map((file) => {
+        const { filetype, content } = file as ContentFile;
+        return "```" + `${filetype}\n${content}\n` + "```";
       });
-      const csvContent =
-        "Use data from following CSV raw contents:\n" +
-        rawContents.join("\n\n");
+      const fileContent =
+        `Use data from following raw contents:\n` + rawContents.join("\n\n");
       content.push({
         type: "text",
-        text: csvContent,
-      });
-    }
-    // convert PDF files to text
-    if (type === "pdf" && "pdfFiles" in data && Array.isArray(data.pdfFiles)) {
-      const pdfContent = data.pdfFiles
-        .map((pdf) => {
-          return "```pdf\n" + (pdf as PdfFile).content + "\n```";
-        })
-        .join("\n\n");
-      content.push({
-        type: "text",
-        text: pdfContent,
+        text: fileContent,
       });
     }
   });

@@ -1,15 +1,12 @@
 import { JSONValue } from "ai";
-import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { MessageAnnotation, MessageAnnotationType } from ".";
 import { Button } from "../button";
-import { CsvPreview, PdfPreview } from "../file-content-preview";
+import { FileContentPreview } from "../file-content-preview";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
-import { useCsv } from "./hooks/use-csv";
-import { usePdf } from "./hooks/use-pdf ";
+import { useFile } from "./hooks/use-file";
 
 export default function ChatInput(
   props: Pick<
@@ -25,50 +22,17 @@ export default function ChatInput(
     | "append"
   >,
 ) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const { files: csvFiles, upload, remove, reset } = useCsv();
-  const { pdf, setPdf, uploadAndEmbed } = usePdf();
-
-  const getAnnotations = () => {
-    if (!imageUrl && csvFiles.length === 0 && !pdf) return undefined;
-    const annotations: MessageAnnotation[] = [];
-    if (imageUrl) {
-      annotations.push({
-        type: MessageAnnotationType.IMAGE,
-        data: { url: imageUrl },
-      });
-    }
-    if (csvFiles.length > 0) {
-      annotations.push({
-        type: MessageAnnotationType.CSV,
-        data: {
-          csvFiles: csvFiles.map((file) => ({
-            id: file.id,
-            content: file.content,
-            filename: file.filename,
-            filesize: file.filesize,
-          })),
-        },
-      });
-    }
-    if (pdf) {
-      annotations.push({
-        type: MessageAnnotationType.PDF,
-        data: {
-          pdfFiles: [
-            {
-              id: pdf.id,
-              content: pdf.content,
-              filename: pdf.filename,
-              filesize: pdf.filesize,
-              embeddings: pdf.embeddings,
-            },
-          ],
-        },
-      });
-    }
-    return annotations as JSONValue[];
-  };
+  const {
+    imageUrl,
+    setImageUrl,
+    files,
+    upload,
+    remove,
+    reset,
+    uploadPdf,
+    getAnnotations,
+    alreadyUploaded,
+  } = useFile();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -88,17 +52,12 @@ export default function ChatInput(
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const annotations = getAnnotations();
-    if (annotations) {
+    if (annotations.length) {
       handleSubmitWithAnnotations(e, annotations);
-      imageUrl && setImageUrl(null);
-      csvFiles.length && reset();
-      pdf && setPdf(null);
-      return;
+      return reset();
     }
     props.handleSubmit(e);
   };
-
-  const onRemovePreviewImage = () => setImageUrl(null);
 
   const readContent = async (file: File): Promise<string> => {
     const content = await new Promise<string>((resolve, reject) => {
@@ -126,6 +85,7 @@ export default function ChatInput(
       content,
       filename: file.name,
       filesize: file.size,
+      filetype: "csv",
     });
     if (!isSuccess) {
       alert("File already exists in the list.");
@@ -134,7 +94,7 @@ export default function ChatInput(
 
   const handleUploadPdfFile = async (file: File) => {
     const base64 = await readContent(file);
-    await uploadAndEmbed({
+    await uploadPdf({
       id: uuidv4(),
       filename: file.name,
       filesize: file.size,
@@ -143,22 +103,18 @@ export default function ChatInput(
   };
 
   const handleUploadFile = async (file: File) => {
+    if (alreadyUploaded) {
+      alert("You can only upload one file at a time.");
+      return;
+    }
     try {
       if (file.type.startsWith("image/")) {
         return await handleUploadImageFile(file);
       }
       if (file.type === "text/csv") {
-        if (csvFiles.length > 0) {
-          alert("You can only upload one csv file at a time.");
-          return;
-        }
         return await handleUploadCsvFile(file);
       }
       if (file.type === "application/pdf") {
-        if (pdf) {
-          alert("You can only upload one pdf file at a time.");
-          return;
-        }
         return await handleUploadPdfFile(file);
       }
       props.onFileUpload?.(file);
@@ -173,16 +129,19 @@ export default function ChatInput(
       className="rounded-xl bg-white p-4 shadow-xl space-y-4 shrink-0"
     >
       {imageUrl && (
-        <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
+        <UploadImagePreview url={imageUrl} onRemove={() => setImageUrl(null)} />
       )}
-      {csvFiles.length > 0 && (
+      {files.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {csvFiles.map((csv) => (
-            <CsvPreview key={csv.id} file={csv} onRemove={() => remove(csv)} />
+          {files.map((file) => (
+            <FileContentPreview
+              key={file.id}
+              file={file}
+              onRemove={() => remove(file)}
+            />
           ))}
         </div>
       )}
-      {pdf && <PdfPreview file={pdf} onRemove={() => setPdf(null)} />}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Input
           autoFocus

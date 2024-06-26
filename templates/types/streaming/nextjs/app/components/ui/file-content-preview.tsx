@@ -2,6 +2,7 @@ import { FileText, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import SheetIcon from "../ui/icons/sheet.svg";
 import { Button } from "./button";
+import { ContentFile } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -13,16 +14,53 @@ import {
 } from "./drawer";
 import { cn } from "./lib/utils";
 
-interface FilePreviewProps {
-  file: {
-    filename: string;
-    filesize: number;
-    content: string;
-  };
+export interface FileContentPreviewProps {
+  file: ContentFile;
   onRemove?: () => void;
 }
 
-interface FileContentPreviewProps extends FilePreviewProps {
+export function FileContentPreview({ file, onRemove }: FileContentPreviewProps) {
+  if (file.filetype === "csv") {
+    return (
+      <PreviewDialog
+        file={file}
+        title="Csv Raw Content"
+        card={{
+          icon: (
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
+              <Image
+                className="h-full w-auto"
+                priority
+                src={SheetIcon}
+                alt="SheetIcon"
+              />
+            </div>
+          ),
+          name: "Spreadsheet",
+        }}
+        onRemove={onRemove}
+      />
+    );
+  }
+
+  if (file.filetype === "pdf") {
+    return (
+      <PreviewDialog
+        file={file}
+        title="PDF Raw Content"
+        card={{
+          icon: <FileText className="w-6 h-6 text-red-500" />,
+          name: "PDF File",
+        }}
+        onRemove={onRemove}
+      />
+    );
+  }
+
+  return null;
+}
+
+interface PreviewDialogProps extends FileContentPreviewProps {
   title: string;
   card: {
     icon: React.ReactNode;
@@ -30,47 +68,7 @@ interface FileContentPreviewProps extends FilePreviewProps {
   };
 }
 
-const UploadCsvIcon = () => (
-  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
-    <Image className="h-full w-auto" priority src={SheetIcon} alt="SheetIcon" />
-  </div>
-);
-
-const UploadPdfIcon = () => (
-  <FileText className="w-6 h-6 text-red-500" />
-);
-
-export function CsvPreview(props: FilePreviewProps) {
-  const { file, onRemove } = props;
-  return (
-    <FileContentPreview
-      file={file}
-      title="Csv Raw Content"
-      card={{
-        icon: <UploadCsvIcon />,
-        name: "Spreadsheet",
-      }}
-      onRemove={onRemove}
-    />
-  );
-}
-
-export function PdfPreview(props: FilePreviewProps) {
-  const { file, onRemove } = props;
-  return (
-    <FileContentPreview
-      file={file}
-      title="PDF Raw Content"
-      card={{
-        icon: <UploadPdfIcon />,
-        name: "PDF File",
-      }}
-      onRemove={onRemove}
-    />
-  );
-}
-
-function FileContentPreview(props: FileContentPreviewProps) {
+function PreviewDialog(props: PreviewDialogProps) {
   const { filename, filesize, content } = props.file;
   return (
     <Drawer direction="left">
@@ -101,7 +99,7 @@ function FileContentPreview(props: FileContentPreviewProps) {
   );
 }
 
-function PreviewCard(props: FileContentPreviewProps) {
+function PreviewCard(props: PreviewDialogProps) {
   const { onRemove, file } = props;
   return (
     <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">

@@ -5,19 +5,18 @@ import { Fragment } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
-  CsvData,
+  ContentFileData,
   EventData,
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
-  PDFData,
   SourceData,
   ToolData,
   getAnnotationData,
 } from "../index";
 import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
-import { CsvFileContent, PdfFileContent } from "./chat-files";
+import { ChatFiles } from "./chat-files";
 import { ChatImage } from "./chat-image";
 import { ChatSources } from "./chat-sources";
 import ChatTools from "./chat-tools";
@@ -42,13 +41,9 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.IMAGE,
   );
-  const csvData = getAnnotationData<CsvData>(
+  const contentFileData = getAnnotationData<ContentFileData>(
     annotations,
-    MessageAnnotationType.CSV,
-  );
-  const pdfData = getAnnotationData<PDFData>(
-    annotations,
-    MessageAnnotationType.PDF,
+    MessageAnnotationType.CONTENT_FILE,
   );
   const eventData = getAnnotationData<EventData>(
     annotations,
@@ -77,11 +72,9 @@ function ChatMessageContent({
     },
     {
       order: 2,
-      component: csvData[0] ? <CsvFileContent data={csvData[0]} /> : null,
-    },
-    {
-      order: 3,
-      component: pdfData[0] ? <PdfFileContent data={pdfData[0]} /> : null,
+      component: contentFileData[0] ? (
+        <ChatFiles data={contentFileData[0]} />
+      ) : null,
     },
     {
       order: -1,

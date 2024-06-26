@@ -112,22 +112,22 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-export type CsvFile = {
-  content: string;
-  filename: string;
-  filesize: number;
-  id: string;
-};
-
 export type TextEmbedding = {
   text: string;
   embedding: number[];
 };
 
-export type PdfFile = {
+export type ContentFileType = "csv" | "pdf" | "txt" | "docx";
+
+export type ContentFile = {
   id: string;
   content: string;
   filename: string;
   filesize: number;
-  embeddings: TextEmbedding[];
+  filetype: ContentFileType;
+  embeddings?: TextEmbedding[];
+};
+
+export type ContentFileData = {
+  files: ContentFile[];
 };
