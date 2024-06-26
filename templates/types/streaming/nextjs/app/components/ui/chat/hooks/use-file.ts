@@ -7,7 +7,6 @@ import { useClientConfig } from "./use-config";
 
 export function useFile() {
   const { backend } = useClientConfig();
-  
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [files, setFiles] = useState<ContentFile[]>([]);
 
