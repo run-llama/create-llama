@@ -1,8 +1,11 @@
-import { FileText, XCircleIcon } from "lucide-react";
+import { XCircleIcon } from "lucide-react";
 import Image from "next/image";
+import DocxIcon from "../ui/icons/docx.svg";
+import PdfIcon from "../ui/icons/pdf.svg";
 import SheetIcon from "../ui/icons/sheet.svg";
+import TxtIcon from "../ui/icons/txt.svg";
 import { Button } from "./button";
-import { ContentFile } from "./chat";
+import { ContentFile, ContentFileType } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -19,60 +22,8 @@ export interface FileContentPreviewProps {
   onRemove?: () => void;
 }
 
-export function FileContentPreview({
-  file,
-  onRemove,
-}: FileContentPreviewProps) {
-  if (file.filetype === "csv") {
-    return (
-      <PreviewDialog
-        file={file}
-        title="Csv Raw Content"
-        card={{
-          icon: (
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
-              <Image
-                className="h-full w-auto"
-                priority
-                src={SheetIcon}
-                alt="SheetIcon"
-              />
-            </div>
-          ),
-          name: "Spreadsheet",
-        }}
-        onRemove={onRemove}
-      />
-    );
-  }
-
-  if (file.filetype === "pdf") {
-    return (
-      <PreviewDialog
-        file={file}
-        title="PDF Raw Content"
-        card={{
-          icon: <FileText className="w-6 h-6 text-red-500" />,
-          name: "PDF File",
-        }}
-        onRemove={onRemove}
-      />
-    );
-  }
-
-  return null;
-}
-
-interface PreviewDialogProps extends FileContentPreviewProps {
-  title: string;
-  card: {
-    icon: React.ReactNode;
-    name: string;
-  };
-}
-
-function PreviewDialog(props: PreviewDialogProps) {
-  const { filename, filesize, content } = props.file;
+export function FileContentPreview(props: FileContentPreviewProps) {
+  const { filename, filesize, content, filetype } = props.file;
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
@@ -83,7 +34,7 @@ function PreviewDialog(props: PreviewDialogProps) {
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
-            <DrawerTitle>{props.title}</DrawerTitle>
+            <DrawerTitle>{filetype.toUpperCase()} Raw Content</DrawerTitle>
             <DrawerDescription>
               {filename} ({inKB(filesize)} KB)
             </DrawerDescription>
@@ -102,18 +53,32 @@ function PreviewDialog(props: PreviewDialogProps) {
   );
 }
 
-function PreviewCard(props: PreviewDialogProps) {
+const FileIcon: Record<ContentFileType, string> = {
+  csv: SheetIcon,
+  pdf: PdfIcon,
+  docx: DocxIcon,
+  txt: TxtIcon,
+};
+
+function PreviewCard(props: FileContentPreviewProps) {
   const { onRemove, file } = props;
   return (
     <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">
       <div className="flex flex-row items-center gap-2">
-        {props.card.icon}
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+          <Image
+            className="h-full w-auto"
+            priority
+            src={FileIcon[file.filetype]}
+            alt="Icon"
+          />
+        </div>
         <div className="overflow-hidden">
           <div className="truncate font-semibold">
             {file.filename} ({inKB(file.filesize)} KB)
           </div>
           <div className="truncate text-token-text-tertiary flex items-center gap-2">
-            <span>{props.card.name}</span>
+            <span>{file.filetype.toUpperCase()} File</span>
           </div>
         </div>
       </div>
