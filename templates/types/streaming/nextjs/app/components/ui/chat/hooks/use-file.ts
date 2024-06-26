@@ -15,7 +15,7 @@ export function useFile() {
     if (a.filename === b.filename && a.filesize === b.filesize) return true;
     return false;
   };
-  
+
   const upload = (file: DocumentFile) => {
     const existedFile = files.find((f) => fileEqual(f, file));
     if (!existedFile) {
