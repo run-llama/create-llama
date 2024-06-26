@@ -7,7 +7,7 @@ export { ChatInput, ChatMessages };
 
 export enum MessageAnnotationType {
   IMAGE = "image",
-  CONTENT_FILE = "content_file",
+  DOCUMENT_FILE = "document_file",
   SOURCES = "sources",
   EVENTS = "events",
   TOOLS = "tools",

@@ -77,7 +77,7 @@ export function useFile() {
     }
     if (files.length > 0) {
       annotations.push({
-        type: MessageAnnotationType.CONTENT_FILE,
+        type: MessageAnnotationType.DOCUMENT_FILE,
         data: { files },
       });
     }

@@ -61,7 +61,7 @@ const convertAnnotations = (
     }
     // convert files to text
     if (
-      type === "content_file" &&
+      type === "document_file" &&
       "files" in data &&
       Array.isArray(data.files)
     ) {

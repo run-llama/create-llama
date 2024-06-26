@@ -43,7 +43,7 @@ function ChatMessageContent({
   );
   const contentFileData = getAnnotationData<DocumentFileData>(
     annotations,
-    MessageAnnotationType.CONTENT_FILE,
+    MessageAnnotationType.DOCUMENT_FILE,
   );
   const eventData = getAnnotationData<EventData>(
     annotations,
