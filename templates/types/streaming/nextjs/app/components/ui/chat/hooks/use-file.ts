@@ -6,7 +6,8 @@ import { ContentFile, MessageAnnotation, MessageAnnotationType } from "..";
 import { useClientConfig } from "./use-config";
 
 export function useFile() {
-  const { embedAPI } = useClientConfig();
+  const { backend } = useClientConfig();
+  
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [files, setFiles] = useState<ContentFile[]>([]);
 
@@ -37,7 +38,7 @@ export function useFile() {
   const getPdfDetail = async (
     pdfBase64: string,
   ): Promise<Pick<ContentFile, "content" | "embeddings">> => {
-    if (!embedAPI) throw new Error("Embed API is not defined");
+    const embedAPI = `${backend}/api/chat/embed`;
     const response = await fetch(embedAPI, {
       method: "POST",
       headers: {

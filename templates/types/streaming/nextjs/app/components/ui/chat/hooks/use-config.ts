@@ -3,23 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 
 export interface ChatConfig {
-  chatAPI?: string;
-  embedAPI?: string;
+  backend?: string;
   starterQuestions?: string[];
 }
 
 export function useClientConfig(): ChatConfig {
   const chatAPI = process.env.NEXT_PUBLIC_CHAT_API;
-  const [config, setConfig] = useState<ChatConfig>({
-    chatAPI,
-  });
+  const [config, setConfig] = useState<ChatConfig>();
 
   const backendOrigin = useMemo(() => {
     return chatAPI ? new URL(chatAPI).origin : "";
   }, [chatAPI]);
 
   const configAPI = `${backendOrigin}/api/chat/config`;
-  const embedAPI = `${backendOrigin}/api/chat/embed`;
 
   useEffect(() => {
     fetch(configAPI)
@@ -29,8 +25,7 @@ export function useClientConfig(): ChatConfig {
   }, [chatAPI, configAPI]);
 
   return {
-    chatAPI,
-    embedAPI,
-    starterQuestions: config.starterQuestions,
+    backend: backendOrigin,
+    starterQuestions: config?.starterQuestions,
   };
 }
