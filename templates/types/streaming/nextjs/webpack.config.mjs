@@ -9,6 +9,7 @@ export default function webpack(config) {
   config.externals.push({
     "onnxruntime-node": "commonjs onnxruntime-node",
     sharp: "commonjs sharp",
+    canvas: "commonjs canvas",
   });
 
   return config;
