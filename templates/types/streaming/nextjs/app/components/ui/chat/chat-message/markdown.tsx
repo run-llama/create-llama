@@ -31,7 +31,7 @@ const preprocessLaTeX = (content: string) => {
 const preprocessMedia = (content: string) => {
   // Remove `sandbox:` from the beginning of the URL
   // to fix OpenAI's models issue appending `sandbox:` to the relative URL
-  return content.replace(/sandbox:/g, "");
+  return content.replace(/(sandbox|attachment|snt):/g, "");
 };
 
 const preprocessContent = (content: string) => {
