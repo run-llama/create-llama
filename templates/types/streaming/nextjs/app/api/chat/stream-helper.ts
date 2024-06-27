@@ -114,17 +114,12 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-export type ContentFileType = "csv" | "pdf" | "txt" | "docx";
+export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFile = {
   id: string;
   filename: string;
   filesize: number;
-  filetype: ContentFileType;
-  content?: string;
-  nodes?: Pick<TextNode, "text" | "embedding">[];
-};
-
-export type DocumentFileData = {
-  files: DocumentFile[];
+  filetype: DocumentFileType;
+  content: string | TextNode[];
 };

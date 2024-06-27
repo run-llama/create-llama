@@ -23,17 +23,14 @@ export type TextNode = {
   embedding: number[];
 };
 
-export type ContentFileType = "csv" | "pdf" | "txt" | "docx";
+export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFile = {
   id: string;
   filename: string;
   filesize: number;
-  filetype: ContentFileType;
-  // a document either has the whole content or the content is split into TextNodes
-  // TODO: better separate into two types or use union type
-  content?: string;
-  nodes?: TextNode[];
+  filetype: DocumentFileType;
+  content: string | TextNode[];
 };
 
 export type DocumentFileData = {

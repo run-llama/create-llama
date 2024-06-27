@@ -79,8 +79,10 @@ const convertAnnotations = (
 // it with the user's query
 function getDocFileContext(files: DocumentFile[]): string {
   const rawContents = files.map((file) => {
-    const { nodes } = file;
-    const context = nodes?.map((node) => node.text).join("\n");
+    const { content } = file;
+    const context = Array.isArray(content)
+      ? content.map((node) => node.text).join("\n")
+      : content;
     return "```" + `${context}\n` + "```";
   });
   return `Use the following context:\n` + rawContents.join("\n\n");

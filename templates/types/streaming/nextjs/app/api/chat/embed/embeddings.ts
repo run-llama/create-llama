@@ -6,18 +6,17 @@ import {
   SimpleNodeParser,
   TextNode,
 } from "llamaindex";
+import { DocxReader } from "llamaindex/readers/DocxReader";
 import { PDFReader } from "llamaindex/readers/PDFReader";
+import { TextFileReader } from "llamaindex/readers/TextFileReader";
 
 export async function readAndSplitDocument(
-  base64: string,
+  raw: string,
 ): Promise<Pick<TextNode, "text" | "embedding">[]> {
-  const [header, content] = base64.split(",");
+  const [header, content] = raw.split(",");
   const mimeType = header.replace("data:", "").replace(";base64", "");
-  console.log(`Processing uploaded document of type: ${mimeType}`);
-  // TODO: select right reader based on mimeType
-  const pdfBuffer = new Uint8Array(Buffer.from(content, "base64"));
-  const reader = new PDFReader();
-  const documents = await reader.loadDataAsContent(pdfBuffer);
+  const fileBuffer = Buffer.from(content, "base64");
+  const documents = await loadDocuments(fileBuffer, mimeType);
   return await runPipeline(documents);
 }
 
@@ -39,4 +38,21 @@ async function runPipeline(
     text: node.getContent(MetadataMode.NONE),
     embedding: node.embedding,
   }));
+}
+
+async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
+  console.log(`Processing uploaded document of type: ${mimeType}`);
+  switch (mimeType) {
+    case "application/pdf":
+      const pdfReader = new PDFReader();
+      return await pdfReader.loadDataAsContent(new Uint8Array(fileBuffer));
+    case "text/plain":
+      const textReader = new TextFileReader();
+      return await textReader.loadDataAsContent(fileBuffer);
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      const docxReader = new DocxReader();
+      return await docxReader.loadDataAsContent(fileBuffer);
+    default:
+      throw new Error(`Unsupported document type: ${mimeType}`);
+  }
 }

@@ -5,7 +5,7 @@ import PdfIcon from "../ui/icons/pdf.svg";
 import SheetIcon from "../ui/icons/sheet.svg";
 import TxtIcon from "../ui/icons/txt.svg";
 import { Button } from "./button";
-import { ContentFileType, DocumentFile } from "./chat";
+import { DocumentFile, DocumentFileType } from "./chat";
 import {
   Drawer,
   DrawerClose,
@@ -24,6 +24,9 @@ export interface DocumentPreviewProps {
 
 export function DocumentPreview(props: DocumentPreviewProps) {
   const { filename, filesize, content, filetype } = props.file;
+  const docContent = Array.isArray(content)
+    ? content.map((n) => n.text).join("\n")
+    : content;
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
@@ -45,7 +48,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
           <pre className="bg-secondary rounded-md p-4 block text-sm">
-            {content}
+            {docContent}
           </pre>
         </div>
       </DrawerContent>
@@ -53,7 +56,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
   );
 }
 
-const FileIcon: Record<ContentFileType, string> = {
+const FileIcon: Record<DocumentFileType, string> = {
   csv: SheetIcon,
   pdf: PdfIcon,
   docx: DocxIcon,

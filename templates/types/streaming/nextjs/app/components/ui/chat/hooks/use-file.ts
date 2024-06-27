@@ -5,11 +5,20 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   DocumentFile,
+  DocumentFileType,
   MessageAnnotation,
   MessageAnnotationType,
   TextNode,
 } from "..";
 import { useClientConfig } from "./use-config";
+
+const docMineTypeMap: Record<string, DocumentFileType> = {
+  "text/csv": "csv",
+  "application/pdf": "pdf",
+  "text/plain": "txt",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    "docx",
+};
 
 export function useFile() {
   const { backend } = useClientConfig();
@@ -51,7 +60,7 @@ export function useFile() {
         base64,
       }),
     });
-    if (!response.ok) throw new Error("Failed to get pdf detail");
+    if (!response.ok) throw new Error("Failed to get text nodes from file.");
     return await response.json();
   };
 
@@ -95,32 +104,28 @@ export function useFile() {
       const base64 = await readContent({ file, asUrl: true });
       return setImageUrl(base64);
     }
+
+    const filetype = docMineTypeMap[file.type];
+    if (!filetype) throw new Error("Unsupported document type.");
+    const newDoc: DocumentFile = {
+      id: uuidv4(),
+      filetype,
+      filename: file.name,
+      filesize: file.size,
+      content: "",
+    };
     switch (file.type) {
       case "text/csv": {
         const content = await readContent({ file });
-        return addDoc({
-          id: uuidv4(),
-          filetype: "csv",
-          filename: file.name,
-          filesize: file.size,
-          content,
-        });
+        return addDoc({ ...newDoc, content });
       }
-      case "application/pdf": {
+      default: {
         const base64 = await readContent({ file, asUrl: true });
         const nodes = await getTextNodes(base64);
-        return addDoc({
-          id: uuidv4(),
-          filetype: "pdf",
-          filename: file.name,
-          filesize: file.size,
-          nodes,
-        });
+        return addDoc({ ...newDoc, content: nodes });
       }
     }
   };
-
-  const alreadyUploaded = imageUrl || files.length > 0;
 
   return {
     imageUrl,
@@ -129,7 +134,6 @@ export function useFile() {
     removeDoc,
     reset,
     getAnnotations,
-    alreadyUploaded,
     uploadFile,
   };
 }

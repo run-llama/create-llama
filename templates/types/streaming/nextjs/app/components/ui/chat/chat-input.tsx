@@ -7,6 +7,8 @@ import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useFile } from "./hooks/use-file";
 
+const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
+
 export default function ChatInput(
   props: Pick<
     ChatHandler,
@@ -29,7 +31,6 @@ export default function ChatInput(
     removeDoc,
     reset,
     getAnnotations,
-    alreadyUploaded,
   } = useFile();
 
   // default submit function does not handle including annotations in the message
@@ -58,7 +59,7 @@ export default function ChatInput(
   };
 
   const handleUploadFile = async (file: File) => {
-    if (alreadyUploaded) {
+    if (imageUrl || files.length > 0) {
       alert("You can only upload one file at a time.");
       return;
     }
@@ -101,6 +102,10 @@ export default function ChatInput(
         <FileUploader
           onFileUpload={handleUploadFile}
           onFileError={props.onFileError}
+          config={{
+            allowedExtensions: ALLOWED_EXTENSIONS,
+            disabled: props.isLoading,
+          }}
         />
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
