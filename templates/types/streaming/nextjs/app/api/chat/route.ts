@@ -4,8 +4,12 @@ import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import { LlamaIndexStream, convertMessageContent } from "./llamaindex-stream";
-import { createCallbackManager, createStreamTimeout } from "./stream-helper";
+import { convertMessageContent, retrieveNodes } from "./llamaindex/annotations";
+import {
+  createCallbackManager,
+  createStreamTimeout,
+} from "./llamaindex/events";
+import { LlamaIndexStream } from "./llamaindex/stream";
 
 initObservability();
 initSettings();
@@ -32,8 +36,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const chatEngine = await createChatEngine();
-
     let annotations = userMessage.annotations;
     if (!annotations) {
       // the user didn't send any new annotations with the last message
@@ -46,6 +48,10 @@ export async function POST(request: NextRequest) {
           (message) => message.role === "user" && message.annotations,
         )?.annotations;
     }
+
+    // retrieve nodes from annotations (if any) and create chat engine with index
+    const nodes = retrieveNodes(annotations);
+    const chatEngine = await createChatEngine(nodes);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(

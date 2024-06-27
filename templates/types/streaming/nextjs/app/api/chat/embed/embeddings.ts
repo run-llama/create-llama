@@ -10,9 +10,11 @@ import { DocxReader } from "llamaindex/readers/DocxReader";
 import { PDFReader } from "llamaindex/readers/PDFReader";
 import { TextFileReader } from "llamaindex/readers/TextFileReader";
 
+type SimpleTextNode = Pick<TextNode, "text" | "embedding" | "metadata">;
+
 export async function readAndSplitDocument(
   raw: string,
-): Promise<Pick<TextNode, "text" | "embedding">[]> {
+): Promise<SimpleTextNode[]> {
   const [header, content] = raw.split(",");
   const mimeType = header.replace("data:", "").replace(";base64", "");
   const fileBuffer = Buffer.from(content, "base64");
@@ -20,9 +22,7 @@ export async function readAndSplitDocument(
   return await runPipeline(documents);
 }
 
-async function runPipeline(
-  documents: Document[],
-): Promise<Pick<TextNode, "text" | "embedding">[]> {
+async function runPipeline(documents: Document[]): Promise<SimpleTextNode[]> {
   const pipeline = new IngestionPipeline({
     transformations: [
       new SimpleNodeParser({
@@ -33,10 +33,12 @@ async function runPipeline(
     ],
   });
   const nodes = await pipeline.run({ documents });
-  // remove metadata from text nodes to reduce data send over the wire
-  return nodes.map((node) => ({
+  // remove text nodes to reduce data send over the wire
+  return nodes.map((node: TextNode) => ({
     text: node.getContent(MetadataMode.NONE),
     embedding: node.embedding,
+    // TODO: to be able to view the source document, we need to store its URL in the metadata
+    metadata: node.metadata,
   }));
 }
 

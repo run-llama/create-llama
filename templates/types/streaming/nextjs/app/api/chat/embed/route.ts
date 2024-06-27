@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readAndSplitDocument } from "../embeddings";
 import { initSettings } from "../engine/settings";
+import { readAndSplitDocument } from "./embeddings";
 
 initSettings();
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +25,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
