@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "../engine/settings";
-import { readAndSplitDocument } from "./embeddings";
+import { readAndSplitDocument } from "../embeddings";
 
 initSettings();
 
