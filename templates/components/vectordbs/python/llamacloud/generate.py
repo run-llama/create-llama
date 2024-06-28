@@ -17,14 +17,14 @@ def generate_datasource():
     init_settings()
     logger.info("Generate index for the provided data")
 
-    name = os.getenv("LLAMA_CLOUD_NAME")
+    name = os.getenv("LLAMA_CLOUD_INDEX_NAME")
     project_name = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
     api_key = os.getenv("LLAMA_CLOUD_API_KEY")
     base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
 
     if not name or not project_name or not api_key:
         raise ValueError(
-            "Please set LLAMA_CLOUD_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
+            "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
             " to your environment variables or config them in .env file"
         )
 

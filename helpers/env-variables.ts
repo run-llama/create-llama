@@ -136,19 +136,25 @@ const getVectorDBEnvs = (
     case "llamacloud":
       return [
         {
-          name: "LLAMA_CLOUD_NAME",
+          name: "LLAMA_CLOUD_INDEX_NAME",
+          description:
+            "The name of the LlamaCloud index to use (part of the LlamaCloud project).",
+          value: "test",
         },
         {
           name: "LLAMA_CLOUD_PROJECT_NAME",
-          description: "The name of the Llama Cloud project.",
+          description: "The name of the LlamaCloud project.",
+          value: "Default",
         },
         {
           name: "LLAMA_CLOUD_API_KEY",
-          description: "The Llama Cloud API key.",
+          description: "The LlamaCloud API key.",
         },
         {
           name: "LLAMA_CLOUD_BASE_URL",
-          description: "The base URL for the Llama Cloud API.",
+          description:
+            "The base URL for the LlamaCloud API. Only change this for non-production environments",
+          value: "https://api.cloud.llamaindex.ai",
         },
       ];
     case "chroma":
