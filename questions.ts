@@ -611,6 +611,7 @@ export const askQuestions = async (
               type: "llamacloud",
               config: {},
             });
+            program.dataSources.push(EXAMPLE_FILE);
             break;
           }
         }
@@ -618,31 +619,36 @@ export const askQuestions = async (
     }
   }
 
-  // Asking for LlamaParse if user selected file data source
-  if (program.dataSources.some((ds) => ds.type === "file")) {
-    if (ciInfo.isCI) {
-      program.useLlamaParse = getPrefOrDefault("useLlamaParse");
-    } else {
-      const { useLlamaParse } = await prompts(
-        {
-          type: "toggle",
-          name: "useLlamaParse",
-          message:
-            "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-          initial: false,
-          active: "yes",
-          inactive: "no",
-        },
-        questionHandlers,
-      );
-      program.useLlamaParse = useLlamaParse;
-      preferences.useLlamaParse = useLlamaParse;
-    }
-  }
-
   const isUsingLlamaCloud = program.dataSources.some(
     (ds) => ds.type === "llamacloud",
   );
+
+  // Asking for LlamaParse if user selected file data source
+  if (isUsingLlamaCloud) {
+    // default to use LlamaParse if using LlamaCloud
+    program.useLlamaParse = preferences.useLlamaParse = true;
+  } else {
+    if (program.dataSources.some((ds) => ds.type === "file")) {
+      if (ciInfo.isCI) {
+        program.useLlamaParse = getPrefOrDefault("useLlamaParse");
+      } else {
+        const { useLlamaParse } = await prompts(
+          {
+            type: "toggle",
+            name: "useLlamaParse",
+            message:
+              "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+            initial: false,
+            active: "yes",
+            inactive: "no",
+          },
+          questionHandlers,
+        );
+        program.useLlamaParse = useLlamaParse;
+        preferences.useLlamaParse = useLlamaParse;
+      }
+    }
+  }
 
   // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
   if (isUsingLlamaCloud || program.useLlamaParse) {
