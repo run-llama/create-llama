@@ -1,7 +1,7 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { questionHandlers } from "../../questions";
-import { ModelConfig, ModelProvider } from "../types";
+import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
@@ -14,7 +14,7 @@ const DEFAULT_MODEL_PROVIDER = "openai";
 export type ModelConfigQuestionsParams = {
   openAiKey?: string;
   askModels: boolean;
-  framework?: string;
+  framework?: TemplateFramework;
 };
 
 export type ModelConfigParams = Omit<ModelConfig, "provider">;
