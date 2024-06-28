@@ -1,4 +1,8 @@
-const REQUIRED_ENV_VARS = ["LLAMA_CLOUD_API_KEY"];
+const REQUIRED_ENV_VARS = [
+  "LLAMA_CLOUD_NAME",
+  "LLAMA_CLOUD_PROJECT_NAME",
+  "LLAMA_CLOUD_API_KEY",
+];
 
 export function checkRequiredEnvVars() {
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {

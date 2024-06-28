@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
 import { LlamaCloudIndex } from "llamaindex";
 import { getDocuments } from "./loader";
@@ -11,8 +10,8 @@ async function loadAndIndex() {
   const documents = await getDocuments();
   await LlamaCloudIndex.fromDocuments({
     documents,
-    name: "default",
-    projectName: "Default",
+    name: process.env.LLAMA_CLOUD_NAME!,
+    projectName: process.env.LLAMA_CLOUD_PROJECT_NAME!,
     apiKey: process.env.LLAMA_CLOUD_API_KEY,
     baseUrl: process.env.LLAMA_CLOUD_BASE_URL,
   });

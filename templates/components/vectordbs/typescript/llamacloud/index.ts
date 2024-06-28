@@ -1,14 +1,13 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
-import { LlamaCloudIndex } from "llamaindex";
+import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
 import { checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource() {
   checkRequiredEnvVars();
   const index = new LlamaCloudIndex({
-    name: "default",
-    projectName: "Default",
-    baseUrl: process.env.LLAMA_CLOUD_BASE_URL,
+    name: process.env.LLAMA_CLOUD_NAME!,
+    projectName: process.env.LLAMA_CLOUD_PROJECT_NAME!,
     apiKey: process.env.LLAMA_CLOUD_API_KEY,
+    baseUrl: process.env.LLAMA_CLOUD_BASE_URL,
   });
   return index;
 }
