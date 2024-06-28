@@ -133,6 +133,24 @@ const getVectorDBEnvs = (
             "Optional API key for authenticating requests to Qdrant.",
         },
       ];
+    case "llamacloud":
+      return [
+        {
+          name: "LLAMA_CLOUD_NAME",
+        },
+        {
+          name: "LLAMA_CLOUD_PROJECT_NAME",
+          description: "The name of the Llama Cloud project.",
+        },
+        {
+          name: "LLAMA_CLOUD_API_KEY",
+          description: "The Llama Cloud API key.",
+        },
+        {
+          name: "LLAMA_CLOUD_BASE_URL",
+          description: "The base URL for the Llama Cloud API.",
+        },
+      ];
     case "chroma":
       const envs = [
         {
