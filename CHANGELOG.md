@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.15
+
+### Patch Changes
+
+- 64732f0: Fix the issue of images not showing with the sandbox URL from OpenAI's models
+- aeb6fef: use llamacloud for chat
+
 ## 0.1.14
 
 ### Patch Changes
