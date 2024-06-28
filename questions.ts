@@ -180,7 +180,7 @@ export const getDataSourceChoices = (
 
   if (!selectedDataSource.length) {
     choices.push({
-      title: "Use LlamaCloud",
+      title: "Use managed index from LlamaCloud",
       value: "llamacloud",
     });
   }
@@ -618,14 +618,10 @@ export const askQuestions = async (
     }
   }
 
-  // Asking for LlamaParse if user selected file or folder data source
-  if (
-    program.dataSources.some((ds) => ds.type === "file") &&
-    program.useLlamaParse === undefined
-  ) {
+  // Asking for LlamaParse if user selected file data source
+  if (program.dataSources.some((ds) => ds.type === "file")) {
     if (ciInfo.isCI) {
       program.useLlamaParse = getPrefOrDefault("useLlamaParse");
-      program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
     } else {
       const { useLlamaParse } = await prompts(
         {
@@ -640,20 +636,7 @@ export const askQuestions = async (
         questionHandlers,
       );
       program.useLlamaParse = useLlamaParse;
-
-      // Ask for LlamaCloud API key
-      if (useLlamaParse && program.llamaCloudKey === undefined) {
-        const { llamaCloudKey } = await prompts(
-          {
-            type: "text",
-            name: "llamaCloudKey",
-            message:
-              "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
-          },
-          questionHandlers,
-        );
-        program.llamaCloudKey = llamaCloudKey;
-      }
+      preferences.useLlamaParse = useLlamaParse;
     }
   }
 
@@ -661,8 +644,28 @@ export const askQuestions = async (
     (ds) => ds.type === "llamacloud",
   );
 
+  // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
+  if (isUsingLlamaCloud || program.useLlamaParse) {
+    if (ciInfo.isCI) {
+      program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
+    } else {
+      // Ask for LlamaCloud API key
+      const { llamaCloudKey } = await prompts(
+        {
+          type: "text",
+          name: "llamaCloudKey",
+          message:
+            "Please provide your LlamaCloud API key (leave blank to skip):",
+        },
+        questionHandlers,
+      );
+      program.llamaCloudKey = preferences.llamaCloudKey =
+        llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+    }
+  }
+
   if (isUsingLlamaCloud) {
-    // If using LlamaCloud, don't ask for vector database and use `llamacloud` folder for vector database
+    // When using a LlamaCloud index, don't ask for vector database and use code in `llamacloud` folder for vector database
     const vectorDb = "llamacloud";
     program.vectorDb = vectorDb;
     preferences.vectorDb = vectorDb;

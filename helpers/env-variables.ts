@@ -147,10 +147,6 @@ const getVectorDBEnvs = (
           value: "Default",
         },
         {
-          name: "LLAMA_CLOUD_API_KEY",
-          description: "The LlamaCloud API key.",
-        },
-        {
           name: "LLAMA_CLOUD_BASE_URL",
           description:
             "The base URL for the LlamaCloud API. Only change this for non-production environments",
