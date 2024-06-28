@@ -3,6 +3,7 @@ import {
   CallbackManager,
   Metadata,
   NodeWithScore,
+  TextNode,
   ToolCall,
   ToolOutput,
 } from "llamaindex";
@@ -113,9 +114,12 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-export type CsvFile = {
-  content: string;
+export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
+
+export type DocumentFile = {
+  id: string;
   filename: string;
   filesize: number;
-  id: string;
+  filetype: DocumentFileType;
+  content: string | TextNode[];
 };

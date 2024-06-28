@@ -1,14 +1,13 @@
 import { JSONValue } from "ai";
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { MessageAnnotation, MessageAnnotationType } from ".";
 import { Button } from "../button";
+import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
 import { Input } from "../input";
-import UploadCsvPreview from "../upload-csv-preview";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
-import { useCsv } from "./hooks/use-csv";
+import { useFile } from "./hooks/use-file";
+
+const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
 
 export default function ChatInput(
   props: Pick<
@@ -24,33 +23,15 @@ export default function ChatInput(
     | "append"
   >,
 ) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const { files: csvFiles, upload, remove, reset } = useCsv();
-
-  const getAnnotations = () => {
-    if (!imageUrl && csvFiles.length === 0) return undefined;
-    const annotations: MessageAnnotation[] = [];
-    if (imageUrl) {
-      annotations.push({
-        type: MessageAnnotationType.IMAGE,
-        data: { url: imageUrl },
-      });
-    }
-    if (csvFiles.length > 0) {
-      annotations.push({
-        type: MessageAnnotationType.CSV,
-        data: {
-          csvFiles: csvFiles.map((file) => ({
-            id: file.id,
-            content: file.content,
-            filename: file.filename,
-            filesize: file.filesize,
-          })),
-        },
-      });
-    }
-    return annotations as JSONValue[];
-  };
+  const {
+    imageUrl,
+    setImageUrl,
+    uploadFile,
+    files,
+    removeDoc,
+    reset,
+    getAnnotations,
+  } = useFile();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -70,61 +51,20 @@ export default function ChatInput(
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const annotations = getAnnotations();
-    if (annotations) {
+    if (annotations.length) {
       handleSubmitWithAnnotations(e, annotations);
-      imageUrl && setImageUrl(null);
-      csvFiles.length && reset();
-      return;
+      return reset();
     }
     props.handleSubmit(e);
   };
 
-  const onRemovePreviewImage = () => setImageUrl(null);
-
-  const readContent = async (file: File): Promise<string> => {
-    const content = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      if (file.type.startsWith("image/")) {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
-      }
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-    return content;
-  };
-
-  const handleUploadImageFile = async (file: File) => {
-    const base64 = await readContent(file);
-    setImageUrl(base64);
-  };
-
-  const handleUploadCsvFile = async (file: File) => {
-    const content = await readContent(file);
-    const isSuccess = upload({
-      id: uuidv4(),
-      content,
-      filename: file.name,
-      filesize: file.size,
-    });
-    if (!isSuccess) {
-      alert("File already exists in the list.");
-    }
-  };
-
   const handleUploadFile = async (file: File) => {
+    if (imageUrl || files.length > 0) {
+      alert("You can only upload one file at a time.");
+      return;
+    }
     try {
-      if (file.type.startsWith("image/")) {
-        return await handleUploadImageFile(file);
-      }
-      if (file.type === "text/csv") {
-        if (csvFiles.length > 0) {
-          alert("You can only upload one csv file at a time.");
-          return;
-        }
-        return await handleUploadCsvFile(file);
-      }
+      await uploadFile(file);
       props.onFileUpload?.(file);
     } catch (error: any) {
       props.onFileError?.(error.message);
@@ -137,19 +77,17 @@ export default function ChatInput(
       className="rounded-xl bg-white p-4 shadow-xl space-y-4 shrink-0"
     >
       {imageUrl && (
-        <UploadImagePreview url={imageUrl} onRemove={onRemovePreviewImage} />
+        <UploadImagePreview url={imageUrl} onRemove={() => setImageUrl(null)} />
       )}
-      {csvFiles.length > 0 && (
+      {files.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {csvFiles.map((csv) => {
-            return (
-              <UploadCsvPreview
-                key={csv.id}
-                csv={csv}
-                onRemove={() => remove(csv)}
-              />
-            );
-          })}
+          {files.map((file) => (
+            <DocumentPreview
+              key={file.id}
+              file={file}
+              onRemove={() => removeDoc(file)}
+            />
+          ))}
         </div>
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
@@ -164,6 +102,10 @@ export default function ChatInput(
         <FileUploader
           onFileUpload={handleUploadFile}
           onFileError={props.onFileError}
+          config={{
+            allowedExtensions: ALLOWED_EXTENSIONS,
+            disabled: props.isLoading,
+          }}
         />
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message

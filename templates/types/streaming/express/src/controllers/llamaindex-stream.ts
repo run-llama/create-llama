@@ -11,8 +11,7 @@ import {
   MessageContent,
   MessageContentDetail,
 } from "llamaindex";
-
-import { CsvFile } from "./stream-helper";
+import { DocumentFile } from "./stream-helper";
 
 export const convertMessageContent = (
   content: string,
@@ -60,23 +59,34 @@ const convertAnnotations = (
         },
       });
     }
-    // convert CSV files to text
-    if (type === "csv" && "csvFiles" in data && Array.isArray(data.csvFiles)) {
-      const rawContents = data.csvFiles.map((csv) => {
-        return "```csv\n" + (csv as CsvFile).content + "\n```";
-      });
-      const csvContent =
-        "Use data from following CSV raw contents:\n" +
-        rawContents.join("\n\n");
+    // convert files to text
+    if (
+      type === "document_file" &&
+      "files" in data &&
+      Array.isArray(data.files)
+    ) {
       content.push({
         type: "text",
-        text: csvContent,
+        text: getDocFileContext(data.files as DocumentFile[]),
       });
     }
   });
 
   return content;
 };
+
+// TODO: we must get here the relevant context based on the embeddings by comparing
+// it with the user's query
+function getDocFileContext(files: DocumentFile[]): string {
+  const rawContents = files.map((file) => {
+    const { content } = file;
+    const context = Array.isArray(content)
+      ? content.map((node) => node.text).join("\n")
+      : content;
+    return "```" + `${context}\n` + "```";
+  });
+  return `Use the following context:\n` + rawContents.join("\n\n");
+}
 
 function createParser(res: AsyncIterable<EngineResponse>, data: StreamData) {
   const it = res[Symbol.asyncIterator]();

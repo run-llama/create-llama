@@ -6,8 +6,8 @@ export { type ChatHandler } from "./chat.interface";
 export { ChatInput, ChatMessages };
 
 export enum MessageAnnotationType {
-  CSV = "csv",
   IMAGE = "image",
+  DOCUMENT_FILE = "document_file",
   SOURCES = "sources",
   EVENTS = "events",
   TOOLS = "tools",
@@ -17,15 +17,24 @@ export type ImageData = {
   url: string;
 };
 
-export type CsvFile = {
-  content: string;
-  filename: string;
-  filesize: number;
-  id: string;
+// this is subset of LlamaIndex's TextNode
+export type TextNode = {
+  text: string;
+  embedding: number[];
 };
 
-export type CsvData = {
-  csvFiles: CsvFile[];
+export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
+
+export type DocumentFile = {
+  id: string;
+  filename: string;
+  filesize: number;
+  filetype: DocumentFileType;
+  content: string | TextNode[];
+};
+
+export type DocumentFileData = {
+  files: DocumentFile[];
 };
 
 export type SourceNode = {
@@ -61,7 +70,7 @@ export type ToolData = {
 
 export type AnnotationData =
   | ImageData
-  | CsvData
+  | DocumentFileData
   | SourceData
   | EventData
   | ToolData;
