@@ -8,6 +8,8 @@ import {
   TemplateVectorDB,
 } from "./types";
 
+import { TSYSTEMS_LLMHUB_API_URL } from "./providers/llmhub";
+
 export type EnvVar = {
   name?: string;
   description?: string;
@@ -247,12 +249,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           {
             name: "T_SYSTEMS_LLMHUB_BASE_URL",
             description:
-              "The base URL for the T-Systems LLM Hub API. Eg: http://localhost:11434",
-            value: modelConfig.apiBase,
+              "The base URL for the T-Systems AI Foundation Model API. Eg: http://localhost:11434",
+            value: TSYSTEMS_LLMHUB_API_URL,
           },
           {
             name: "T_SYSTEMS_LLMHUB_API_KEY",
-            description: "API Key for T-System's AI Foundation Model (LLMHUB)",
+            description: "API Key for T-System's AI Foundation Model.",
             value: modelConfig.apiKey,
           },
         ]

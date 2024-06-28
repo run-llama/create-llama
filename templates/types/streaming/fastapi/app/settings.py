@@ -2,7 +2,7 @@ import os
 from typing import Dict
 
 from llama_index.core.settings import Settings
-
+from .llmhub import init_llmhub
 
 def init_settings():
     model_provider = os.getenv("MODEL_PROVIDER")
@@ -148,32 +148,4 @@ def init_gemini():
     Settings.llm = Gemini(model=model_name)
     Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
 
-    embed_model_map: Dict[str, str] = {
-        "embedding-001": "models/embedding-001",
-        "text-embedding-004": "models/text-embedding-004",
-    }
-
-    Settings.llm = Gemini(model=model_map[os.getenv("MODEL")])
-    Settings.embed_model = GeminiEmbedding(
-        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
-    )
-
-def init_llmhub():
-    from .llmhub import TSIEmbedding
-    from .llmhub import llm_config_from_env
-    from .llmhub import embedding_config_from_env
-    from llama_index.llms.openai_like import OpenAILike
-
-    llm_configs = llm_config_from_env()
-    embedding_configs = embedding_config_from_env()
-
-    Settings.embed_model = TSIEmbedding(**embedding_configs)
-    Settings.llm = OpenAILike(
-        **llm_configs,
-        is_chat_model=True,
-        is_function_calling_model=False,
-        context_window=4096,
-    )
-    Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
-    Settings.chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "20"))
 

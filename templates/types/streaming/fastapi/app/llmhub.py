@@ -1,4 +1,5 @@
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core.settings import Settings
 from typing import Dict
 import os
 
@@ -44,3 +45,17 @@ def embedding_config_from_env() -> Dict:
         "api_base": api_base,
     }
     return config
+
+def init_llmhub():
+    from llama_index.llms.openai_like import OpenAILike
+
+    llm_configs = llm_config_from_env()
+    embedding_configs = embedding_config_from_env()
+
+    Settings.embed_model = TSIEmbedding(**embedding_configs)
+    Settings.llm = OpenAILike(
+        **llm_configs,
+        is_chat_model=True,
+        is_function_calling_model=False,
+        context_window=4096,
+    )

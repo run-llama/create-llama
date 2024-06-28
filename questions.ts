@@ -471,6 +471,7 @@ export const askQuestions = async (
     const modelConfig = await askModelConfig({
       openAiKey,
       askModels: program.askModels ?? false,
+      framework: program.framework,
     });
     program.modelConfig = modelConfig;
     preferences.modelConfig = modelConfig;

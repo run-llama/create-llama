@@ -6,7 +6,8 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers } from "../../questions";
 
-const LLMHUB_API_URL = "https://llm-server.llmhub.t-systems.net/v2";
+export const TSYSTEMS_LLMHUB_API_URL =
+  "https://llm-server.llmhub.t-systems.net/v2";
 
 const DEFAULT_MODEL = "gpt-3.5-turbo";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
@@ -41,7 +42,6 @@ export async function askLLMHubQuestions({
   apiKey,
 }: LLMHubQuestionsParams): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
-    apiBase: LLMHUB_API_URL,
     apiKey,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
@@ -129,7 +129,7 @@ async function getAvailableModelChoices(
 
   const spinner = ora("Fetching available models").start();
   try {
-    const response = await got(`${LLMHUB_API_URL}/models`, {
+    const response = await got(`${TSYSTEMS_LLMHUB_API_URL}/models`, {
       headers: {
         Authorization: "Bearer " + apiKey,
       },

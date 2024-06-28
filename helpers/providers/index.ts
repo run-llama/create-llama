@@ -14,6 +14,7 @@ const DEFAULT_MODEL_PROVIDER = "openai";
 export type ModelConfigQuestionsParams = {
   openAiKey?: string;
   askModels: boolean;
+  framework?: string;
 };
 
 export type ModelConfigParams = Omit<ModelConfig, "provider">;
@@ -21,22 +22,27 @@ export type ModelConfigParams = Omit<ModelConfig, "provider">;
 export async function askModelConfig({
   askModels,
   openAiKey,
+  framework,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
   if (askModels && !ciInfo.isCI) {
+    let choices = [
+      { title: "OpenAI", value: "openai" },
+      { title: "Groq", value: "groq" },
+      { title: "Ollama", value: "ollama" },
+      { title: "Anthropic", value: "anthropic" },
+      { title: "Gemini", value: "gemini" },
+    ];
+
+    if (framework === "fastapi") {
+      choices.push({ title: "T-Systems", value: "t-systems" });
+    }
     const { provider } = await prompts(
       {
         type: "select",
         name: "provider",
         message: "Which model provider would you like to use",
-        choices: [
-          { title: "OpenAI", value: "openai" },
-          { title: "Groq", value: "groq" },
-          { title: "Ollama", value: "ollama" },
-          { title: "Anthropic", value: "anthropic" },
-          { title: "Gemini", value: "gemini" },
-          { title: "T-Systems", value: "t-systems" },
-        ],
+        choices: choices,
         initial: 0,
       },
       questionHandlers,
