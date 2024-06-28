@@ -8,14 +8,14 @@ export async function createChatEngine() {
       `StorageContext is empty - call 'npm run generate' to generate the storage first`,
     );
   }
-  const retriever = index.asRetriever();
-  retriever.similarityTopK = process.env.TOP_K
-    ? parseInt(process.env.TOP_K)
-    : 3;
+  const retriever = index.asRetriever({
+    similarityTopK: process.env.TOP_K ? parseInt(process.env.TOP_K) : 3,
+  });
 
   return new ContextChatEngine({
     chatModel: Settings.llm,
     retriever,
-    systemPrompt: process.env.SYSTEM_PROMPT,
+    // disable as a custom system prompt disables the generated context
+    // systemPrompt: process.env.SYSTEM_PROMPT,
   });
 }
