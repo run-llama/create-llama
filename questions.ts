@@ -178,7 +178,7 @@ export const getDataSourceChoices = (
     });
   }
 
-  if (framework !== "fastapi" && !selectedDataSource.length) {
+  if (!selectedDataSource.length) {
     choices.push({
       title: "Use LlamaCloud",
       value: "llamacloud",

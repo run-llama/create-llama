@@ -118,6 +118,12 @@ const getAdditionalDependencies = (
             version: "^2.9.9",
           });
           break;
+        case "llamacloud":
+          dependencies.push({
+            name: "llama-index-indices-managed-llama-cloud",
+            version: "^0.1.6",
+          });
+          break;
       }
     }
   }
