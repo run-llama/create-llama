@@ -123,7 +123,13 @@ export const getDataSourceChoices = (
   framework: TemplateFramework,
   selectedDataSource: TemplateDataSource[],
 ) => {
+  // If LlamaCloud is already selected, don't show any other options
+  if (selectedDataSource.find((s) => s.type === "llamacloud")) {
+    return [];
+  }
+
   const choices = [];
+
   if (selectedDataSource.length > 0) {
     choices.push({
       title: "No",
@@ -169,6 +175,13 @@ export const getDataSourceChoices = (
     choices.push({
       title: "Use data from a database (Mysql, PostgreSQL)",
       value: "db",
+    });
+  }
+
+  if (framework !== "fastapi" && !selectedDataSource.length) {
+    choices.push({
+      title: "Use LlamaCloud",
+      value: "llamacloud",
     });
   }
   return choices;
@@ -484,6 +497,11 @@ export const askQuestions = async (
       // continue asking user for data sources if none are initially provided
       while (true) {
         const firstQuestion = program.dataSources.length === 0;
+        const choices = getDataSourceChoices(
+          program.framework,
+          program.dataSources,
+        );
+        if (choices.length === 0) break;
         const { selectedSource } = await prompts(
           {
             type: "select",
@@ -491,10 +509,7 @@ export const askQuestions = async (
             message: firstQuestion
               ? "Which data source would you like to use?"
               : "Would you like to add another data source?",
-            choices: getDataSourceChoices(
-              program.framework,
-              program.dataSources,
-            ),
+            choices,
             initial: firstQuestion ? 1 : 0,
           },
           questionHandlers,
@@ -591,6 +606,13 @@ export const askQuestions = async (
               config: await prompts(dbPrompts, questionHandlers),
             });
           }
+          case "llamacloud": {
+            program.dataSources.push({
+              type: "llamacloud",
+              config: {},
+            });
+            break;
+          }
         }
       }
     }
@@ -635,7 +657,16 @@ export const askQuestions = async (
     }
   }
 
-  if (program.dataSources.length > 0 && !program.vectorDb) {
+  const isUsingLlamaCloud = program.dataSources.some(
+    (ds) => ds.type === "llamacloud",
+  );
+
+  if (isUsingLlamaCloud) {
+    // If using LlamaCloud, don't ask for vector database and use `llamacloud` folder for vector database
+    const vectorDb = "llamacloud";
+    program.vectorDb = vectorDb;
+    preferences.vectorDb = vectorDb;
+  } else if (program.dataSources.length > 0 && !program.vectorDb) {
     if (ciInfo.isCI) {
       program.vectorDb = getPrefOrDefault("vectorDb");
     } else {
