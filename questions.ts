@@ -333,9 +333,9 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Chat", value: "streaming" },
+            { title: "Agentic RAG (single agent)", value: "streaming" },
             {
-              title: "Multi-agents app",
+              title: "Multi-agent app (using llama-agents)",
               value: "multiagents",
             },
             {
@@ -354,11 +354,6 @@ export const askQuestions = async (
       program.template = template;
       preferences.template = template;
     }
-  }
-
-  if (program.template === "multiagents") {
-    await askPostInstallAction();
-    return; // early return - no further questions needed for multi-agent projects
   }
 
   if (program.template === "community") {
@@ -406,6 +401,10 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
+  if (program.template === "multiagents") {
+    // TODO: multi-agents currently only supports FastAPI
+    program.framework = preferences.framework = "fastapi";
+  }
   if (!program.framework) {
     if (ciInfo.isCI) {
       program.framework = getPrefOrDefault("framework");
@@ -431,7 +430,10 @@ export const askQuestions = async (
     }
   }
 
-  if (program.framework === "express" || program.framework === "fastapi") {
+  if (
+    (program.framework === "express" || program.framework === "fastapi") &&
+    program.template === "streaming"
+  ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       if (ciInfo.isCI) {
@@ -468,7 +470,7 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.observability) {
+  if (!program.observability && program.template === "streaming") {
     if (ciInfo.isCI) {
       program.observability = getPrefOrDefault("observability");
     } else {
@@ -706,7 +708,8 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools) {
+  if (!program.tools && program.template === "streaming") {
+    // TODO: allow to select tools also for multi-agent framework
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

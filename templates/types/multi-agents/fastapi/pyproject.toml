@@ -1,13 +1,12 @@
-[tool]
 [tool.poetry]
 name = "app"
 version = "0.1.0"
 description = ""
-authors = [ "Marcus Schiesser <mail@marcusschiesser.de>" ]
+authors = ["Marcus Schiesser <mail@marcusschiesser.de>"]
 readme = "README.md"
 
 [tool.poetry.scripts]
-generate = "app.agents.query_engine.engine.generate:generate_datasource"
+generate = "app.engine.generate:generate_datasource"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -17,5 +16,5 @@ llama-index-embeddings-openai = "^0.1.10"
 llama-index-llms-openai = "^0.1.23"
 
 [build-system]
-requires = [ "poetry-core" ]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
