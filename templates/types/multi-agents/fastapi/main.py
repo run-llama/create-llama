@@ -1,59 +1,21 @@
 from dotenv import load_dotenv
+from app.settings import init_settings
 
 load_dotenv()
-
-import logging
-import os
-import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-from app.api.routers.chat import chat_router
-from app.settings import init_settings
-from fastapi.staticfiles import StaticFiles
-
-
-app = FastAPI()
-
 init_settings()
 
-environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
+from llama_agents import ServerLauncher
+from app.core.message_queue import message_queue
+from app.core.control_plane import control_plane
+from app.core.task_result import human_consumer_server
+from app.agents.query_engine.agent import init_query_engine_agent
 
-if environment == "dev":
-    logging.getLogger("llama_agents").setLevel(logging.DEBUG)
-    logging.getLogger("llama_index").setLevel(logging.DEBUG)
-    logger = logging.getLogger("uvicorn")
-    logger.warning("Running in development mode - allowing CORS for all origins")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Redirect to documentation page when accessing base URL
-    @app.get("/")
-    async def redirect_to_docs():
-        return RedirectResponse(url="/docs")
-
-
-def mount_static_files(directory, path):
-    if os.path.exists(directory):
-        app.mount(path, StaticFiles(directory=directory), name=f"{directory}-static")
-
-
-# Mount the data files to serve the file viewer
-mount_static_files("data", "/api/files/data")
-# Mount the output files from tools
-mount_static_files("tool-output", "/api/files/tool-output")
-
-app.include_router(chat_router, prefix="/api/chat")
-
+launcher = ServerLauncher(
+    [init_query_engine_agent(message_queue)],
+    control_plane,
+    message_queue,
+    additional_consumers=[human_consumer_server.as_consumer()],
+)
 
 if __name__ == "__main__":
-    app_host = os.getenv("APP_HOST", "0.0.0.0")
-    app_port = int(os.getenv("APP_PORT", "8000"))
-    reload = True if environment == "dev" else False
-
-    uvicorn.run(app="main:app", host=app_host, port=app_port, reload=reload)
+    launcher.launch_servers()
