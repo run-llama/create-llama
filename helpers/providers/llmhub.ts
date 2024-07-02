@@ -50,7 +50,7 @@ export async function askLLMHubQuestions({
       if (config.apiKey) {
         return true;
       }
-      if (process.env["LLMHUB_API_KEY"]) {
+      if (process.env["T_SYSTEMS_LLMHUB_API_KEY"]) {
         return true;
       }
       return false;
@@ -63,21 +63,21 @@ export async function askLLMHubQuestions({
         type: "text",
         name: "key",
         message: askModels
-          ? "Please provide your LLMHub API key (or leave blank to use LLMHUB_API_KEY env variable):"
+          ? "Please provide your LLMHub API key (or leave blank to use T_SYSTEMS_LLMHUB_API_KEY env variable):"
           : "Please provide your LLMHub API key (leave blank to skip):",
         validate: (value: string) => {
           if (askModels && !value) {
-            if (process.env.LLMHUB_API_KEY) {
+            if (process.env.T_SYSTEMS_LLMHUB_API_KEY) {
               return true;
             }
-            return "LLMHUB_API_KEY env variable is not set - key is required";
+            return "T_SYSTEMS_LLMHUB_API_KEY env variable is not set - key is required";
           }
           return true;
         },
       },
       questionHandlers,
     );
-    config.apiKey = key || process.env.LLMHUB_API_KEY;
+    config.apiKey = key || process.env.T_SYSTEMS_LLMHUB_API_KEY;
   }
 
   // use default model values in CI or if user should not be asked
