@@ -16,7 +16,11 @@ export type ModelConfig = {
   dimensions: number;
   isConfigured(): boolean;
 };
-export type TemplateType = "streaming" | "community" | "llamapack";
+export type TemplateType =
+  | "streaming"
+  | "community"
+  | "llamapack"
+  | "multiagents";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB =

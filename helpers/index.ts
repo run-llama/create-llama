@@ -141,15 +141,18 @@ export const installTemplate = async (
     // This is a backend, so we need to copy the test data and create the env file.
 
     // Copy the environment file to the target directory.
-    await createBackendEnvFile(props.root, {
-      modelConfig: props.modelConfig,
-      llamaCloudKey: props.llamaCloudKey,
-      vectorDb: props.vectorDb,
-      framework: props.framework,
-      dataSources: props.dataSources,
-      port: props.externalPort,
-      tools: props.tools,
-    });
+    if (props.template === "streaming") {
+      // TODO: this only works for streaming template at the moment
+      await createBackendEnvFile(props.root, {
+        modelConfig: props.modelConfig,
+        llamaCloudKey: props.llamaCloudKey,
+        vectorDb: props.vectorDb,
+        framework: props.framework,
+        dataSources: props.dataSources,
+        port: props.externalPort,
+        tools: props.tools,
+      });
+    }
 
     if (props.dataSources.length > 0) {
       console.log("\nGenerating context data...\n");

@@ -281,25 +281,27 @@ export const askQuestions = async (
           },
         ];
 
-        const modelConfigured =
-          !program.llamapack && program.modelConfig.isConfigured();
-        // If using LlamaParse, require LlamaCloud API key
-        const llamaCloudKeyConfigured = program.useLlamaParse
-          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-          : true;
-        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-        // Can run the app if all tools do not require configuration
-        if (
-          !hasVectorDb &&
-          modelConfigured &&
-          llamaCloudKeyConfigured &&
-          !toolsRequireConfig(program.tools)
-        ) {
-          actionChoices.push({
-            title:
-              "Generate code, install dependencies, and run the app (~2 min)",
-            value: "runApp",
-          });
+        if (program.template !== "multiagents") {
+          const modelConfigured =
+            !program.llamapack && program.modelConfig.isConfigured();
+          // If using LlamaParse, require LlamaCloud API key
+          const llamaCloudKeyConfigured = program.useLlamaParse
+            ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+            : true;
+          const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
+          // Can run the app if all tools do not require configuration
+          if (
+            !hasVectorDb &&
+            modelConfigured &&
+            llamaCloudKeyConfigured &&
+            !toolsRequireConfig(program.tools)
+          ) {
+            actionChoices.push({
+              title:
+                "Generate code, install dependencies, and run the app (~2 min)",
+              value: "runApp",
+            });
+          }
         }
 
         const { action } = await prompts(
@@ -331,7 +333,11 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Chat", value: "streaming" },
+            { title: "Agentic RAG (single agent)", value: "streaming" },
+            {
+              title: "Multi-agent app (using llama-agents)",
+              value: "multiagents",
+            },
             {
               title: `Community template from ${styledRepo}`,
               value: "community",
@@ -395,6 +401,10 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
+  if (program.template === "multiagents") {
+    // TODO: multi-agents currently only supports FastAPI
+    program.framework = preferences.framework = "fastapi";
+  }
   if (!program.framework) {
     if (ciInfo.isCI) {
       program.framework = getPrefOrDefault("framework");
@@ -420,7 +430,10 @@ export const askQuestions = async (
     }
   }
 
-  if (program.framework === "express" || program.framework === "fastapi") {
+  if (
+    (program.framework === "express" || program.framework === "fastapi") &&
+    program.template === "streaming"
+  ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       if (ciInfo.isCI) {
@@ -457,7 +470,7 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.observability) {
+  if (!program.observability && program.template === "streaming") {
     if (ciInfo.isCI) {
       program.observability = getPrefOrDefault("observability");
     } else {
@@ -695,7 +708,8 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools) {
+  if (!program.tools && program.template === "streaming") {
+    // TODO: allow to select tools also for multi-agent framework
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {
