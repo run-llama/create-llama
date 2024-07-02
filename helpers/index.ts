@@ -8,6 +8,7 @@ import { writeLoadersConfig } from "./datasources";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
+import { installMultiAgentsProject } from "./multi-agents";
 import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
@@ -115,6 +116,11 @@ export const installTemplate = async (
 
   if (props.template === "llamapack" && props.llamapack) {
     await installLlamapackProject(props);
+    return;
+  }
+
+  if (props.template === "multiagents") {
+    await installMultiAgentsProject(props);
     return;
   }
 
