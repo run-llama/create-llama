@@ -7,18 +7,24 @@ from llama_agents import (
     AgentOrchestrator,
 )
 from llama_index.core.settings import Settings
-from llama_index.core.agent import FunctionCallingAgentWorker
+from llama_index.core.agent import FunctionCallingAgentWorker, AgentRunner
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from app.core.message_queue import message_queue
+from app.core.control_plane import control_plane
+from app.core.result import result_consumer
 from app.engine.index import get_index
 
 
 def init_message_queue():
+    """
+    Initialize the in-memory message queue.
+    """
     return SimpleMessageQueue()
 
 
 def init_agent(message_queue: SimpleMessageQueue) -> AgentService:
     """
-    Initialize the agent service.
+    An agent service that uses the query engine tool to query the information from the index.
     """
     index = get_index()
     if index is None:
@@ -33,9 +39,11 @@ def init_agent(message_queue: SimpleMessageQueue) -> AgentService:
             """,
         ),
     )
-    agent = FunctionCallingAgentWorker(
-        tools=[query_engine_tool], llm=Settings.llm, prefix_messages=[]
-    ).as_agent()
+    agent = AgentRunner.from_llm(
+        llm=Settings.llm,
+        tools=[query_engine_tool],
+        verbose=True,  # Show agent logs to console
+    )
     return AgentService(
         service_name="context_query_agent",
         agent=agent,
@@ -47,7 +55,10 @@ def init_agent(message_queue: SimpleMessageQueue) -> AgentService:
 def init_control_plane(message_queue: SimpleMessageQueue) -> ControlPlaneServer:
     return ControlPlaneServer(
         message_queue=message_queue,
-        orchestrator=AgentOrchestrator(llm=Settings.llm),
+        orchestrator=AgentOrchestrator(
+            human_description="Useful for finalizing a response. Should contain a complete answer that satisfies the original input.",
+            llm=Settings.llm,
+        ),
     )
 
 
