@@ -173,6 +173,16 @@ const getAdditionalDependencies = (
         version: "0.1.6",
       });
       break;
+    case "t-systems":
+      dependencies.push({
+        name: "llama-index-agent-openai",
+        version: "0.2.2",
+      });
+      dependencies.push({
+        name: "llama-index-llms-openai-like",
+        version: "0.1.3",
+      });
+      break;
   }
 
   return dependencies;

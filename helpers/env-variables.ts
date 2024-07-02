@@ -8,6 +8,8 @@ import {
   TemplateVectorDB,
 } from "./types";
 
+import { TSYSTEMS_LLMHUB_API_URL } from "./providers/llmhub";
+
 export type EnvVar = {
   name?: string;
   description?: string;
@@ -259,6 +261,21 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
             name: "OLLAMA_BASE_URL",
             description:
               "The base URL for the Ollama API. Eg: http://127.0.0.1:11434",
+          },
+        ]
+      : []),
+    ...(modelConfig.provider === "t-systems"
+      ? [
+          {
+            name: "T_SYSTEMS_LLMHUB_BASE_URL",
+            description:
+              "The base URL for the T-Systems AI Foundation Model API. Eg: http://localhost:11434",
+            value: TSYSTEMS_LLMHUB_API_URL,
+          },
+          {
+            name: "T_SYSTEMS_LLMHUB_API_KEY",
+            description: "API Key for T-System's AI Foundation Model.",
+            value: modelConfig.apiKey,
           },
         ]
       : []),

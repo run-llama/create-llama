@@ -6,7 +6,8 @@ export type ModelProvider =
   | "groq"
   | "ollama"
   | "anthropic"
-  | "gemini";
+  | "gemini"
+  | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
   apiKey?: string;
