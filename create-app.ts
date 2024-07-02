@@ -152,9 +152,9 @@ export async function createApp({
   }
 
   if (
-    template === "streaming" &&
-    dataSources.some((dataSource) => dataSource.type === "file") &&
-    process.platform === "linux"
+    template === "multiagents" ||
+    (dataSources.some((dataSource) => dataSource.type === "file") &&
+      process.platform === "linux")
   ) {
     console.log(
       yellow(

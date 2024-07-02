@@ -7,6 +7,11 @@ from app.agents.query_engine.engine.index import get_index
 from app.utils import load_from_env
 
 
+DEFAULT_QUERY_ENGINE_AGENT_DESCRIPTION = (
+    "Used to answer the questions using the provided context data."
+)
+
+
 def get_query_engine_tool() -> QueryEngineTool:
     """
     Provide an agent worker that can be used to query the index.
@@ -39,8 +44,9 @@ def init_query_engine_agent(
     return AgentService(
         service_name="context_query_agent",
         agent=agent,
-        message_queue=message_queue,
-        description="Used to answer the questions using the provided context data.",
-        host=os.getenv("AGENT_QUERY_ENGINE_HOST", "127.0.0.1"),
+        message_queue=message_queue.client,
+        description=load_from_env("AGENT_QUERY_ENGINE_DESCRIPTION", throw_error=False)
+        or DEFAULT_QUERY_ENGINE_AGENT_DESCRIPTION,
+        host=load_from_env("AGENT_QUERY_ENGINE_HOST", throw_error=False) or "127.0.0.1",
         port=int(load_from_env("AGENT_QUERY_ENGINE_PORT")),
     )

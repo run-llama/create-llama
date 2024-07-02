@@ -4,7 +4,7 @@ import { templatesDir } from "./dir";
 import { installPythonDependencies } from "./python";
 import { InstallTemplateArgs } from "./types";
 
-export const copyAgenticRAGTemplate = async ({
+export const copyMultiAgentsTemplate = async ({
   root,
 }: Pick<InstallTemplateArgs, "root">) => {
   const templatePath = path.join(
@@ -25,7 +25,7 @@ export const installMultiAgentsProject = async ({
   postInstallAction,
 }: Pick<InstallTemplateArgs, "root" | "postInstallAction">) => {
   console.log("\nCreating Multi-agent project:");
-  await copyAgenticRAGTemplate({ root });
+  await copyMultiAgentsTemplate({ root });
   if (postInstallAction === "dependencies") {
     installPythonDependencies({ noRoot: true });
   }
