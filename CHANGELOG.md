@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.16
+
+### Patch Changes
+
+- a0aab03: Add T-System's LLMHUB as a model provider
+
 ## 0.1.15
 
 ### Patch Changes
