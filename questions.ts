@@ -281,25 +281,27 @@ export const askQuestions = async (
           },
         ];
 
-        const modelConfigured =
-          !program.llamapack && program.modelConfig.isConfigured();
-        // If using LlamaParse, require LlamaCloud API key
-        const llamaCloudKeyConfigured = program.useLlamaParse
-          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-          : true;
-        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-        // Can run the app if all tools do not require configuration
-        if (
-          !hasVectorDb &&
-          modelConfigured &&
-          llamaCloudKeyConfigured &&
-          !toolsRequireConfig(program.tools)
-        ) {
-          actionChoices.push({
-            title:
-              "Generate code, install dependencies, and run the app (~2 min)",
-            value: "runApp",
-          });
+        if (program.template !== "multiagents") {
+          const modelConfigured =
+            !program.llamapack && program.modelConfig.isConfigured();
+          // If using LlamaParse, require LlamaCloud API key
+          const llamaCloudKeyConfigured = program.useLlamaParse
+            ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+            : true;
+          const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
+          // Can run the app if all tools do not require configuration
+          if (
+            !hasVectorDb &&
+            modelConfigured &&
+            llamaCloudKeyConfigured &&
+            !toolsRequireConfig(program.tools)
+          ) {
+            actionChoices.push({
+              title:
+                "Generate code, install dependencies, and run the app (~2 min)",
+              value: "runApp",
+            });
+          }
         }
 
         const { action } = await prompts(
@@ -333,6 +335,10 @@ export const askQuestions = async (
           choices: [
             { title: "Chat", value: "streaming" },
             {
+              title: "Multi-agents app",
+              value: "multiagents",
+            },
+            {
               title: `Community template from ${styledRepo}`,
               value: "community",
             },
@@ -348,6 +354,11 @@ export const askQuestions = async (
       program.template = template;
       preferences.template = template;
     }
+  }
+
+  if (program.template === "multiagents") {
+    await askPostInstallAction();
+    return; // early return - no further questions needed for multi-agent projects
   }
 
   if (program.template === "community") {
