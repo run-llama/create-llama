@@ -9,9 +9,6 @@ from llama_agents import (
 from llama_index.core.settings import Settings
 from llama_index.core.agent import FunctionCallingAgentWorker, AgentRunner
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
-from app.core.message_queue import message_queue
-from app.core.control_plane import control_plane
-from app.core.result import result_consumer
 from app.engine.index import get_index
 
 
