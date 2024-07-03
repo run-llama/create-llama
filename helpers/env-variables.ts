@@ -384,15 +384,12 @@ const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
     return [
       {
         name: "MESSAGE_QUEUE_PORT",
-        value: "8000",
       },
       {
         name: "CONTROL_PLANE_PORT",
-        value: "8001",
       },
       {
         name: "HUMAN_CONSUMER_PORT",
-        value: "8002",
       },
       {
         name: "AGENT_QUERY_ENGINE_PORT",

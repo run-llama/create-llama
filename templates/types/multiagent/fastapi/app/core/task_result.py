@@ -20,7 +20,7 @@ class TaskResultService:
         message_queue: BaseMessageQueue,
         name: str = "human",
         host: str = "127.0.0.1",
-        port: Optional[int] = 8000,
+        port: Optional[int] = 8002,
     ) -> None:
         self.name = name
         self.host = host
@@ -77,7 +77,7 @@ class TaskResultService:
 human_consumer_host = (
     load_from_env("HUMAN_CONSUMER_HOST", throw_error=False) or "127.0.0.1"
 )
-human_consumer_port = load_from_env("HUMAN_CONSUMER_PORT", throw_error=False)
+human_consumer_port = load_from_env("HUMAN_CONSUMER_PORT", throw_error=False) or "8002"
 
 
 human_consumer_server = TaskResultService(

@@ -4,8 +4,10 @@ from app.core.message_queue import message_queue
 from app.utils import load_from_env
 
 
-control_plane_host = load_from_env("CONTROL_PLANE_HOST", throw_error=False) or "127.0.0.1"
-control_plane_port = load_from_env("CONTROL_PLANE_PORT")
+control_plane_host = (
+    load_from_env("CONTROL_PLANE_HOST", throw_error=False) or "127.0.0.1"
+)
+control_plane_port = load_from_env("CONTROL_PLANE_PORT", throw_error=False) or "8001"
 
 
 # setup control plane
