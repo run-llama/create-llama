@@ -9,6 +9,7 @@ import {
   TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
+  TemplateType,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
@@ -122,7 +123,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
 export const getDataSourceChoices = (
   framework: TemplateFramework,
   selectedDataSource: TemplateDataSource[],
-  template?: string,
+  template?: TemplateType,
 ) => {
   // If LlamaCloud is already selected, don't show any other options
   if (selectedDataSource.find((s) => s.type === "llamacloud")) {
