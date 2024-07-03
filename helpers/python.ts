@@ -320,19 +320,26 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "loaders", "python"),
   });
 
-  // Select and copy engine code based on data sources and tools
-  let engine;
-  tools = tools ?? [];
-  if (dataSources.length > 0 && tools.length === 0) {
-    console.log("\nNo tools selected - use optimized context chat engine\n");
-    engine = "chat";
-  } else {
-    engine = "agent";
-  }
-  await copy("**", enginePath, {
-    parents: true,
-    cwd: path.join(compPath, "engines", "python", engine),
+  // Copy settings.py to app
+  await copy("**", path.join(root, "app"), {
+    cwd: path.join(compPath, "settings", "python"),
   });
+
+  if (template === "streaming") {
+    // For the streaming template only:
+    // Select and copy engine code based on data sources and tools
+    let engine;
+    if (dataSources.length > 0 && (!tools || tools.length === 0)) {
+      console.log("\nNo tools selected - use optimized context chat engine\n");
+      engine = "chat";
+    } else {
+      engine = "agent";
+    }
+    await copy("**", enginePath, {
+      parents: true,
+      cwd: path.join(compPath, "engines", "python", engine),
+    });
+  }
 
   console.log("Adding additional dependencies");
 

@@ -2,7 +2,7 @@ import os
 from typing import Dict
 
 from llama_index.core.settings import Settings
-from .llmhub import init_llmhub
+
 
 def init_settings():
     model_provider = os.getenv("MODEL_PROVIDER")
@@ -20,6 +20,8 @@ def init_settings():
         case "azure-openai":
             init_azure_openai()
         case "t-systems":
+            from .llmhub import init_llmhub
+
             init_llmhub()
         case _:
             raise ValueError(f"Invalid model provider: {model_provider}")
@@ -147,5 +149,3 @@ def init_gemini():
 
     Settings.llm = Gemini(model=model_name)
     Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
-
-
