@@ -20,7 +20,7 @@ export type TemplateType =
   | "streaming"
   | "community"
   | "llamapack"
-  | "multiagents";
+  | "multiagent";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB =

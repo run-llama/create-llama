@@ -1,16 +1,14 @@
 import json
-import asyncio
 from logging import getLogger
 from pathlib import Path
 from fastapi import FastAPI
 from typing import Dict, Optional
-from llama_agents import CallableMessageConsumer, QueueMessage, SimpleMessageQueue
+from llama_agents import CallableMessageConsumer, QueueMessage
 from llama_agents.message_queues.base import BaseMessageQueue
 from llama_agents.message_consumers.base import BaseMessageQueueConsumer
 from llama_agents.message_consumers.remote import RemoteMessageConsumer
 from app.utils import load_from_env
 from app.core.message_queue import message_queue
-
 
 
 logger = getLogger(__name__)
@@ -76,7 +74,9 @@ class TaskResultService:
         await self.message_queue.register_consumer(self.as_consumer(remote=True))
 
 
-human_consumer_host = load_from_env("HUMAN_CONSUMER_HOST", throw_error=False) or "127.0.0.1"
+human_consumer_host = (
+    load_from_env("HUMAN_CONSUMER_HOST", throw_error=False) or "127.0.0.1"
+)
 human_consumer_port = load_from_env("HUMAN_CONSUMER_PORT", throw_error=False)
 
 

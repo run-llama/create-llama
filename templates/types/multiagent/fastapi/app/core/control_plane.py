@@ -1,6 +1,5 @@
-import asyncio
 from llama_index.llms.openai import OpenAI
-from llama_agents import AgentOrchestrator, ControlPlaneServer, SimpleMessageQueue
+from llama_agents import AgentOrchestrator, ControlPlaneServer
 from app.core.message_queue import message_queue
 from app.utils import load_from_env
 

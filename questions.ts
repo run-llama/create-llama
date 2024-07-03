@@ -281,7 +281,7 @@ export const askQuestions = async (
           },
         ];
 
-        if (program.template !== "multiagents") {
+        if (program.template !== "multiagent") {
           const modelConfigured =
             !program.llamapack && program.modelConfig.isConfigured();
           // If using LlamaParse, require LlamaCloud API key
@@ -336,7 +336,7 @@ export const askQuestions = async (
             { title: "Agentic RAG (single agent)", value: "streaming" },
             {
               title: "Multi-agent app (using llama-agents)",
-              value: "multiagents",
+              value: "multiagent",
             },
             {
               title: `Community template from ${styledRepo}`,
@@ -401,7 +401,7 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
-  if (program.template === "multiagents") {
+  if (program.template === "multiagent") {
     // TODO: multi-agents currently only supports FastAPI
     program.framework = preferences.framework = "fastapi";
   }

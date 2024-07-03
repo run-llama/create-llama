@@ -1,4 +1,3 @@
-import os
 from llama_agents import AgentService, SimpleMessageQueue
 from llama_index.core.agent import FunctionCallingAgentWorker
 from llama_index.core.tools import FunctionTool

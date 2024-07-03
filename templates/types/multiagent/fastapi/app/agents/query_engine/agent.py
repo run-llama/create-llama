@@ -3,7 +3,7 @@ from llama_agents import AgentService, SimpleMessageQueue
 from llama_index.core.agent import FunctionCallingAgentWorker
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.settings import Settings
-from app.agents.query_engine.engine.index import get_index
+from app.engine.index import get_index
 from app.utils import load_from_env
 
 
