@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.17
+
+### Patch Changes
+
+- 9ecd061: Add new template for a multi-agents app
+
 ## 0.1.16
 
 ### Patch Changes
