@@ -118,6 +118,12 @@ const getAdditionalDependencies = (
             version: "^2.9.9",
           });
           break;
+        case "llamacloud":
+          dependencies.push({
+            name: "llama-index-indices-managed-llama-cloud",
+            version: "^0.2.1",
+          });
+          break;
       }
     }
   }
@@ -165,6 +171,16 @@ const getAdditionalDependencies = (
       dependencies.push({
         name: "llama-index-embeddings-gemini",
         version: "0.1.6",
+      });
+      break;
+    case "t-systems":
+      dependencies.push({
+        name: "llama-index-agent-openai",
+        version: "0.2.2",
+      });
+      dependencies.push({
+        name: "llama-index-llms-openai-like",
+        version: "0.1.3",
       });
       break;
   }

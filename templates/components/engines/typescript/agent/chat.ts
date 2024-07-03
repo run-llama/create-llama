@@ -7,7 +7,6 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
-import { STORAGE_CACHE_DIR } from "./shared";
 import { createTools } from "./tools";
 
 export async function createChatEngine(nodes?: TextNode[]) {
@@ -22,7 +21,7 @@ export async function createChatEngine(nodes?: TextNode[]) {
         queryEngine: index.asQueryEngine(),
         metadata: {
           name: "data_query_engine",
-          description: `A query engine for documents in storage folder: ${STORAGE_CACHE_DIR}`,
+          description: `A query engine for documents from your data source.`,
         },
       }),
     );

@@ -6,7 +6,8 @@ export type ModelProvider =
   | "groq"
   | "ollama"
   | "anthropic"
-  | "gemini";
+  | "gemini"
+  | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
   apiKey?: string;
@@ -26,7 +27,8 @@ export type TemplateVectorDB =
   | "milvus"
   | "astra"
   | "qdrant"
-  | "chroma";
+  | "chroma"
+  | "llamacloud";
 export type TemplatePostInstallAction =
   | "none"
   | "VSCode"
@@ -36,7 +38,7 @@ export type TemplateDataSource = {
   type: TemplateDataSourceType;
   config: TemplateDataSourceConfig;
 };
-export type TemplateDataSourceType = "file" | "web" | "db";
+export type TemplateDataSourceType = "file" | "web" | "db" | "llamacloud";
 export type TemplateObservability = "none" | "opentelemetry";
 // Config for both file and folder
 export type FileSourceConfig = {

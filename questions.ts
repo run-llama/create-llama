@@ -123,7 +123,13 @@ export const getDataSourceChoices = (
   framework: TemplateFramework,
   selectedDataSource: TemplateDataSource[],
 ) => {
+  // If LlamaCloud is already selected, don't show any other options
+  if (selectedDataSource.find((s) => s.type === "llamacloud")) {
+    return [];
+  }
+
   const choices = [];
+
   if (selectedDataSource.length > 0) {
     choices.push({
       title: "No",
@@ -169,6 +175,13 @@ export const getDataSourceChoices = (
     choices.push({
       title: "Use data from a database (Mysql, PostgreSQL)",
       value: "db",
+    });
+  }
+
+  if (!selectedDataSource.length) {
+    choices.push({
+      title: "Use managed index from LlamaCloud",
+      value: "llamacloud",
     });
   }
   return choices;
@@ -471,6 +484,7 @@ export const askQuestions = async (
     const modelConfig = await askModelConfig({
       openAiKey,
       askModels: program.askModels ?? false,
+      framework: program.framework,
     });
     program.modelConfig = modelConfig;
     preferences.modelConfig = modelConfig;
@@ -484,6 +498,11 @@ export const askQuestions = async (
       // continue asking user for data sources if none are initially provided
       while (true) {
         const firstQuestion = program.dataSources.length === 0;
+        const choices = getDataSourceChoices(
+          program.framework,
+          program.dataSources,
+        );
+        if (choices.length === 0) break;
         const { selectedSource } = await prompts(
           {
             type: "select",
@@ -491,10 +510,7 @@ export const askQuestions = async (
             message: firstQuestion
               ? "Which data source would you like to use?"
               : "Would you like to add another data source?",
-            choices: getDataSourceChoices(
-              program.framework,
-              program.dataSources,
-            ),
+            choices,
             initial: firstQuestion ? 1 : 0,
           },
           questionHandlers,
@@ -591,51 +607,76 @@ export const askQuestions = async (
               config: await prompts(dbPrompts, questionHandlers),
             });
           }
+          case "llamacloud": {
+            program.dataSources.push({
+              type: "llamacloud",
+              config: {},
+            });
+            program.dataSources.push(EXAMPLE_FILE);
+            break;
+          }
         }
       }
     }
   }
 
-  // Asking for LlamaParse if user selected file or folder data source
-  if (
-    program.dataSources.some((ds) => ds.type === "file") &&
-    program.useLlamaParse === undefined
-  ) {
-    if (ciInfo.isCI) {
-      program.useLlamaParse = getPrefOrDefault("useLlamaParse");
-      program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
-    } else {
-      const { useLlamaParse } = await prompts(
-        {
-          type: "toggle",
-          name: "useLlamaParse",
-          message:
-            "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-          initial: false,
-          active: "yes",
-          inactive: "no",
-        },
-        questionHandlers,
-      );
-      program.useLlamaParse = useLlamaParse;
+  const isUsingLlamaCloud = program.dataSources.some(
+    (ds) => ds.type === "llamacloud",
+  );
 
-      // Ask for LlamaCloud API key
-      if (useLlamaParse && program.llamaCloudKey === undefined) {
-        const { llamaCloudKey } = await prompts(
+  // Asking for LlamaParse if user selected file data source
+  if (isUsingLlamaCloud) {
+    // default to use LlamaParse if using LlamaCloud
+    program.useLlamaParse = preferences.useLlamaParse = true;
+  } else {
+    if (program.dataSources.some((ds) => ds.type === "file")) {
+      if (ciInfo.isCI) {
+        program.useLlamaParse = getPrefOrDefault("useLlamaParse");
+      } else {
+        const { useLlamaParse } = await prompts(
           {
-            type: "text",
-            name: "llamaCloudKey",
+            type: "toggle",
+            name: "useLlamaParse",
             message:
-              "Please provide your LlamaIndex Cloud API key (leave blank to skip):",
+              "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+            initial: false,
+            active: "yes",
+            inactive: "no",
           },
           questionHandlers,
         );
-        program.llamaCloudKey = llamaCloudKey;
+        program.useLlamaParse = useLlamaParse;
+        preferences.useLlamaParse = useLlamaParse;
       }
     }
   }
 
-  if (program.dataSources.length > 0 && !program.vectorDb) {
+  // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
+  if (isUsingLlamaCloud || program.useLlamaParse) {
+    if (ciInfo.isCI) {
+      program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
+    } else {
+      // Ask for LlamaCloud API key
+      const { llamaCloudKey } = await prompts(
+        {
+          type: "text",
+          name: "llamaCloudKey",
+          message:
+            "Please provide your LlamaCloud API key (leave blank to skip):",
+        },
+        questionHandlers,
+      );
+      program.llamaCloudKey = preferences.llamaCloudKey =
+        llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+    }
+  }
+
+  if (isUsingLlamaCloud) {
+    // When using a LlamaCloud index, don't ask for vector database and use code in `llamacloud` folder for vector database
+    const vectorDb = "llamacloud";
+    program.vectorDb = vectorDb;
+    preferences.vectorDb = vectorDb;
+  } else if (program.dataSources.length > 0 && !program.vectorDb) {
     if (ciInfo.isCI) {
       program.vectorDb = getPrefOrDefault("vectorDb");
     } else {

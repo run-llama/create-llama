@@ -1,5 +1,25 @@
 # create-llama
 
+## 0.1.16
+
+### Patch Changes
+
+- a0aab03: Add T-System's LLMHUB as a model provider
+
+## 0.1.15
+
+### Patch Changes
+
+- 64732f0: Fix the issue of images not showing with the sandbox URL from OpenAI's models
+- aeb6fef: use llamacloud for chat
+
+## 0.1.14
+
+### Patch Changes
+
+- f2c3389: chore: update to llamaindex 0.4.3
+- 5093b37: Remove non-working file selectors for Linux
+
 ## 0.1.13
 
 ### Patch Changes

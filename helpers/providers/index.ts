@@ -1,10 +1,11 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { questionHandlers } from "../../questions";
-import { ModelConfig, ModelProvider } from "../types";
+import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
+import { askLLMHubQuestions } from "./llmhub";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
 
@@ -13,6 +14,7 @@ const DEFAULT_MODEL_PROVIDER = "openai";
 export type ModelConfigQuestionsParams = {
   openAiKey?: string;
   askModels: boolean;
+  framework?: TemplateFramework;
 };
 
 export type ModelConfigParams = Omit<ModelConfig, "provider">;
@@ -20,24 +22,27 @@ export type ModelConfigParams = Omit<ModelConfig, "provider">;
 export async function askModelConfig({
   askModels,
   openAiKey,
+  framework,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
   if (askModels && !ciInfo.isCI) {
+    let choices = [
+      { title: "OpenAI", value: "openai" },
+      { title: "Groq", value: "groq" },
+      { title: "Ollama", value: "ollama" },
+      { title: "Anthropic", value: "anthropic" },
+      { title: "Gemini", value: "gemini" },
+    ];
+
+    if (framework === "fastapi") {
+      choices.push({ title: "T-Systems", value: "t-systems" });
+    }
     const { provider } = await prompts(
       {
         type: "select",
         name: "provider",
         message: "Which model provider would you like to use",
-        choices: [
-          {
-            title: "OpenAI",
-            value: "openai",
-          },
-          { title: "Groq", value: "groq" },
-          { title: "Ollama", value: "ollama" },
-          { title: "Anthropic", value: "anthropic" },
-          { title: "Gemini", value: "gemini" },
-        ],
+        choices: choices,
         initial: 0,
       },
       questionHandlers,
@@ -58,6 +63,9 @@ export async function askModelConfig({
       break;
     case "gemini":
       modelConfig = await askGeminiQuestions({ askModels });
+      break;
+    case "t-systems":
+      modelConfig = await askLLMHubQuestions({ askModels });
       break;
     default:
       modelConfig = await askOpenAIQuestions({
