@@ -5,6 +5,7 @@ import {
   ModelConfig,
   TemplateDataSource,
   TemplateFramework,
+  TemplateType,
   TemplateVectorDB,
 } from "./types";
 
@@ -378,6 +379,39 @@ const getSystemPromptEnv = (tools?: Tool[]): EnvVar => {
   };
 };
 
+const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
+  if (template === "multiagent") {
+    return [
+      {
+        name: "MESSAGE_QUEUE_PORT",
+        value: "8000",
+      },
+      {
+        name: "CONTROL_PLANE_PORT",
+        value: "8001",
+      },
+      {
+        name: "HUMAN_CONSUMER_PORT",
+        value: "8002",
+      },
+      {
+        name: "AGENT_QUERY_ENGINE_PORT",
+        value: "8003",
+      },
+      {
+        name: "AGENT_QUERY_ENGINE_DESCRIPTION",
+        value: "Query information from the provided data",
+      },
+      {
+        name: "AGENT_DUMMY_PORT",
+        value: "8004",
+      },
+    ];
+  } else {
+    return [];
+  }
+};
+
 export const createBackendEnvFile = async (
   root: string,
   opts: {
@@ -386,6 +420,7 @@ export const createBackendEnvFile = async (
     modelConfig: ModelConfig;
     framework: TemplateFramework;
     dataSources?: TemplateDataSource[];
+    template?: TemplateType;
     port?: number;
     tools?: Tool[];
   },
@@ -406,6 +441,8 @@ export const createBackendEnvFile = async (
     ...getVectorDBEnvs(opts.vectorDb, opts.framework),
     ...getFrameworkEnvs(opts.framework, opts.port),
     ...getToolEnvs(opts.tools),
+    // Add template environment variables
+    ...getTemplateEnvs(opts.template),
     getSystemPromptEnv(opts.tools),
   ];
   // Render and write env file

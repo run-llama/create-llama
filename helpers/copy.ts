@@ -61,9 +61,6 @@ export const assetRelocator = (name: string) => {
     case "README-template.md": {
       return "README.md";
     }
-    case "env.example": {
-      return ".env";
-    }
     default: {
       return name;
     }

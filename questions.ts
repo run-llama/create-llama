@@ -122,6 +122,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
 export const getDataSourceChoices = (
   framework: TemplateFramework,
   selectedDataSource: TemplateDataSource[],
+  template?: string,
 ) => {
   // If LlamaCloud is already selected, don't show any other options
   if (selectedDataSource.find((s) => s.type === "llamacloud")) {
@@ -137,10 +138,12 @@ export const getDataSourceChoices = (
     });
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
-    choices.push({
-      title: "No data, just a simple chat or agent",
-      value: "none",
-    });
+    if (template !== "multiagent") {
+      choices.push({
+        title: "No data, just a simple chat or agent",
+        value: "none",
+      });
+    }
     choices.push({
       title:
         process.platform !== "linux"
@@ -514,6 +517,7 @@ export const askQuestions = async (
         const choices = getDataSourceChoices(
           program.framework,
           program.dataSources,
+          program.template,
         );
         if (choices.length === 0) break;
         const { selectedSource } = await prompts(
