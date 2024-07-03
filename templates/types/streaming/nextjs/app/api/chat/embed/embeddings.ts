@@ -1,20 +1,14 @@
 import {
   Document,
   IngestionPipeline,
-  MetadataMode,
   Settings,
   SimpleNodeParser,
-  TextNode,
 } from "llamaindex";
 import { DocxReader } from "llamaindex/readers/DocxReader";
 import { PDFReader } from "llamaindex/readers/PDFReader";
 import { TextFileReader } from "llamaindex/readers/TextFileReader";
 
-type SimpleTextNode = Pick<TextNode, "text" | "embedding" | "metadata">;
-
-export async function readAndSplitDocument(
-  raw: string,
-): Promise<SimpleTextNode[]> {
+export async function uploadDocument(raw: string): Promise<string[]> {
   const [header, content] = raw.split(",");
   const mimeType = header.replace("data:", "").replace(";base64", "");
   const fileBuffer = Buffer.from(content, "base64");
@@ -22,7 +16,14 @@ export async function readAndSplitDocument(
   return await runPipeline(documents);
 }
 
-async function runPipeline(documents: Document[]): Promise<SimpleTextNode[]> {
+async function runPipeline(documents: Document[]): Promise<string[]> {
+  // mark documents to add to the vector store as private
+  for (const document of documents) {
+    document.metadata = {
+      ...document.metadata,
+      private: true,
+    };
+  }
   const pipeline = new IngestionPipeline({
     transformations: [
       new SimpleNodeParser({
@@ -31,15 +32,12 @@ async function runPipeline(documents: Document[]): Promise<SimpleTextNode[]> {
       }),
       Settings.embedModel,
     ],
+    // TODO: make sure this adds the nodes to the vector DB
+    vectorStore: Settings.vectorStore,
   });
-  const nodes = await pipeline.run({ documents });
-  // remove text nodes to reduce data send over the wire
-  return nodes.map((node: TextNode) => ({
-    text: node.getContent(MetadataMode.NONE),
-    embedding: node.embedding,
-    // TODO: to be able to view the source document, we need to store its URL in the metadata
-    metadata: node.metadata,
-  }));
+  await pipeline.run({ documents });
+  // return document identifiers
+  return documents.map((document) => document.id_);
 }
 
 async function loadDocuments(fileBuffer: Buffer, mimeType: string) {

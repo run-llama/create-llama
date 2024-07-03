@@ -17,12 +17,6 @@ export type ImageData = {
   url: string;
 };
 
-// this is subset of LlamaIndex's TextNode
-export type TextNode = {
-  text: string;
-  embedding: number[];
-};
-
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFile = {
@@ -30,7 +24,7 @@ export type DocumentFile = {
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
-  content: string | TextNode[];
+  content: string | string[];
 };
 
 export type DocumentFileData = {

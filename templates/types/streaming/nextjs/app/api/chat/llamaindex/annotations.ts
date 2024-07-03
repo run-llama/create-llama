@@ -1,5 +1,5 @@
 import { JSONValue } from "ai";
-import { MessageContent, MessageContentDetail, TextNode } from "llamaindex";
+import { MessageContent, MessageContentDetail } from "llamaindex";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
@@ -8,7 +8,9 @@ export type DocumentFile = {
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
-  content: string | TextNode[];
+  // TODO: is should better be a an object, e.g.:
+  // content: { type: "ref"|"text", value: string }[];
+  content: string | string[];
 };
 
 type Annotation = {
@@ -16,12 +18,12 @@ type Annotation = {
   data: object;
 };
 
-export function retrieveNodes(annotations?: JSONValue[]): TextNode[] {
+export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
   if (!annotations) return [];
 
-  const textNodes: TextNode[] = [];
+  const ids: string[] = [];
 
-  annotations.forEach((annotation: JSONValue) => {
+  for (const annotation of annotations) {
     const { type, data } = getValidAnnotation(annotation);
     if (
       type === "document_file" &&
@@ -29,25 +31,18 @@ export function retrieveNodes(annotations?: JSONValue[]): TextNode[] {
       Array.isArray(data.files)
     ) {
       const files = data.files as DocumentFile[];
-      files.forEach((file) => {
+      for (const file of files) {
         if (Array.isArray(file.content)) {
-          file.content.forEach((node) => {
-            if (node.hasOwnProperty("text")) {
-              textNodes.push(
-                new TextNode({
-                  text: node.text,
-                  embedding: node.embedding,
-                  metadata: node.metadata,
-                }),
-              );
-            }
-          });
+          // it's an array, so it's an array of doc IDs
+          for (const id of file.content) {
+            ids.push(id);
+          }
         }
-      });
+      }
     }
-  });
+  }
 
-  return textNodes;
+  return ids;
 }
 
 export function convertMessageContent(

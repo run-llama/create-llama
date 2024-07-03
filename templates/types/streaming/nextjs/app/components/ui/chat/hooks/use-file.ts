@@ -8,7 +8,6 @@ import {
   DocumentFileType,
   MessageAnnotation,
   MessageAnnotationType,
-  TextNode,
 } from "..";
 import { useClientConfig } from "./use-config";
 
@@ -49,7 +48,7 @@ export function useFile() {
     files.length && setFiles([]);
   };
 
-  const getTextNodes = async (base64: string): Promise<TextNode[]> => {
+  const uploadContent = async (base64: string): Promise<string[]> => {
     const embedAPI = `${backend}/api/chat/embed`;
     const response = await fetch(embedAPI, {
       method: "POST",
@@ -60,7 +59,7 @@ export function useFile() {
         base64,
       }),
     });
-    if (!response.ok) throw new Error("Failed to get text nodes from file.");
+    if (!response.ok) throw new Error("Failed to upload document.");
     return await response.json();
   };
 
@@ -121,8 +120,8 @@ export function useFile() {
       }
       default: {
         const base64 = await readContent({ file, asUrl: true });
-        const nodes = await getTextNodes(base64);
-        return addDoc({ ...newDoc, content: nodes });
+        const ids = await uploadContent(base64);
+        return addDoc({ ...newDoc, content: ids });
       }
     }
   };

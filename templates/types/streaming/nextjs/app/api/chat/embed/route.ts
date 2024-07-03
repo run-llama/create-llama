@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "../engine/settings";
-import { readAndSplitDocument } from "./embeddings";
+import { uploadDocument } from "./embeddings";
 
 initSettings();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// TODO: rename this endpoint to /upload (as it uploads a user doc to the vector DB)
 export async function POST(request: NextRequest) {
   try {
     const { base64 }: { base64: string } = await request.json();
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    return NextResponse.json(await readAndSplitDocument(base64));
+    return NextResponse.json(await uploadDocument(base64));
   } catch (error) {
     console.error("[Embed API]", error);
     return NextResponse.json(

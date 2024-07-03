@@ -1,24 +1,31 @@
-import {
-  BaseToolWithCall,
-  OpenAIAgent,
-  QueryEngineTool,
-  TextNode,
-} from "llamaindex";
+import { BaseToolWithCall, OpenAIAgent, QueryEngineTool } from "llamaindex";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
 import { createTools } from "./tools";
 
-export async function createChatEngine(nodes?: TextNode[]) {
+export async function createChatEngine(documentIds?: string[]) {
   const tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
-  const index = await getDataSource(nodes);
+  const index = await getDataSource();
   if (index) {
     tools.push(
       new QueryEngineTool({
-        queryEngine: index.asQueryEngine(),
+        queryEngine: index.asQueryEngine({
+          preFilters: {
+            filters: [
+              // TODO: add filter to only show documents that are public or that are private and
+              // have one of the document ids
+              {
+                key: "private",
+                value: true,
+                filterType: "ExactMatch",
+              },
+            ],
+          },
+        }),
         metadata: {
           name: "data_query_engine",
           description: `A query engine for documents from your data source.`,

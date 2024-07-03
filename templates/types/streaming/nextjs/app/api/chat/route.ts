@@ -4,7 +4,10 @@ import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
-import { convertMessageContent, retrieveNodes } from "./llamaindex/annotations";
+import {
+  convertMessageContent,
+  retrieveDocumentIds,
+} from "./llamaindex/annotations";
 import {
   createCallbackManager,
   createStreamTimeout,
@@ -49,9 +52,9 @@ export async function POST(request: NextRequest) {
         )?.annotations;
     }
 
-    // retrieve nodes from annotations (if any) and create chat engine with index
-    const nodes = retrieveNodes(annotations);
-    const chatEngine = await createChatEngine(nodes);
+    // retrieve document Ids from annotations (if any) and create chat engine with index
+    const ids = retrieveDocumentIds(annotations);
+    const chatEngine = await createChatEngine(ids);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
