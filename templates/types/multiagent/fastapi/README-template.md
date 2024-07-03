@@ -6,7 +6,7 @@ First, setup the environment with poetry:
 
 > **_Note:_** This step is not needed if you are using the dev-container.
 
-```
+```shell
 poetry install
 poetry shell
 ```
@@ -19,7 +19,7 @@ Second, generate the embeddings of the documents in the `./data` directory (if t
 poetry run generate
 ```
 
-Third, run the all the services in one command:
+Third, run all the services in one command:
 
 ```shell
 poetry run python main.py
@@ -36,7 +36,8 @@ poetry run llama-agents monitor --control-plane-url http://127.0.0.1:8001
 - Message queue (port 8000): To exchange the message between services
 - Control plane (port 8001): A gateway to manage the tasks and services.
 - Human consumer (port 8002): To handle result when the task is completed.
-- Agent services (from port 8003 onwards): Default is a `query_engine` agent which helping on query information from the index to answer the question.
+- Agent service `query_engine` (port 8003): Agent that can query information from the configured LlamaIndex index.
+- Agent service `dummy_agent` (port 8004): A dummy agent that does nothing. Good starting point to add more agents.
 
 The ports listed above are set by default, but you can change them in the `.env` file.
 

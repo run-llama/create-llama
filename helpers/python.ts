@@ -320,6 +320,11 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "loaders", "python"),
   });
 
+  // Copy settings.py to app
+  await copy("**", path.join(root, "app"), {
+    cwd: path.join(compPath, "settings", "python"),
+  });
+
   if (template === "streaming") {
     // For the streaming template only:
     // Select and copy engine code based on data sources and tools
