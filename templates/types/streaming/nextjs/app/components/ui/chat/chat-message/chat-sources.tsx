@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../button";
 import {
   HoverCard,
@@ -56,30 +56,62 @@ export function ChatSources({ data }: { data: SourceData }) {
       <span className="font-semibold">Sources:</span>
       <div className="inline-flex gap-1 items-center">
         {sources.map((nodeInfo: NodeInfo, index: number) => {
-          if (nodeInfo.url && nodeInfo.filename?.endsWith(".pdf")) {
-            return (
-              <PdfDialog
-                key={nodeInfo.id}
-                documentId={nodeInfo.id}
-                url={nodeInfo.url!}
-                trigger={<SourceNumberButton index={index} />}
-              />
-            );
-          }
           return (
-            <div key={nodeInfo.id}>
-              <HoverCard>
-                <HoverCardTrigger>
-                  <SourceNumberButton index={index} />
-                </HoverCardTrigger>
-                <HoverCardContent className="w-[320px]">
-                  <NodeInfo nodeInfo={nodeInfo} />
-                </HoverCardContent>
-              </HoverCard>
-            </div>
+            <SourceNodeItem
+              key={nodeInfo.id}
+              nodeInfo={nodeInfo}
+              index={index}
+            />
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function SourceNodeItem({
+  nodeInfo,
+  index,
+}: {
+  nodeInfo: NodeInfo;
+  index: number;
+}) {
+  const [isValidPdf, setIsValidPdf] = useState(false);
+
+  useEffect(() => {
+    const checkPdfUrl = async (url: string) => {
+      try {
+        await fetch(url, { method: "HEAD" });
+        setIsValidPdf(true);
+      } catch (error) {
+        console.error("Failed to fetch PDF file", error);
+      }
+    };
+    if (nodeInfo.url && nodeInfo.filename?.endsWith(".pdf")) {
+      checkPdfUrl(nodeInfo.url);
+    }
+  }, [nodeInfo.filename, nodeInfo.url]);
+
+  if (isValidPdf) {
+    return (
+      <PdfDialog
+        key={nodeInfo.id}
+        documentId={nodeInfo.id}
+        url={nodeInfo.url!}
+        trigger={<SourceNumberButton index={index} />}
+      />
+    );
+  }
+  return (
+    <div key={nodeInfo.id}>
+      <HoverCard>
+        <HoverCardTrigger>
+          <SourceNumberButton index={index} />
+        </HoverCardTrigger>
+        <HoverCardContent className="w-[320px]">
+          <NodeInfo nodeInfo={nodeInfo} />
+        </HoverCardContent>
+      </HoverCard>
     </div>
   );
 }
