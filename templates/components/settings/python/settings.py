@@ -17,6 +17,8 @@ def init_settings():
             init_anthropic()
         case "gemini":
             init_gemini()
+        case "mistral":
+            init_mistral()
         case "azure-openai":
             init_azure_openai()
         case "t-systems":
@@ -149,3 +151,11 @@ def init_gemini():
 
     Settings.llm = Gemini(model=model_name)
     Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
+
+
+def init_mistral():
+    from llama_index.embeddings.mistralai import MistralAIEmbedding
+    from llama_index.llms.mistralai import MistralAI
+
+    Settings.llm = MistralAI(model=os.getenv("MODEL"))
+    Settings.embed_model = MistralAIEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))

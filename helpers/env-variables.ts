@@ -265,6 +265,15 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "mistral"
+      ? [
+          {
+            name: "MISTRAL_API_KEY",
+            description: "The Mistral API key to use.",
+            value: modelConfig.apiKey,
+          },
+        ]
+      : []),
     ...(modelConfig.provider === "t-systems"
       ? [
           {
