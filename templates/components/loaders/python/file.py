@@ -32,6 +32,13 @@ def llama_parse_parser():
     return parser
 
 
+def llama_parse_extractor() -> Dict[str, LlamaParse]:
+    from llama_parse.utils import SUPPORTED_FILE_TYPES
+
+    parser = llama_parse_parser()
+    return {file_type: parser for file_type in SUPPORTED_FILE_TYPES}
+
+
 def get_file_documents(config: FileLoaderConfig):
     from llama_index.core.readers import SimpleDirectoryReader
 
@@ -46,8 +53,7 @@ def get_file_documents(config: FileLoaderConfig):
 
             nest_asyncio.apply()
 
-            parser = llama_parse_parser()
-            reader.file_extractor = {".pdf": parser}
+            reader.file_extractor = llama_parse_extractor()
         return reader.load_data()
     except Exception as e:
         import sys, traceback
