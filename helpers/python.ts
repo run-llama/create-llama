@@ -173,6 +173,16 @@ const getAdditionalDependencies = (
         version: "0.1.6",
       });
       break;
+    case "mistral":
+      dependencies.push({
+        name: "llama-index-llms-mistralai",
+        version: "0.1.17",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-mistralai",
+        version: "0.1.4",
+      });
+      break;
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",

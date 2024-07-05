@@ -6,6 +6,7 @@ import { askAnthropicQuestions } from "./anthropic";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
 import { askLLMHubQuestions } from "./llmhub";
+import { askMistralQuestions } from "./mistral";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
 
@@ -32,6 +33,7 @@ export async function askModelConfig({
       { title: "Ollama", value: "ollama" },
       { title: "Anthropic", value: "anthropic" },
       { title: "Gemini", value: "gemini" },
+      { title: "Mistral", value: "mistral" },
     ];
 
     if (framework === "fastapi") {
@@ -63,6 +65,9 @@ export async function askModelConfig({
       break;
     case "gemini":
       modelConfig = await askGeminiQuestions({ askModels });
+      break;
+    case "mistral":
+      modelConfig = await askMistralQuestions({ askModels });
       break;
     case "t-systems":
       modelConfig = await askLLMHubQuestions({ askModels });

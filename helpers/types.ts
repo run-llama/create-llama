@@ -7,6 +7,7 @@ export type ModelProvider =
   | "ollama"
   | "anthropic"
   | "gemini"
+  | "mistral"
   | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
