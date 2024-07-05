@@ -23,6 +23,7 @@ function SourceNumberButton({ index }: { index: number }) {
 type NodeInfo = {
   id: string;
   url?: string;
+  filename?: string;
 };
 
 export function ChatSources({ data }: { data: SourceData }) {
@@ -34,9 +35,10 @@ export function ChatSources({ data }: { data: SourceData }) {
       .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
       .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
       .forEach((node) => {
-        const nodeInfo = {
+        const nodeInfo: NodeInfo = {
           id: node.id,
           url: node.url,
+          filename: node.metadata.file_name as string,
         };
         const key = nodeInfo.url ?? nodeInfo.id; // use id as key for UNKNOWN type
         if (!nodesByPath[key]) {
@@ -54,7 +56,7 @@ export function ChatSources({ data }: { data: SourceData }) {
       <span className="font-semibold">Sources:</span>
       <div className="inline-flex gap-1 items-center">
         {sources.map((nodeInfo: NodeInfo, index: number) => {
-          if (nodeInfo.url?.endsWith(".pdf")) {
+          if (nodeInfo.url && nodeInfo.filename?.endsWith(".pdf")) {
             return (
               <PdfDialog
                 key={nodeInfo.id}
