@@ -6,8 +6,17 @@ import {
   ToolCall,
   ToolOutput,
 } from "llamaindex";
+import { LLamaCloudFileService } from "./service";
 
-function getNodeUrl(metadata: Metadata) {
+async function getNodeUrl(metadata: Metadata) {
+  // if metadata has pipeline_id, get file url from LLamaCloudFileService
+  const pipelineId = metadata["pipeline_id"];
+  if (pipelineId) {
+    const fileName = metadata["file_name"];
+    const url = await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+    return url;
+  }
+
   const url = metadata["URL"];
   if (url) return url;
   const fileName = metadata["file_name"];
@@ -23,20 +32,23 @@ function getNodeUrl(metadata: Metadata) {
   return undefined;
 }
 
-export function appendSourceData(
+export async function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
+  const nodes = await Promise.all(
+    sourceNodes.map(async (node) => ({
+      ...node.node.toMutableJSON(),
+      id: node.node.id_,
+      score: node.score ?? null,
+      url: await getNodeUrl(node.node.metadata),
+    })),
+  );
   data.appendMessageAnnotation({
     type: "sources",
     data: {
-      nodes: sourceNodes.map((node) => ({
-        ...node.node.toMutableJSON(),
-        id: node.node.id_,
-        score: node.score ?? null,
-        url: getNodeUrl(node.node.metadata),
-      })),
+      nodes,
     },
   });
 }
@@ -84,9 +96,9 @@ export function createStreamTimeout(stream: StreamData) {
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
-  callbackManager.on("retrieve-end", (data) => {
+  callbackManager.on("retrieve-end", async (data) => {
     const { nodes, query } = data.detail.payload;
-    appendSourceData(stream, nodes);
+    await appendSourceData(stream, nodes);
     appendEventData(stream, `Retrieving context for query: '${query}'`);
     appendEventData(
       stream,
