@@ -3,8 +3,9 @@ import logging
 
 from aiostream import stream
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from llama_index.core.chat_engine.types import BaseChatEngine
 from llama_index.core.llms import MessageRole
+from llama_index.core.chat_engine.types import BaseChatEngine
+from llama_index.core.vector_stores.types import MetadataFilters, MetadataFilter
 from app.engine import get_chat_engine
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.api.routers.events import EventCallbackHandler
@@ -32,6 +33,19 @@ async def chat(
         last_message_content = data.get_last_message_content()
         messages = data.get_history_messages()
 
+        doc_ids = data.get_chat_document_ids()
+        if len(doc_ids) > 0:
+            # TODO: Adding metadata filters always returns empty results
+            filters = MetadataFilters(
+                filters=[
+                    MetadataFilter(
+                        key="private",
+                        value=["true"],
+                    )
+                ]
+            )
+            # filters = None
+            chat_engine = get_chat_engine(filters=filters)
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 

@@ -10,17 +10,18 @@ from llama_index.core.llms import ChatMessage, MessageRole
 logger = logging.getLogger("uvicorn")
 
 
-class CsvFile(BaseModel):
-    content: str
+class File(BaseModel):
+    id: str
+    content: str | List[str]
     filename: str
     filesize: int
-    id: str
+    filetype: str
 
 
 class AnnotationData(BaseModel):
-    csv_files: List[CsvFile] | None = Field(
+    files: List[File] | None = Field(
         default=None,
-        description="List of CSV files",
+        description="List of files",
     )
 
     class Config:
@@ -38,6 +39,12 @@ class AnnotationData(BaseModel):
             }
         }
         alias_generator = to_camel
+
+    def get_file_ids(self) -> List[str]:
+        if self.files is None:
+            return []
+        else:
+            return [file.id for file in self.files]
 
 
 class Annotation(BaseModel):
@@ -89,14 +96,6 @@ class ChatData(BaseModel):
             raise ValueError("There is not any message in the chat")
         last_message = self.messages[-1]
         message_content = last_message.content
-        for message in reversed(self.messages):
-            if message.role == MessageRole.USER and message.annotations is not None:
-                annotation_contents = (
-                    annotation.to_content() for annotation in message.annotations
-                )
-                annotation_text = "\n".join(annotation_contents)
-                message_content = f"{message_content}\n{annotation_text}"
-                break
         return message_content
 
     def get_history_messages(self) -> List[Message]:
@@ -110,6 +109,17 @@ class ChatData(BaseModel):
 
     def is_last_message_from_user(self) -> bool:
         return self.messages[-1].role == MessageRole.USER
+
+    def get_chat_document_ids(self) -> List[str]:
+        # Get annotations from the last message has annotations
+        ids = []
+        for message in reversed(self.messages):
+            if message.role == MessageRole.USER and message.annotations is not None:
+                for annotation in message.annotations:
+                    if annotation.type == "document_file":
+                        print(annotation.data)
+                        ids += annotation.data.get_file_ids()
+        return list(set(ids))
 
 
 class SourceNodes(BaseModel):
