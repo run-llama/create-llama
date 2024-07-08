@@ -196,7 +196,7 @@ For better results, you can specify the region parameter to get results from a s
     config: {
       // TODO: `managment` is a typo from the llamahub code, fix it in the future
       pool_managment_endpoint:
-        "Please follow this guideline to create and get the pool management endpoint: https://learn.microsoft.com/en-us/azure/container-apps/sessions?tabs=azure-cli",
+        "Please follow this guideline to create and get the pool management endpoint: https://learn.microsoft.com/azure/container-apps/sessions?tabs=azure-cli",
     },
     dependencies: [
       {
