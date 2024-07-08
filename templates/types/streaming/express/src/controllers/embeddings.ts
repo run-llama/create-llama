@@ -1,14 +1,20 @@
 import fs from "fs";
 import {
+  BaseNode,
   Document,
   IngestionPipeline,
+  Metadata,
   Settings,
   SimpleNodeParser,
+  storageContextFromDefaults,
+  VectorStoreIndex,
 } from "llamaindex";
 import { DocxReader } from "llamaindex/readers/DocxReader";
 import { PDFReader } from "llamaindex/readers/PDFReader";
 import { TextFileReader } from "llamaindex/readers/TextFileReader";
 import crypto from "node:crypto";
+import { getDataSource } from "../engine";
+import { STORAGE_CACHE_DIR } from "../engine/shared";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
@@ -42,11 +48,9 @@ async function runPipeline(documents: Document[]): Promise<string[]> {
       }),
       Settings.embedModel,
     ],
-    // TODO: make sure this adds the nodes to the vector DB
-    // vectorStore: Settings.vectorStore,
   });
-  await pipeline.run({ documents });
-  // return document identifiers
+  const nodes = await pipeline.run({ documents });
+  await addNodesToVectorStore(nodes);
   return documents.map((document) => document.id_);
 }
 
@@ -81,10 +85,26 @@ async function saveDocument(fileBuffer: Buffer, mimeType: string) {
   }
   await fs.promises.writeFile(filepath, fileBuffer);
 
-  console.log(`Saved document to ${filepath}. URL: ${fileurl}`);
+  console.log(`Saved document file to ${filepath}.\nURL: ${fileurl}`);
   return {
     filename,
     filepath,
     fileurl,
   };
+}
+
+async function addNodesToVectorStore(nodes: BaseNode<Metadata>[]) {
+  let currentIndex = await getDataSource();
+  if (currentIndex) {
+    await currentIndex.insertNodes(nodes);
+  } else {
+    const storageContext = await storageContextFromDefaults({
+      persistDir: `${STORAGE_CACHE_DIR}`,
+    });
+    currentIndex = await VectorStoreIndex.init({ nodes, storageContext });
+  }
+  currentIndex.storageContext.docStore.persist(STORAGE_CACHE_DIR);
+  console.log(
+    `Added nodes to the vector store. Storage directory: ${STORAGE_CACHE_DIR}`,
+  );
 }
