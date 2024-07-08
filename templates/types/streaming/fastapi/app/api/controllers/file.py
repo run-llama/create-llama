@@ -105,9 +105,10 @@ class FileController:
         ) as temp_file:
             temp_file.write(file_data)
             temp_file_path = Path(temp_file.name)
-            file_extractor = get_file_loaders_map()
-            # Note: This won't work for pdf file at the moment
-            # TODO: Create a PR to fix this in llama_index
+            # The custom file extractor must be instantiated
+            file_extractor = {
+                ext: loader_cls() for ext, loader_cls in get_file_loaders_map().items()
+            }
             documents = SimpleDirectoryReader.load_file(
                 input_file=temp_file_path,
                 file_metadata=file_metadata_func,
