@@ -2,8 +2,15 @@ import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
-import { LlamaIndexStream, convertMessageContent } from "./llamaindex-stream";
-import { createCallbackManager, createStreamTimeout } from "./stream-helper";
+import {
+  convertMessageContent,
+  retrieveDocumentIds,
+} from "./llamaindex/annotations";
+import {
+  createCallbackManager,
+  createStreamTimeout,
+} from "./llamaindex/events";
+import { LlamaIndexStream } from "./llamaindex/stream";
 
 export const chat = async (req: Request, res: Response) => {
   // Init Vercel AI StreamData and timeout
@@ -19,8 +26,6 @@ export const chat = async (req: Request, res: Response) => {
       });
     }
 
-    const chatEngine = await createChatEngine();
-
     let annotations = userMessage.annotations;
     if (!annotations) {
       // the user didn't send any new annotations with the last message
@@ -33,6 +38,11 @@ export const chat = async (req: Request, res: Response) => {
           (message) => message.role === "user" && message.annotations,
         )?.annotations;
     }
+
+    // retrieve document Ids from annotations (if any) and create chat engine with index
+    const ids = retrieveDocumentIds(userMessage.annotations);
+
+    const chatEngine = await createChatEngine(ids);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
