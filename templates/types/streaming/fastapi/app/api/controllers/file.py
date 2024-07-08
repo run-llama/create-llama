@@ -4,12 +4,11 @@ import tempfile
 from typing import List, Dict
 from pathlib import Path
 from llama_index.core import SimpleDirectoryReader
-from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core import VectorStoreIndex
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
     default_file_metadata_func,
 )
-from app.engine.generate import generate_datasource
 from llama_index.core.ingestion import IngestionPipeline
 from app.engine.index import get_index
 
@@ -100,15 +99,20 @@ class FileController:
     @staticmethod
     def load_file(file_data, extension) -> List["Documents"]:
         # Create a temp file with extensions
+        # TODO: We should store the file to serve it in file viewer
         with tempfile.NamedTemporaryFile(
-            suffix=f".{extension}", delete=True
+            suffix=f".{extension}", delete=False
         ) as temp_file:
             temp_file.write(file_data)
             temp_file_path = Path(temp_file.name)
+            file_extractor = get_file_loaders_map()
+            # Note: This won't work for pdf file at the moment
+            # TODO: Create a PR to fix this in llama_index
             documents = SimpleDirectoryReader.load_file(
                 input_file=temp_file_path,
                 file_metadata=file_metadata_func,
-                file_extractor=get_file_loaders_map(),
+                file_extractor=file_extractor,
+                raise_on_error=True,
             )
 
             return documents
@@ -124,10 +128,13 @@ class FileController:
 
         # Add the nodes to the index and persist it
         current_index = get_index()
-        current_index.insert_nodes(nodes=nodes)
+        if current_index is None:
+            current_index = VectorStoreIndex(nodes=nodes)
+        else:
+            current_index.insert_nodes(nodes=nodes)
         current_index.storage_context.persist(
             persist_dir=os.environ.get("STORAGE_DIR", "storage")
         )
 
-        # Return the node ids
-        return [node.node_id for node in nodes]
+        # Return the document ids
+        return [doc.doc_id for doc in documents]

@@ -35,17 +35,19 @@ async def chat(
 
         doc_ids = data.get_chat_document_ids()
         if len(doc_ids) > 0:
-            # TODO: Adding metadata filters always returns empty results
             filters = MetadataFilters(
                 filters=[
                     MetadataFilter(
                         key="private",
                         value=["true"],
-                    )
+                    ),
+                    MetadataFilter(
+                        key="doc_id",
+                        value=doc_ids,
+                        operator="any",
+                    ),
                 ]
             )
-            # filters = None
-            chat_engine = get_chat_engine(filters=filters)
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 

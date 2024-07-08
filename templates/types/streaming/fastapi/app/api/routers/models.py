@@ -40,12 +40,6 @@ class AnnotationData(BaseModel):
         }
         alias_generator = to_camel
 
-    def get_file_ids(self) -> List[str]:
-        if self.files is None:
-            return []
-        else:
-            return [file.id for file in self.files]
-
 
 class Annotation(BaseModel):
     type: str
@@ -117,8 +111,8 @@ class ChatData(BaseModel):
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
                     if annotation.type == "document_file":
-                        print(annotation.data)
-                        ids += annotation.data.get_file_ids()
+                        for fi in annotation.data.files:
+                            ids += fi.content
         return list(set(ids))
 
 
