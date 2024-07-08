@@ -19,12 +19,17 @@ export type ImageData = {
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
+export type DocumentFileContent = {
+  type: "ref" | "text";
+  value: string[];
+};
+
 export type DocumentFile = {
   id: string;
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
-  content: string | string[];
+  content: DocumentFileContent;
 };
 
 export type DocumentFileData = {

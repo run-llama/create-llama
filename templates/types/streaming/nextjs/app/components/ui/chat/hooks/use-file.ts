@@ -106,22 +106,33 @@ export function useFile() {
 
     const filetype = docMineTypeMap[file.type];
     if (!filetype) throw new Error("Unsupported document type.");
-    const newDoc: DocumentFile = {
+    const newDoc: Omit<DocumentFile, "content"> = {
       id: uuidv4(),
       filetype,
       filename: file.name,
       filesize: file.size,
-      content: "",
     };
     switch (file.type) {
       case "text/csv": {
         const content = await readContent({ file });
-        return addDoc({ ...newDoc, content });
+        return addDoc({
+          ...newDoc,
+          content: {
+            type: "text",
+            value: [content],
+          },
+        });
       }
       default: {
         const base64 = await readContent({ file, asUrl: true });
         const ids = await uploadContent(base64);
-        return addDoc({ ...newDoc, content: ids });
+        return addDoc({
+          ...newDoc,
+          content: {
+            type: "ref",
+            value: ids,
+          },
+        });
       }
     }
   };

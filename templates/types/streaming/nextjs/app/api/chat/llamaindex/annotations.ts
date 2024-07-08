@@ -3,14 +3,17 @@ import { MessageContent, MessageContentDetail } from "llamaindex";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
+export type DocumentFileContent = {
+  type: "ref" | "text";
+  value: string[];
+};
+
 export type DocumentFile = {
   id: string;
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
-  // TODO: is should better be a an object, e.g.:
-  // content: { type: "ref"|"text", value: string }[];
-  content: string | string[];
+  content: DocumentFileContent;
 };
 
 type Annotation = {
@@ -80,12 +83,13 @@ function convertAnnotations(annotations: JSONValue[]): MessageContentDetail[] {
     ) {
       // get all CSV files and convert their whole content to one text message
       // currently CSV files are the only files where we send the whole content - we don't use an index
-      const csvFiles = data.files.filter(
+      const csvFiles: DocumentFile[] = data.files.filter(
         (file: DocumentFile) => file.filetype === "csv",
       );
       if (csvFiles && csvFiles.length > 0) {
         const csvContents = csvFiles.map(
-          (file: DocumentFile) => "```csv\n" + file.content + "\n```",
+          (file: DocumentFile) =>
+            "```csv\n" + file.content.value.join("\n") + "\n```",
         );
         const text =
           "Use the following CSV content:\n" + csvContents.join("\n\n");

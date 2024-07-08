@@ -24,9 +24,6 @@ export interface DocumentPreviewProps {
 
 export function DocumentPreview(props: DocumentPreviewProps) {
   const { filename, filesize, content, filetype } = props.file;
-  const docContent = Array.isArray(content)
-    ? content.map((n) => n.text).join("\n")
-    : content;
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>
@@ -47,9 +44,21 @@ export function DocumentPreview(props: DocumentPreviewProps) {
           </DrawerClose>
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
-          <pre className="bg-secondary rounded-md p-4 block text-sm">
-            {docContent}
-          </pre>
+          {content.type === "text" && (
+            <pre className="bg-secondary rounded-md p-4 block text-sm">
+              {content.value.join("\n")}
+            </pre>
+          )}
+          {content.type === "ref" && (
+            <div className="space-y-4">
+              {/* TODO: display url of uploaded file */}
+              {content.value.map((id) => (
+                <a key={id} href={`/data/${id}`} className="block">
+                  {filename}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>
