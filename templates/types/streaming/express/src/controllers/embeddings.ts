@@ -28,7 +28,18 @@ export async function uploadDocument(raw: string): Promise<string[]> {
   const mimeType = header.replace("data:", "").replace(";base64", "");
   const fileBuffer = Buffer.from(content, "base64");
   const documents = await loadDocuments(fileBuffer, mimeType);
-  await saveDocument(fileBuffer, mimeType);
+  const { filename, fileurl } = await saveDocument(fileBuffer, mimeType);
+
+  // update document metadata and mark documents to add to the vector store as private
+  for (const document of documents) {
+    document.metadata = {
+      ...document.metadata,
+      file_name: filename,
+      URL: fileurl,
+      private: true,
+    };
+  }
+
   return await runPipeline(documents);
 }
 
