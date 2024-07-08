@@ -9,12 +9,16 @@ import {
 import { LLamaCloudFileService } from "./service";
 
 async function getNodeUrl(metadata: Metadata) {
-  // if metadata has pipeline_id, get file url from LLamaCloudFileService
-  const pipelineId = metadata["pipeline_id"];
-  if (pipelineId) {
-    const fileName = metadata["file_name"];
-    const url = await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
-    return url;
+  try {
+    const pipelineId = metadata["pipeline_id"];
+    if (pipelineId) {
+      const fileName = metadata["file_name"];
+      const url = await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+      return url;
+    }
+  } catch (error) {
+    console.error("Error fetching file from LlamaCloud:", error);
+    return undefined;
   }
 
   const url = metadata["URL"];
@@ -37,20 +41,24 @@ export async function appendSourceData(
   sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
-  const nodes = await Promise.all(
-    sourceNodes.map(async (node) => ({
-      ...node.node.toMutableJSON(),
-      id: node.node.id_,
-      score: node.score ?? null,
-      url: await getNodeUrl(node.node.metadata),
-    })),
-  );
-  data.appendMessageAnnotation({
-    type: "sources",
-    data: {
-      nodes,
-    },
-  });
+  try {
+    const nodes = await Promise.all(
+      sourceNodes.map(async (node) => ({
+        ...node.node.toMutableJSON(),
+        id: node.node.id_,
+        score: node.score ?? null,
+        url: await getNodeUrl(node.node.metadata),
+      })),
+    );
+    data.appendMessageAnnotation({
+      type: "sources",
+      data: {
+        nodes,
+      },
+    });
+  } catch (error) {
+    console.error("Error appending source data:", error);
+  }
 }
 
 export function appendEventData(data: StreamData, title?: string) {

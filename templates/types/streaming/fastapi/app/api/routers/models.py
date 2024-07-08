@@ -1,6 +1,5 @@
 import os
 import logging
-import requests
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict
@@ -129,18 +128,22 @@ class SourceNodes(BaseModel):
         # if metadata has pipeline_id, get file url from LLamaCloudFileService
         pipeline_id = metadata.get("pipeline_id")
         if pipeline_id:
-            file_name = metadata.get("file_name")
-            url = LLamaCloudFileService.get_file_url(file_name, pipeline_id)
-
-        if not url:
-            file_name = metadata.get("file_name")
-            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-            if not url_prefix:
-                logger.warning(
-                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-                )
-            if file_name and url_prefix:
-                url = f"{url_prefix}/data/{file_name}"
+            try:
+                file_name = metadata.get("file_name")
+                url = LLamaCloudFileService.get_file_url(file_name, pipeline_id)
+            except Exception as e:
+                logger.error(f"Error fetching file URL: {e}")
+                url = None
+        else:
+            if not url:
+                file_name = metadata.get("file_name")
+                url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+                if not url_prefix:
+                    logger.warning(
+                        "Warning: FILESERVER_URL_PREFIX not set in environment variables"
+                    )
+                if file_name and url_prefix:
+                    url = f"{url_prefix}/data/{file_name}"
 
         return cls(
             id=source_node.node.node_id,

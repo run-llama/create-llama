@@ -76,23 +76,25 @@ function SourceNodeItem({
   nodeInfo: NodeInfo;
   index: number;
 }) {
-  const [isValidPdf, setIsValidPdf] = useState(false);
+  const [isFetchablePDF, setIsFetchablePDF] = useState(false);
 
   useEffect(() => {
-    const checkPdfUrl = async (url: string) => {
+    const isUrlFetchable = async (url: string) => {
       try {
         await fetch(url, { method: "HEAD" });
-        setIsValidPdf(true);
-      } catch (error) {
-        console.error("Failed to fetch PDF file", error);
+        return true;
+      } catch (e) {
+        return false;
       }
     };
     if (nodeInfo.url && nodeInfo.filename?.endsWith(".pdf")) {
-      checkPdfUrl(nodeInfo.url);
+      isUrlFetchable(nodeInfo.url).then(setIsFetchablePDF);
     }
   }, [nodeInfo.filename, nodeInfo.url]);
 
-  if (isValidPdf) {
+  if (isFetchablePDF) {
+    // only use the PDF Viewer if we're dealing with a PDF that the client can fetch
+    // (e.g. LlamaCloud's PDFs are not fetchable due to CORS restrictions)
     return (
       <PdfDialog
         key={nodeInfo.id}
