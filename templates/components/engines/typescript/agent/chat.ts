@@ -1,4 +1,11 @@
-import { BaseToolWithCall, OpenAIAgent, QueryEngineTool } from "llamaindex";
+import {
+  BaseToolWithCall,
+  MetadataFilters,
+  OpenAIAgent,
+  QueryEngineTool,
+  VectorStoreByType,
+} from "llamaindex";
+import { SimpleVectorStore } from "llamaindex/storage/vectorStore/SimpleVectorStore";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
@@ -14,17 +21,7 @@ export async function createChatEngine(documentIds?: string[]) {
     tools.push(
       new QueryEngineTool({
         queryEngine: index.asQueryEngine({
-          preFilters: {
-            filters: [
-              // TODO: add filter to only show documents that are public or that are private and
-              // have one of the document ids
-              {
-                key: "private",
-                value: true,
-                filterType: "ExactMatch",
-              },
-            ],
-          },
+          preFilters: getQueryFilters(index.vectorStores, documentIds),
         }),
         metadata: {
           name: "data_query_engine",
@@ -50,4 +47,46 @@ export async function createChatEngine(documentIds?: string[]) {
     tools,
     systemPrompt: process.env.SYSTEM_PROMPT,
   });
+}
+
+function getQueryFilters(
+  vectorStores: VectorStoreByType,
+  documentIds?: string[],
+): MetadataFilters | undefined {
+  // SimpleVectorStore doesn't support metadata filters,
+  // Don't apply filters if any of the vector stores is a SimpleVectorStore
+  if (
+    Object.values(vectorStores).some(
+      (store) => store instanceof SimpleVectorStore,
+    )
+  ) {
+    return undefined;
+  }
+
+  if (documentIds?.length) {
+    return {
+      filters: [
+        {
+          key: "private",
+          value: "true",
+          filterType: "ExactMatch",
+        },
+        // TODO(thucpn): Add ContainMatch to LITS and replace below
+        {
+          key: "doc_id",
+          value: documentIds[0],
+          filterType: "ExactMatch",
+        },
+      ],
+    };
+  }
+  return {
+    filters: [
+      {
+        key: "private",
+        value: "true",
+        filterType: "ExactMatch",
+      },
+    ],
+  };
 }
