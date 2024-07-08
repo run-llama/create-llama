@@ -105,11 +105,6 @@ export const installTSTemplate = async ({
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
   // copy llamaindex folder for TS templates
-  console.log(
-    { framework },
-    relativeEngineDestPath,
-    path.join(compPath, "shared", "llamaindex"),
-  );
   await copy("**", path.join(root, relativeEngineDestPath, "llamaindex"), {
     parents: true,
     cwd: path.join(compPath, "shared", "llamaindex"),
