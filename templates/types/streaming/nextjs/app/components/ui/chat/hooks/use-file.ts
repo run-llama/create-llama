@@ -49,8 +49,8 @@ export function useFile() {
   };
 
   const uploadContent = async (base64: string): Promise<string[]> => {
-    const embedAPI = `${backend}/api/chat/embed`;
-    const response = await fetch(embedAPI, {
+    const uploadAPI = `${backend}/api/chat/upload`;
+    const response = await fetch(uploadAPI, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

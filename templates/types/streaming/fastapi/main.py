@@ -51,7 +51,7 @@ mount_static_files("tool-output", "/api/files/tool-output")
 
 app.include_router(chat_router, prefix="/api/chat")
 # Todo: Should change to /api/chat/upload
-app.include_router(file_upload_router, prefix="/api/chat/embed")
+app.include_router(file_upload_router, prefix="/api/chat/upload")
 
 if __name__ == "__main__":
     app_host = os.getenv("APP_HOST", "0.0.0.0")

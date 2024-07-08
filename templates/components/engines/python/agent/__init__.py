@@ -6,7 +6,7 @@ from app.engine.tools import ToolFactory
 from app.engine.index import get_index
 
 
-def get_chat_engine():
+def get_chat_engine(filters=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = os.getenv("TOP_K", "3")
     tools = []
@@ -14,7 +14,9 @@ def get_chat_engine():
     # Add query tool if index exists
     index = get_index()
     if index is not None:
-        query_engine = index.as_query_engine(similarity_top_k=int(top_k))
+        query_engine = index.as_query_engine(
+            similarity_top_k=int(top_k), filters=filters
+        )
         query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
         tools.append(query_engine_tool)
 
