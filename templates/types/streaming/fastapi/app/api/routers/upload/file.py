@@ -2,7 +2,7 @@ import logging
 from typing import List
 from pydantic import BaseModel
 from fastapi import HTTPException
-from fastapi import APIRouter, File, UploadFile, Request
+from fastapi import APIRouter
 from app.api.controllers.file import FileController
 
 file_upload_router = r = APIRouter()

@@ -3,7 +3,6 @@ import base64
 import tempfile
 from typing import List, Dict
 from pathlib import Path
-from llama_index.core import SimpleDirectoryReader
 from llama_index.core import VectorStoreIndex
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
@@ -97,31 +96,30 @@ class FileController:
         return data, extension
 
     @staticmethod
-    def load_file(file_data, extension) -> List["Documents"]:
-        # Create a temp file with extensions
-        # TODO: We should store the file to serve it in file viewer
+    def store_and_parse_file(file_data, extension) -> List[str]:
+        # Store file to `data/private` directory
+        os.makedirs("data/private", exist_ok=True)
+
         with tempfile.NamedTemporaryFile(
-            suffix=f".{extension}", delete=False
+            suffix=f".{extension}", delete=False, dir="data/private"
         ) as temp_file:
             temp_file.write(file_data)
-            temp_file_path = Path(temp_file.name)
-            # The custom file extractor must be instantiated
-            file_extractor = {
-                ext: loader_cls() for ext, loader_cls in get_file_loaders_map().items()
-            }
-            documents = SimpleDirectoryReader.load_file(
-                input_file=temp_file_path,
-                file_metadata=file_metadata_func,
-                file_extractor=file_extractor,
-                raise_on_error=True,
-            )
 
+            # Read the file
+            reader_cls = get_file_loaders_map().get(f".{extension}")
+            documents = reader_cls().load_data(temp_file.name)
+            # Add custom metadata
+            for doc in documents:
+                doc.metadata["private"] = "true"
+                # Override the file name with the private path to show the file
+                file_name = doc.metadata.get("file_name")
+                doc.metadata["file_name"] = f"private/{file_name}"
             return documents
 
     @staticmethod
     def process_file(base64_content: str) -> List[str]:
         file_data, extension = FileController.preprocess_base64_file(base64_content)
-        documents = FileController.load_file(file_data, extension)
+        documents = FileController.store_and_parse_file(file_data, extension)
 
         # Only process nodes, no store the index
         pipeline = IngestionPipeline()
