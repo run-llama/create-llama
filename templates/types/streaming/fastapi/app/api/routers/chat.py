@@ -27,27 +27,42 @@ logger = logging.getLogger("uvicorn")
 async def chat(
     request: Request,
     data: ChatData,
-    chat_engine: BaseChatEngine = Depends(get_chat_engine),
 ):
     try:
         last_message_content = data.get_last_message_content()
         messages = data.get_history_messages()
 
         doc_ids = data.get_chat_document_ids()
+        filters = None
         if len(doc_ids) > 0:
             filters = MetadataFilters(
                 filters=[
                     MetadataFilter(
                         key="private",
-                        value=["true"],
+                        value="true",
+                        operator="!=",
                     ),
                     MetadataFilter(
                         key="doc_id",
                         value=doc_ids,
                         operator="any",
                     ),
+                ],
+                condition="or",
+            )
+        else:
+            filters = MetadataFilters(
+                filters=[
+                    MetadataFilter(
+                        key="private",
+                        value="true",
+                        operator="!=",
+                    ),
                 ]
             )
+        print("Creating chat engine with filters", filters.dict())
+        chat_engine = get_chat_engine(filters=filters)
+
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 
