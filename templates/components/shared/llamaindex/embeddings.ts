@@ -14,7 +14,6 @@ import { PDFReader } from "llamaindex/readers/PDFReader";
 import { TextFileReader } from "llamaindex/readers/TextFileReader";
 import crypto from "node:crypto";
 import { getDataSource } from "../engine";
-import { STORAGE_CACHE_DIR } from "../engine/shared";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
@@ -105,17 +104,16 @@ async function saveDocument(fileBuffer: Buffer, mimeType: string) {
 }
 
 async function addNodesToVectorStore(nodes: BaseNode<Metadata>[]) {
-  let currentIndex = await getDataSource();
+  let currentIndex = await getDataSource(); // always not null with an vectordb
   if (currentIndex) {
     await currentIndex.insertNodes(nodes);
   } else {
+    // Not using vectordb and haven't generated local index yet
     const storageContext = await storageContextFromDefaults({
-      persistDir: `${STORAGE_CACHE_DIR}`,
+      persistDir: "./cache",
     });
     currentIndex = await VectorStoreIndex.init({ nodes, storageContext });
   }
-  currentIndex.storageContext.docStore.persist(STORAGE_CACHE_DIR);
-  console.log(
-    `Added nodes to the vector store. Storage directory: ${STORAGE_CACHE_DIR}`,
-  );
+  currentIndex.storageContext.docStore.persist();
+  console.log("Added nodes to the vector store.");
 }
