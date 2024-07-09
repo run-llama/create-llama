@@ -172,9 +172,10 @@ export const installTemplate = async (
       }
     }
 
-    // Create tool-output directory
+    // Create outputs directory
     if (props.tools && props.tools.length > 0) {
-      await fsExtra.mkdir(path.join(props.root, "tool-output"));
+      await fsExtra.mkdir(path.join(props.root, "output/tools"));
+      await fsExtra.mkdir(path.join(props.root, "output/uploaded"));
     }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information

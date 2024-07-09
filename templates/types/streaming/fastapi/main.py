@@ -47,10 +47,9 @@ def mount_static_files(directory, path):
 # Mount the data files to serve the file viewer
 mount_static_files("data", "/api/files/data")
 # Mount the output files from tools
-mount_static_files("tool-output", "/api/files/tool-output")
+mount_static_files("output", "/api/files/output")
 
 app.include_router(chat_router, prefix="/api/chat")
-# Todo: Should change to /api/chat/upload
 app.include_router(file_upload_router, prefix="/api/chat/upload")
 
 if __name__ == "__main__":

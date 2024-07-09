@@ -9,6 +9,7 @@ from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
     default_file_metadata_func,
 )
+from llama_index.core.schema import Document
 from llama_index.core.ingestion import IngestionPipeline
 from app.engine.index import get_index
 
@@ -21,7 +22,7 @@ def file_metadata_func(*args, **kwargs) -> Dict:
 
 class FileController:
 
-    PRIVATE_STORE_PATH="private-data"
+    PRIVATE_STORE_PATH="output/uploaded"
 
     @staticmethod
     def preprocess_base64_file(base64_content: str) -> tuple:
@@ -33,7 +34,7 @@ class FileController:
         return data, extension
 
     @staticmethod
-    def store_and_parse_file(file_data, extension) -> List["Documents"]:
+    def store_and_parse_file(file_data, extension) -> List[Document]:
         # Store file to the private directory
         os.makedirs(FileController.PRIVATE_STORE_PATH, exist_ok=True)
 
@@ -50,9 +51,7 @@ class FileController:
             # Add custom metadata
             for doc in documents:
                 doc.metadata["private"] = "true"
-                # Override the file name with the private path to show the file
                 file_name = doc.metadata.get("file_name")
-                doc.metadata["file_name"] = f"private/{file_name}"
             return documents
 
     @staticmethod

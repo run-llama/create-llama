@@ -138,7 +138,7 @@ export const getDataSourceChoices = (
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
     choices.push({
-      title: "No data, just a simple chat or agent",
+      title: "No datasource",
       value: "none",
     });
     choices.push({

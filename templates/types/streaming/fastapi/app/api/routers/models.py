@@ -124,13 +124,17 @@ class SourceNodes(BaseModel):
 
         if not url:
             file_name = metadata.get("file_name")
+            is_private = metadata.get("private" ,"false") == "true"
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
                 logger.warning(
                     "Warning: FILESERVER_URL_PREFIX not set in environment variables"
                 )
             if file_name and url_prefix:
-                url = f"{url_prefix}/data/{file_name}"
+                if is_private:
+                    url = f"{url_prefix}/output/uploaded/{file_name}"
+                else:
+                    url = f"{url_prefix}/data/{file_name}"
 
         return cls(
             id=source_node.node.node_id,
