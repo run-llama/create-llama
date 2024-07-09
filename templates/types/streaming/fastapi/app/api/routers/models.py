@@ -9,10 +9,13 @@ from llama_index.core.llms import ChatMessage, MessageRole
 
 logger = logging.getLogger("uvicorn")
 
+class FileContent(BaseModel):
+    type: str
+    value: str | List[str]
 
 class File(BaseModel):
     id: str
-    content: str | List[str]
+    content: FileContent
     filename: str
     filesize: int
     filetype: str
@@ -44,15 +47,6 @@ class AnnotationData(BaseModel):
 class Annotation(BaseModel):
     type: str
     data: AnnotationData
-
-    def to_content(self) -> str:
-        if self.type == "csv":
-            csv_files = self.data.csv_files
-            if csv_files is not None and len(csv_files) > 0:
-                return "Use data from following CSV raw contents\n" + "\n".join(
-                    [f"```csv\n{csv_file.content}\n```" for csv_file in csv_files]
-                )
-        raise ValueError(f"Unsupported annotation type: {self.type}")
 
 
 class Message(BaseModel):
@@ -110,9 +104,9 @@ class ChatData(BaseModel):
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
-                    if annotation.type == "document_file":
+                    if annotation.type == "document_file" and annotation.data.files is not None:
                         for fi in annotation.data.files:
-                            ids += fi.content
+                            ids += fi.content.value
         return list(set(ids))
 
 

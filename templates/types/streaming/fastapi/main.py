@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from app.api.routers.chat import chat_router
-from app.api.routers.upload.file import file_upload_router
+from app.api.routers.upload import file_upload_router
 from app.settings import init_settings
 from app.observability import init_observability
 from fastapi.staticfiles import StaticFiles

@@ -33,7 +33,6 @@ async def chat(
         messages = data.get_history_messages()
 
         doc_ids = data.get_chat_document_ids()
-        filters = None
         if len(doc_ids) > 0:
             filters = MetadataFilters(
                 filters=[
@@ -45,8 +44,8 @@ async def chat(
                     MetadataFilter(
                         key="doc_id",
                         value=doc_ids,
-                        operator="any",
-                    ),
+                        operator="in", # This won't work with a simple vector store since it uses the 'any' operator for that.
+                    )
                 ],
                 condition="or",
             )
@@ -142,4 +141,4 @@ async def chat_config() -> ChatConfig:
     conversation_starters = os.getenv("CONVERSATION_STARTERS")
     if conversation_starters and conversation_starters.strip():
         starter_questions = conversation_starters.strip().split("\n")
-    return ChatConfig(starterQuestions=starter_questions)
+    return ChatConfig(starter_questions=starter_questions)
