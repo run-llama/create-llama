@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.18
+
+### Patch Changes
+
+- d1026ea: support Mistral as llm and embedding
+- a221cfc: Use LlamaParse for all the file types that it supports (if activated)
+
 ## 0.1.17
 
 ### Patch Changes
