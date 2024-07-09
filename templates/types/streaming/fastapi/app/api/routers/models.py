@@ -2,7 +2,7 @@ import os
 import logging
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Literal
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 
@@ -10,8 +10,12 @@ from llama_index.core.llms import ChatMessage, MessageRole
 logger = logging.getLogger("uvicorn")
 
 class FileContent(BaseModel):
-    type: str
+    type: Literal["text", "ref"]
+    # If the file is text then the value should be a string
+    # but FE is sending the csv content as List[str]
+    # TODO: Update the FE to send the csv content as string
     value: str | List[str]
+
 
 class File(BaseModel):
     id: str
@@ -22,8 +26,8 @@ class File(BaseModel):
 
 
 class AnnotationData(BaseModel):
-    files: List[File] | None = Field(
-        default=None,
+    files: List[File] = Field(
+        default=[],
         description="List of files",
     )
 
@@ -45,8 +49,20 @@ class AnnotationData(BaseModel):
 
 
 class Annotation(BaseModel):
-    type: str
+    type: Literal["document_file", "events", "sources"]
     data: AnnotationData
+
+
+    def to_content(self) -> str | None:
+        if self.type == "document_file":
+            # We only support construct content for CSV files for now
+            csv_files = [file for file in self.data.files if file.filetype == "csv"]
+            if len(csv_files) > 0:
+                return "Use data from following CSV raw contents\n" + "\n".join(
+                    [f"```csv\n{csv_file.content.value[0]}\n```" for csv_file in csv_files]
+                )
+        logger.warning("The annotation type is not supported to construct content")
+        return None
 
 
 class Message(BaseModel):
@@ -84,9 +100,24 @@ class ChatData(BaseModel):
             raise ValueError("There is not any message in the chat")
         last_message = self.messages[-1]
         message_content = last_message.content
+        for message in reversed(self.messages):
+            if message.role == MessageRole.USER and message.annotations is not None:
+                if message.annotations is None:
+                    continue
+                annotation_contents = [
+                    annotation.to_content()
+                    for annotation in message.annotations
+                    if annotation.to_content() is not None
+                ]
+                if len(annotation_contents) == 0:
+                    continue
+                annotation_text = "\n".join(annotation_contents)
+                message_content = f"{message_content}\n{annotation_text}"
+                break
+        print("message_content", message_content)
         return message_content
 
-    def get_history_messages(self) -> List[Message]:
+    def get_history_messages(self) -> List[ChatMessage]:
         """
         Get the history messages
         """

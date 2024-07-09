@@ -39,15 +39,15 @@ async def chat(
                     MetadataFilter(
                         key="private",
                         value="true",
-                        operator="!=",
+                        operator="!=", # type: ignore
                     ),
                     MetadataFilter(
                         key="doc_id",
                         value=doc_ids,
-                        operator="in", # This won't work with a simple vector store since it uses the 'any' operator for that.
+                        operator="any", # type: ignore . This won't work with a simple vector store since it uses the 'any' operator for that.
                     )
                 ],
-                condition="or",
+                condition="or", # type: ignore
             )
         else:
             filters = MetadataFilters(
@@ -55,11 +55,11 @@ async def chat(
                     MetadataFilter(
                         key="private",
                         value="true",
-                        operator="!=",
+                        operator="!=", # type: ignore
                     ),
                 ]
             )
-        print("Creating chat engine with filters", filters.dict())
+        logger.info("Creating chat engine with filters", filters.dict())
         chat_engine = get_chat_engine(filters=filters)
 
         event_handler = EventCallbackHandler()
