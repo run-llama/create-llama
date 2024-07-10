@@ -2,9 +2,11 @@ import os
 import base64
 import tempfile
 import mimetypes
-from typing import List, Dict
+from uuid import uuid4
 from pathlib import Path
+from typing import List, Dict, Optional
 from llama_index.core import VectorStoreIndex
+from llama_index.core.readers.base import BaseReader
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
     default_file_metadata_func,
@@ -14,10 +16,39 @@ from llama_index.core.ingestion import IngestionPipeline
 from app.engine.index import get_index
 
 
+class RawFileReader(BaseReader):
+    """
+    A simple reader that load the raw content of file to document.
+    """
+
+    def load_data(self,
+        file,
+        encoding: str = "utf-8",
+        errors: str = "ignore",
+        extra_info: Optional[Dict] = None,
+        **kwargs,
+    ) -> List[Document]:
+        if not isinstance(file, Path):
+            file = Path(file)
+
+        with open(file, "rb") as f:
+            content = f.read().decode(encoding, errors)
+            metadata = {"file_name": file.name}
+            if extra_info:
+                metadata.update(extra_info)
+            return [Document(text=content, metadata=metadata)]
+
+
 def file_metadata_func(*args, **kwargs) -> Dict:
     default_meta = default_file_metadata_func(*args, **kwargs)
     default_meta["private"] = "true"
     return default_meta
+
+def file_loaders_map():
+    default_loaders = get_file_loaders_map()
+    default_loaders[".txt"] = RawFileReader
+    return default_loaders
+
 
 
 class FileController:
@@ -38,21 +69,24 @@ class FileController:
         # Store file to the private directory
         os.makedirs(FileController.PRIVATE_STORE_PATH, exist_ok=True)
 
-        with tempfile.NamedTemporaryFile(
-            suffix=extension, delete=False, dir=FileController.PRIVATE_STORE_PATH
-        ) as temp_file:
-            temp_file.write(file_data)
+        # random file name
+        file_name = f"{uuid4().hex}{extension}"
+        file_path = os.path.join(FileController.PRIVATE_STORE_PATH, file_name)
 
-            # Read the file
-            reader_cls = get_file_loaders_map().get(extension)
-            if reader_cls is None:
-                raise ValueError(f"File extension {extension} is not supported")
-            documents = reader_cls().load_data(temp_file.name)
-            # Add custom metadata
-            for doc in documents:
-                doc.metadata["private"] = "true"
-                file_name = doc.metadata.get("file_name")
-            return documents
+        # write file
+        with open(file_path, "wb") as f:
+            f.write(file_data)
+
+        # Load file to documents
+        reader_cls = file_loaders_map().get(extension)
+        if reader_cls is None:
+            raise ValueError(f"File extension {extension} is not supported")
+        documents = reader_cls().load_data(file_path)
+        # Add custom metadata
+        for doc in documents:
+            doc.metadata["private"] = "true"
+            file_name = doc.metadata.get("file_name")
+        return documents
 
     @staticmethod
     def process_file(base64_content: str) -> List[str]:

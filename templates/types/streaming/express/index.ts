@@ -32,7 +32,7 @@ if (isDevelopment) {
 }
 
 app.use("/api/files/data", express.static("data"));
-app.use("/api/files/ouptut", express.static("output"));
+app.use("/api/files/output", express.static("output"));
 app.use(express.text());
 
 app.get("/", (req: Request, res: Response) => {
