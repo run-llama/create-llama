@@ -9,16 +9,10 @@ import {
 import { LLamaCloudFileService } from "./service";
 
 async function getNodeUrl(metadata: Metadata) {
-  try {
-    const pipelineId = metadata["pipeline_id"];
-    if (pipelineId) {
-      const fileName = metadata["file_name"];
-      const url = await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
-      return url;
-    }
-  } catch (error) {
-    console.error("Error fetching file from LlamaCloud:", error);
-    return undefined;
+  const pipelineId = metadata["pipeline_id"];
+  if (pipelineId) {
+    const fileName = metadata["file_name"];
+    return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
   }
 
   const url = metadata["URL"];

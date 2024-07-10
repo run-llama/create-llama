@@ -1,3 +1,7 @@
+import fs from "node:fs";
+import https from "node:https";
+import path from "node:path";
+
 export interface LlamaCloudFile {
   name: string;
   file_id: string;
@@ -34,15 +38,65 @@ export class LLamaCloudFileService {
     name: string,
     pipelineId: string,
   ): Promise<string | null> {
-    const files = await this.getFiles(pipelineId);
-    for (const file of files) {
-      if (file.name === name) {
-        const fileId = file.file_id;
-        const projectId = file.project_id;
-        const fileDetail = await this.getFileDetail(projectId, fileId);
-        return fileDetail.url;
+    try {
+      const files = await this.getFiles(pipelineId);
+      for (const file of files) {
+        if (file.name === name) {
+          const fileId = file.file_id;
+          const projectId = file.project_id;
+          const fileDetail = await this.getFileDetail(projectId, fileId);
+          const localFileUrl = await this.downloadFile(
+            fileDetail.url,
+            fileId,
+            name,
+          );
+          return localFileUrl;
+        }
       }
+      return null;
+    } catch (error) {
+      console.error("Error fetching file from LlamaCloud:", error);
+      return null;
     }
-    return null;
+  }
+
+  static async downloadFile(url: string, fileId: string, filename: string) {
+    const directory = "data/private"; // TODO: move to output/llamacloud later
+    const delimiter = "$"; // delimiter between fileId and filename
+    const downloadedFileName = `${fileId}${delimiter}${filename}`;
+    const downloadedFilePath = path.join(directory, downloadedFileName);
+    const urlPrefix = `${process.env.FILESERVER_URL_PREFIX}/${directory}`;
+    const fileurl = `${urlPrefix}/${downloadedFileName}`;
+
+    try {
+      // Check if file already exists
+      if (fs.existsSync(downloadedFilePath)) return fileurl;
+
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+      }
+
+      const file = fs.createWriteStream(downloadedFilePath);
+      https
+        .get(url, (response) => {
+          response.pipe(file);
+          file.on("finish", () => {
+            file.close(() => {
+              console.log("File downloaded successfully");
+            });
+          });
+        })
+        .on("error", (err) => {
+          fs.unlink(downloadedFilePath, () => {
+            console.error("Error downloading file:", err);
+            throw err;
+          });
+        });
+
+      return fileurl;
+    } catch (error) {
+      throw new Error(`Error downloading file from LlamaCloud: ${error}`);
+    }
   }
 }
