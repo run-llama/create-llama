@@ -85,6 +85,7 @@ def init_azure_openai():
         "model": os.getenv("MODEL"),
         "temperature": float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)),
         "max_tokens": int(max_tokens) if max_tokens is not None else None,
+        "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2024-06-01"),
     }
     Settings.llm = AzureOpenAI(**llm_config)
 
@@ -94,6 +95,7 @@ def init_azure_openai():
         "deployment_name": embedding_deployment,
         "model": os.getenv("EMBEDDING_MODEL"),
         "dimensions": int(dimensions) if dimensions is not None else None,
+        "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2024-06-01"),
     }
     Settings.embed_model = AzureOpenAIEmbedding(**embedding_config)
 
