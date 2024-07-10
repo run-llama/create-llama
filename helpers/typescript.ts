@@ -104,10 +104,10 @@ export const installTSTemplate = async ({
       : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
-  // copy llamaindex folder for TS templates
+  // copy llamaindex code for TS templates
   await copy("**", path.join(root, relativeEngineDestPath, "llamaindex"), {
     parents: true,
-    cwd: path.join(compPath, "shared", "llamaindex"),
+    cwd: path.join(compPath, "llamaindex", "typescript"),
   });
 
   // copy vector db component
