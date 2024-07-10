@@ -59,7 +59,7 @@ class Annotation(BaseModel):
             csv_files = [file for file in self.data.files if file.filetype == "csv"]
             if len(csv_files) > 0:
                 return "Use data from following CSV raw contents\n" + "\n".join(
-                    [f"```csv\n{csv_file.content.value[0]}\n```" for csv_file in csv_files]
+                    [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
                 )
         logger.warning("The annotation type is not supported to construct content")
         return None

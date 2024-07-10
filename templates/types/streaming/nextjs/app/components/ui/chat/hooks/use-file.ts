@@ -119,7 +119,7 @@ export function useFile() {
           ...newDoc,
           content: {
             type: "text",
-            value: [content],
+            value: content,
           },
         });
       }

@@ -21,7 +21,7 @@ export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFileContent = {
   type: "ref" | "text";
-  value: string[];
+  value: string[] | string;
 };
 
 export type DocumentFile = {
