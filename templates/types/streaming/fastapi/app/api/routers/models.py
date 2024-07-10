@@ -117,7 +117,6 @@ class ChatData(BaseModel):
         # Append a message prefix for better focus on the provided document
         if len(self.get_chat_document_ids()) > 0:
             message_content = f"I've given you my document, you can use the query engine tool to find the info you need.\n{message_content}\n"
-        logger.info("message_content", message_content)
         return message_content
 
     def get_history_messages(self) -> List[ChatMessage]:
