@@ -108,7 +108,8 @@ function getNodeUrl(metadata: Metadata) {
     return undefined;
   }
   if (fileName) {
-    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
+    const folder = metadata["private"] ? "output/uploaded" : "data";
+    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
   }
   return undefined;
 }

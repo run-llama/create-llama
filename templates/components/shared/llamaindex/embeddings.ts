@@ -27,26 +27,16 @@ export async function uploadDocument(raw: string): Promise<string[]> {
   const mimeType = header.replace("data:", "").replace(";base64", "");
   const fileBuffer = Buffer.from(content, "base64");
   const documents = await loadDocuments(fileBuffer, mimeType);
-  const { filename, fileurl } = await saveDocument(fileBuffer, mimeType);
-
-  // update document metadata and mark documents to add to the vector store as private
-  for (const document of documents) {
-    document.metadata = {
-      ...document.metadata,
-      file_name: filename,
-      URL: fileurl,
-      private: true,
-    };
-  }
-
-  return await runPipeline(documents);
+  const { filename } = await saveDocument(fileBuffer, mimeType);
+  return await runPipeline(documents, filename);
 }
 
-async function runPipeline(documents: Document[]): Promise<string[]> {
+async function runPipeline(documents: Document[], filename: string): Promise<string[]> {
   // mark documents to add to the vector store as private
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
+      file_name: filename,
       private: true,
     };
   }
@@ -67,15 +57,18 @@ async function runPipeline(documents: Document[]): Promise<string[]> {
 async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   console.log(`Processing uploaded document of type: ${mimeType}`);
   switch (mimeType) {
-    case "application/pdf":
+    case "application/pdf": {
       const pdfReader = new PDFReader();
       return await pdfReader.loadDataAsContent(new Uint8Array(fileBuffer));
-    case "text/plain":
+    }
+    case "text/plain": {
       const textReader = new TextFileReader();
       return await textReader.loadDataAsContent(fileBuffer);
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    }
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
       const docxReader = new DocxReader();
       return await docxReader.loadDataAsContent(fileBuffer);
+    }
     default:
       throw new Error(`Unsupported document type: ${mimeType}`);
   }
@@ -85,7 +78,7 @@ async function saveDocument(fileBuffer: Buffer, mimeType: string) {
   const fileExt = MIME_TYPE_TO_EXT[mimeType];
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
-  const folder = "data/private";
+  const folder = "output/uploaded";
   const filename = `${crypto.randomUUID()}.${fileExt}`;
   const filepath = `${folder}/${filename}`;
   const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
