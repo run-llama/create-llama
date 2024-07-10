@@ -7,12 +7,12 @@ import { initSettings } from "./engine/settings";
 import {
   convertMessageContent,
   retrieveDocumentIds,
-} from "./llamaindex/annotations";
+} from "./llamaindex/streaming/annotations";
 import {
   createCallbackManager,
   createStreamTimeout,
-} from "./llamaindex/events";
-import { LlamaIndexStream } from "./llamaindex/stream";
+} from "./llamaindex/streaming/events";
+import { LlamaIndexStream } from "./llamaindex/streaming/stream";
 
 initObservability();
 initSettings();

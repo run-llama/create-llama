@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { uploadDocument } from "./llamaindex/documents";
+import { uploadDocument } from "./llamaindex/documents/documents";
 
 export const chatUpload = async (req: Request, res: Response) => {
   const { base64 }: { base64: string } = req.body;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "../engine/settings";
-import { uploadDocument } from "../llamaindex/documents";
+import { uploadDocument } from "../llamaindex/documents/documents";
 
 initSettings();
 

@@ -5,12 +5,12 @@ import { createChatEngine } from "./engine/chat";
 import {
   convertMessageContent,
   retrieveDocumentIds,
-} from "./llamaindex/annotations";
+} from "./llamaindex/streaming/annotations";
 import {
   createCallbackManager,
   createStreamTimeout,
-} from "./llamaindex/events";
-import { LlamaIndexStream } from "./llamaindex/stream";
+} from "./llamaindex/streaming/events";
+import { LlamaIndexStream } from "./llamaindex/streaming/stream";
 
 export const chat = async (req: Request, res: Response) => {
   // Init Vercel AI StreamData and timeout
