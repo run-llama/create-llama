@@ -49,7 +49,7 @@ class AnnotationData(BaseModel):
 
 
 class Annotation(BaseModel):
-    type: Literal["document_file", "events", "sources"]
+    type: str
     data: AnnotationData
 
 
@@ -114,9 +114,6 @@ class ChatData(BaseModel):
                 annotation_text = "\n".join(annotation_contents)
                 message_content = f"{message_content}\n{annotation_text}"
                 break
-        # Append a message prefix for better focus on the provided document
-        if len(self.get_chat_document_ids()) > 0:
-            message_content = f"I've given you my document, you can use the query engine tool to find the info you need.\n{message_content}\n"
         return message_content
 
     def get_history_messages(self) -> List[ChatMessage]:
