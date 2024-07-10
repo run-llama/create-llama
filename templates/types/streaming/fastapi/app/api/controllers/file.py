@@ -1,6 +1,5 @@
 import os
 import base64
-import tempfile
 import mimetypes
 from uuid import uuid4
 from pathlib import Path
@@ -85,7 +84,6 @@ class FileController:
         # Add custom metadata
         for doc in documents:
             doc.metadata["private"] = "true"
-            file_name = doc.metadata.get("file_name")
         return documents
 
     @staticmethod
