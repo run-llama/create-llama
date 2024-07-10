@@ -3,7 +3,7 @@ import base64
 import mimetypes
 from uuid import uuid4
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 from llama_index.core import VectorStoreIndex
 from llama_index.readers.file import FlatReader
 from llama_index.core.readers.file.base import (
@@ -35,8 +35,8 @@ class FileController:
     @staticmethod
     def preprocess_base64_file(base64_content: str) -> tuple:
         header, data = base64_content.split(",", 1)
-        mine_type = header.split(";")[0].split(":", 1)[1]
-        extension = mimetypes.guess_extension(mine_type)
+        mime_type = header.split(";")[0].split(":", 1)[1]
+        extension = mimetypes.guess_extension(mime_type)
         # File data as bytes
         data = base64.b64decode(data)
         return data, extension

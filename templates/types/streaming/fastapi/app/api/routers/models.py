@@ -132,16 +132,18 @@ class ChatData(BaseModel):
         return self.messages[-1].role == MessageRole.USER
 
     def get_chat_document_ids(self) -> List[str]:
-        # Get annotations from the last message has annotations
-        ids = []
-        for message in reversed(self.messages):
+        """
+        Get the document IDs from the chat messages
+        """
+        document_ids = []
+        for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
                     if annotation.type == "document_file" and annotation.data.files is not None:
                         for fi in annotation.data.files:
                             if fi.content.type == "ref":
-                                ids += fi.content.value
-        return list(set(ids))
+                                document_ids += fi.content.value
+        return list(set(document_ids))
 
 
 class SourceNodes(BaseModel):
