@@ -13,7 +13,7 @@ import { DocxReader } from "llamaindex/readers/DocxReader";
 import { PDFReader } from "llamaindex/readers/PDFReader";
 import { TextFileReader } from "llamaindex/readers/TextFileReader";
 import crypto from "node:crypto";
-import { getDataSource } from "../engine";
+import { getDataSource } from "../../engine";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
@@ -31,7 +31,10 @@ export async function uploadDocument(raw: string): Promise<string[]> {
   return await runPipeline(documents, filename);
 }
 
-async function runPipeline(documents: Document[], filename: string): Promise<string[]> {
+async function runPipeline(
+  documents: Document[],
+  filename: string,
+): Promise<string[]> {
   // mark documents to add to the vector store as private
   for (const document of documents) {
     document.metadata = {
