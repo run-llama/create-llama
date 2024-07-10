@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "../../button";
 import {
   HoverCard,
@@ -23,7 +23,6 @@ function SourceNumberButton({ index }: { index: number }) {
 type NodeInfo = {
   id: string;
   url?: string;
-  filename?: string;
 };
 
 export function ChatSources({ data }: { data: SourceData }) {
@@ -35,10 +34,9 @@ export function ChatSources({ data }: { data: SourceData }) {
       .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
       .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
       .forEach((node) => {
-        const nodeInfo: NodeInfo = {
+        const nodeInfo = {
           id: node.id,
           url: node.url,
-          filename: node.metadata.file_name as string,
         };
         const key = nodeInfo.url ?? nodeInfo.id; // use id as key for UNKNOWN type
         if (!nodesByPath[key]) {
@@ -56,64 +54,30 @@ export function ChatSources({ data }: { data: SourceData }) {
       <span className="font-semibold">Sources:</span>
       <div className="inline-flex gap-1 items-center">
         {sources.map((nodeInfo: NodeInfo, index: number) => {
+          if (nodeInfo.url?.endsWith(".pdf")) {
+            return (
+              <PdfDialog
+                key={nodeInfo.id}
+                documentId={nodeInfo.id}
+                url={nodeInfo.url!}
+                trigger={<SourceNumberButton index={index} />}
+              />
+            );
+          }
           return (
-            <SourceNodeItem
-              key={nodeInfo.id}
-              nodeInfo={nodeInfo}
-              index={index}
-            />
+            <div key={nodeInfo.id}>
+              <HoverCard>
+                <HoverCardTrigger>
+                  <SourceNumberButton index={index} />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-[320px]">
+                  <NodeInfo nodeInfo={nodeInfo} />
+                </HoverCardContent>
+              </HoverCard>
+            </div>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function SourceNodeItem({
-  nodeInfo,
-  index,
-}: {
-  nodeInfo: NodeInfo;
-  index: number;
-}) {
-  const [isFetchablePDF, setIsFetchablePDF] = useState(false);
-
-  useEffect(() => {
-    const isUrlFetchable = async (url: string) => {
-      try {
-        await fetch(url, { method: "HEAD" });
-        return true;
-      } catch (e) {
-        return false;
-      }
-    };
-    if (nodeInfo.url && nodeInfo.filename?.endsWith(".pdf")) {
-      isUrlFetchable(nodeInfo.url).then(setIsFetchablePDF);
-    }
-  }, [nodeInfo.filename, nodeInfo.url]);
-
-  if (isFetchablePDF) {
-    // only use the PDF Viewer if we're dealing with a PDF that the client can fetch
-    // (e.g. LlamaCloud's PDFs are not fetchable due to CORS restrictions)
-    return (
-      <PdfDialog
-        key={nodeInfo.id}
-        documentId={nodeInfo.id}
-        url={nodeInfo.url!}
-        trigger={<SourceNumberButton index={index} />}
-      />
-    );
-  }
-  return (
-    <div key={nodeInfo.id}>
-      <HoverCard>
-        <HoverCardTrigger>
-          <SourceNumberButton index={index} />
-        </HoverCardTrigger>
-        <HoverCardContent className="w-[320px]">
-          <NodeInfo nodeInfo={nodeInfo} />
-        </HoverCardContent>
-      </HoverCard>
     </div>
   );
 }
@@ -126,11 +90,7 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
     // add a link to view its URL and a button to copy the URL to the clipboard
     return (
       <div className="flex items-center my-2">
-        <a
-          className="hover:text-blue-900 truncate"
-          href={nodeInfo.url}
-          target="_blank"
-        >
+        <a className="hover:text-blue-900" href={nodeInfo.url} target="_blank">
           <span>{nodeInfo.url}</span>
         </a>
         <Button

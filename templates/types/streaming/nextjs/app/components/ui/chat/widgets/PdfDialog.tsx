@@ -24,10 +24,10 @@ export default function PdfDialog(props: PdfDialogProps) {
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
             <DrawerTitle>PDF Content</DrawerTitle>
-            <DrawerDescription className="flex gap-2 items-center">
-              <span>File URL:</span>
+            <DrawerDescription>
+              File URL:{" "}
               <a
-                className="hover:text-blue-900 max-w-xs block truncate"
+                className="hover:text-blue-900"
                 href={props.url}
                 target="_blank"
               >
