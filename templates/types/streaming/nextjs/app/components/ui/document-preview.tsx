@@ -27,7 +27,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
 
   if (content.type === "ref") {
     return (
-      <div title={`Document IDs: ${content.value.join(", ")}`}>
+      <div title={`Document IDs: ${(content.value as string[]).join(", ")}`}>
         <PreviewCard {...props} />
       </div>
     );
@@ -55,7 +55,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
         <div className="m-4 max-h-[80%] overflow-auto">
           {content.type === "text" && (
             <pre className="bg-secondary rounded-md p-4 block text-sm">
-              {content.value.join("\n")}
+              {content.value as string}
             </pre>
           )}
         </div>
