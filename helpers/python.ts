@@ -55,11 +55,11 @@ const getAdditionalDependencies = (
     case "milvus": {
       dependencies.push({
         name: "llama-index-vector-stores-milvus",
-        version: "^0.1.6",
+        version: "^0.1.20",
       });
       dependencies.push({
         name: "pymilvus",
-        version: "2.3.7",
+        version: "2.4.4",
       });
       break;
     }
