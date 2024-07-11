@@ -5,7 +5,7 @@ export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type DocumentFileContent = {
   type: "ref" | "text";
-  value: string[];
+  value: string[] | string;
 };
 
 export type DocumentFile = {
@@ -87,10 +87,12 @@ function convertAnnotations(annotations: JSONValue[]): MessageContentDetail[] {
         (file: DocumentFile) => file.filetype === "csv",
       );
       if (csvFiles && csvFiles.length > 0) {
-        const csvContents = csvFiles.map(
-          (file: DocumentFile) =>
-            "```csv\n" + file.content.value.join("\n") + "\n```",
-        );
+        const csvContents = csvFiles.map((file: DocumentFile) => {
+          const fileContent = Array.isArray(file.content.value)
+            ? file.content.value.join("\n")
+            : file.content.value;
+          return "```csv\n" + fileContent + "\n```";
+        });
         const text =
           "Use the following CSV content:\n" + csvContents.join("\n\n");
         content.push({
