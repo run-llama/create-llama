@@ -105,14 +105,8 @@ class ChatData(BaseModel):
         message_content = last_message.content
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
-                if message.annotations is None:
-                    continue
-                annotation_contents = [
-                    annotation.to_content()
-                    for annotation in message.annotations
-                    if annotation.to_content() is not None
-                ]
-                if len(annotation_contents) == 0:
+                annotation_contents = filter(None, [annotation.to_content() for annotation in message.annotations])
+                if not annotation_contents:
                     continue
                 annotation_text = "\n".join(annotation_contents)
                 message_content = f"{message_content}\n{annotation_text}"
