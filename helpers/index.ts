@@ -8,6 +8,7 @@ import { writeLoadersConfig } from "./datasources";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
+import { makeDir } from "./make-dir";
 import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
@@ -21,7 +22,6 @@ import {
   TemplateVectorDB,
 } from "./types";
 import { installTSTemplate } from "./typescript";
-import { makeDir } from "./make-dir";
 
 // eslint-disable-next-line max-params
 async function generateContextData(
