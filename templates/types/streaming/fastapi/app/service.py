@@ -1,36 +1,46 @@
 import os
+import logging
 import requests
 from typing import List, Any, Dict, Optional
 
 
+logger = logging.getLogger("uvicorn")
+
+
 class LLamaCloudFileService:
+    LLAMA_CLOUD_URL = "https://cloud.llamaindex.ai/api/v1"
+    # TODO: move to output/llamacloud later
+    LOCAL_STORE_PATH = "data/private"
+
+    @classmethod
+    def make_request(
+        cls, url: str, data = None, headers: Optional[Dict] = None, method: str = "get"
+    ):
+        if headers is None:
+            headers = {
+                "Accept": "application/json",
+                "Authorization": f'Bearer {os.getenv("LLAMA_CLOUD_API_KEY")}',
+            }
+        response = requests.request(method, url, headers=headers, data=data)
+        response.raise_for_status()
+        return response.json()
+
     @classmethod
     def get_files(cls, pipeline_id: str) -> List[Dict[str, Any]]:
-        url = f"https://cloud.llamaindex.ai/api/v1/pipelines/{pipeline_id}/files"
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f'Bearer {os.getenv("LLAMA_CLOUD_API_KEY")}',
-        }
-        response = requests.get(url, headers=headers)
-        return response.json()
+        url = f"{cls.LLAMA_CLOUD_URL}/pipelines/{pipeline_id}/files"
+        return cls.make_request(url)
 
     @classmethod
     def get_file_detail(cls, project_id: str, file_id: str) -> Dict[str, Any]:
-        url = f"https://cloud.llamaindex.ai/api/v1/files/{file_id}/content?project_id={project_id}"
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f'Bearer {os.getenv("LLAMA_CLOUD_API_KEY")}',
-        }
-        response = requests.get(url, headers=headers)
-        return response.json()
+        url = f"{cls.LLAMA_CLOUD_URL}/files/{file_id}/content?project_id={project_id}"
+        return cls.make_request(url)
 
     @classmethod
     def download_file(cls, url: str, file_id: str, filename: str) -> str:
-        directory = "data/private"  # TODO: move to output/llamacloud later
         delimiter = "$"  # delimiter between fileId and filename
         downloaded_file_name = f"{file_id}{delimiter}{filename}"
-        downloaded_file_path = os.path.join(directory, downloaded_file_name)
-        url_prefix = f"{os.getenv('FILESERVER_URL_PREFIX')}/{directory}"
+        downloaded_file_path = os.path.join(cls.LOCAL_STORE_PATH, downloaded_file_name)
+        url_prefix = f"{os.getenv('FILESERVER_URL_PREFIX')}/{cls.LOCAL_STORE_PATH}"
         file_url = f"{url_prefix}/{downloaded_file_name}"
 
         # Check if file already exists
@@ -38,7 +48,7 @@ class LLamaCloudFileService:
             return file_url
 
         # Create directory if it doesn't exist
-        os.makedirs(directory, exist_ok=True)
+        os.makedirs(cls.LOCAL_STORE_PATH, exist_ok=True)
 
         # Download the file
         with requests.get(url, stream=True) as r:
@@ -47,7 +57,7 @@ class LLamaCloudFileService:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-        print("File downloaded successfully")
+        logger.info("File downloaded successfully")
         return file_url
 
     @classmethod
@@ -65,5 +75,5 @@ class LLamaCloudFileService:
                     return local_file_url
             return None
         except Exception as error:
-            print(f"Error fetching file from LlamaCloud: {error}")
+            logger.info(f"Error fetching file from LlamaCloud: {error}")
             return None
