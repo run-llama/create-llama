@@ -12,9 +12,8 @@ logger = logging.getLogger("uvicorn")
 
 class FileContent(BaseModel):
     type: Literal["text", "ref"]
-    # If the file is text then the value should be a string
-    # but FE is sending the csv content as List[str]
-    # TODO: Update the FE to send the csv content as string
+    # If the file is pure text then the value is be a string
+    # otherwise, it's a list of document IDs
     value: str | List[str]
 
 
@@ -105,7 +104,10 @@ class ChatData(BaseModel):
         message_content = last_message.content
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
-                annotation_contents = filter(None, [annotation.to_content() for annotation in message.annotations])
+                annotation_contents = filter(
+                    None,
+                    [annotation.to_content() for annotation in message.annotations],
+                )
                 if not annotation_contents:
                     continue
                 annotation_text = "\n".join(annotation_contents)

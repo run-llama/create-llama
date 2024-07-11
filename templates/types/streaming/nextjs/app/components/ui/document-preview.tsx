@@ -74,7 +74,12 @@ const FileIcon: Record<DocumentFileType, string> = {
 function PreviewCard(props: DocumentPreviewProps) {
   const { onRemove, file } = props;
   return (
-    <div className="p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative cursor-pointer">
+    <div
+      className={cn(
+        "p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative",
+        file.content.type === "ref" ? "" : "cursor-pointer",
+      )}
+    >
       <div className="flex flex-row items-center gap-2">
         <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
           <Image
