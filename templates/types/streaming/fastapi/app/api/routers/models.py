@@ -1,11 +1,11 @@
 import os
 import logging
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, PrivateAttr
 from pydantic.alias_generators import to_camel
 from typing import List, Any, Optional, Dict
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
-from app.service import LLamaCloudFileService
+from app.tasks.llama_cloud import LLamaCloudFile
 
 
 logger = logging.getLogger("uvicorn")
@@ -119,30 +119,35 @@ class SourceNodes(BaseModel):
     score: Optional[float]
     text: str
     url: Optional[str]
+    use_remote_file: bool = Field(
+        default=False,
+    )
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
         url = metadata.get("URL")
-
-        # if metadata has pipeline_id, get file url from LLamaCloudFileService
         pipeline_id = metadata.get("pipeline_id")
-        if pipeline_id:
-            try:
-                file_name = metadata.get("file_name")
-                url = LLamaCloudFileService.get_file_url(file_name, pipeline_id)
-            except Exception as e:
-                logger.error(f"Error fetching file URL: {e}")
-                url = None
-        else:
-            if not url:
-                file_name = metadata.get("file_name")
-                url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-                if not url_prefix:
-                    logger.warning(
-                        "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-                    )
-                if file_name and url_prefix:
+        file_name = metadata.get("file_name")
+        use_remote_file = False
+
+        if pipeline_id and file_name:
+            # If the nodes use data from LlamaCloud, we'll use a local file path as file name
+            file_name = LLamaCloudFile.get_file_name(file_name, pipeline_id)
+            use_remote_file = True
+
+        # Construct file url through file server
+        if not url:
+            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+            if not url_prefix:
+                logger.warning(
+                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
+                )
+            if file_name and url_prefix:
+                # TODO: Update the stored file path and simplify this
+                if use_remote_file:
+                    url = f"{url_prefix}/data/private/{file_name}"
+                else:
                     url = f"{url_prefix}/data/{file_name}"
 
         return cls(
@@ -151,6 +156,7 @@ class SourceNodes(BaseModel):
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
             url=url,
+            use_remote_file=use_remote_file,
         )
 
     @classmethod
