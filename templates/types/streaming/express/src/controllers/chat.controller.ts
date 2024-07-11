@@ -1,4 +1,4 @@
-import { Message, StreamData, streamToResponse } from "ai";
+import { JSONValue, Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
@@ -39,8 +39,13 @@ export const chat = async (req: Request, res: Response) => {
         )?.annotations;
     }
 
-    // retrieve document Ids from annotations (if any) and create chat engine with index
-    const ids = retrieveDocumentIds(userMessage.annotations);
+    // retrieve document Ids from the annotations of all messages (if any) and create chat engine with index
+    const allAnnotations: JSONValue[] = [...messages, userMessage].flatMap(
+      (message) => {
+        return message.annotations ?? [];
+      },
+    );
+    const ids = retrieveDocumentIds(allAnnotations);
     const chatEngine = await createChatEngine(ids);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format

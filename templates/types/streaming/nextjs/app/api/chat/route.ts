@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { Message, StreamData, StreamingTextResponse } from "ai";
+import { JSONValue, Message, StreamData, StreamingTextResponse } from "ai";
 import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
@@ -52,8 +52,13 @@ export async function POST(request: NextRequest) {
         )?.annotations;
     }
 
-    // retrieve document Ids from annotations (if any) and create chat engine with index
-    const ids = retrieveDocumentIds(annotations);
+    // retrieve document Ids from the annotations of all messages (if any) and create chat engine with index
+    const allAnnotations: JSONValue[] = [...messages, userMessage].flatMap(
+      (message) => {
+        return message.annotations ?? [];
+      },
+    );
+    const ids = retrieveDocumentIds(allAnnotations);
     const chatEngine = await createChatEngine(ids);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
