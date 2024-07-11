@@ -45,11 +45,7 @@ export class LLamaCloudFileService {
           const fileId = file.file_id;
           const projectId = file.project_id;
           const fileDetail = await this.getFileDetail(projectId, fileId);
-          const localFileUrl = await this.downloadFile(
-            fileDetail.url,
-            fileId,
-            name,
-          );
+          const localFileUrl = this.downloadFile(fileDetail.url, fileId, name);
           return localFileUrl;
         }
       }
@@ -60,7 +56,7 @@ export class LLamaCloudFileService {
     }
   }
 
-  static async downloadFile(url: string, fileId: string, filename: string) {
+  static downloadFile(url: string, fileId: string, filename: string) {
     const directory = "data/private"; // TODO: move to output/llamacloud later
     const delimiter = "$"; // delimiter between fileId and filename
     const downloadedFileName = `${fileId}${delimiter}${filename}`;
