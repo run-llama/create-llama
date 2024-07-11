@@ -21,6 +21,7 @@ import {
   TemplateVectorDB,
 } from "./types";
 import { installTSTemplate } from "./typescript";
+import { makeDir } from "./make-dir";
 
 // eslint-disable-next-line max-params
 async function generateContextData(
@@ -177,8 +178,8 @@ export const installTemplate = async (
 
     // Create outputs directory
     if (props.tools && props.tools.length > 0) {
-      await fsExtra.mkdir(path.join(props.root, "output/tools"));
-      await fsExtra.mkdir(path.join(props.root, "output/uploaded"));
+      await makeDir(path.join(props.root, "output/tools"));
+      await makeDir(path.join(props.root, "output/uploaded"));
     }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
