@@ -21,7 +21,7 @@ export async function createChatEngine(documentIds?: string[]) {
     tools.push(
       new QueryEngineTool({
         queryEngine: index.asQueryEngine({
-          preFilters: getQueryFilters(index.vectorStores, documentIds),
+          preFilters: undefined, // TODO: Add filters once we LITS supports it
         }),
         metadata: {
           name: "data_query_engine",

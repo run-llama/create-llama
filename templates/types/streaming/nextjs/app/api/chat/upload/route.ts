@@ -7,7 +7,6 @@ initSettings();
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// TODO: rename this endpoint to /upload (as it uploads a user doc to the vector DB)
 export async function POST(request: NextRequest) {
   try {
     const { base64 }: { base64: string } = await request.json();
