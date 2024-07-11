@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(await uploadDocument(base64));
   } catch (error) {
-    console.error("[Embed API]", error);
+    console.error("[Upload API]", error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 },

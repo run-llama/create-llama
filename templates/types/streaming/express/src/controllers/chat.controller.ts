@@ -41,7 +41,6 @@ export const chat = async (req: Request, res: Response) => {
 
     // retrieve document Ids from annotations (if any) and create chat engine with index
     const ids = retrieveDocumentIds(userMessage.annotations);
-
     const chatEngine = await createChatEngine(ids);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format

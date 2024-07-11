@@ -9,6 +9,7 @@ from llama_index.core.llms import ChatMessage, MessageRole
 
 logger = logging.getLogger("uvicorn")
 
+
 class FileContent(BaseModel):
     type: Literal["text", "ref"]
     # If the file is text then the value should be a string
@@ -52,17 +53,18 @@ class Annotation(BaseModel):
     type: str
     data: AnnotationData
 
-
     def to_content(self) -> str | None:
         if self.type == "document_file":
-            # We only support construct content for CSV files for now
+            # We only support generating context content for CSV files for now
             csv_files = [file for file in self.data.files if file.filetype == "csv"]
             if len(csv_files) > 0:
-                return "Use data from following CSV raw contents\n" + "\n".join(
+                return "Use data from following CSV raw content\n" + "\n".join(
                     [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
                 )
         else:
-            logger.warning(f"The annotation {self.type} is not supported to construct content")
+            logger.warning(
+                f"The annotation {self.type} is not supported for generating context content"
+            )
         return None
 
 
@@ -137,7 +139,10 @@ class ChatData(BaseModel):
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
-                    if annotation.type == "document_file" and annotation.data.files is not None:
+                    if (
+                        annotation.type == "document_file"
+                        and annotation.data.files is not None
+                    ):
                         for fi in annotation.data.files:
                             if fi.content.type == "ref":
                                 document_ids += fi.content.value
@@ -158,7 +163,7 @@ class SourceNodes(BaseModel):
 
         if not url:
             file_name = metadata.get("file_name")
-            is_private = metadata.get("private" ,"false") == "true"
+            is_private = metadata.get("private", "false") == "true"
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
                 logger.warning(

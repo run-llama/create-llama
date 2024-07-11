@@ -22,7 +22,6 @@ def generate_datasource():
     # load the documents and create the index
     documents = get_documents()
     # We must add private=false to the provided documents for filtering
-    # TODO: Consider using other condition or fix this in upstream
     for doc in documents:
         doc.metadata["private"] = "false"
     index = VectorStoreIndex.from_documents(

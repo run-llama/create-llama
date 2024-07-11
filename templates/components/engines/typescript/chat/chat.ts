@@ -1,7 +1,7 @@
 import { ContextChatEngine, Settings } from "llamaindex";
 import { getDataSource } from "./index";
 
-export async function createChatEngine() {
+export async function createChatEngine(documentIds?: string[]) {
   const index = await getDataSource();
   if (!index) {
     throw new Error(

@@ -1,6 +1,6 @@
 import { Settings, SimpleChatEngine } from "llamaindex";
 
-export async function createChatEngine(ids: string[]) {
+export async function createChatEngine(documentIds?: string[]) {
   return new SimpleChatEngine({
     llm: Settings.llm,
   });

@@ -39,15 +39,15 @@ async def chat(
                     MetadataFilter(
                         key="private",
                         value="true",
-                        operator="!=", # type: ignore
+                        operator="!=",  # type: ignore
                     ),
                     MetadataFilter(
                         key="doc_id",
                         value=doc_ids,
-                        operator="in", # type: ignore . This won't work with a simple vector store since it uses the 'any' operator for that.
-                    )
+                        operator="in",  # type: ignore
+                    ),
                 ],
-                condition="or", # type: ignore
+                condition="or",  # type: ignore
             )
         else:
             filters = MetadataFilters(
@@ -55,7 +55,7 @@ async def chat(
                     MetadataFilter(
                         key="private",
                         value="true",
-                        operator="!=", # type: ignore
+                        operator="!=",  # type: ignore
                     ),
                 ]
             )
