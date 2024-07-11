@@ -61,7 +61,8 @@ class Annotation(BaseModel):
                 return "Use data from following CSV raw contents\n" + "\n".join(
                     [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
                 )
-        logger.warning("The annotation type is not supported to construct content")
+        else:
+            logger.warning(f"The annotation {self.type} is not supported to construct content")
         return None
 
 
