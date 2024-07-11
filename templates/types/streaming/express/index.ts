@@ -14,7 +14,7 @@ const prodCorsOrigin = process.env["PROD_CORS_ORIGIN"];
 
 initObservability();
 
-app.use(express.json({ limit: "50mb" }));  
+app.use(express.json({ limit: "50mb" }));
 
 if (isDevelopment) {
   console.warn("Running in development mode - allowing CORS for all origins");
