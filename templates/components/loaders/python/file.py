@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Dict
 from llama_parse import LlamaParse
 from pydantic import BaseModel, validator
 
@@ -32,13 +33,18 @@ def llama_parse_parser():
     return parser
 
 
+def llama_parse_extractor() -> Dict[str, LlamaParse]:
+    from llama_parse.utils import SUPPORTED_FILE_TYPES
+
+    parser = llama_parse_parser()
+    return {file_type: parser for file_type in SUPPORTED_FILE_TYPES}
+
+
 def get_file_documents(config: FileLoaderConfig):
     from llama_index.core.readers import SimpleDirectoryReader
 
     try:
-        reader = SimpleDirectoryReader(
-            config.data_dir, recursive=True, filename_as_id=True, raise_on_error=True
-        )
+        file_extractor = None
         if config.use_llama_parse:
             # LlamaParse is async first,
             # so we need to use nest_asyncio to run it in sync mode
@@ -46,8 +52,14 @@ def get_file_documents(config: FileLoaderConfig):
 
             nest_asyncio.apply()
 
-            parser = llama_parse_parser()
-            reader.file_extractor = {".pdf": parser}
+            file_extractor = llama_parse_extractor()
+        reader = SimpleDirectoryReader(
+            config.data_dir,
+            recursive=True,
+            filename_as_id=True,
+            raise_on_error=True,
+            file_extractor=file_extractor,
+        )
         return reader.load_data()
     except Exception as e:
         import sys, traceback

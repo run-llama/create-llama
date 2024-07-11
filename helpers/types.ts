@@ -7,6 +7,7 @@ export type ModelProvider =
   | "ollama"
   | "anthropic"
   | "gemini"
+  | "mistral"
   | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
@@ -16,7 +17,11 @@ export type ModelConfig = {
   dimensions: number;
   isConfigured(): boolean;
 };
-export type TemplateType = "streaming" | "community" | "llamapack";
+export type TemplateType =
+  | "streaming"
+  | "community"
+  | "llamapack"
+  | "multiagent";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB =

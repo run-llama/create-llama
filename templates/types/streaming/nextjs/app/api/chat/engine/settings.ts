@@ -1,10 +1,14 @@
 import {
+  ALL_AVAILABLE_MISTRAL_MODELS,
   Anthropic,
   GEMINI_EMBEDDING_MODEL,
   GEMINI_MODEL,
   Gemini,
   GeminiEmbedding,
   Groq,
+  MistralAI,
+  MistralAIEmbedding,
+  MistralAIEmbeddingModelType,
   OpenAI,
   OpenAIEmbedding,
   Settings,
@@ -37,6 +41,9 @@ export const initSettings = async () => {
       break;
     case "gemini":
       initGemini();
+      break;
+    case "mistral":
+      initMistralAI();
       break;
     default:
       initOpenAI();
@@ -115,5 +122,14 @@ function initGemini() {
   });
   Settings.embedModel = new GeminiEmbedding({
     model: process.env.EMBEDDING_MODEL as GEMINI_EMBEDDING_MODEL,
+  });
+}
+
+function initMistralAI() {
+  Settings.llm = new MistralAI({
+    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_MISTRAL_MODELS,
+  });
+  Settings.embedModel = new MistralAIEmbedding({
+    model: process.env.EMBEDDING_MODEL as MistralAIEmbeddingModelType,
   });
 }

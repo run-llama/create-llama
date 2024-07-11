@@ -9,13 +9,11 @@ readme = "README.md"
 generate = "app.engine.generate:generate_datasource"
 
 [tool.poetry.dependencies]
-python = "^3.11,<3.12"
-fastapi = "^0.109.1"
-uvicorn = { extras = ["standard"], version = "^0.23.2" }
-python-dotenv = "^1.0.0"
-aiostream = "^0.5.2"
-llama-index = "0.10.53"
-cachetools = "^5.3.3"
+python = "^3.11"
+llama-agents = "^0.0.3"
+llama-index-agent-openai = "^0.2.7"
+llama-index-embeddings-openai = "^0.1.10"
+llama-index-llms-openai = "^0.1.23"
 
 [build-system]
 requires = ["poetry-core"]

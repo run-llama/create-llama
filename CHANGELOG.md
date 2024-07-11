@@ -1,5 +1,18 @@
 # create-llama
 
+## 0.1.18
+
+### Patch Changes
+
+- d1026ea: support Mistral as llm and embedding
+- a221cfc: Use LlamaParse for all the file types that it supports (if activated)
+
+## 0.1.17
+
+### Patch Changes
+
+- 9ecd061: Add new template for a multi-agents app
+
 ## 0.1.16
 
 ### Patch Changes

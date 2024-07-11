@@ -9,6 +9,7 @@ import {
   TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
+  TemplateType,
 } from "./helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
 import { EXAMPLE_FILE } from "./helpers/datasources";
@@ -122,6 +123,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
 export const getDataSourceChoices = (
   framework: TemplateFramework,
   selectedDataSource: TemplateDataSource[],
+  template?: TemplateType,
 ) => {
   // If LlamaCloud is already selected, don't show any other options
   if (selectedDataSource.find((s) => s.type === "llamacloud")) {
@@ -141,6 +143,12 @@ export const getDataSourceChoices = (
       title: "No datasource",
       value: "none",
     });
+    if (template !== "multiagent") {
+      choices.push({
+        title: "No data, just a simple chat or agent",
+        value: "none",
+      });
+    }
     choices.push({
       title:
         process.platform !== "linux"
@@ -281,25 +289,27 @@ export const askQuestions = async (
           },
         ];
 
-        const modelConfigured =
-          !program.llamapack && program.modelConfig.isConfigured();
-        // If using LlamaParse, require LlamaCloud API key
-        const llamaCloudKeyConfigured = program.useLlamaParse
-          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-          : true;
-        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-        // Can run the app if all tools do not require configuration
-        if (
-          !hasVectorDb &&
-          modelConfigured &&
-          llamaCloudKeyConfigured &&
-          !toolsRequireConfig(program.tools)
-        ) {
-          actionChoices.push({
-            title:
-              "Generate code, install dependencies, and run the app (~2 min)",
-            value: "runApp",
-          });
+        if (program.template !== "multiagent") {
+          const modelConfigured =
+            !program.llamapack && program.modelConfig.isConfigured();
+          // If using LlamaParse, require LlamaCloud API key
+          const llamaCloudKeyConfigured = program.useLlamaParse
+            ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+            : true;
+          const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
+          // Can run the app if all tools do not require configuration
+          if (
+            !hasVectorDb &&
+            modelConfigured &&
+            llamaCloudKeyConfigured &&
+            !toolsRequireConfig(program.tools)
+          ) {
+            actionChoices.push({
+              title:
+                "Generate code, install dependencies, and run the app (~2 min)",
+              value: "runApp",
+            });
+          }
         }
 
         const { action } = await prompts(
@@ -331,7 +341,11 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Chat", value: "streaming" },
+            { title: "Agentic RAG (single agent)", value: "streaming" },
+            {
+              title: "Multi-agent app (using llama-agents)",
+              value: "multiagent",
+            },
             {
               title: `Community template from ${styledRepo}`,
               value: "community",
@@ -395,6 +409,10 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
+  if (program.template === "multiagent") {
+    // TODO: multi-agents currently only supports FastAPI
+    program.framework = preferences.framework = "fastapi";
+  }
   if (!program.framework) {
     if (ciInfo.isCI) {
       program.framework = getPrefOrDefault("framework");
@@ -420,7 +438,10 @@ export const askQuestions = async (
     }
   }
 
-  if (program.framework === "express" || program.framework === "fastapi") {
+  if (
+    (program.framework === "express" || program.framework === "fastapi") &&
+    program.template === "streaming"
+  ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       if (ciInfo.isCI) {
@@ -457,7 +478,7 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.observability) {
+  if (!program.observability && program.template === "streaming") {
     if (ciInfo.isCI) {
       program.observability = getPrefOrDefault("observability");
     } else {
@@ -501,6 +522,7 @@ export const askQuestions = async (
         const choices = getDataSourceChoices(
           program.framework,
           program.dataSources,
+          program.template,
         );
         if (choices.length === 0) break;
         const { selectedSource } = await prompts(
@@ -695,7 +717,8 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools) {
+  if (!program.tools && program.template === "streaming") {
+    // TODO: allow to select tools also for multi-agent framework
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

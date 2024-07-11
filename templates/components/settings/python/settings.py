@@ -2,7 +2,7 @@ import os
 from typing import Dict
 
 from llama_index.core.settings import Settings
-from .llmhub import init_llmhub
+
 
 def init_settings():
     model_provider = os.getenv("MODEL_PROVIDER")
@@ -17,9 +17,13 @@ def init_settings():
             init_anthropic()
         case "gemini":
             init_gemini()
+        case "mistral":
+            init_mistral()
         case "azure-openai":
             init_azure_openai()
         case "t-systems":
+            from .llmhub import init_llmhub
+
             init_llmhub()
         case _:
             raise ValueError(f"Invalid model provider: {model_provider}")
@@ -149,3 +153,9 @@ def init_gemini():
     Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
 
 
+def init_mistral():
+    from llama_index.embeddings.mistralai import MistralAIEmbedding
+    from llama_index.llms.mistralai import MistralAI
+
+    Settings.llm = MistralAI(model=os.getenv("MODEL"))
+    Settings.embed_model = MistralAIEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))
