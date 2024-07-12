@@ -8,28 +8,6 @@ import {
 } from "llamaindex";
 import { LLamaCloudFileService } from "./service";
 
-async function getNodeUrl(metadata: Metadata) {
-  const pipelineId = metadata["pipeline_id"];
-  if (pipelineId) {
-    const fileName = metadata["file_name"];
-    return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
-  }
-
-  const url = metadata["URL"];
-  if (url) return url;
-  const fileName = metadata["file_name"];
-  if (!process.env.FILESERVER_URL_PREFIX) {
-    console.warn(
-      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
-    );
-    return undefined;
-  }
-  if (fileName) {
-    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
-  }
-  return undefined;
-}
-
 export async function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],
@@ -140,6 +118,28 @@ function getNodeUrl(metadata: Metadata) {
   if (fileName) {
     const folder = metadata["private"] ? "output/uploaded" : "data";
     return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
+  }
+  return undefined;
+}
+
+async function getNodeUrl(metadata: Metadata) {
+  const pipelineId = metadata["pipeline_id"];
+  if (pipelineId) {
+    const fileName = metadata["file_name"];
+    return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+  }
+
+  const url = metadata["URL"];
+  if (url) return url;
+  const fileName = metadata["file_name"];
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    console.warn(
+      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
+    );
+    return undefined;
+  }
+  if (fileName) {
+    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
   }
   return undefined;
 }
