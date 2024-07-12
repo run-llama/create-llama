@@ -153,14 +153,24 @@ const getAdditionalDependencies = (
         version: "0.2.6",
       });
       break;
+    case "groq":
+      dependencies.push({
+        name: "llama-index-llms-groq",
+        version: "0.1.4",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-fastembed",
+        version: "^0.1.4",
+      });
+      break;
     case "anthropic":
       dependencies.push({
         name: "llama-index-llms-anthropic",
         version: "0.1.10",
       });
       dependencies.push({
-        name: "llama-index-embeddings-huggingface",
-        version: "0.2.0",
+        name: "llama-index-embeddings-fastembed",
+        version: "^0.1.4",
       });
       break;
     case "gemini":
