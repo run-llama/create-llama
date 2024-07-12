@@ -105,23 +105,6 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-function getNodeUrl(metadata: Metadata) {
-  const url = metadata["URL"];
-  if (url) return url;
-  const fileName = metadata["file_name"];
-  if (!process.env.FILESERVER_URL_PREFIX) {
-    console.warn(
-      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
-    );
-    return undefined;
-  }
-  if (fileName) {
-    const folder = metadata["private"] ? "output/uploaded" : "data";
-    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
-  }
-  return undefined;
-}
-
 async function getNodeUrl(metadata: Metadata) {
   const pipelineId = metadata["pipeline_id"];
   if (pipelineId) {
@@ -139,7 +122,8 @@ async function getNodeUrl(metadata: Metadata) {
     return undefined;
   }
   if (fileName) {
-    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
+    const folder = metadata["private"] ? "output/uploaded" : "data";
+    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
   }
   return undefined;
 }
