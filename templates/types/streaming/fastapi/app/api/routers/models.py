@@ -171,25 +171,15 @@ class SourceNodes(BaseModel):
 
         # Construct file url through file server
         if not url:
-<<<<<<< HEAD
-=======
-            file_name = metadata.get("file_name")
-            is_private = metadata.get("private", "false") == "true"
->>>>>>> main
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
                 logger.warning(
                     "Warning: FILESERVER_URL_PREFIX not set in environment variables"
                 )
             if file_name and url_prefix:
-<<<<<<< HEAD
                 # TODO: Update the stored file path and simplify this
                 if use_remote_file:
                     url = f"{url_prefix}/data/private/{file_name}"
-=======
-                if is_private:
-                    url = f"{url_prefix}/output/uploaded/{file_name}"
->>>>>>> main
                 else:
                     url = f"{url_prefix}/data/{file_name}"
 

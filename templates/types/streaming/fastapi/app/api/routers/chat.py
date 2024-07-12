@@ -1,28 +1,23 @@
-import os
 import logging
-
+import os
 from typing import List
+
 from aiostream import stream
-<<<<<<< HEAD
-from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
-from llama_index.core.schema import NodeWithScore
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine
-=======
-from fastapi import APIRouter, Depends, HTTPException, Request, status
->>>>>>> main
 from llama_index.core.llms import MessageRole
-from llama_index.core.chat_engine.types import BaseChatEngine
-from llama_index.core.vector_stores.types import MetadataFilters, MetadataFilter
-from app.engine import get_chat_engine
-from app.api.routers.vercel_response import VercelStreamResponse
+from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
+
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
-    ChatData,
     ChatConfig,
-    SourceNodes,
-    Result,
+    ChatData,
     Message,
+    Result,
+    SourceNodes,
 )
+from app.api.routers.vercel_response import VercelStreamResponse
+from app.engine import get_chat_engine
 from app.tasks.llama_cloud import LLamaCloudFile
 
 chat_router = r = APIRouter()
@@ -64,11 +59,8 @@ def process_source_nodes(
 async def chat(
     request: Request,
     data: ChatData,
-<<<<<<< HEAD
     background_tasks: BackgroundTasks,
     chat_engine: BaseChatEngine = Depends(get_chat_engine),
-=======
->>>>>>> main
 ):
     try:
         last_message_content = data.get_last_message_content()
@@ -82,7 +74,6 @@ async def chat(
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 
-<<<<<<< HEAD
         async def content_generator():
             # Yield the text response
             async def _chat_response_generator():
@@ -133,11 +124,6 @@ async def chat(
                         break
 
         return VercelStreamResponse(content=content_generator())
-=======
-        response = await chat_engine.astream_chat(last_message_content, messages)
-
-        return VercelStreamResponse(request, event_handler, response)
->>>>>>> main
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
