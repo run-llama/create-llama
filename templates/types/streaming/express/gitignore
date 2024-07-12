@@ -2,4 +2,4 @@
 .env
 node_modules/
 
-tool-output/
+output/

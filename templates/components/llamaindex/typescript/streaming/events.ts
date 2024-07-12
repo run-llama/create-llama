@@ -7,22 +7,6 @@ import {
   ToolOutput,
 } from "llamaindex";
 
-function getNodeUrl(metadata: Metadata) {
-  const url = metadata["URL"];
-  if (url) return url;
-  const fileName = metadata["file_name"];
-  if (!process.env.FILESERVER_URL_PREFIX) {
-    console.warn(
-      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
-    );
-    return undefined;
-  }
-  if (fileName) {
-    return `${process.env.FILESERVER_URL_PREFIX}/data/${fileName}`;
-  }
-  return undefined;
-}
-
 export function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],
@@ -113,9 +97,19 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-export type CsvFile = {
-  content: string;
-  filename: string;
-  filesize: number;
-  id: string;
-};
+function getNodeUrl(metadata: Metadata) {
+  const url = metadata["URL"];
+  if (url) return url;
+  const fileName = metadata["file_name"];
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    console.warn(
+      "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
+    );
+    return undefined;
+  }
+  if (fileName) {
+    const folder = metadata["private"] ? "output/uploaded" : "data";
+    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
+  }
+  return undefined;
+}

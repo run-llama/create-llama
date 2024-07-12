@@ -56,7 +56,7 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
 };
 
 export class InterpreterTool implements BaseTool<InterpreterParameter> {
-  private readonly outputDir = "tool-output";
+  private readonly outputDir = "output/tool";
   private apiKey?: string;
   private fileServerURLPrefix?: string;
   metadata: ToolMetadata<JSONSchemaType<InterpreterParameter>>;

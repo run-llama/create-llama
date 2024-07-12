@@ -2,7 +2,7 @@ import os
 import logging
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Literal
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.llms import ChatMessage, MessageRole
 
@@ -10,17 +10,25 @@ from llama_index.core.llms import ChatMessage, MessageRole
 logger = logging.getLogger("uvicorn")
 
 
-class CsvFile(BaseModel):
-    content: str
+class FileContent(BaseModel):
+    type: Literal["text", "ref"]
+    # If the file is pure text then the value is be a string
+    # otherwise, it's a list of document IDs
+    value: str | List[str]
+
+
+class File(BaseModel):
+    id: str
+    content: FileContent
     filename: str
     filesize: int
-    id: str
+    filetype: str
 
 
 class AnnotationData(BaseModel):
-    csv_files: List[CsvFile] | None = Field(
-        default=None,
-        description="List of CSV files",
+    files: List[File] = Field(
+        default=[],
+        description="List of files",
     )
 
     class Config:
@@ -44,14 +52,19 @@ class Annotation(BaseModel):
     type: str
     data: AnnotationData
 
-    def to_content(self) -> str:
-        if self.type == "csv":
-            csv_files = self.data.csv_files
-            if csv_files is not None and len(csv_files) > 0:
-                return "Use data from following CSV raw contents\n" + "\n".join(
-                    [f"```csv\n{csv_file.content}\n```" for csv_file in csv_files]
+    def to_content(self) -> str | None:
+        if self.type == "document_file":
+            # We only support generating context content for CSV files for now
+            csv_files = [file for file in self.data.files if file.filetype == "csv"]
+            if len(csv_files) > 0:
+                return "Use data from following CSV raw content\n" + "\n".join(
+                    [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
                 )
-        raise ValueError(f"Unsupported annotation type: {self.type}")
+        else:
+            logger.warning(
+                f"The annotation {self.type} is not supported for generating context content"
+            )
+        return None
 
 
 class Message(BaseModel):
@@ -91,15 +104,18 @@ class ChatData(BaseModel):
         message_content = last_message.content
         for message in reversed(self.messages):
             if message.role == MessageRole.USER and message.annotations is not None:
-                annotation_contents = (
-                    annotation.to_content() for annotation in message.annotations
+                annotation_contents = filter(
+                    None,
+                    [annotation.to_content() for annotation in message.annotations],
                 )
+                if not annotation_contents:
+                    continue
                 annotation_text = "\n".join(annotation_contents)
                 message_content = f"{message_content}\n{annotation_text}"
                 break
         return message_content
 
-    def get_history_messages(self) -> List[Message]:
+    def get_history_messages(self) -> List[ChatMessage]:
         """
         Get the history messages
         """
@@ -110,6 +126,23 @@ class ChatData(BaseModel):
 
     def is_last_message_from_user(self) -> bool:
         return self.messages[-1].role == MessageRole.USER
+
+    def get_chat_document_ids(self) -> List[str]:
+        """
+        Get the document IDs from the chat messages
+        """
+        document_ids = []
+        for message in self.messages:
+            if message.role == MessageRole.USER and message.annotations is not None:
+                for annotation in message.annotations:
+                    if (
+                        annotation.type == "document_file"
+                        and annotation.data.files is not None
+                    ):
+                        for fi in annotation.data.files:
+                            if fi.content.type == "ref":
+                                document_ids += fi.content.value
+        return list(set(document_ids))
 
 
 class SourceNodes(BaseModel):
@@ -126,13 +159,17 @@ class SourceNodes(BaseModel):
 
         if not url:
             file_name = metadata.get("file_name")
+            is_private = metadata.get("private", "false") == "true"
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
                 logger.warning(
                     "Warning: FILESERVER_URL_PREFIX not set in environment variables"
                 )
             if file_name and url_prefix:
-                url = f"{url_prefix}/data/{file_name}"
+                if is_private:
+                    url = f"{url_prefix}/output/uploaded/{file_name}"
+                else:
+                    url = f"{url_prefix}/data/{file_name}"
 
         return cls(
             id=source_node.node.node_id,
