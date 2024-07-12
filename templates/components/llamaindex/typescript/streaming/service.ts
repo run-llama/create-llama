@@ -57,7 +57,7 @@ export class LLamaCloudFileService {
   }
 
   static downloadFile(url: string, fileId: string, filename: string) {
-    const directory = "data/private"; // TODO: move to output/llamacloud later
+    const directory = "output/llamacloud";
     const delimiter = "$"; // delimiter between fileId and filename
     const downloadedFileName = `${fileId}${delimiter}${filename}`;
     const downloadedFilePath = path.join(directory, downloadedFileName);
