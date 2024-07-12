@@ -57,11 +57,14 @@ export class LLamaCloudFileService {
   }
 
   static downloadFile(url: string, fileId: string, filename: string) {
-    const directory = "output/llamacloud";
-    const delimiter = "$"; // delimiter between fileId and filename
-    const downloadedFileName = `${fileId}${delimiter}${filename}`;
-    const downloadedFilePath = path.join(directory, downloadedFileName);
-    const urlPrefix = `${process.env.FILESERVER_URL_PREFIX}/${directory}`;
+    const LLAMACKOUD_OUTPUT_DIR = "output/llamacloud";
+    const FILE_DELIMITER = "$"; // delimiter between fileId and filename
+    const downloadedFileName = `${fileId}${FILE_DELIMITER}${filename}`;
+    const downloadedFilePath = path.join(
+      LLAMACKOUD_OUTPUT_DIR,
+      downloadedFileName,
+    );
+    const urlPrefix = `${process.env.FILESERVER_URL_PREFIX}/${LLAMACKOUD_OUTPUT_DIR}`;
     const fileurl = `${urlPrefix}/${downloadedFileName}`;
 
     try {
@@ -69,8 +72,8 @@ export class LLamaCloudFileService {
       if (fs.existsSync(downloadedFilePath)) return fileurl;
 
       // Create directory if it doesn't exist
-      if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true });
+      if (!fs.existsSync(LLAMACKOUD_OUTPUT_DIR)) {
+        fs.mkdirSync(LLAMACKOUD_OUTPUT_DIR, { recursive: true });
       }
 
       const file = fs.createWriteStream(downloadedFilePath);
