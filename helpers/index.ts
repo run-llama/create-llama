@@ -8,6 +8,7 @@ import { writeLoadersConfig } from "./datasources";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
+import { makeDir } from "./make-dir";
 import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
@@ -175,9 +176,10 @@ export const installTemplate = async (
       }
     }
 
-    // Create tool-output directory
+    // Create outputs directory
     if (props.tools && props.tools.length > 0) {
-      await fsExtra.mkdir(path.join(props.root, "tool-output"));
+      await makeDir(path.join(props.root, "output/tools"));
+      await makeDir(path.join(props.root, "output/uploaded"));
     }
   } else {
     // this is a frontend for a full-stack app, create .env file with model information

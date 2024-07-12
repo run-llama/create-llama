@@ -27,7 +27,6 @@
     "llamaindex": "0.4.6",
     "lucide-react": "^0.294.0",
     "next": "^14.2.4",
-    "pdf2json": "3.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.7",

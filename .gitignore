@@ -46,5 +46,8 @@ e2e/cache
 # intellij
 **/.idea
 
+# Python
+.mypy_cache/
+
 # build artifacts
 create-llama-*.tgz

@@ -17,6 +17,8 @@ def init_settings():
             init_anthropic()
         case "gemini":
             init_gemini()
+        case "mistral":
+            init_mistral()
         case "azure-openai":
             init_azure_openai()
         case "t-systems":
@@ -96,8 +98,25 @@ def init_azure_openai():
     Settings.embed_model = AzureOpenAIEmbedding(**embedding_config)
 
 
+def init_fastembed():
+    """
+    Use Qdrant Fastembed as the local embedding provider.
+    """
+    from llama_index.embeddings.fastembed import FastEmbedEmbedding
+
+    embed_model_map: Dict[str, str] = {
+        # Small and multilingual
+        "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+        # Large and multilingual
+        "paraphrase-multilingual-mpnet-base-v2": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",   # noqa: E501
+    }
+
+    # This will download the model automatically if it is not already downloaded
+    Settings.embed_model = FastEmbedEmbedding(
+        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
+    )
+
 def init_groq():
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
     from llama_index.llms.groq import Groq
 
     model_map: Dict[str, str] = {
@@ -106,19 +125,13 @@ def init_groq():
         "mixtral-8x7b": "mixtral-8x7b-32768",
     }
 
-    embed_model_map: Dict[str, str] = {
-        "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
-        "all-mpnet-base-v2": "sentence-transformers/all-mpnet-base-v2",
-    }
 
     Settings.llm = Groq(model=model_map[os.getenv("MODEL")])
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
-    )
+    # Groq does not provide embeddings, so we use FastEmbed instead
+    init_fastembed()
 
 
 def init_anthropic():
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
     from llama_index.llms.anthropic import Anthropic
 
     model_map: Dict[str, str] = {
@@ -129,15 +142,9 @@ def init_anthropic():
         "claude-instant-1.2": "claude-instant-1.2",
     }
 
-    embed_model_map: Dict[str, str] = {
-        "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
-        "all-mpnet-base-v2": "sentence-transformers/all-mpnet-base-v2",
-    }
-
     Settings.llm = Anthropic(model=model_map[os.getenv("MODEL")])
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
-    )
+    # Anthropic does not provide embeddings, so we use FastEmbed instead
+    init_fastembed()
 
 
 def init_gemini():
@@ -149,3 +156,11 @@ def init_gemini():
 
     Settings.llm = Gemini(model=model_name)
     Settings.embed_model = GeminiEmbedding(model_name=embed_model_name)
+
+
+def init_mistral():
+    from llama_index.embeddings.mistralai import MistralAIEmbedding
+    from llama_index.llms.mistralai import MistralAI
+
+    Settings.llm = MistralAI(model=os.getenv("MODEL"))
+    Settings.embed_model = MistralAIEmbedding(model_name=os.getenv("EMBEDDING_MODEL"))

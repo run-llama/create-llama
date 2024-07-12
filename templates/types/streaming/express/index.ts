@@ -14,7 +14,7 @@ const prodCorsOrigin = process.env["PROD_CORS_ORIGIN"];
 
 initObservability();
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 
 if (isDevelopment) {
   console.warn("Running in development mode - allowing CORS for all origins");
@@ -32,7 +32,7 @@ if (isDevelopment) {
 }
 
 app.use("/api/files/data", express.static("data"));
-app.use("/api/files/tool-output", express.static("tool-output"));
+app.use("/api/files/output", express.static("output"));
 app.use(express.text());
 
 app.get("/", (req: Request, res: Response) => {

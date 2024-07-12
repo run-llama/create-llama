@@ -21,7 +21,7 @@ export async function GET(
   }
 
   const [folder, ...pathTofile] = params.slug; // data, file.pdf
-  const allowedFolders = ["data", "tool-output"];
+  const allowedFolders = ["data", "output"];
 
   if (!allowedFolders.includes(folder)) {
     return NextResponse.json({ detail: "No permission" }, { status: 400 });

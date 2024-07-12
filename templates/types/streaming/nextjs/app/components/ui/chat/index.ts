@@ -6,8 +6,8 @@ export { type ChatHandler } from "./chat.interface";
 export { ChatInput, ChatMessages };
 
 export enum MessageAnnotationType {
-  CSV = "csv",
   IMAGE = "image",
+  DOCUMENT_FILE = "document_file",
   SOURCES = "sources",
   EVENTS = "events",
   TOOLS = "tools",
@@ -17,15 +17,23 @@ export type ImageData = {
   url: string;
 };
 
-export type CsvFile = {
-  content: string;
-  filename: string;
-  filesize: number;
-  id: string;
+export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
+
+export type DocumentFileContent = {
+  type: "ref" | "text";
+  value: string[] | string;
 };
 
-export type CsvData = {
-  csvFiles: CsvFile[];
+export type DocumentFile = {
+  id: string;
+  filename: string;
+  filesize: number;
+  filetype: DocumentFileType;
+  content: DocumentFileContent;
+};
+
+export type DocumentFileData = {
+  files: DocumentFile[];
 };
 
 export type SourceNode = {
@@ -61,7 +69,7 @@ export type ToolData = {
 
 export type AnnotationData =
   | ImageData
-  | CsvData
+  | DocumentFileData
   | SourceData
   | EventData
   | ToolData;

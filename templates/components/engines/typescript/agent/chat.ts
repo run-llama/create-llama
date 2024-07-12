@@ -4,7 +4,7 @@ import path from "node:path";
 import { getDataSource } from "./index";
 import { createTools } from "./tools";
 
-export async function createChatEngine() {
+export async function createChatEngine(documentIds?: string[]) {
   const tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
@@ -13,7 +13,9 @@ export async function createChatEngine() {
   if (index) {
     tools.push(
       new QueryEngineTool({
-        queryEngine: index.asQueryEngine(),
+        queryEngine: index.asQueryEngine({
+          preFilters: undefined, // TODO: Add filters once LITS supports it (getQueryFilters)
+        }),
         metadata: {
           name: "data_query_engine",
           description: `A query engine for documents from your data source.`,

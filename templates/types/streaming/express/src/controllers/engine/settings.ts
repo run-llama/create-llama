@@ -1,10 +1,14 @@
 import {
+  ALL_AVAILABLE_MISTRAL_MODELS,
   Anthropic,
   GEMINI_EMBEDDING_MODEL,
   GEMINI_MODEL,
   Gemini,
   GeminiEmbedding,
   Groq,
+  MistralAI,
+  MistralAIEmbedding,
+  MistralAIEmbeddingModelType,
   OpenAI,
   OpenAIEmbedding,
   Settings,
@@ -38,6 +42,9 @@ export const initSettings = async () => {
     case "gemini":
       initGemini();
       break;
+    case "mistral":
+      initMistralAI();
+      break;
     default:
       initOpenAI();
       break;
@@ -65,7 +72,6 @@ function initOllama() {
   const config = {
     host: process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434",
   };
-
   Settings.llm = new Ollama({
     model: process.env.MODEL ?? "",
     config,
@@ -73,19 +79,6 @@ function initOllama() {
   Settings.embedModel = new OllamaEmbedding({
     model: process.env.EMBEDDING_MODEL ?? "",
     config,
-  });
-}
-
-function initAnthropic() {
-  const embedModelMap: Record<string, string> = {
-    "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
-    "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
-  };
-  Settings.llm = new Anthropic({
-    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_ANTHROPIC_MODELS,
-  });
-  Settings.embedModel = new HuggingFaceEmbedding({
-    modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
   });
 }
 
@@ -110,11 +103,33 @@ function initGroq() {
   });
 }
 
+function initAnthropic() {
+  const embedModelMap: Record<string, string> = {
+    "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
+    "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
+  };
+  Settings.llm = new Anthropic({
+    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_ANTHROPIC_MODELS,
+  });
+  Settings.embedModel = new HuggingFaceEmbedding({
+    modelType: embedModelMap[process.env.EMBEDDING_MODEL!],
+  });
+}
+
 function initGemini() {
   Settings.llm = new Gemini({
     model: process.env.MODEL as GEMINI_MODEL,
   });
   Settings.embedModel = new GeminiEmbedding({
     model: process.env.EMBEDDING_MODEL as GEMINI_EMBEDDING_MODEL,
+  });
+}
+
+function initMistralAI() {
+  Settings.llm = new MistralAI({
+    model: process.env.MODEL as keyof typeof ALL_AVAILABLE_MISTRAL_MODELS,
+  });
+  Settings.embedModel = new MistralAIEmbedding({
+    model: process.env.EMBEDDING_MODEL as MistralAIEmbeddingModelType,
   });
 }

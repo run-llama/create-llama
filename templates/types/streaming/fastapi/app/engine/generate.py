@@ -64,6 +64,9 @@ def generate_datasource():
 
     # Get the stores and documents or create new ones
     documents = get_documents()
+    # Set the metadata for the documents
+    for doc in documents:
+        doc.metadata["private"] = "false"
     docstore = get_doc_store()
     vector_store = get_vector_store()
 

@@ -55,11 +55,11 @@ const getAdditionalDependencies = (
     case "milvus": {
       dependencies.push({
         name: "llama-index-vector-stores-milvus",
-        version: "^0.1.6",
+        version: "^0.1.20",
       });
       dependencies.push({
         name: "pymilvus",
-        version: "2.3.7",
+        version: "2.4.4",
       });
       break;
     }
@@ -153,14 +153,24 @@ const getAdditionalDependencies = (
         version: "0.2.6",
       });
       break;
+    case "groq":
+      dependencies.push({
+        name: "llama-index-llms-groq",
+        version: "0.1.4",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-fastembed",
+        version: "^0.1.4",
+      });
+      break;
     case "anthropic":
       dependencies.push({
         name: "llama-index-llms-anthropic",
         version: "0.1.10",
       });
       dependencies.push({
-        name: "llama-index-embeddings-huggingface",
-        version: "0.2.0",
+        name: "llama-index-embeddings-fastembed",
+        version: "^0.1.4",
       });
       break;
     case "gemini":
@@ -171,6 +181,16 @@ const getAdditionalDependencies = (
       dependencies.push({
         name: "llama-index-embeddings-gemini",
         version: "0.1.6",
+      });
+      break;
+    case "mistral":
+      dependencies.push({
+        name: "llama-index-llms-mistralai",
+        version: "0.1.17",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-mistralai",
+        version: "0.1.4",
       });
       break;
     case "t-systems":
