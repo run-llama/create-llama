@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.19
+
+### Patch Changes
+
+- df96159: Use Qdrant FastEmbed as local embedding provider
+- 32fb32a: Support upload document files: pdf, docx, txt
+
 ## 0.1.18
 
 ### Patch Changes
