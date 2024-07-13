@@ -1,17 +1,16 @@
-import os
 import logging
-import requests
-from typing import List, Any, Dict, Optional
+import os
+from typing import Any, Dict, List, Optional
 
+import requests
 
 logger = logging.getLogger("uvicorn")
 
 
-class LLamaCloudFile:
+class LLamaCloudFileController:
 
     LLAMA_CLOUD_URL = "https://cloud.llamaindex.ai/api/v1"
-    # TODO: move to output/llamacloud later
-    LOCAL_STORE_PATH = "data/private"
+    LOCAL_STORE_PATH = "output/llamacloud"
 
     DOWNLOAD_FILE_NAME_TPL = "{pipeline_id}${filename}"
 
@@ -39,12 +38,12 @@ class LLamaCloudFile:
         logger.info("File downloaded successfully")
 
     @classmethod
-    def task_download_llamacloud_pipeline_file(
+    def download_llamacloud_pipeline_file(
         cls,
         file_name: str,
         pipeline_id: str,
         force_download: bool = False,
-    ) -> Optional[str]:
+    ):
         # Check is the file already exists
         downloaded_file_path = cls.get_file_path(file_name, pipeline_id)
         if os.path.exists(downloaded_file_path) and not force_download:
@@ -60,7 +59,7 @@ class LLamaCloudFile:
                     file_id = file["file_id"]
                     project_id = file["project_id"]
                     file_detail = cls.get_file_detail(project_id, file_id)
-                    local_file_url = cls.download_file(
+                    cls.download_file(
                         file_detail["url"], downloaded_file_path
                     )
                     break

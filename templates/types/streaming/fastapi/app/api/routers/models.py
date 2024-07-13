@@ -1,12 +1,13 @@
-import os
 import logging
-from pydantic import BaseModel, Field, validator, PrivateAttr
-from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict, Literal
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.llms import ChatMessage, MessageRole
-from app.tasks.llama_cloud import LLamaCloudFile
+import os
+from typing import Any, Dict, List, Literal, Optional
 
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.schema import NodeWithScore
+from pydantic import BaseModel, Field, validator
+from pydantic.alias_generators import to_camel
+
+from app.api.controllers.llama_cloud import LLamaCloudFileController
 
 logger = logging.getLogger("uvicorn")
 
@@ -97,7 +98,8 @@ class ChatData(BaseModel):
 
     def get_last_message_content(self) -> str:
         """
-        Get the content of the last message along with the data content if available. Fallback to use data content from previous messages
+        Get the content of the last message along with the data content if available. 
+        Fallback to use data content from previous messages
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
@@ -166,7 +168,7 @@ class SourceNodes(BaseModel):
 
         if pipeline_id and file_name:
             # If the nodes use data from LlamaCloud, we'll use a local file path as file name
-            file_name = LLamaCloudFile.get_file_name(file_name, pipeline_id)
+            file_name = LLamaCloudFileController.get_file_name(file_name, pipeline_id)
             use_remote_file = True
 
         # Construct file url through file server
@@ -179,7 +181,7 @@ class SourceNodes(BaseModel):
             if file_name and url_prefix:
                 # TODO: Update the stored file path and simplify this
                 if use_remote_file:
-                    url = f"{url_prefix}/data/private/{file_name}"
+                    url = f"{url_prefix}/files/output/llamacloud/{file_name}"
                 else:
                     url = f"{url_prefix}/data/{file_name}"
 

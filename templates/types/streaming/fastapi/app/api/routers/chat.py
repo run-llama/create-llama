@@ -2,12 +2,12 @@ import logging
 import os
 from typing import List
 
-from aiostream import stream
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine
 from llama_index.core.llms import MessageRole
 from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 
+from app.api.controllers.llama_cloud import LLamaCloudFileController
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
     ChatConfig,
@@ -18,7 +18,6 @@ from app.api.routers.models import (
 )
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.engine import get_chat_engine
-from app.tasks.llama_cloud import LLamaCloudFile
 
 chat_router = r = APIRouter()
 
@@ -32,10 +31,10 @@ def process_source_nodes(
     """
     Start background tasks on the source nodes if needed.
     """
-    to_download_files = [
+    files_to_download = [
         {
             "file_name": node.metadata.get("file_name"),
-            "pipeline_id": node.metadata.get("pipeline_id")
+            "pipeline_id": node.metadata.get("pipeline_id"),
         }
         for node in source_nodes
         if (
@@ -45,10 +44,10 @@ def process_source_nodes(
         )
     ]
     # Remove duplicates
-    to_download_files = list({v['pipeline_id']:v for v in to_download_files}.values())
-    for file in to_download_files:
+    files_to_download = list({v["pipeline_id"]: v for v in files_to_download}.values())
+    for file in files_to_download:
         background_tasks.add_task(
-            LLamaCloudFile.task_download_llamacloud_pipeline_file,
+            LLamaCloudFileController.download_llamacloud_pipeline_file,
             file_name=file.get("file_name"),
             pipeline_id=file.get("pipeline_id"),
         )
@@ -74,56 +73,9 @@ async def chat(
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 
-        async def content_generator():
-            # Yield the text response
-            async def _chat_response_generator():
-                response = await chat_engine.astream_chat(
-                    last_message_content, messages
-                )
-                source_nodes = [
-                    SourceNodes.from_source_node(node)
-                    for node in response.source_nodes
-                ]
-                process_source_nodes(source_nodes, background_tasks)
+        response = await chat_engine.astream_chat(last_message_content, messages)
 
-
-                async for token in response.async_response_gen():
-                    yield VercelStreamResponse.convert_text(token)
-                # the text_generator is the leading stream, once it's finished, also finish the event stream
-                event_handler.is_done = True
-
-                # Yield the source nodes
-                yield VercelStreamResponse.convert_data(
-                    {
-                        "type": "sources",
-                        "data": {
-                            "nodes": [node.dict() for node in source_nodes],
-                        },
-                    }
-                )
-
-            # Yield the events from the event handler
-            async def _event_generator():
-                async for event in event_handler.async_event_gen():
-                    event_response = event.to_response()
-                    if event_response is not None:
-                        yield VercelStreamResponse.convert_data(event_response)
-
-            combine = stream.merge(_chat_response_generator(), _event_generator())
-            is_stream_started = False
-            async with combine.stream() as streamer:
-                async for output in streamer:
-                    if not is_stream_started:
-                        is_stream_started = True
-                        # Stream a blank message to start the stream
-                        yield VercelStreamResponse.convert_text("")
-
-                    yield output
-
-                    if await request.is_disconnected():
-                        break
-
-        return VercelStreamResponse(content=content_generator())
+        return VercelStreamResponse(request, event_handler, response)
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(

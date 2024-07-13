@@ -1,13 +1,12 @@
 import json
-from typing import Any
+
+from aiostream import stream
+from fastapi import Request
 from fastapi.responses import StreamingResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 from app.api.routers.events import EventCallbackHandler
-from aiostream import stream
-
 from app.api.routers.models import SourceNodes
-from fastapi import Request
-from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 
 class VercelStreamResponse(StreamingResponse):
@@ -17,6 +16,15 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+
+    def __init__(
+        self,
+        request: Request,
+        event_handler: EventCallbackHandler,
+        response: StreamingAgentChatResponse,
+    ):
+        content = self.content_generator(request, event_handler, response)
+        super().__init__(content=content)
 
     @classmethod
     def convert_text(cls, token: str):
@@ -29,17 +37,6 @@ class VercelStreamResponse(StreamingResponse):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
-    def __init__(
-        self,
-        request: Request,
-        event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
-    ):
-        content = VercelStreamResponse.content_generator(
-            request, event_handler, response
-        )
-        super().__init__(content=content)
-
     @classmethod
     async def content_generator(
         cls,
@@ -50,12 +47,12 @@ class VercelStreamResponse(StreamingResponse):
         # Yield the text response
         async def _chat_response_generator():
             async for token in response.async_response_gen():
-                yield VercelStreamResponse.convert_text(token)
+                yield cls.convert_text(token)
             # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
 
             # Yield the source nodes
-            yield VercelStreamResponse.convert_data(
+            yield cls.convert_data(
                 {
                     "type": "sources",
                     "data": {
