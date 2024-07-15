@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.20
+
+### Patch Changes
+
+- 624c721: Update to LlamaIndex 0.10.55
+
 ## 0.1.19
 
 ### Patch Changes
