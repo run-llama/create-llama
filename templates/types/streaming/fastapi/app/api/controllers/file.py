@@ -1,25 +1,19 @@
-import os
 import base64
 import mimetypes
-from uuid import uuid4
+import os
 from pathlib import Path
-from typing import List, Dict
+from typing import List
+from uuid import uuid4
+
+from app.engine.index import get_index
 from llama_index.core import VectorStoreIndex
-from llama_index.readers.file import FlatReader
+from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
-    default_file_metadata_func,
 )
 from llama_index.core.schema import Document
-from llama_index.core.ingestion import IngestionPipeline
-from app.engine.index import get_index
+from llama_index.readers.file import FlatReader
 
-
-
-def file_metadata_func(*args, **kwargs) -> Dict:
-    default_meta = default_file_metadata_func(*args, **kwargs)
-    default_meta["private"] = "true"
-    return default_meta
 
 def file_loaders_map():
     default_loaders = get_file_loaders_map()
@@ -27,19 +21,15 @@ def file_loaders_map():
     return default_loaders
 
 
-
 class FileController:
-
-    PRIVATE_STORE_PATH="output/uploaded"
+    PRIVATE_STORE_PATH = "output/uploaded"
 
     @staticmethod
     def preprocess_base64_file(base64_content: str) -> tuple:
         header, data = base64_content.split(",", 1)
         mime_type = header.split(";")[0].split(":", 1)[1]
         extension = mimetypes.guess_extension(mime_type)
-        # File data as bytes
-        data = base64.b64decode(data)
-        return data, extension
+        return base64.b64decode(data), extension
 
     @staticmethod
     def store_and_parse_file(file_data, extension) -> List[Document]:

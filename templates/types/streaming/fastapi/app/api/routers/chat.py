@@ -3,7 +3,7 @@ import os
 from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from llama_index.core.chat_engine.types import BaseChatEngine
+from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
 from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 
@@ -24,13 +24,14 @@ chat_router = r = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 
-def process_source_nodes(
-    source_nodes: List[SourceNodes],
+def process_response_nodes(
+    nodes: List[NodeWithScore],
     background_tasks: BackgroundTasks,
 ):
     """
     Start background tasks on the source nodes if needed.
     """
+    source_nodes = SourceNodes.from_source_nodes(nodes)
     files_to_download = [
         {
             "file_name": node.metadata.get("file_name"),
@@ -74,6 +75,7 @@ async def chat(
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
 
         response = await chat_engine.astream_chat(last_message_content, messages)
+        process_response_nodes(response.source_nodes, background_tasks)
 
         return VercelStreamResponse(request, event_handler, response)
     except Exception as e:

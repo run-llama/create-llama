@@ -98,7 +98,7 @@ class ChatData(BaseModel):
 
     def get_last_message_content(self) -> str:
         """
-        Get the content of the last message along with the data content if available. 
+        Get the content of the last message along with the data content if available.
         Fallback to use data content from previous messages
         """
         if len(self.messages) == 0:
@@ -164,6 +164,7 @@ class SourceNodes(BaseModel):
         url = metadata.get("URL")
         pipeline_id = metadata.get("pipeline_id")
         file_name = metadata.get("file_name")
+        is_private = metadata.get("private", "false") == "true"
         use_remote_file = False
 
         if pipeline_id and file_name:
@@ -172,19 +173,19 @@ class SourceNodes(BaseModel):
             use_remote_file = True
 
         # Construct file url through file server
-        if not url:
+        if url is not None or file_name is not None:
             url_prefix = os.getenv("FILESERVER_URL_PREFIX")
             if not url_prefix:
                 logger.warning(
                     "Warning: FILESERVER_URL_PREFIX not set in environment variables"
                 )
             if file_name and url_prefix:
-                # TODO: Update the stored file path and simplify this
                 if use_remote_file:
-                    url = f"{url_prefix}/files/output/llamacloud/{file_name}"
+                    url = f"{url_prefix}/output/llamacloud/{file_name}"
+                if is_private:
+                    url = f"{url_prefix}/output/uploaded/{file_name}"
                 else:
                     url = f"{url_prefix}/data/{file_name}"
-
         return cls(
             id=source_node.node.node_id,
             metadata=metadata,
