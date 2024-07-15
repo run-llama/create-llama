@@ -90,7 +90,11 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
     // add a link to view its URL and a button to copy the URL to the clipboard
     return (
       <div className="flex items-center my-2">
-        <a className="hover:text-blue-900 truncate" href={nodeInfo.url} target="_blank">
+        <a
+          className="hover:text-blue-900 truncate"
+          href={nodeInfo.url}
+          target="_blank"
+        >
           <span>{nodeInfo.url}</span>
         </a>
         <Button

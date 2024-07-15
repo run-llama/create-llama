@@ -182,7 +182,7 @@ class SourceNodes(BaseModel):
             if file_name and url_prefix:
                 if use_remote_file:
                     url = f"{url_prefix}/output/llamacloud/{file_name}"
-                if is_private:
+                elif is_private:
                     url = f"{url_prefix}/output/uploaded/{file_name}"
                 else:
                     url = f"{url_prefix}/data/{file_name}"

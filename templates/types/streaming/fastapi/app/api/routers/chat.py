@@ -105,11 +105,15 @@ def generate_filters(doc_ids):
         )
     else:
         filters = MetadataFilters(
+            # Use the "NIN" - "not in" operator to include documents that either don't have the private key 
+            # or have it set to `false`.
+            # You can change to "!=" - "not equal" operator if the documents always have the private key 
+            # to improve performance
             filters=[
                 MetadataFilter(
                     key="private",
-                    value="true",
-                    operator="!=",  # type: ignore
+                    value=["true"],
+                    operator="nin",  # type: ignore
                 ),
             ]
         )
