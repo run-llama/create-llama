@@ -193,11 +193,6 @@ For better results, you can specify the region parameter to get results from a s
     name: "azure_code_interpreter.AzureCodeInterpreterToolSpec",
     supportedFrameworks: ["fastapi"],
     type: ToolType.LLAMAHUB,
-    config: {
-      // TODO: `managment` is a typo from the llamahub code, fix it in the future
-      pool_managment_endpoint:
-        "Please follow this guideline to create and get the pool management endpoint: https://learn.microsoft.com/azure/container-apps/sessions?tabs=azure-cli",
-    },
     dependencies: [
       {
         name: "llama-index-tools-azure-code-interpreter",
@@ -205,6 +200,11 @@ For better results, you can specify the region parameter to get results from a s
       },
     ],
     envVars: [
+      {
+        name: "AZURE_POOL_MANAGEMENT_ENDPOINT",
+        description:
+          "Please follow this guideline to create and get the pool management endpoint: https://learn.microsoft.com/azure/container-apps/sessions?tabs=azure-cli",
+      },
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
         description: "System prompt for Azure code interpreter tool.",
