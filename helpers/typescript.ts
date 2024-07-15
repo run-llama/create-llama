@@ -115,6 +115,26 @@ export const installTSTemplate = async ({
     console.log(
       `\nUsing managed index from LlamaCloud. Ensure the ${yellow("LLAMA_CLOUD_* environment variables are set correctly.")}`,
     );
+    // copy llamacloud pipeline code for documents
+    await copy(
+      "**",
+      path.join(root, relativeEngineDestPath, "llamaindex", "documents"),
+      {
+        parents: true,
+        cwd: path.join(
+          compPath,
+          "llamaindex",
+          "typescript",
+          "documents",
+          "llamacloud",
+        ),
+      },
+    );
+    // remove llamacloud folder in documents
+    await fs.rm(
+      path.join(root, relativeEngineDestPath, "llamaindex", "documents", "llamacloud"),
+      { recursive: true },
+    );
   } else {
     console.log("\nUsing vector DB:", vectorDb ?? "none");
   }
