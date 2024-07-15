@@ -130,14 +130,22 @@ export const installTSTemplate = async ({
         ),
       },
     );
-    // remove llamacloud folder in documents
-    await fs.rm(
-      path.join(root, relativeEngineDestPath, "llamaindex", "documents", "llamacloud"),
-      { recursive: true },
-    );
   } else {
     console.log("\nUsing vector DB:", vectorDb ?? "none");
   }
+
+  // remove llamacloud folder in documents
+  await fs.rm(
+    path.join(
+      root,
+      relativeEngineDestPath,
+      "llamaindex",
+      "documents",
+      "llamacloud",
+    ),
+    { recursive: true },
+  );
+
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
