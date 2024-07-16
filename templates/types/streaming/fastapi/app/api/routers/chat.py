@@ -7,7 +7,7 @@ from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
 from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 
-from app.api.controllers.llama_cloud import LLamaCloudFileController
+from app.api.services.llama_cloud import LLamaCloudFileService
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
     ChatConfig,
@@ -34,9 +34,7 @@ def process_response_nodes(
     files_to_download = SourceNodes.get_download_files(nodes)
     for file in files_to_download:
         background_tasks.add_task(
-            LLamaCloudFileController.download_llamacloud_pipeline_file,
-            file_name=file.get("file_name"),
-            pipeline_id=file.get("pipeline_id"),
+            LLamaCloudFileService.download_llamacloud_pipeline_file, file
         )
 
 
@@ -91,9 +89,9 @@ def generate_filters(doc_ids):
         )
     else:
         filters = MetadataFilters(
-            # Use the "NIN" - "not in" operator to include documents that either don't have the private key 
+            # Use the "NIN" - "not in" operator to include documents that either don't have the private key
             # or have it set to `false`.
-            # You can change to "!=" - "not equal" operator if the documents always have the private key 
+            # You can change to "!=" - "not equal" operator if the documents always have the private key
             # to improve performance
             filters=[
                 MetadataFilter(

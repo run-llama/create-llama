@@ -8,7 +8,7 @@ from app.api.routers.models import LlamaCloudFile
 logger = logging.getLogger("uvicorn")
 
 
-class LLamaCloudFileController:
+class LLamaCloudFileService:
     LLAMA_CLOUD_URL = "https://cloud.llamaindex.ai/api/v1"
     LOCAL_STORE_PATH = "output/llamacloud"
 

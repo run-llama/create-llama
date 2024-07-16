@@ -132,7 +132,7 @@ class ChatData(BaseModel):
         """
         Get the document IDs from the chat messages
         """
-        document_ids = []
+        document_ids: List[str] = []
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
@@ -167,45 +167,39 @@ class SourceNodes(BaseModel):
     score: Optional[float]
     text: str
     url: Optional[str]
-    use_remote_file: bool = Field(
-        default=False,
-    )
 
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
-        url = metadata.get("URL")
+
         pipeline_id = metadata.get("pipeline_id")
         file_name = metadata.get("file_name")
         is_private = metadata.get("private", "false") == "true"
-        use_remote_file = metadata.get("use_remote_file", False)
-
-        if pipeline_id and file_name:
-            # If the nodes use data from LlamaCloud, we'll use a local file path as file name
-            file_name = f"{pipeline_id}${file_name}"
-            use_remote_file = True
-
-        # Construct file url through file server
-        if url is not None or file_name is not None:
-            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-            if not url_prefix:
-                logger.warning(
-                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-                )
-            if file_name and url_prefix:
-                if use_remote_file:
-                    url = f"{url_prefix}/output/llamacloud/{file_name}"
-                elif is_private:
-                    url = f"{url_prefix}/output/uploaded/{file_name}"
+        is_local_file = metadata.get("is_local_file")
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if not url_prefix:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables"
+            )
+        if file_name and url_prefix:
+            if not is_local_file:
+                if pipeline_id is None:
+                    logger.warning(
+                        "Warning: The file source is llamacloud but pipeline_id is not set. Cannot construct file url"
+                    )
                 else:
-                    url = f"{url_prefix}/data/{file_name}"
+                    file_name = f"{pipeline_id}${file_name}"
+                    url = f"{url_prefix}/output/llamacloud/{file_name}"
+            elif is_private:
+                url = f"{url_prefix}/output/uploaded/{file_name}"
+            else:
+                url = f"{url_prefix}/data/{file_name}"
         return cls(
             id=source_node.node.node_id,
             metadata=metadata,
             score=source_node.score,
             text=source_node.node.text,  # type: ignore
             url=url,
-            use_remote_file=use_remote_file,
         )
 
     @classmethod
@@ -222,7 +216,9 @@ class SourceNodes(BaseModel):
             )
             for node in source_nodes
             if (
-                node.use_remote_file
+                not node.metadata.get(
+                    "is_local_file"
+                )  # Download the file of the node flagged as not local
                 and node.metadata.get("pipeline_id") is not None
                 and node.metadata.get("file_name") is not None
             )

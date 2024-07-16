@@ -22,7 +22,7 @@ def file_loaders_map():
     return default_loaders
 
 
-class FileController:
+class PrivateFileService:
     PRIVATE_STORE_PATH = "output/uploaded"
 
     @staticmethod
@@ -35,11 +35,11 @@ class FileController:
     @staticmethod
     def store_and_parse_file(file_data, extension) -> List[Document]:
         # Store file to the private directory
-        os.makedirs(FileController.PRIVATE_STORE_PATH, exist_ok=True)
+        os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
 
         # random file name
         file_name = f"{uuid4().hex}{extension}"
-        file_path = Path(os.path.join(FileController.PRIVATE_STORE_PATH, file_name))
+        file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
 
         # write file
         with open(file_path, "wb") as f:
@@ -53,13 +53,13 @@ class FileController:
         # Add custom metadata
         for doc in documents:
             doc.metadata["private"] = "true"
-            doc.metadata["use_remote_file"] = "false"
+            doc.metadata["is_local_file"] = "true"
         return documents
 
     @staticmethod
     def process_file(base64_content: str) -> List[str]:
-        file_data, extension = FileController.preprocess_base64_file(base64_content)
-        documents = FileController.store_and_parse_file(file_data, extension)
+        file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
+        documents = PrivateFileService.store_and_parse_file(file_data, extension)
         current_index = get_index()
 
         # Insert the documents into the index
