@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { bold, cyan } from "picocolors";
+import { bold, cyan, yellow } from "picocolors";
 import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
@@ -111,7 +111,13 @@ export const installTSTemplate = async ({
   });
 
   // copy vector db component
-  console.log("\nUsing vector DB:", vectorDb ?? "none");
+  if (vectorDb === "llamacloud") {
+    console.log(
+      `\nUsing managed index from LlamaCloud. Ensure the ${yellow("LLAMA_CLOUD_* environment variables are set correctly.")}`,
+    );
+  } else {
+    console.log("\nUsing vector DB:", vectorDb ?? "none");
+  }
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
