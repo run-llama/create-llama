@@ -2,14 +2,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
 import logging
+import os
+
+from app.engine.loaders import get_documents
+from app.settings import init_settings
 from llama_index.core.indices import (
     VectorStoreIndex,
 )
-from app.engine.loaders import get_documents
-from app.settings import init_settings
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -24,6 +24,7 @@ def generate_datasource():
     # Set private=false to mark the document as public (required for filtering)
     for doc in documents:
         doc.metadata["private"] = "false"
+        doc.metadata["is_local_file"] = "true"
     index = VectorStoreIndex.from_documents(
         documents,
     )

@@ -7,7 +7,6 @@ from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
 from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 
-from app.api.services.llama_cloud import LLamaCloudFileService
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
     ChatConfig,
@@ -17,6 +16,7 @@ from app.api.routers.models import (
     SourceNodes,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
+from app.api.services.llama_cloud import LLamaCloudFileService
 from app.engine import get_chat_engine
 
 chat_router = r = APIRouter()
@@ -89,10 +89,7 @@ def generate_filters(doc_ids):
         )
     else:
         filters = MetadataFilters(
-            # Use the "NIN" - "not in" operator to include documents that either don't have the private key
-            # or have it set to `false`.
-            # You can change to "!=" - "not equal" operator if the documents always have the private key
-            # to improve performance
+            # Use the "NIN" - "not in" operator to include all public documents (don't have the private key set)
             filters=[
                 MetadataFilter(
                     key="private",
