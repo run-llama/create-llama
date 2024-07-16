@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { bold, cyan, yellow } from "picocolors";
+import { bold, cyan } from "picocolors";
 import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
@@ -111,41 +111,7 @@ export const installTSTemplate = async ({
   });
 
   // copy vector db component
-  if (vectorDb === "llamacloud") {
-    console.log(
-      `\nUsing managed index from LlamaCloud. Ensure the ${yellow("LLAMA_CLOUD_* environment variables are set correctly.")}`,
-    );
-    // copy llamacloud pipeline code for documents
-    await copy(
-      "**",
-      path.join(root, relativeEngineDestPath, "llamaindex", "documents"),
-      {
-        parents: true,
-        cwd: path.join(
-          compPath,
-          "llamaindex",
-          "typescript",
-          "documents",
-          "llamacloud",
-        ),
-      },
-    );
-  } else {
-    console.log("\nUsing vector DB:", vectorDb ?? "none");
-  }
-
-  // remove llamacloud folder in documents
-  await fs.rm(
-    path.join(
-      root,
-      relativeEngineDestPath,
-      "llamaindex",
-      "documents",
-      "llamacloud",
-    ),
-    { recursive: true },
-  );
-
+  console.log("\nUsing vector DB:", vectorDb ?? "none");
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),

@@ -8,37 +8,50 @@ import {
   storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
+import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
 import { getDataSource } from "../../engine";
 
-export async function runPipeline(
-  documents: Document[],
-  filename: string,
-): Promise<string[]> {
-  // mark documents to add to the vector store as private
+export async function runPipeline(documents: Document[], filename: string) {
+  const currentIndex = await getDataSource();
+
+  // Update documents with metadata
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
       file_name: filename,
-      private: true,
+      private: true, // to separate from other public documents
+      use_remote_file: false,
     };
   }
 
-  const pipeline = new IngestionPipeline({
-    transformations: [
-      new SimpleNodeParser({
-        chunkSize: Settings.chunkSize,
-        chunkOverlap: Settings.chunkOverlap,
-      }),
-      Settings.embedModel,
-    ],
-  });
-  const nodes = await pipeline.run({ documents });
-  await addNodesToVectorStore(nodes);
+  if (currentIndex instanceof LlamaCloudIndex) {
+    // LlamaCloudIndex processes the documents automatically
+    // so we don't need ingestion pipeline, just insert the documents directly
+    for (const document of documents) {
+      await currentIndex.insert(document);
+    }
+  } else {
+    // Use ingestion pipeline to process the documents into nodes and add them to the vector store
+    const pipeline = new IngestionPipeline({
+      transformations: [
+        new SimpleNodeParser({
+          chunkSize: Settings.chunkSize,
+          chunkOverlap: Settings.chunkOverlap,
+        }),
+        Settings.embedModel,
+      ],
+    });
+    const nodes = await pipeline.run({ documents });
+    await addNodesToVectorStore(nodes, currentIndex);
+  }
+
   return documents.map((document) => document.id_);
 }
 
-async function addNodesToVectorStore(nodes: BaseNode<Metadata>[]) {
-  let currentIndex = await getDataSource(); // always not null with an vectordb
+async function addNodesToVectorStore(
+  nodes: BaseNode<Metadata>[],
+  currentIndex: VectorStoreIndex,
+) {
   if (currentIndex) {
     await currentIndex.insertNodes(nodes);
   } else {
