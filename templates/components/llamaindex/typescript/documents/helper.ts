@@ -11,6 +11,8 @@ const MIME_TYPE_TO_EXT: Record<string, string> = {
     "docx",
 };
 
+const UPLOADED_FOLDER = "output/uploaded";
+
 export async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   console.log(`Processing uploaded document of type: ${mimeType}`);
   switch (mimeType) {
@@ -35,13 +37,12 @@ export async function saveDocument(fileBuffer: Buffer, mimeType: string) {
   const fileExt = MIME_TYPE_TO_EXT[mimeType];
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
-  const folder = "output/uploaded";
   const filename = `${crypto.randomUUID()}.${fileExt}`;
-  const filepath = `${folder}/${filename}`;
+  const filepath = `${UPLOADED_FOLDER}/${filename}`;
   const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
 
-  if (!fs.existsSync(folder)) {
-    fs.mkdirSync(folder, { recursive: true });
+  if (!fs.existsSync(UPLOADED_FOLDER)) {
+    fs.mkdirSync(UPLOADED_FOLDER, { recursive: true });
   }
   await fs.promises.writeFile(filepath, fileBuffer);
 

@@ -2,6 +2,9 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 
+const LLAMA_CLOUD_OUTPUT_DIR = "output/llamacloud";
+const LLAMA_CLOUD_BASE_URL = "https://cloud.llamaindex.ai/api/v1";
+
 export interface LlamaCloudFile {
   name: string;
   file_id: string;
@@ -10,7 +13,7 @@ export interface LlamaCloudFile {
 
 export class LLamaCloudFileService {
   static async getFiles(pipelineId: string): Promise<LlamaCloudFile[]> {
-    const url = `https://cloud.llamaindex.ai/api/v1/pipelines/${pipelineId}/files`;
+    const url = `${LLAMA_CLOUD_BASE_URL}/pipelines/${pipelineId}/files`;
     const headers = {
       Accept: "application/json",
       Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
@@ -24,7 +27,7 @@ export class LLamaCloudFileService {
     projectId: string,
     fileId: string,
   ): Promise<{ url: string }> {
-    const url = `https://cloud.llamaindex.ai/api/v1/files/${fileId}/content?project_id=${projectId}`;
+    const url = `${LLAMA_CLOUD_BASE_URL}/files/${fileId}/content?project_id=${projectId}`;
     const headers = {
       Accept: "application/json",
       Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
@@ -57,23 +60,22 @@ export class LLamaCloudFileService {
   }
 
   static downloadFile(url: string, fileId: string, filename: string) {
-    const LLAMACKOUD_OUTPUT_DIR = "output/llamacloud";
     const FILE_DELIMITER = "$"; // delimiter between fileId and filename
     const downloadedFileName = `${fileId}${FILE_DELIMITER}${filename}`;
     const downloadedFilePath = path.join(
-      LLAMACKOUD_OUTPUT_DIR,
+      LLAMA_CLOUD_OUTPUT_DIR,
       downloadedFileName,
     );
-    const urlPrefix = `${process.env.FILESERVER_URL_PREFIX}/${LLAMACKOUD_OUTPUT_DIR}`;
-    const fileurl = `${urlPrefix}/${downloadedFileName}`;
+    const urlPrefix = `${process.env.FILESERVER_URL_PREFIX}/${LLAMA_CLOUD_OUTPUT_DIR}`;
+    const fileUrl = `${urlPrefix}/${downloadedFileName}`;
 
     try {
       // Check if file already exists
-      if (fs.existsSync(downloadedFilePath)) return fileurl;
+      if (fs.existsSync(downloadedFilePath)) return fileUrl;
 
       // Create directory if it doesn't exist
-      if (!fs.existsSync(LLAMACKOUD_OUTPUT_DIR)) {
-        fs.mkdirSync(LLAMACKOUD_OUTPUT_DIR, { recursive: true });
+      if (!fs.existsSync(LLAMA_CLOUD_OUTPUT_DIR)) {
+        fs.mkdirSync(LLAMA_CLOUD_OUTPUT_DIR, { recursive: true });
       }
 
       const file = fs.createWriteStream(downloadedFilePath);
@@ -93,7 +95,7 @@ export class LLamaCloudFileService {
           });
         });
 
-      return fileurl;
+      return fileUrl;
     } catch (error) {
       throw new Error(`Error downloading file from LlamaCloud: ${error}`);
     }
