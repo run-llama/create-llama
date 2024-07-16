@@ -19,8 +19,8 @@ export async function runPipeline(documents: Document[], filename: string) {
     document.metadata = {
       ...document.metadata,
       file_name: filename,
-      private: true, // to separate from other public documents
-      use_remote_file: false,
+      private: "true", // to separate from other public documents
+      is_local_file: "true",
     };
   }
 

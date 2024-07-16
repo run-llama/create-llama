@@ -107,11 +107,13 @@ export function createCallbackManager(stream: StreamData) {
 
 async function getNodeUrl(metadata: Metadata) {
   const pipelineId = metadata["pipeline_id"];
-  if (pipelineId) {
+  const isLocalFile = metadata["is_local_file"] === "true";
+  // Download and return the file URL if the file is stored in LlamaCloud
+  if (pipelineId && !isLocalFile) {
     const fileName = metadata["file_name"];
     return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
   }
-
+  // Construct and return the file URL if the file is stored locally
   const url = metadata["URL"];
   if (url) return url;
   const fileName = metadata["file_name"];
