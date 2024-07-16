@@ -1,13 +1,11 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Set
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
-
-from app.api.controllers.llama_cloud import LLamaCloudFileController
 
 logger = logging.getLogger("uvicorn")
 
@@ -148,6 +146,21 @@ class ChatData(BaseModel):
         return list(set(document_ids))
 
 
+class LlamaCloudFile(BaseModel):
+    file_name: str
+    pipeline_id: str
+
+    def __eq__(self, other):
+        if not isinstance(other, LlamaCloudFile):
+            return NotImplemented
+        return (
+            self.file_name == other.file_name and self.pipeline_id == other.pipeline_id
+        )
+
+    def __hash__(self):
+        return hash((self.file_name, self.pipeline_id))
+
+
 class SourceNodes(BaseModel):
     id: str
     metadata: Dict[str, Any]
@@ -165,11 +178,11 @@ class SourceNodes(BaseModel):
         pipeline_id = metadata.get("pipeline_id")
         file_name = metadata.get("file_name")
         is_private = metadata.get("private", "false") == "true"
-        use_remote_file = False
+        use_remote_file = metadata.get("use_remote_file", False)
 
         if pipeline_id and file_name:
             # If the nodes use data from LlamaCloud, we'll use a local file path as file name
-            file_name = LLamaCloudFileController.get_file_name(file_name, pipeline_id)
+            file_name = f"{pipeline_id}${file_name}"
             use_remote_file = True
 
         # Construct file url through file server
@@ -198,6 +211,24 @@ class SourceNodes(BaseModel):
     @classmethod
     def from_source_nodes(cls, source_nodes: List[NodeWithScore]):
         return [cls.from_source_node(node) for node in source_nodes]
+
+    @staticmethod
+    def get_download_files(nodes: List[NodeWithScore]) -> Set[LlamaCloudFile]:
+        source_nodes = SourceNodes.from_source_nodes(nodes)
+        llama_cloud_files = [
+            LlamaCloudFile(
+                file_name=node.metadata.get("file_name"),
+                pipeline_id=node.metadata.get("pipeline_id"),
+            )
+            for node in source_nodes
+            if (
+                node.use_remote_file
+                and node.metadata.get("pipeline_id") is not None
+                and node.metadata.get("file_name") is not None
+            )
+        ]
+        # Remove duplicates and return
+        return set(llama_cloud_files)
 
 
 class Result(BaseModel):

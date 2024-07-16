@@ -3,12 +3,12 @@ import os
 from typing import Any, Dict, List, Optional
 
 import requests
+from app.api.routers.models import LlamaCloudFile
 
 logger = logging.getLogger("uvicorn")
 
 
 class LLamaCloudFileController:
-
     LLAMA_CLOUD_URL = "https://cloud.llamaindex.ai/api/v1"
     LOCAL_STORE_PATH = "output/llamacloud"
 
@@ -40,10 +40,12 @@ class LLamaCloudFileController:
     @classmethod
     def download_llamacloud_pipeline_file(
         cls,
-        file_name: str,
-        pipeline_id: str,
+        file: LlamaCloudFile,
         force_download: bool = False,
     ):
+        file_name = file.file_name
+        pipeline_id = file.pipeline_id
+
         # Check is the file already exists
         downloaded_file_path = cls.get_file_path(file_name, pipeline_id)
         if os.path.exists(downloaded_file_path) and not force_download:
@@ -54,14 +56,12 @@ class LLamaCloudFileController:
             files = cls.get_files(pipeline_id)
             if not files or not isinstance(files, list):
                 raise Exception("No files found in LlamaCloud")
-            for file in files:
-                if file["name"] == file_name:
-                    file_id = file["file_id"]
-                    project_id = file["project_id"]
+            for file_entry in files:
+                if file_entry["name"] == file_name:
+                    file_id = file_entry["file_id"]
+                    project_id = file_entry["project_id"]
                     file_detail = cls.get_file_detail(project_id, file_id)
-                    cls.download_file(
-                        file_detail["url"], downloaded_file_path
-                    )
+                    cls.download_file(file_detail["url"], downloaded_file_path)
                     break
         except Exception as error:
             logger.info(f"Error fetching file from LlamaCloud: {error}")

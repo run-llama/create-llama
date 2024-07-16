@@ -31,21 +31,7 @@ def process_response_nodes(
     """
     Start background tasks on the source nodes if needed.
     """
-    source_nodes = SourceNodes.from_source_nodes(nodes)
-    files_to_download = [
-        {
-            "file_name": node.metadata.get("file_name"),
-            "pipeline_id": node.metadata.get("pipeline_id"),
-        }
-        for node in source_nodes
-        if (
-            node.use_remote_file
-            and node.metadata.get("pipeline_id") is not None
-            and node.metadata.get("file_name") is not None
-        )
-    ]
-    # Remove duplicates
-    files_to_download = list({v["pipeline_id"]: v for v in files_to_download}.values())
+    files_to_download = SourceNodes.get_download_files(nodes)
     for file in files_to_download:
         background_tasks.add_task(
             LLamaCloudFileController.download_llamacloud_pipeline_file,

@@ -12,6 +12,7 @@ from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
 )
 from llama_index.core.schema import Document
+from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 
 
@@ -52,26 +53,34 @@ class FileController:
         # Add custom metadata
         for doc in documents:
             doc.metadata["private"] = "true"
+            doc.metadata["use_remote_file"] = "false"
         return documents
 
     @staticmethod
     def process_file(base64_content: str) -> List[str]:
         file_data, extension = FileController.preprocess_base64_file(base64_content)
         documents = FileController.store_and_parse_file(file_data, extension)
-
-        # Only process nodes, no store the index
-        pipeline = IngestionPipeline()
-        nodes = pipeline.run(documents=documents)
-
-        # Add the nodes to the index and persist it
         current_index = get_index()
-        if current_index is None:
-            current_index = VectorStoreIndex(nodes=nodes)
+
+        # Insert the documents into the index
+        if isinstance(current_index, LlamaCloudIndex):
+            # LlamaCloudIndex is a managed index so we don't need to process the nodes
+            # just insert the documents
+            for doc in documents:
+                current_index.insert(doc)
         else:
-            current_index.insert_nodes(nodes=nodes)
-        current_index.storage_context.persist(
-            persist_dir=os.environ.get("STORAGE_DIR", "storage")
-        )
+            # Only process nodes, no store the index
+            pipeline = IngestionPipeline()
+            nodes = pipeline.run(documents=documents)
+
+            # Add the nodes to the index and persist it
+            if current_index is None:
+                current_index = VectorStoreIndex(nodes=nodes)
+            else:
+                current_index.insert_nodes(nodes=nodes)
+            current_index.storage_context.persist(
+                persist_dir=os.environ.get("STORAGE_DIR", "storage")
+            )
 
         # Return the document ids
         return [doc.doc_id for doc in documents]
