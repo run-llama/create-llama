@@ -50,7 +50,7 @@ export async function runPipeline(documents: Document[], filename: string) {
 
 async function addNodesToVectorStore(
   nodes: BaseNode<Metadata>[],
-  currentIndex: VectorStoreIndex,
+  currentIndex: VectorStoreIndex | null,
 ) {
   if (currentIndex) {
     await currentIndex.insertNodes(nodes);
