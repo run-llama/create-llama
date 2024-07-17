@@ -9,11 +9,9 @@ import {
   storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
-import { DocxReader } from "llamaindex/readers/DocxReader";
-import { PDFReader } from "llamaindex/readers/PDFReader";
-import { TextFileReader } from "llamaindex/readers/TextFileReader";
 import crypto from "node:crypto";
 import { getDataSource } from "../../engine";
+import { getExtractors } from "../../engine/loader";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
@@ -58,23 +56,14 @@ async function runPipeline(
 }
 
 async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
-  console.log(`Processing uploaded document of type: ${mimeType}`);
-  switch (mimeType) {
-    case "application/pdf": {
-      const pdfReader = new PDFReader();
-      return await pdfReader.loadDataAsContent(new Uint8Array(fileBuffer));
-    }
-    case "text/plain": {
-      const textReader = new TextFileReader();
-      return await textReader.loadDataAsContent(fileBuffer);
-    }
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-      const docxReader = new DocxReader();
-      return await docxReader.loadDataAsContent(fileBuffer);
-    }
-    default:
-      throw new Error(`Unsupported document type: ${mimeType}`);
+  const extractors = getExtractors();
+  const reader = extractors[MIME_TYPE_TO_EXT[mimeType]];
+
+  if (!reader) {
+    throw new Error(`Unsupported document type: ${mimeType}`);
   }
+  console.log(`Processing uploaded document of type: ${mimeType}`);
+  return await reader.loadDataAsContent(fileBuffer);
 }
 
 async function saveDocument(fileBuffer: Buffer, mimeType: string) {
