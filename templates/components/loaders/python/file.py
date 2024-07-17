@@ -62,7 +62,8 @@ def get_file_documents(config: FileLoaderConfig):
         )
         return reader.load_data()
     except Exception as e:
-        import sys, traceback
+        import sys
+        import traceback
 
         # Catch the error if the data dir is empty
         # and return as empty document list
