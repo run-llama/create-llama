@@ -81,7 +81,6 @@ class PrivateFileService:
         for doc in documents:
             doc.metadata["file_name"] = file_name
             doc.metadata["private"] = "true"
-            doc.metadata["is_local_file"] = "true"
         return documents
 
     @staticmethod

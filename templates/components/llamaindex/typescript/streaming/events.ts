@@ -106,26 +106,26 @@ export function createCallbackManager(stream: StreamData) {
 }
 
 async function getNodeUrl(metadata: Metadata) {
-  const pipelineId = metadata["pipeline_id"];
-  const isLocalFile = metadata["is_local_file"] === "true";
-  // Download and return the file URL if the file is stored in LlamaCloud
-  if (pipelineId && !isLocalFile) {
-    const fileName = metadata["file_name"];
-    return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
-  }
-  // Construct and return the file URL if the file is stored locally
-  const url = metadata["URL"];
-  if (url) return url;
-  const fileName = metadata["file_name"];
   if (!process.env.FILESERVER_URL_PREFIX) {
     console.warn(
       "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
     );
-    return undefined;
   }
-  if (fileName) {
-    const folder = metadata["private"] ? "output/uploaded" : "data";
+  const fileName = metadata["file_name"];
+  if (fileName && process.env.FILESERVER_URL_PREFIX) {
+    // file_name exists and file server is configured
+    const isLocalFile = metadata["is_local_file"] === "true";
+    const pipelineId = metadata["pipeline_id"];
+    if (pipelineId && !isLocalFile) {
+      // file is from LlamaCloud and was not ingested locally
+      // TODO trigger but don't await file download and just use convention to generate the URL (see Python code)
+      // return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${pipelineId}\$${fileName}`;
+      return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+    }
+    const isPrivate = metadata["private"] === "true";
+    const folder = isPrivate ? "output/uploaded" : "data";
     return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
   }
-  return undefined;
+  // fallback to URL in metadata (e.g. for websites)
+  return metadata["URL"];
 }

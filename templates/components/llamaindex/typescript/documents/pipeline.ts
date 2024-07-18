@@ -20,7 +20,6 @@ export async function runPipeline(documents: Document[], filename: string) {
       ...document.metadata,
       file_name: filename,
       private: "true", // to separate from other public documents
-      is_local_file: "true",
     };
   }
 

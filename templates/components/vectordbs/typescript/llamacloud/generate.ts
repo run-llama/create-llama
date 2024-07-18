@@ -9,6 +9,13 @@ dotenv.config();
 
 async function loadAndIndex() {
   const documents = await getDocuments();
+  // Set is_local_file=true to distinguish locally ingested files from LlamaCloud files
+  for (const document of documents) {
+    document.metadata = {
+      ...document.metadata,
+      is_local_file: "true",
+    };
+  }
   await getDataSource();
   await LlamaCloudIndex.fromDocuments({
     documents,

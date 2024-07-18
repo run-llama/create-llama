@@ -171,30 +171,8 @@ class SourceNodes(BaseModel):
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
+        url = cls.get_url_from_metadata(metadata)
 
-        url = metadata.get("URL")
-        pipeline_id = metadata.get("pipeline_id")
-        file_name = metadata.get("file_name")
-        is_private = metadata.get("private", "false") == "true"
-        is_local_file = metadata.get("is_local_file")
-        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-        if not url_prefix:
-            logger.warning(
-                "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-            )
-        if file_name and url_prefix:
-            if not is_local_file:
-                if pipeline_id is None:
-                    logger.warning(
-                        "Warning: The file source is llamacloud but pipeline_id is not set. Cannot construct file url"
-                    )
-                else:
-                    file_name = f"{pipeline_id}${file_name}"
-                    url = f"{url_prefix}/output/llamacloud/{file_name}"
-            elif is_private:
-                url = f"{url_prefix}/output/uploaded/{file_name}"
-            else:
-                url = f"{url_prefix}/data/{file_name}"
         return cls(
             id=source_node.node.node_id,
             metadata=metadata,
@@ -202,6 +180,30 @@ class SourceNodes(BaseModel):
             text=source_node.node.text,  # type: ignore
             url=url,
         )
+
+    @classmethod
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if not url_prefix:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
+            )
+        file_name = metadata.get("file_name")
+        if file_name and url_prefix:
+            # file_name exists and file server is configured
+            pipeline_id = metadata.get("pipeline_id")
+            is_local_file = metadata.get("is_local_file")
+            if pipeline_id and not is_local_file:
+                # file is from LlamaCloud and was not ingested locally
+                file_name = f"{pipeline_id}${file_name}"
+                return f"{url_prefix}/output/llamacloud/{file_name}"
+            is_private = metadata.get("private", "false") == "true"
+            if is_private:
+                return f"{url_prefix}/output/uploaded/{file_name}"
+            return f"{url_prefix}/data/{file_name}"
+        else:
+            # fallback to URL in metadata (e.g. for websites)
+            return metadata.get("URL")
 
     @classmethod
     def from_source_nodes(cls, source_nodes: List[NodeWithScore]):
