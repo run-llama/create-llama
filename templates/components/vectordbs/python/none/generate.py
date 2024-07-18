@@ -23,7 +23,6 @@ def generate_datasource():
     documents = get_documents()
     # Set private=false to mark the document as public (required for filtering)
     for doc in documents:
-        doc.metadata["private"] = "false"
         doc.metadata["is_local_file"] = "true"
     index = VectorStoreIndex.from_documents(
         documents,

@@ -66,7 +66,6 @@ def generate_datasource():
     documents = get_documents()
     # Set the metadata for the documents
     for doc in documents:
-        doc.metadata["private"] = "false"
         doc.metadata["is_local_file"] = "true"
     docstore = get_doc_store()
     vector_store = get_vector_store()

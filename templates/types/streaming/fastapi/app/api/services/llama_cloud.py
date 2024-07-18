@@ -15,17 +15,17 @@ class LLamaCloudFileService:
     DOWNLOAD_FILE_NAME_TPL = "{pipeline_id}${filename}"
 
     @classmethod
-    def get_files(cls, pipeline_id: str) -> List[Dict[str, Any]]:
+    def _get_files(cls, pipeline_id: str) -> List[Dict[str, Any]]:
         url = f"{cls.LLAMA_CLOUD_URL}/pipelines/{pipeline_id}/files"
-        return cls.make_request(url)
+        return cls._make_request(url)
 
     @classmethod
-    def get_file_detail(cls, project_id: str, file_id: str) -> Dict[str, Any]:
+    def _get_file_detail(cls, project_id: str, file_id: str) -> Dict[str, Any]:
         url = f"{cls.LLAMA_CLOUD_URL}/files/{file_id}/content?project_id={project_id}"
-        return cls.make_request(url)
+        return cls._make_request(url)
 
     @classmethod
-    def download_file(cls, url: str, local_file_path: str):
+    def _download_file(cls, url: str, local_file_path: str):
         logger.info(f"Downloading file to {local_file_path}")
         # Create directory if it doesn't exist
         os.makedirs(cls.LOCAL_STORE_PATH, exist_ok=True)
@@ -53,15 +53,15 @@ class LLamaCloudFileService:
             return
         try:
             logger.info(f"Downloading file {file_name} for pipeline {pipeline_id}")
-            files = cls.get_files(pipeline_id)
+            files = cls._get_files(pipeline_id)
             if not files or not isinstance(files, list):
                 raise Exception("No files found in LlamaCloud")
             for file_entry in files:
                 if file_entry["name"] == file_name:
                     file_id = file_entry["file_id"]
                     project_id = file_entry["project_id"]
-                    file_detail = cls.get_file_detail(project_id, file_id)
-                    cls.download_file(file_detail["url"], downloaded_file_path)
+                    file_detail = cls._get_file_detail(project_id, file_id)
+                    cls._download_file(file_detail["url"], downloaded_file_path)
                     break
         except Exception as error:
             logger.info(f"Error fetching file from LlamaCloud: {error}")
@@ -75,7 +75,7 @@ class LLamaCloudFileService:
         return os.path.join(cls.LOCAL_STORE_PATH, cls.get_file_name(name, pipeline_id))
 
     @staticmethod
-    def make_request(
+    def _make_request(
         url: str, data=None, headers: Optional[Dict] = None, method: str = "get"
     ):
         if headers is None:
