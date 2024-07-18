@@ -172,6 +172,7 @@ class SourceNodes(BaseModel):
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
 
+        url = metadata.get("URL")
         pipeline_id = metadata.get("pipeline_id")
         file_name = metadata.get("file_name")
         is_private = metadata.get("private", "false") == "true"
