@@ -77,7 +77,7 @@ export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
   callbackManager.on("retrieve-end", async (data) => {
-    const { nodes, query } = data.detail.payload;
+    const { nodes, query } = data.detail;
     await appendSourceData(stream, nodes);
     appendEventData(stream, `Retrieving context for query: '${query}'`);
     appendEventData(
@@ -87,7 +87,7 @@ export function createCallbackManager(stream: StreamData) {
   });
 
   callbackManager.on("llm-tool-call", (event) => {
-    const { name, input } = event.detail.payload.toolCall;
+    const { name, input } = event.detail.toolCall;
     const inputString = Object.entries(input)
       .map(([key, value]) => `${key}: ${value}`)
       .join(", ");
@@ -98,7 +98,7 @@ export function createCallbackManager(stream: StreamData) {
   });
 
   callbackManager.on("llm-tool-result", (event) => {
-    const { toolCall, toolResult } = event.detail.payload;
+    const { toolCall, toolResult } = event.detail;
     appendToolData(stream, toolCall, toolResult);
   });
 

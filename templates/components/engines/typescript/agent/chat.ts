@@ -1,4 +1,9 @@
-import { BaseToolWithCall, OpenAIAgent, QueryEngineTool } from "llamaindex";
+import {
+  BaseToolWithCall,
+  MetadataFilters,
+  OpenAIAgent,
+  QueryEngineTool,
+} from "llamaindex";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
@@ -14,7 +19,7 @@ export async function createChatEngine(documentIds?: string[]) {
     tools.push(
       new QueryEngineTool({
         queryEngine: index.asQueryEngine({
-          preFilters: undefined, // TODO: Add filters once LITS supports it (getQueryFilters)
+          preFilters: generateFilters(documentIds || []),
         }),
         metadata: {
           name: "data_query_engine",
@@ -40,4 +45,33 @@ export async function createChatEngine(documentIds?: string[]) {
     tools,
     systemPrompt: process.env.SYSTEM_PROMPT,
   });
+}
+
+function generateFilters(documentIds: string[]): MetadataFilters | undefined {
+  if (!documentIds.length) {
+    return {
+      filters: [
+        {
+          key: "private",
+          value: ["true"],
+          operator: "nin",
+        },
+      ],
+    };
+  }
+  return {
+    filters: [
+      {
+        key: "private",
+        value: "true",
+        operator: "!=",
+      },
+      {
+        key: "doc_id",
+        value: documentIds,
+        operator: "in",
+      },
+    ],
+    condition: "or",
+  };
 }
