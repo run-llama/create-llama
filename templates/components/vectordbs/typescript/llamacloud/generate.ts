@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 import { LlamaCloudIndex } from "llamaindex";
+import { getDataSource } from "./index";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
@@ -8,6 +9,7 @@ dotenv.config();
 
 async function loadAndIndex() {
   const documents = await getDocuments();
+  await getDataSource();
   await LlamaCloudIndex.fromDocuments({
     documents,
     name: process.env.LLAMA_CLOUD_INDEX_NAME!,
