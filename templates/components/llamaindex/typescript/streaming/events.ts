@@ -6,23 +6,31 @@ import {
   ToolCall,
   ToolOutput,
 } from "llamaindex";
+import { LLamaCloudFileService } from "./service";
 
-export function appendSourceData(
+export async function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
-  data.appendMessageAnnotation({
-    type: "sources",
-    data: {
-      nodes: sourceNodes.map((node) => ({
+  try {
+    const nodes = await Promise.all(
+      sourceNodes.map(async (node) => ({
         ...node.node.toMutableJSON(),
         id: node.node.id_,
         score: node.score ?? null,
-        url: getNodeUrl(node.node.metadata),
+        url: await getNodeUrl(node.node.metadata),
       })),
-    },
-  });
+    );
+    data.appendMessageAnnotation({
+      type: "sources",
+      data: {
+        nodes,
+      },
+    });
+  } catch (error) {
+    console.error("Error appending source data:", error);
+  }
 }
 
 export function appendEventData(data: StreamData, title?: string) {
@@ -68,9 +76,9 @@ export function createStreamTimeout(stream: StreamData) {
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
-  callbackManager.on("retrieve-end", (data) => {
+  callbackManager.on("retrieve-end", async (data) => {
     const { nodes, query } = data.detail.payload;
-    appendSourceData(stream, nodes);
+    await appendSourceData(stream, nodes);
     appendEventData(stream, `Retrieving context for query: '${query}'`);
     appendEventData(
       stream,
@@ -97,19 +105,27 @@ export function createCallbackManager(stream: StreamData) {
   return callbackManager;
 }
 
-function getNodeUrl(metadata: Metadata) {
-  const url = metadata["URL"];
-  if (url) return url;
-  const fileName = metadata["file_name"];
+async function getNodeUrl(metadata: Metadata) {
   if (!process.env.FILESERVER_URL_PREFIX) {
     console.warn(
       "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
     );
-    return undefined;
   }
-  if (fileName) {
-    const folder = metadata["private"] ? "output/uploaded" : "data";
+  const fileName = metadata["file_name"];
+  if (fileName && process.env.FILESERVER_URL_PREFIX) {
+    // file_name exists and file server is configured
+    const isLocalFile = metadata["is_local_file"] === "true";
+    const pipelineId = metadata["pipeline_id"];
+    if (pipelineId && !isLocalFile) {
+      // file is from LlamaCloud and was not ingested locally
+      // TODO trigger but don't await file download and just use convention to generate the URL (see Python code)
+      // return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${pipelineId}\$${fileName}`;
+      return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+    }
+    const isPrivate = metadata["private"] === "true";
+    const folder = isPrivate ? "output/uploaded" : "data";
     return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
   }
-  return undefined;
+  // fallback to URL in metadata (e.g. for websites)
+  return metadata["URL"];
 }

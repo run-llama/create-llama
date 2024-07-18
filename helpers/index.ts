@@ -177,10 +177,9 @@ export const installTemplate = async (
     }
 
     // Create outputs directory
-    if (props.tools && props.tools.length > 0) {
-      await makeDir(path.join(props.root, "output/tools"));
-      await makeDir(path.join(props.root, "output/uploaded"));
-    }
+    await makeDir(path.join(props.root, "output/tools"));
+    await makeDir(path.join(props.root, "output/uploaded"));
+    await makeDir(path.join(props.root, "output/llamacloud"));
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
     await createFrontendEnvFile(props.root, {
