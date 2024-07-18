@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Able to display file url from llamacloud
+Display files in sources using LlamaCloud indexes.
