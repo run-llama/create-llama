@@ -1,21 +1,23 @@
-import os
 import logging
+import os
+from typing import List
 
-from aiostream import stream
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from llama_index.core.llms import MessageRole
 from llama_index.core.chat_engine.types import BaseChatEngine
-from llama_index.core.vector_stores.types import MetadataFilters, MetadataFilter
-from app.engine import get_chat_engine
-from app.api.routers.vercel_response import VercelStreamResponse
+from llama_index.core.llms import MessageRole
+from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
+
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
-    ChatData,
     ChatConfig,
-    SourceNodes,
-    Result,
+    ChatData,
     Message,
+    Result,
+    SourceNodes,
 )
+from app.api.routers.vercel_response import VercelStreamResponse
+from app.api.services.suggestion import NextQuestionSuggestion
+from app.engine import get_chat_engine
 
 chat_router = r = APIRouter()
 
@@ -105,3 +107,28 @@ async def chat_config() -> ChatConfig:
     if conversation_starters and conversation_starters.strip():
         starter_questions = conversation_starters.strip().split("\n")
     return ChatConfig(starter_questions=starter_questions)
+
+
+@r.get("/suggest-questions")
+async def suggest_questions(
+    request: Request,
+    data: ChatData,
+    num_questions: int = 3,
+) -> List[str]:
+    try:
+        # Get last message, only suggest if the message from assistant
+        messages = data.messages
+        last_message = messages[-1]
+
+        if last_message is not None and last_message.role != "assistant":
+            return []
+        suggestions = await NextQuestionSuggestion.suggest_next_questions(
+            messages, num_questions
+        )
+        return suggestions
+    except Exception as e:
+        logger.exception("Error in suggestion engine", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in suggestion engine: {e}",
+        ) from e
