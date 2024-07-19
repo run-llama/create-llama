@@ -15,8 +15,9 @@ interface LlamaCloudFile {
 
 export class LLamaCloudFileService {
   public static async downloadFiles(nodes: NodeWithScore<Metadata>[]) {
-    console.log("Downloading files from LlamaCloud...");
     const files = this.nodesToDownloadFiles(nodes);
+    if (!files.length) return;
+    console.log("Downloading files from LlamaCloud...");
     for (const file of files) {
       await this.downloadFile(file.pipelineId, file.fileName);
     }
