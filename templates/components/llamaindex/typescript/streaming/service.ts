@@ -34,10 +34,9 @@ export class LLamaCloudFileService {
     }> = [];
     for (const node of nodes) {
       const isLocalFile = node.node.metadata["is_local_file"] === "true";
-      if (isLocalFile) continue;
       const pipelineId = node.node.metadata["pipeline_id"];
       const fileName = node.node.metadata["file_name"];
-      if (!pipelineId || !fileName) continue;
+      if (isLocalFile || !pipelineId || !fileName) continue;
       const isDuplicate = downloadFiles.some(
         (f) => f.pipelineId === pipelineId && f.fileName === fileName,
       );
