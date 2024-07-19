@@ -99,12 +99,12 @@ function ChatMessageContent({
     },
     {
       order: 4,
-      component: (
+      component: suggestedQuestionsData[0] ? (
         <SuggestedQuestions
           questions={suggestedQuestionsData[0]}
           append={append}
         />
-      ),
+      ) : null,
     },
   ];
 
