@@ -31,8 +31,10 @@ def generate_datasource():
     documents = get_documents()
 
     # Set is_local_file=true to distinguish locally ingested files from LlamaCloud files
+    # Set private=false to mark the document as public (required for filtering)
     for doc in documents:
         doc.metadata["is_local_file"] = "true"
+        doc.metadata["private"] = "false"
 
     LlamaCloudIndex.from_documents(
         documents=documents,
