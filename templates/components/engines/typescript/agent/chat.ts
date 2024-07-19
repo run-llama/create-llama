@@ -53,8 +53,8 @@ function generateFilters(documentIds: string[]): MetadataFilters | undefined {
       filters: [
         {
           key: "private",
-          value: ["true"],
-          operator: "nin",
+          value: "true",
+          operator: "!=",
         },
       ],
     };
