@@ -84,6 +84,7 @@ export function createCallbackManager(stream: StreamData) {
       stream,
       `Retrieved ${nodes.length} sources to use as context for the query`,
     );
+    LLamaCloudFileService.downloadFiles(nodes); // don't await to avoid blocking chat streaming
   });
 
   callbackManager.on("llm-tool-call", (event) => {
@@ -118,9 +119,8 @@ async function getNodeUrl(metadata: Metadata) {
     const pipelineId = metadata["pipeline_id"];
     if (pipelineId && !isLocalFile) {
       // file is from LlamaCloud and was not ingested locally
-      // TODO trigger but don't await file download and just use convention to generate the URL (see Python code)
-      // return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${pipelineId}\$${fileName}`;
-      return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+      const name = LLamaCloudFileService.toDownloadedName(pipelineId, fileName);
+      return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
     }
     const isPrivate = metadata["private"] === "true";
     const folder = isPrivate ? "output/uploaded" : "data";
