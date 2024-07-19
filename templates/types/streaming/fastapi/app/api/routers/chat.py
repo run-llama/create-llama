@@ -44,7 +44,7 @@ async def chat(
 
         response = await chat_engine.astream_chat(last_message_content, messages)
 
-        return VercelStreamResponse(request, event_handler, response)
+        return VercelStreamResponse(request, event_handler, response, data)
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(

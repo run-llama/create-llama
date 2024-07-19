@@ -1,13 +1,13 @@
 import json
-from typing import Any
+
+from aiostream import stream
+from fastapi import Request
 from fastapi.responses import StreamingResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 from app.api.routers.events import EventCallbackHandler
-from aiostream import stream
-
-from app.api.routers.models import SourceNodes
-from fastapi import Request
-from llama_index.core.chat_engine.types import StreamingAgentChatResponse
+from app.api.routers.models import ChatData, Message, SourceNodes
+from app.api.services.suggestion import NextQuestionSuggestion
 
 
 class VercelStreamResponse(StreamingResponse):
@@ -34,9 +34,10 @@ class VercelStreamResponse(StreamingResponse):
         request: Request,
         event_handler: EventCallbackHandler,
         response: StreamingAgentChatResponse,
+        chat_data: ChatData,
     ):
         content = VercelStreamResponse.content_generator(
-            request, event_handler, response
+            request, event_handler, response, chat_data
         )
         super().__init__(content=content)
 
@@ -46,11 +47,29 @@ class VercelStreamResponse(StreamingResponse):
         request: Request,
         event_handler: EventCallbackHandler,
         response: StreamingAgentChatResponse,
+        chat_data: ChatData,
     ):
         # Yield the text response
         async def _chat_response_generator():
+            final_response = ""
             async for token in response.async_response_gen():
+                final_response = token
                 yield VercelStreamResponse.convert_text(token)
+
+            # Generate questions that user might interested to
+            questions = await NextQuestionSuggestion.suggest_next_questions(
+                chat_data.messages
+                + [Message(role="assistant", content=final_response)],
+                3,
+            )
+            if len(questions) > 0:
+                yield VercelStreamResponse.convert_data(
+                    {
+                        "type": "suggested_questions",
+                        "data": questions,
+                    }
+                )
+
             # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
 

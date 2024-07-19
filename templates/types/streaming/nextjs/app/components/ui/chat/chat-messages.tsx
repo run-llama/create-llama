@@ -53,6 +53,7 @@ export default function ChatMessages(
               key={m.id}
               chatMessage={m}
               isLoading={isLoadingMessage}
+              append={props.append!}
             />
           );
         })}

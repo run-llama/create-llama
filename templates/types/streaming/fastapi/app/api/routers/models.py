@@ -1,11 +1,11 @@
-import os
 import logging
+import os
+from typing import Any, Dict, List, Literal, Optional
+
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
-from typing import List, Any, Optional, Dict, Literal
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.llms import ChatMessage, MessageRole
-
 
 logger = logging.getLogger("uvicorn")
 
@@ -25,7 +25,7 @@ class File(BaseModel):
     filetype: str
 
 
-class AnnotationData(BaseModel):
+class AnnotationFileData(BaseModel):
     files: List[File] = Field(
         default=[],
         description="List of files",
@@ -50,7 +50,7 @@ class AnnotationData(BaseModel):
 
 class Annotation(BaseModel):
     type: str
-    data: AnnotationData
+    data: AnnotationFileData | List[str]
 
     def to_content(self) -> str | None:
         if self.type == "document_file":
