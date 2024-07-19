@@ -55,6 +55,12 @@ export const installTSTemplate = async ({
       nextConfigJson.output = "export";
       nextConfigJson.images = { unoptimized: true };
       console.log("\nUsing static site generation\n");
+
+      // if having backend, copy overwrite next.config.simple.mjs to next.config.mjs
+      await fs.copyFile(
+        path.join(root, "next.config.simple.mjs"),
+        path.join(root, "next.config.mjs"),
+      );
     } else {
       if (vectorDb === "milvus") {
         nextConfigJson.experimental.serverComponentsExternalPackages =
@@ -64,6 +70,7 @@ export const installTSTemplate = async ({
         );
       }
     }
+    await fs.rm(path.join(root, "next.config.simple.mjs"));
     await fs.writeFile(
       nextConfigJsonFile,
       JSON.stringify(nextConfigJson, null, 2) + os.EOL,
