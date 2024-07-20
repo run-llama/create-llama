@@ -80,7 +80,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Transform LlamaIndex stream to Vercel/AI format
-    const stream = LlamaIndexStream(response, vercelStreamData);
+    const stream = LlamaIndexStream(
+      response,
+      vercelStreamData,
+      messages as ChatMessage[],
+    );
 
     // Return a StreamingTextResponse, which can be consumed by the Vercel/AI client
     return new StreamingTextResponse(stream, {}, vercelStreamData);
