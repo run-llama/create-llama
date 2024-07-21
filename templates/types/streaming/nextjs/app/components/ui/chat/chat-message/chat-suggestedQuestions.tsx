@@ -21,8 +21,7 @@ export function SuggestedQuestions({
               append({ role: "user", content: question });
               setShowQuestions(false);
             }}
-            rel="noopener noreferrer"
-            className="text-sm italic hover:underline"
+            className="text-sm italic hover:underline cursor-pointer"
           >
             {"->"} {question}
           </a>
