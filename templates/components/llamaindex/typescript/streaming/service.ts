@@ -27,13 +27,23 @@ export class LLamaCloudFileService {
     return `${pipelineId}${FILE_DELIMITER}${fileName}`;
   }
 
+  /**
+   * This function will return an array of unique files to download from LlamaCloud
+   * We only download files that are uploaded directly in LlamaCloud datasources (don't have `private` in metadata)
+   * Files are uploaded directly in LlamaCloud datasources don't have `private` in metadata (public docs)
+   * Files are uploaded from local via `generate` command will have `private=false` (public docs)
+   * Files are uploaded from local via `/chat/upload` endpoint will have `private=true` (private docs)
+   *
+   * @param nodes
+   * @returns list of unique files to download
+   */
   private static nodesToDownloadFiles(nodes: NodeWithScore<Metadata>[]) {
     const downloadFiles: Array<{
       pipelineId: string;
       fileName: string;
     }> = [];
     for (const node of nodes) {
-      const isLocalFile = node.node.metadata["is_local_file"] === "true";
+      const isLocalFile = node.node.metadata["private"] != null;
       const pipelineId = node.node.metadata["pipeline_id"];
       const fileName = node.node.metadata["file_name"];
       if (isLocalFile || !pipelineId || !fileName) continue;

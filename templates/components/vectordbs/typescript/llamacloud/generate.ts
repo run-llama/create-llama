@@ -9,12 +9,10 @@ dotenv.config();
 
 async function loadAndIndex() {
   const documents = await getDocuments();
-  // Set is_local_file=true to distinguish locally ingested files from LlamaCloud files
   // Set private=false to mark the document as public (required for filtering)
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
-      is_local_file: "true",
       private: "false",
     };
   }
