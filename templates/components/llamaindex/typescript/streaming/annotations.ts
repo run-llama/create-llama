@@ -35,9 +35,9 @@ export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
     ) {
       const files = data.files as DocumentFile[];
       for (const file of files) {
-        if (Array.isArray(file.content)) {
+        if (Array.isArray(file.content.value)) {
           // it's an array, so it's an array of doc IDs
-          for (const id of file.content) {
+          for (const id of file.content.value) {
             ids.push(id);
           }
         }

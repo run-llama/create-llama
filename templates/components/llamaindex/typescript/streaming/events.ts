@@ -8,20 +8,18 @@ import {
 } from "llamaindex";
 import { LLamaCloudFileService } from "./service";
 
-export async function appendSourceData(
+export function appendSourceData(
   data: StreamData,
   sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
   try {
-    const nodes = await Promise.all(
-      sourceNodes.map(async (node) => ({
-        ...node.node.toMutableJSON(),
-        id: node.node.id_,
-        score: node.score ?? null,
-        url: await getNodeUrl(node.node.metadata),
-      })),
-    );
+    const nodes = sourceNodes.map((node) => ({
+      ...node.node.toMutableJSON(),
+      id: node.node.id_,
+      score: node.score ?? null,
+      url: getNodeUrl(node.node.metadata),
+    }));
     data.appendMessageAnnotation({
       type: "sources",
       data: {
@@ -76,18 +74,19 @@ export function createStreamTimeout(stream: StreamData) {
 export function createCallbackManager(stream: StreamData) {
   const callbackManager = new CallbackManager();
 
-  callbackManager.on("retrieve-end", async (data) => {
-    const { nodes, query } = data.detail.payload;
-    await appendSourceData(stream, nodes);
+  callbackManager.on("retrieve-end", (data) => {
+    const { nodes, query } = data.detail;
+    appendSourceData(stream, nodes);
     appendEventData(stream, `Retrieving context for query: '${query}'`);
     appendEventData(
       stream,
       `Retrieved ${nodes.length} sources to use as context for the query`,
     );
+    LLamaCloudFileService.downloadFiles(nodes); // don't await to avoid blocking chat streaming
   });
 
   callbackManager.on("llm-tool-call", (event) => {
-    const { name, input } = event.detail.payload.toolCall;
+    const { name, input } = event.detail.toolCall;
     const inputString = Object.entries(input)
       .map(([key, value]) => `${key}: ${value}`)
       .join(", ");
@@ -98,14 +97,14 @@ export function createCallbackManager(stream: StreamData) {
   });
 
   callbackManager.on("llm-tool-result", (event) => {
-    const { toolCall, toolResult } = event.detail.payload;
+    const { toolCall, toolResult } = event.detail;
     appendToolData(stream, toolCall, toolResult);
   });
 
   return callbackManager;
 }
 
-async function getNodeUrl(metadata: Metadata) {
+function getNodeUrl(metadata: Metadata) {
   if (!process.env.FILESERVER_URL_PREFIX) {
     console.warn(
       "FILESERVER_URL_PREFIX is not set. File URLs will not be generated.",
@@ -114,13 +113,11 @@ async function getNodeUrl(metadata: Metadata) {
   const fileName = metadata["file_name"];
   if (fileName && process.env.FILESERVER_URL_PREFIX) {
     // file_name exists and file server is configured
-    const isLocalFile = metadata["is_local_file"] === "true";
     const pipelineId = metadata["pipeline_id"];
-    if (pipelineId && !isLocalFile) {
+    if (pipelineId && metadata["private"] == null) {
       // file is from LlamaCloud and was not ingested locally
-      // TODO trigger but don't await file download and just use convention to generate the URL (see Python code)
-      // return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${pipelineId}\$${fileName}`;
-      return await LLamaCloudFileService.getFileUrl(fileName, pipelineId);
+      const name = LLamaCloudFileService.toDownloadedName(pipelineId, fileName);
+      return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
     }
     const isPrivate = metadata["private"] === "true";
     const folder = isPrivate ? "output/uploaded" : "data";

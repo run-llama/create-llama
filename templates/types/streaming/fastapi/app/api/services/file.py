@@ -19,12 +19,6 @@ from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 
 
-def file_metadata_func(*args, **kwargs) -> Dict:
-    default_meta = default_file_metadata_func(*args, **kwargs)
-    default_meta["private"] = "true"
-    return default_meta
-
-
 def get_llamaparse_parser():
     from app.engine.loaders import load_configs
     from app.engine.loaders.file import FileLoaderConfig, llama_parse_parser
