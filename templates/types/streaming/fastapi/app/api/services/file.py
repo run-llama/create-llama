@@ -79,6 +79,7 @@ class PrivateFileService:
         documents = reader.load_data(file_path)
         # Add custom metadata
         for doc in documents:
+            doc.metadata["doc_id"] = doc.doc_id
             doc.metadata["file_name"] = file_name
             doc.metadata["private"] = "true"
         return documents
