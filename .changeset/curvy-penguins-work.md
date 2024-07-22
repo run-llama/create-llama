@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-add filter for query in ts templates
+Filter private documents for Typescript (Using MetadataFilters) and update to LlamaIndexTS 0.5.6
