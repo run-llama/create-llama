@@ -18,7 +18,6 @@ export async function runPipeline(documents: Document[], filename: string) {
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
-      doc_id: document.id_,
       file_name: filename,
       private: "true", // to separate from other public documents
     };
