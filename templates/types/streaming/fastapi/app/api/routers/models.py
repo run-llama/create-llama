@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Set
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -96,7 +96,8 @@ class ChatData(BaseModel):
 
     def get_last_message_content(self) -> str:
         """
-        Get the content of the last message along with the data content if available. Fallback to use data content from previous messages
+        Get the content of the last message along with the data content if available.
+        Fallback to use data content from previous messages
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
@@ -131,7 +132,7 @@ class ChatData(BaseModel):
         """
         Get the document IDs from the chat messages
         """
-        document_ids = []
+        document_ids: List[str] = []
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
@@ -145,6 +146,21 @@ class ChatData(BaseModel):
         return list(set(document_ids))
 
 
+class LlamaCloudFile(BaseModel):
+    file_name: str
+    pipeline_id: str
+
+    def __eq__(self, other):
+        if not isinstance(other, LlamaCloudFile):
+            return NotImplemented
+        return (
+            self.file_name == other.file_name and self.pipeline_id == other.pipeline_id
+        )
+
+    def __hash__(self):
+        return hash((self.file_name, self.pipeline_id))
+
+
 class SourceNodes(BaseModel):
     id: str
     metadata: Dict[str, Any]
@@ -155,21 +171,7 @@ class SourceNodes(BaseModel):
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore):
         metadata = source_node.node.metadata
-        url = metadata.get("URL")
-
-        if not url:
-            file_name = metadata.get("file_name")
-            is_private = metadata.get("private", "false") == "true"
-            url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-            if not url_prefix:
-                logger.warning(
-                    "Warning: FILESERVER_URL_PREFIX not set in environment variables"
-                )
-            if file_name and url_prefix:
-                if is_private:
-                    url = f"{url_prefix}/output/uploaded/{file_name}"
-                else:
-                    url = f"{url_prefix}/data/{file_name}"
+        url = cls.get_url_from_metadata(metadata)
 
         return cls(
             id=source_node.node.node_id,
@@ -180,8 +182,52 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if not url_prefix:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
+            )
+        file_name = metadata.get("file_name")
+        if file_name and url_prefix:
+            # file_name exists and file server is configured
+            pipeline_id = metadata.get("pipeline_id")
+            is_local_file = metadata.get("is_local_file")
+            if pipeline_id and not is_local_file:
+                # file is from LlamaCloud and was not ingested locally
+                file_name = f"{pipeline_id}${file_name}"
+                return f"{url_prefix}/output/llamacloud/{file_name}"
+            is_private = metadata.get("private", "false") == "true"
+            if is_private:
+                return f"{url_prefix}/output/uploaded/{file_name}"
+            return f"{url_prefix}/data/{file_name}"
+        else:
+            # fallback to URL in metadata (e.g. for websites)
+            return metadata.get("URL")
+
+    @classmethod
     def from_source_nodes(cls, source_nodes: List[NodeWithScore]):
         return [cls.from_source_node(node) for node in source_nodes]
+
+    @staticmethod
+    def get_download_files(nodes: List[NodeWithScore]) -> Set[LlamaCloudFile]:
+        source_nodes = SourceNodes.from_source_nodes(nodes)
+        llama_cloud_files = [
+            LlamaCloudFile(
+                file_name=node.metadata.get("file_name"),
+                pipeline_id=node.metadata.get("pipeline_id"),
+            )
+            for node in source_nodes
+            if (
+                not node.metadata.get(
+                    "is_local_file"
+                )  # Download the file of the node flagged as not local
+                and node.metadata.get("pipeline_id") is not None
+                and node.metadata.get("file_name") is not None
+            )
+        ]
+        # Remove duplicates and return
+        return set(llama_cloud_files)
 
 
 class Result(BaseModel):

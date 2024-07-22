@@ -30,6 +30,10 @@ def generate_datasource():
 
     documents = get_documents()
 
+    # Set is_local_file=true to distinguish locally ingested files from LlamaCloud files
+    for doc in documents:
+        doc.metadata["is_local_file"] = "true"
+
     LlamaCloudIndex.from_documents(
         documents=documents,
         name=name,

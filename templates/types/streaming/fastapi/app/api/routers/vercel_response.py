@@ -74,7 +74,7 @@ class VercelStreamResponse(StreamingResponse):
             event_handler.is_done = True
 
             # Yield the source nodes
-            yield VercelStreamResponse.convert_data(
+            yield cls.convert_data(
                 {
                     "type": "sources",
                     "data": {

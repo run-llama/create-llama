@@ -21,9 +21,9 @@ init_settings()
 init_observability()
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
+logger = logging.getLogger("uvicorn")
 
 if environment == "dev":
-    logger = logging.getLogger("uvicorn")
     logger.warning("Running in development mode - allowing CORS for all origins")
     app.add_middleware(
         CORSMiddleware,
@@ -41,7 +41,11 @@ if environment == "dev":
 
 def mount_static_files(directory, path):
     if os.path.exists(directory):
-        app.mount(path, StaticFiles(directory=directory), name=f"{directory}-static")
+        for dir, _, _ in os.walk(directory):
+            relative_path = os.path.relpath(dir, directory)
+            mount_path = path if relative_path == "." else f"{path}/{relative_path}"
+            logger.info(f"Mounting static files '{dir}' at {mount_path}")
+            app.mount(mount_path, StaticFiles(directory=dir), name=f"{dir}-static")
 
 
 # Mount the data files to serve the file viewer
