@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Filter private documents for Typescript (Using MetadataFilters) and update to LlamaIndexTS 0.5.6
+Filter private documents for Typescript (Using MetadataFilters) and update to LlamaIndexTS 0.5.7
