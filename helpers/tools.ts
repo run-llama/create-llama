@@ -191,7 +191,7 @@ For better results, you can specify the region parameter to get results from a s
   {
     display: "Azure Code Interpreter",
     name: "azure_code_interpreter.AzureCodeInterpreterToolSpec",
-    supportedFrameworks: ["fastapi"],
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
     type: ToolType.LLAMAHUB,
     dependencies: [
       {
