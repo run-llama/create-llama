@@ -4,12 +4,5 @@ export default function webpack(config) {
     aws4: false,
   };
 
-  // Following lines will fix issues with onnxruntime-node when using pnpm
-  // See: https://github.com/vercel/next.js/issues/43433
-  config.externals.push({
-    "onnxruntime-node": "commonjs onnxruntime-node",
-    sharp: "commonjs sharp",
-  });
-
   return config;
 }

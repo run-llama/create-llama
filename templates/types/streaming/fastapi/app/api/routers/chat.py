@@ -76,8 +76,8 @@ def generate_filters(doc_ids):
             filters=[
                 MetadataFilter(
                     key="private",
-                    value="true",
-                    operator="!=",  # type: ignore
+                    value=["true"],
+                    operator="nin",  # type: ignore
                 ),
                 MetadataFilter(
                     key="doc_id",
