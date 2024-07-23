@@ -1,6 +1,10 @@
-# Create LlamaIndex App
+# Create Llama
 
 The easiest way to get started with [LlamaIndex](https://www.llamaindex.ai/) is by using `create-llama`. This CLI tool enables you to quickly start building a new LlamaIndex application, with everything set up for you.
+
+https://github.com/user-attachments/assets/dd3edc36-4453-4416-91c2-d24326c6c167
+
+## Get started
 
 Just run
 
@@ -54,7 +58,7 @@ Optionally generate a frontend if you've selected the Python or Express back-end
 
 ## Customizing the AI models
 
-The app will default to OpenAI's `gpt-4-turbo` LLM and `text-embedding-3-large` embedding model.
+The app will default to OpenAI's `gpt-4o-mini` LLM and `text-embedding-3-large` embedding model.
 
 If you want to use different OpenAI models, add the `--ask-models` CLI parameter.
 
