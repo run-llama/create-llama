@@ -25,7 +25,7 @@ class File(BaseModel):
     filetype: str
 
 
-class AnnotationData(BaseModel):
+class AnnotationFileData(BaseModel):
     files: List[File] = Field(
         default=[],
         description="List of files",
@@ -50,7 +50,7 @@ class AnnotationData(BaseModel):
 
 class Annotation(BaseModel):
     type: str
-    data: AnnotationData
+    data: AnnotationFileData | List[str]
 
     def to_content(self) -> str | None:
         if self.type == "document_file":

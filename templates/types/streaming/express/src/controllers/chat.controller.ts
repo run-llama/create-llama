@@ -67,7 +67,11 @@ export const chat = async (req: Request, res: Response) => {
     });
 
     // Return a stream, which can be consumed by the Vercel/AI client
-    const stream = LlamaIndexStream(response, vercelStreamData);
+    const stream = LlamaIndexStream(
+      response,
+      vercelStreamData,
+      messages as ChatMessage[],
+    );
 
     return streamToResponse(stream, res, {}, vercelStreamData);
   } catch (error) {

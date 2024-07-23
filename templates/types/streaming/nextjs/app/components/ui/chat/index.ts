@@ -11,6 +11,7 @@ export enum MessageAnnotationType {
   SOURCES = "sources",
   EVENTS = "events",
   TOOLS = "tools",
+  SUGGESTED_QUESTIONS = "suggested_questions",
 }
 
 export type ImageData = {
@@ -67,12 +68,15 @@ export type ToolData = {
   };
 };
 
+export type SuggestedQuestionsData = string[];
+
 export type AnnotationData =
   | ImageData
   | DocumentFileData
   | SourceData
   | EventData
-  | ToolData;
+  | ToolData
+  | SuggestedQuestionsData;
 
 export type MessageAnnotation = {
   type: MessageAnnotationType;

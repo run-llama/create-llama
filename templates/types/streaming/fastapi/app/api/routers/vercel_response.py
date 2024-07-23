@@ -6,7 +6,8 @@ from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 from app.api.routers.events import EventCallbackHandler
-from app.api.routers.models import SourceNodes
+from app.api.routers.models import ChatData, Message, SourceNodes
+from app.api.services.suggestion import NextQuestionSuggestion
 
 
 class VercelStreamResponse(StreamingResponse):
@@ -16,15 +17,6 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
-
-    def __init__(
-        self,
-        request: Request,
-        event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
-    ):
-        content = self.content_generator(request, event_handler, response)
-        super().__init__(content=content)
 
     @classmethod
     def convert_text(cls, token: str):
@@ -37,17 +29,48 @@ class VercelStreamResponse(StreamingResponse):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
+    def __init__(
+        self,
+        request: Request,
+        event_handler: EventCallbackHandler,
+        response: StreamingAgentChatResponse,
+        chat_data: ChatData,
+    ):
+        content = VercelStreamResponse.content_generator(
+            request, event_handler, response, chat_data
+        )
+        super().__init__(content=content)
+
     @classmethod
     async def content_generator(
         cls,
         request: Request,
         event_handler: EventCallbackHandler,
         response: StreamingAgentChatResponse,
+        chat_data: ChatData,
     ):
         # Yield the text response
         async def _chat_response_generator():
+            final_response = ""
             async for token in response.async_response_gen():
-                yield cls.convert_text(token)
+                final_response += token
+                yield VercelStreamResponse.convert_text(token)
+
+            # Generate questions that user might interested to
+            conversation = chat_data.messages + [
+                Message(role="assistant", content=final_response)
+            ]
+            questions = await NextQuestionSuggestion.suggest_next_questions(
+                conversation
+            )
+            if len(questions) > 0:
+                yield VercelStreamResponse.convert_data(
+                    {
+                        "type": "suggested_questions",
+                        "data": questions,
+                    }
+                )
+
             # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
 
