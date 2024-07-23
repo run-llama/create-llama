@@ -1,5 +1,15 @@
 # create-llama
 
+## 0.1.21
+
+### Patch Changes
+
+- bd4714c: Filter private documents for Typescript (Using MetadataFilters) and update to LlamaIndexTS 0.5.7
+- 58e6c15: Add using LlamaParse for private file uploader
+- 455ab68: Display files in sources using LlamaCloud indexes.
+- 23b7357: Use gpt-4o-mini as default model
+- 0900413: Add suggestions for next questions.
+
 ## 0.1.20
 
 ### Patch Changes
