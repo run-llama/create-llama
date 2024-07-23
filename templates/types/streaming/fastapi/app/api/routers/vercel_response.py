@@ -53,14 +53,15 @@ class VercelStreamResponse(StreamingResponse):
         async def _chat_response_generator():
             final_response = ""
             async for token in response.async_response_gen():
-                final_response = token
+                final_response += token
                 yield VercelStreamResponse.convert_text(token)
 
             # Generate questions that user might interested to
+            conversation = chat_data.messages + [
+                Message(role="assistant", content=final_response)
+            ]
             questions = await NextQuestionSuggestion.suggest_next_questions(
-                chat_data.messages
-                + [Message(role="assistant", content=final_response)],
-                3,
+                conversation
             )
             if len(questions) > 0:
                 yield VercelStreamResponse.convert_data(

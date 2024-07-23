@@ -12,6 +12,9 @@ Your answer should be wrapped in three sticks which follows the following format
 <question 2>\`\`\`
 `;
 
+const N_QUESTIONS_TO_GENERATE = 3;
+
+// TODO: instead of parsing the LLM's result we can use structured predict, once LITS supports it
 function extractQuestions(text: string): string[] {
   // Extract the text inside the triple backticks
   const contentMatch = text.match(/```(.*?)```/s);
@@ -26,10 +29,9 @@ function extractQuestions(text: string): string[] {
   return questions;
 }
 
-export function generateNextQuestions(
+export async function generateNextQuestions(
   conversation: ChatMessage[],
-  numberOfQuestions: number = 3,
-  onComplete?: (result: string[]) => void,
+  numberOfQuestions: number = N_QUESTIONS_TO_GENERATE,
 ) {
   const llm = Settings.llm;
 
@@ -42,14 +44,12 @@ export function generateNextQuestions(
     conversationText,
   ).replace("$number_of_questions", numberOfQuestions.toString());
 
-  return llm
-    .complete({ prompt: message })
-    .then((response) => {
-      const questions = extractQuestions(response.text);
-      onComplete?.(questions);
-    })
-    .catch((error) => {
-      console.error("Error: ", error);
-      throw error;
-    });
+  try {
+    const response = await llm.complete({ prompt: message });
+    const questions = extractQuestions(response.text);
+    return questions;
+  } catch (error) {
+    console.error("Error: ", error);
+    throw error;
+  }
 }
