@@ -340,17 +340,12 @@ Please check ${cyan(
     }
   } else if (program.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
-    const isUsingLlamaCloud = program.dataSources.some(
-      (ds: TemplateDataSource) => ds.type === "llamacloud",
-    );
-
     await runApp(
       root,
       program.frontend,
       program.framework,
       program.port,
       program.externalPort,
-      isUsingLlamaCloud,
     );
   }
 }

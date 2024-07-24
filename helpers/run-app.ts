@@ -30,7 +30,6 @@ export async function runApp(
   framework: TemplateFramework,
   port?: number,
   externalPort?: number,
-  isUsingLlamaCloud?: boolean,
 ): Promise<any> {
   let backendAppProcess: ChildProcess;
   let frontendAppProcess: ChildProcess | undefined;
@@ -57,11 +56,11 @@ export async function runApp(
     ];
   } else if (framework === "nextjs") {
     backendCommand = "npm";
-    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "dev"];
+    backendArgs = ["run", "dev"];
     backendPort = frontendPort;
   } else {
     backendCommand = "npm";
-    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "dev"];
+    backendArgs = ["run", "dev"];
   }
 
   if (frontend) {

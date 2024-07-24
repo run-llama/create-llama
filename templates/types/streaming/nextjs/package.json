@@ -4,7 +4,6 @@
   "scripts": {
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
-    "dev:generate": "npm run generate && npm run dev",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
