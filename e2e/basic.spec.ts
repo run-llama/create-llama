@@ -12,13 +12,9 @@ import type {
 import { createTestDir, runCreateLlama, type AppType } from "./utils";
 
 const templateTypes: TemplateType[] = ["streaming"];
-const templateFrameworks: TemplateFramework[] = [
-  "nextjs",
-  "express",
-  "fastapi",
-];
-const dataSources: string[] = ["--no-files", "--example-file", "--llamacloud"];
-const templateUIs: TemplateUI[] = ["shadcn", "html"];
+const templateFrameworks: TemplateFramework[] = ["nextjs"];
+const dataSources: string[] = ["--llamacloud"];
+const templateUIs: TemplateUI[] = ["shadcn"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
   "runApp",

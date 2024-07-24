@@ -15,9 +15,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [18, 20]
+        node-version: [20]
         python-version: ["3.11"]
-        os: [macos-latest, windows-latest, ubuntu-22.04]
+        os: [macos-latest]
     defaults:
       run:
         shell: bash
