@@ -1,4 +1,4 @@
-import { PDFViewer, PdfFocusProvider } from "@llamaindex/pdf-viewer";
+import dynamic from "next/dynamic";
 import { Button } from "../../button";
 import {
   Drawer,
@@ -15,6 +15,18 @@ export interface PdfDialogProps {
   url: string;
   trigger: React.ReactNode;
 }
+
+// Dynamic imports for client-side rendering only
+const PDFViewer = dynamic(
+  () => import("@llamaindex/pdf-viewer").then((module) => module.PDFViewer),
+  { ssr: false },
+);
+
+const PdfFocusProvider = dynamic(
+  () =>
+    import("@llamaindex/pdf-viewer").then((module) => module.PdfFocusProvider),
+  { ssr: false },
+);
 
 export default function PdfDialog(props: PdfDialogProps) {
   return (
