@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Upgrade pdf component
+Upgrade pdf viewer
