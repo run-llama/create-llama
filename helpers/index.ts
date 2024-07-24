@@ -42,8 +42,12 @@ async function generateContextData(
     const llamaCloudKeyConfigured = useLlamaParse
       ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
       : true;
+    // only generate for non-vector db or llamacloud with key
+    const canGenerateVectorDb =
+      vectorDb === "none" ||
+      (vectorDb === "llamacloud" && llamaCloudKeyConfigured);
     const hasVectorDb = vectorDb && vectorDb !== "none";
-    if (modelConfigured && llamaCloudKeyConfigured && !hasVectorDb) {
+    if (modelConfigured && llamaCloudKeyConfigured && canGenerateVectorDb) {
       // If all the required environment variables are set, run the generate script
       if (framework === "fastapi") {
         if (isHavingPoetryLockFile()) {
