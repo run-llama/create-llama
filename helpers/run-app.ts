@@ -57,11 +57,11 @@ export async function runApp(
     ];
   } else if (framework === "nextjs") {
     backendCommand = "npm";
-    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "generate"];
+    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "dev"];
     backendPort = frontendPort;
   } else {
     backendCommand = "npm";
-    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "generate"];
+    backendArgs = ["run", isUsingLlamaCloud ? "dev:generate" : "dev"];
   }
 
   if (frontend) {
