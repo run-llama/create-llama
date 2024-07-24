@@ -196,7 +196,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "llama-index-tools-azure-code-interpreter",
-        version: "0.1.1",
+        version: "0.2.0",
       },
     ],
     envVars: [
