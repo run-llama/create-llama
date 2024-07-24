@@ -110,6 +110,8 @@ export async function runCreateLlama(
     "--no-llama-parse",
     "--observability",
     "none",
+    "--llama-cloud-key",
+    process.env.LLAMA_CLOUD_API_KEY,
   ].join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {

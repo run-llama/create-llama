@@ -9,7 +9,7 @@ import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
-import { getDataSources } from "./helpers/datasources";
+import { EXAMPLE_FILE, getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
 import { initializeGlobalAgent } from "./helpers/proxy";
@@ -194,8 +194,16 @@ if (process.argv.includes("--no-llama-parse")) {
 program.askModels = process.argv.includes("--ask-models");
 if (process.argv.includes("--no-files")) {
   program.dataSources = [];
-} else {
+} else if (process.argv.includes("--example-file")) {
   program.dataSources = getDataSources(program.files, program.exampleFile);
+} else {
+  program.dataSources = [
+    {
+      type: "llamacloud",
+      config: {},
+    },
+    EXAMPLE_FILE,
+  ];
 }
 
 const packageManager = !!program.useNpm

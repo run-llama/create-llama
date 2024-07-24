@@ -670,7 +670,7 @@ export const askQuestions = async (
   }
 
   // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
-  if (isUsingLlamaCloud || program.useLlamaParse) {
+  if ((isUsingLlamaCloud || program.useLlamaParse) && !program.llamaCloudKey) {
     if (ciInfo.isCI) {
       program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
     } else {

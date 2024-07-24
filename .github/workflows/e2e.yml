@@ -62,6 +62,7 @@ jobs:
         run: pnpm run e2e
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
         working-directory: .
 
       - uses: actions/upload-artifact@v3
