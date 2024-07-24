@@ -45,6 +45,8 @@ export async function runApp(
 
   let backendCommand = "";
   let backendArgs: string[];
+  let generateArgs: string[];
+
   if (framework === "fastapi") {
     backendCommand = "poetry";
     backendArgs = [
@@ -54,17 +56,25 @@ export async function runApp(
       "--host=0.0.0.0",
       "--port=" + backendPort,
     ];
+    generateArgs = ["run", "generate"];
   } else if (framework === "nextjs") {
     backendCommand = "npm";
     backendArgs = ["run", "dev"];
     backendPort = frontendPort;
+    generateArgs = ["run", "generate"];
   } else {
     backendCommand = "npm";
     backendArgs = ["run", "dev"];
+    generateArgs = ["run", "generate"];
   }
 
   if (frontend) {
     return new Promise((resolve, reject) => {
+      createProcess(backendCommand, generateArgs, {
+        stdio: "inherit",
+        cwd: path.join(appPath, "backend"),
+        env: process.env,
+      });
       backendAppProcess = createProcess(backendCommand, backendArgs, {
         stdio: "inherit",
         cwd: path.join(appPath, "backend"),
@@ -78,6 +88,11 @@ export async function runApp(
     });
   } else {
     return new Promise((resolve, reject) => {
+      createProcess(backendCommand, generateArgs, {
+        stdio: "inherit",
+        cwd: path.join(appPath, "backend"),
+        env: process.env,
+      });
       backendAppProcess = createProcess(backendCommand, backendArgs, {
         stdio: "inherit",
         cwd: path.join(appPath),

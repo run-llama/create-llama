@@ -196,7 +196,7 @@ if (process.argv.includes("--no-files")) {
   program.dataSources = [];
 } else if (process.argv.includes("--example-file")) {
   program.dataSources = getDataSources(program.files, program.exampleFile);
-} else {
+} else if (process.argv.includes("--llamacloud")) {
   program.dataSources = [
     {
       type: "llamacloud",
