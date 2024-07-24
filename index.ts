@@ -9,6 +9,7 @@ import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
+import { TemplateDataSource } from "./helpers";
 import { EXAMPLE_FILE, getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
@@ -339,12 +340,17 @@ Please check ${cyan(
     }
   } else if (program.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
+    const isUsingLlamaCloud = program.dataSources.some(
+      (ds: TemplateDataSource) => ds.type === "llamacloud",
+    );
+
     await runApp(
       root,
       program.frontend,
       program.framework,
       program.port,
       program.externalPort,
+      isUsingLlamaCloud,
     );
   }
 }
