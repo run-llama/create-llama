@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add Azure code interpreter for Python
+Add Azure code interpreter for Python and TS
