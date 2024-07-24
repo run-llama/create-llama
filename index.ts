@@ -9,7 +9,6 @@ import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
-import { TemplateDataSource } from "./helpers";
 import { EXAMPLE_FILE, getDataSources } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
