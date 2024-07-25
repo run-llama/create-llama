@@ -41,6 +41,7 @@ export async function generateNextQuestions(
 // TODO: instead of parsing the LLM's result we can use structured predict, once LITS supports it
 function extractQuestions(text: string): string[] {
   // Extract the text inside the triple backticks
+  // @ts-ignore
   const contentMatch = text.match(/```(.*?)```/s);
   const content = contentMatch ? contentMatch[1] : "";
 
