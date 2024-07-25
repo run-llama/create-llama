@@ -18,6 +18,7 @@ export type ModelConfig = {
   isConfigured(): boolean;
 };
 export type TemplateType =
+  | "extractor"
   | "streaming"
   | "community"
   | "llamapack"

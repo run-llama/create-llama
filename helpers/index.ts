@@ -163,7 +163,11 @@ export const installTemplate = async (
     // This is a backend, so we need to copy the test data and create the env file.
 
     // Copy the environment file to the target directory.
-    if (props.template === "streaming" || props.template === "multiagent") {
+    if (
+      props.template === "streaming" ||
+      props.template === "multiagent" ||
+      props.template === "extractor"
+    ) {
       await createBackendEnvFile(props.root, {
         modelConfig: props.modelConfig,
         llamaCloudKey: props.llamaCloudKey,
