@@ -1,4 +1,3 @@
-import ciInfo from "ci-info";
 import fs from "fs/promises";
 import path from "path";
 import { TOOL_SYSTEM_PROMPT_ENV_VAR, Tool } from "./tools";
@@ -10,7 +9,6 @@ import {
   TemplateVectorDB,
 } from "./types";
 
-import { randomUUID } from "crypto";
 import { TSYSTEMS_LLMHUB_API_URL } from "./providers/llmhub";
 
 export type EnvVar = {
@@ -144,12 +142,12 @@ const getVectorDBEnvs = (
           name: "LLAMA_CLOUD_INDEX_NAME",
           description:
             "The name of the LlamaCloud index to use (part of the LlamaCloud project).",
-          value: ciInfo.isCI ? randomUUID() : "test",
+          value: "test",
         },
         {
           name: "LLAMA_CLOUD_PROJECT_NAME",
           description: "The name of the LlamaCloud project.",
-          value: ciInfo.isCI ? "create-llama" : "Default",
+          value: "Default",
         },
         {
           name: "LLAMA_CLOUD_BASE_URL",

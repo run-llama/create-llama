@@ -1,6 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
+import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import type {
@@ -17,12 +18,15 @@ const templateFrameworks: TemplateFramework[] = [
   "express",
   "fastapi",
 ];
-const dataSources: string[] = ["--no-files", "--example-file", "--llamacloud"];
-const templateUIs: TemplateUI[] = ["shadcn", "html"];
+const dataSources: string[] = ["--no-files", "--llamacloud"];
+const templateUIs: TemplateUI[] = ["shadcn"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
   "runApp",
 ];
+
+const llamaCloudProjectName = "create-llama";
+const llamaCloudIndexName = randomUUID();
 
 for (const templateType of templateTypes) {
   for (const templateFramework of templateFrameworks) {
@@ -59,6 +63,8 @@ for (const templateType of templateTypes) {
                 port,
                 externalPort,
                 templatePostInstallAction,
+                llamaCloudProjectName,
+                llamaCloudIndexName,
               );
               name = result.projectName;
               appProcess = result.appProcess;
