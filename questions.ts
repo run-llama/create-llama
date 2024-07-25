@@ -670,22 +670,24 @@ export const askQuestions = async (
   }
 
   // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
-  if ((isUsingLlamaCloud || program.useLlamaParse) && !program.llamaCloudKey) {
-    if (ciInfo.isCI) {
-      program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
-    } else {
-      // Ask for LlamaCloud API key
-      const { llamaCloudKey } = await prompts(
-        {
-          type: "text",
-          name: "llamaCloudKey",
-          message:
-            "Please provide your LlamaCloud API key (leave blank to skip):",
-        },
-        questionHandlers,
-      );
-      program.llamaCloudKey = preferences.llamaCloudKey =
-        llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+  if (isUsingLlamaCloud || program.useLlamaParse) {
+    if (!program.llamaCloudKey) { // if already set, don't ask again
+      if (ciInfo.isCI) {
+        program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
+      } else {
+        // Ask for LlamaCloud API key
+        const { llamaCloudKey } = await prompts(
+          {
+            type: "text",
+            name: "llamaCloudKey",
+            message:
+              "Please provide your LlamaCloud API key (leave blank to skip):",
+          },
+          questionHandlers,
+        );
+        program.llamaCloudKey = preferences.llamaCloudKey =
+          llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+      }
     }
   }
 

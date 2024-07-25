@@ -19,7 +19,7 @@ const templateFrameworks: TemplateFramework[] = [
   "fastapi",
 ];
 const dataSources: string[] = ["--no-files", "--llamacloud"];
-const templateUIs: TemplateUI[] = ["shadcn"];
+const templateUIs: TemplateUI[] = ["shadcn", "html"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
   "runApp",
