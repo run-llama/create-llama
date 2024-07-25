@@ -1,7 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
-import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import type {
@@ -26,7 +25,7 @@ const templatePostInstallActions: TemplatePostInstallAction[] = [
 ];
 
 const llamaCloudProjectName = "create-llama";
-const llamaCloudIndexName = randomUUID();
+const llamaCloudIndexName = "e2e-test";
 
 for (const templateType of templateTypes) {
   for (const templateFramework of templateFrameworks) {

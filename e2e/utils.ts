@@ -75,6 +75,11 @@ export async function runCreateLlama(
   llamaCloudProjectName: string,
   llamaCloudIndexName: string,
 ): Promise<CreateLlamaResult> {
+  if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
+    throw new Error(
+      "Setting the OPENAI_API_KEY and LLAMA_CLOUD_API_KEY is mandatory to run tests",
+    );
+  }
   const name = [
     templateType,
     templateFramework,
@@ -94,8 +99,8 @@ export async function runCreateLlama(
     templateUI,
     "--vector-db",
     vectorDb,
-    process.env.OPENAI_API_KEY ? "--open-ai-key" : "",
-    process.env.OPENAI_API_KEY || "",
+    "--open-ai-key",
+    process.env.OPENAI_API_KEY,
     appType,
     "--use-pnpm",
     "--port",
@@ -109,8 +114,8 @@ export async function runCreateLlama(
     "--no-llama-parse",
     "--observability",
     "none",
-    process.env.LLAMA_CLOUD_API_KEY ? "--llama-cloud-key" : "",
-    process.env.LLAMA_CLOUD_API_KEY || "",
+    "--llama-cloud-key",
+    process.env.LLAMA_CLOUD_API_KEY,
   ].join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {
