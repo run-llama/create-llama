@@ -1,6 +1,6 @@
 {
   "name": "create-llama",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "Create LlamaIndex-powered apps with one command",
   "keywords": [
     "rag",
