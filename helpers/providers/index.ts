@@ -3,13 +3,13 @@ import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
+import { askAzureQuestions } from "./azure";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
 import { askLLMHubQuestions } from "./llmhub";
 import { askMistralQuestions } from "./mistral";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
-import { askAzureQuestions } from "./azure";
 
 const DEFAULT_MODEL_PROVIDER = "openai";
 
