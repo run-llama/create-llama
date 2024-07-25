@@ -45,6 +45,8 @@ export const initSettings = async () => {
     case "mistral":
       initMistralAI();
       break;
+    case "azure-openai":
+      initAzureOpenAI();
     default:
       initOpenAI();
       break;
@@ -55,7 +57,7 @@ export const initSettings = async () => {
 
 function initOpenAI() {
   Settings.llm = new OpenAI({
-    model: process.env.MODEL ?? "gpt-4o-mini",
+    model: process.env.MODEL ?? "gpt-3.5-turbo",
     maxTokens: process.env.LLM_MAX_TOKENS
       ? Number(process.env.LLM_MAX_TOKENS)
       : undefined,
@@ -65,6 +67,31 @@ function initOpenAI() {
     dimensions: process.env.EMBEDDING_DIM
       ? parseInt(process.env.EMBEDDING_DIM)
       : undefined,
+  });
+}
+
+function initAzureOpenAI() {
+  const azureConfig = {
+    model: process.env.MODEL ?? "gpt-4o",
+    apiKey: process.env.AZURE_OPENAI_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion:
+      process.env.AZURE_OPENAI_API_VERSION || process.env.OPENAI_API_VERSION,
+    deployment: process.env.AZURE_OPENAI_DEPLOYMENT,
+  };
+
+  Settings.llm = new OpenAI({
+    maxTokens: process.env.LLM_MAX_TOKENS
+      ? Number(process.env.LLM_MAX_TOKENS)
+      : undefined,
+    azure: azureConfig,
+  });
+
+  Settings.embedModel = new OpenAIEmbedding({
+    dimensions: process.env.EMBEDDING_DIM
+      ? parseInt(process.env.EMBEDDING_DIM)
+      : undefined,
+    azure: azureConfig,
   });
 }
 

@@ -75,6 +75,8 @@ def init_azure_openai():
     from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
     from llama_index.llms.azure_openai import AzureOpenAI
 
+    # TODO: Check environment variables are set correctly
+
     llm_deployment = os.getenv("AZURE_OPENAI_LLM_DEPLOYMENT")
     embedding_deployment = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
     max_tokens = os.getenv("LLM_MAX_TOKENS")

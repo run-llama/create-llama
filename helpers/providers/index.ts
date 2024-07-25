@@ -9,6 +9,7 @@ import { askLLMHubQuestions } from "./llmhub";
 import { askMistralQuestions } from "./mistral";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
+import { askAzureQuestions } from "./azure";
 
 const DEFAULT_MODEL_PROVIDER = "openai";
 
@@ -34,6 +35,7 @@ export async function askModelConfig({
       { title: "Anthropic", value: "anthropic" },
       { title: "Gemini", value: "gemini" },
       { title: "Mistral", value: "mistral" },
+      { title: "AzureOpenAI", value: "azure" },
     ];
 
     if (framework === "fastapi") {
@@ -68,6 +70,9 @@ export async function askModelConfig({
       break;
     case "mistral":
       modelConfig = await askMistralQuestions({ askModels });
+      break;
+    case "azure":
+      modelConfig = await askAzureQuestions({ askModels });
       break;
     case "t-systems":
       modelConfig = await askLLMHubQuestions({ askModels });

@@ -193,6 +193,16 @@ const getAdditionalDependencies = (
         version: "0.1.4",
       });
       break;
+    case "azure":
+      dependencies.push({
+        name: "llama-index-llms-azure-openai",
+        version: "0.1.10",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-azure-openai",
+        version: "0.1.11",
+      });
+      break;
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",

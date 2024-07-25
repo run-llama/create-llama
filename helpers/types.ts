@@ -8,6 +8,7 @@ export type ModelProvider =
   | "anthropic"
   | "gemini"
   | "mistral"
+  | "azure"
   | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
