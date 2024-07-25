@@ -17,12 +17,15 @@ const templateFrameworks: TemplateFramework[] = [
   "express",
   "fastapi",
 ];
-const dataSources: string[] = ["--no-files", "--example-file"];
+const dataSources: string[] = ["--no-files", "--llamacloud"];
 const templateUIs: TemplateUI[] = ["shadcn", "html"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
   "runApp",
 ];
+
+const llamaCloudProjectName = "create-llama";
+const llamaCloudIndexName = "e2e-test";
 
 for (const templateType of templateTypes) {
   for (const templateFramework of templateFrameworks) {
@@ -31,6 +34,10 @@ for (const templateType of templateTypes) {
         for (const templatePostInstallAction of templatePostInstallActions) {
           const appType: AppType =
             templateFramework === "nextjs" ? "" : "--frontend";
+          const userMessage =
+            dataSource !== "--no-files"
+              ? "Physical standard for letters"
+              : "Hello";
           test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
             let port: number;
             let externalPort: number;
@@ -55,6 +62,8 @@ for (const templateType of templateTypes) {
                 port,
                 externalPort,
                 templatePostInstallAction,
+                llamaCloudProjectName,
+                llamaCloudIndexName,
               );
               name = result.projectName;
               appProcess = result.appProcess;
@@ -75,7 +84,7 @@ for (const templateType of templateTypes) {
             }) => {
               test.skip(templatePostInstallAction !== "runApp");
               await page.goto(`http://localhost:${port}`);
-              await page.fill("form input", "hello");
+              await page.fill("form input", userMessage);
               const [response] = await Promise.all([
                 page.waitForResponse(
                   (res) => {
@@ -106,7 +115,7 @@ for (const templateType of templateTypes) {
                     messages: [
                       {
                         role: "user",
-                        content: "Hello",
+                        content: userMessage,
                       },
                     ],
                   },

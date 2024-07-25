@@ -23,6 +23,31 @@ import {
 } from "./types";
 import { installTSTemplate } from "./typescript";
 
+const checkForGenerateScript = (
+  modelConfig: ModelConfig,
+  vectorDb?: TemplateVectorDB,
+  llamaCloudKey?: string,
+  useLlamaParse?: boolean,
+) => {
+  const missingSettings = [];
+
+  if (!modelConfig.isConfigured()) {
+    missingSettings.push("your model provider API key");
+  }
+
+  const llamaCloudApiKey = llamaCloudKey ?? process.env["LLAMA_CLOUD_API_KEY"];
+  const isRequiredLlamaCloudKey = useLlamaParse || vectorDb === "llamacloud";
+  if (isRequiredLlamaCloudKey && !llamaCloudApiKey) {
+    missingSettings.push("your LLAMA_CLOUD_API_KEY");
+  }
+
+  if (vectorDb !== "none" && vectorDb !== "llamacloud") {
+    missingSettings.push("your Vector DB environment variables");
+  }
+
+  return missingSettings;
+};
+
 // eslint-disable-next-line max-params
 async function generateContextData(
   framework: TemplateFramework,
@@ -38,12 +63,15 @@ async function generateContextData(
         ? "poetry run generate"
         : `${packageManager} run generate`,
     )}`;
-    const modelConfigured = modelConfig.isConfigured();
-    const llamaCloudKeyConfigured = useLlamaParse
-      ? llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-      : true;
-    const hasVectorDb = vectorDb && vectorDb !== "none";
-    if (modelConfigured && llamaCloudKeyConfigured && !hasVectorDb) {
+
+    const missingSettings = checkForGenerateScript(
+      modelConfig,
+      vectorDb,
+      llamaCloudKey,
+      useLlamaParse,
+    );
+
+    if (!missingSettings.length) {
       // If all the required environment variables are set, run the generate script
       if (framework === "fastapi") {
         if (isHavingPoetryLockFile()) {
@@ -63,15 +91,8 @@ async function generateContextData(
       }
     }
 
-    // generate the message of what to do to run the generate script manually
-    const settings = [];
-    if (!modelConfigured) settings.push("your model provider API key");
-    if (!llamaCloudKeyConfigured) settings.push("your Llama Cloud key");
-    if (hasVectorDb) settings.push("your Vector DB environment variables");
-    const settingsMessage =
-      settings.length > 0 ? `After setting ${settings.join(" and ")}, ` : "";
-    const generateMessage = `run ${runGenerate} to generate the context data.`;
-    console.log(`\n${settingsMessage}${generateMessage}\n\n`);
+    const settingsMessage = `After setting ${missingSettings.join(" and ")}, run ${runGenerate} to generate the context data.`;
+    console.log(`\n${settingsMessage}\n\n`);
   }
 }
 
