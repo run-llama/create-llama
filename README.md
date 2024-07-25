@@ -24,7 +24,7 @@ to start the development server. You can then visit [http://localhost:3000](http
 
 ## What you'll get
 
-- A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data or interact with your agent 
+- A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data or interact with your agent
 - Your choice of 3 back-ends:
   - **Next.js**: if you select this option, you’ll have a full-stack Next.js application that you can deploy to a host like [Vercel](https://vercel.com/) in just a few clicks. This uses [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex), our TypeScript library.
   - **Express**: if you want a more traditional Node.js application you can generate an Express backend. This also uses LlamaIndex.TS.
