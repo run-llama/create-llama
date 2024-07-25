@@ -3,36 +3,27 @@ import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
 import { questionHandlers } from "../../questions";
 
-const ALL_AZURE_OPENAI_CHAT_MODELS: Record<
-  string,
-  { contextWindow: number; openAIModel: string }
-> = {
-  "gpt-35-turbo": { contextWindow: 4096, openAIModel: "gpt-3.5-turbo" },
+const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
+  "gpt-35-turbo": { openAIModel: "gpt-3.5-turbo" },
   "gpt-35-turbo-16k": {
-    contextWindow: 16384,
     openAIModel: "gpt-3.5-turbo-16k",
   },
-  "gpt-4o": { contextWindow: 128000, openAIModel: "gpt-4o" },
-  "gpt-4": { contextWindow: 8192, openAIModel: "gpt-4" },
-  "gpt-4-32k": { contextWindow: 32768, openAIModel: "gpt-4-32k" },
+  "gpt-4o": { openAIModel: "gpt-4o" },
+  "gpt-4": { openAIModel: "gpt-4" },
+  "gpt-4-32k": { openAIModel: "gpt-4-32k" },
   "gpt-4-turbo": {
-    contextWindow: 128000,
     openAIModel: "gpt-4-turbo",
   },
   "gpt-4-turbo-2024-04-09": {
-    contextWindow: 128000,
     openAIModel: "gpt-4-turbo",
   },
   "gpt-4-vision-preview": {
-    contextWindow: 128000,
     openAIModel: "gpt-4-vision-preview",
   },
   "gpt-4-1106-preview": {
-    contextWindow: 128000,
     openAIModel: "gpt-4-1106-preview",
   },
   "gpt-4o-2024-05-13": {
-    contextWindow: 128000,
     openAIModel: "gpt-4o-2024-05-13",
   },
 };
@@ -41,27 +32,20 @@ const ALL_AZURE_OPENAI_EMBEDDING_MODELS: Record<
   string,
   {
     dimensions: number;
-    dimensionOptions?: number[];
     openAIModel: string;
-    maxTokens: number;
   }
 > = {
   "text-embedding-ada-002": {
     dimensions: 1536,
     openAIModel: "text-embedding-ada-002",
-    maxTokens: 8191,
   },
   "text-embedding-3-small": {
     dimensions: 1536,
-    dimensionOptions: [512, 1536],
     openAIModel: "text-embedding-3-small",
-    maxTokens: 8191,
   },
   "text-embedding-3-large": {
     dimensions: 3072,
-    dimensionOptions: [256, 1024, 3072],
     openAIModel: "text-embedding-3-large",
-    maxTokens: 8191,
   },
 };
 
