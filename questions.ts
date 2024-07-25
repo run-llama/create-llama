@@ -342,6 +342,7 @@ export const askQuestions = async (
               title: "Multi-agent app (using llama-agents)",
               value: "multiagent",
             },
+            { title: "Structured Extractor", value: "extractor" },
             {
               title: `Community template from ${styledRepo}`,
               value: "community",
@@ -405,7 +406,7 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
-  if (program.template === "multiagent") {
+  if (program.template === "multiagent" || program.template === "extractor") {
     // TODO: multi-agents currently only supports FastAPI
     program.framework = preferences.framework = "fastapi";
   }
