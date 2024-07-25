@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.1.22
+
+### Patch Changes
+
+- b0becaa: Add e2e testing for llamacloud datasource
+- df9cca5: Upgrade pdf viewer
+
 ## 0.1.21
 
 ### Patch Changes
