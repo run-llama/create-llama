@@ -2,8 +2,6 @@
 
 The easiest way to get started with [LlamaIndex](https://www.llamaindex.ai/) is by using `create-llama`. This CLI tool enables you to quickly start building a new LlamaIndex application, with everything set up for you.
 
-https://github.com/user-attachments/assets/dd3edc36-4453-4416-91c2-d24326c6c167
-
 ## Get started
 
 Just run
@@ -12,7 +10,11 @@ Just run
 npx create-llama@latest
 ```
 
-to get started, or see below for more options. Once your app is generated, run
+to get started, or watch this video for a demo session:
+
+https://github.com/user-attachments/assets/dd3edc36-4453-4416-91c2-d24326c6c167
+
+Once your app is generated, run
 
 ```bash
 npm run dev
@@ -22,15 +24,19 @@ to start the development server. You can then visit [http://localhost:3000](http
 
 ## What you'll get
 
-- A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data (see below)
+- A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data or interact with your agent 
 - Your choice of 3 back-ends:
   - **Next.js**: if you select this option, you’ll have a full-stack Next.js application that you can deploy to a host like [Vercel](https://vercel.com/) in just a few clicks. This uses [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex), our TypeScript library.
   - **Express**: if you want a more traditional Node.js application you can generate an Express backend. This also uses LlamaIndex.TS.
-  - **Python FastAPI**: if you select this option, you’ll get a backend powered by the [llama-index python package](https://pypi.org/project/llama-index/), which you can deploy to a service like Render or fly.io.
+  - **Python FastAPI**: if you select this option, you’ll get a backend powered by the [llama-index Python package](https://pypi.org/project/llama-index/), which you can deploy to a service like Render or fly.io.
 - The back-end has two endpoints (one streaming, the other one non-streaming) that allow you to send the state of your chat and receive additional responses
 - You add arbitrary data sources to your chat, like local files, websites, or data retrieved from a database.
 - Turn your chat into an AI agent by adding tools (functions called by the LLM).
 - The app uses OpenAI by default, so you'll need an OpenAI API key, or you can customize it to use any of the dozens of LLMs we support.
+
+Here's how it looks like:
+
+https://github.com/user-attachments/assets/d57af1a1-d99b-4e9c-98d9-4cbd1327eff8
 
 ## Using your data
 
@@ -88,7 +94,7 @@ Need to install the following packages:
   create-llama@latest
 Ok to proceed? (y) y
 ✔ What is your project named? … my-app
-✔ Which template would you like to use? › Chat
+✔ Which template would you like to use? › Agentic RAG (single agent)
 ✔ Which framework would you like to use? › NextJS
 ✔ Would you like to set up observability? › No
 ✔ Please provide your OpenAI API key (leave blank to skip): …
@@ -96,6 +102,7 @@ Ok to proceed? (y) y
 ✔ Would you like to add another data source? › No
 ✔ Would you like to use LlamaParse (improved parser for RAG - requires API key)? … no / yes
 ✔ Would you like to use a vector database? › No, just store the data in the file system
+✔ Would you like to build an agent using tools? If so, select the tools here, otherwise just press enter › Weather
 ? How would you like to proceed? › - Use arrow-keys. Return to submit.
    Just generate code (~1 sec)
 ❯  Start in VSCode (~1 sec)
