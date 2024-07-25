@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.23
+
+### Patch Changes
+
+- 6bd76fb: Add template for structured extraction
+
 ## 0.1.22
 
 ### Patch Changes
