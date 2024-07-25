@@ -38,7 +38,7 @@ const checkForGenerateScript = (
   const llamaCloudApiKey = llamaCloudKey ?? process.env["LLAMA_CLOUD_API_KEY"];
   const isRequiredLlamaCloudKey = useLlamaParse || vectorDb === "llamacloud";
   if (isRequiredLlamaCloudKey && !llamaCloudApiKey) {
-    missingSettings.push("your Llama Cloud key");
+    missingSettings.push("your LLAMA_CLOUD_API_KEY");
   }
 
   if (vectorDb !== "none" && vectorDb !== "llamacloud") {
