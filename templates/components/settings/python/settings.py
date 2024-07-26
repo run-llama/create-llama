@@ -75,38 +75,33 @@ def init_azure_openai():
     from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
     from llama_index.llms.azure_openai import AzureOpenAI
 
-    model = os.getenv("MODEL")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION") or os.getenv(
-        "OPENAI_API_VERSION"
-    )
-    deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-
-    azure_config = {
-        "model": model,
-        "api_key": api_key,
-        "azure_endpoint": azure_endpoint,
-        "api_version": api_version,
-        "deployment_name": deployment_name,
-    }
-
+    llm_deployment = os.getenv("AZURE_OPENAI_LLM_DEPLOYMENT")
+    embedding_deployment = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
     max_tokens = os.getenv("LLM_MAX_TOKENS")
     temperature = os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)
-    llm_config = {
-        **azure_config,
-        "max_tokens": int(max_tokens) if max_tokens is not None else None,
-        "temperature": float(temperature),
-    }
-    Settings.llm = AzureOpenAI(**llm_config)
-
     dimensions = os.getenv("EMBEDDING_DIM")
-    embedding_config = {
-        **azure_config,
-        "dimensions": int(dimensions) if dimensions is not None else None,
+
+    azure_config = {
+        "api_key": os.getenv("AZURE_OPENAI_KEY"),
+        "azure_endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
+        "api_version": os.getenv("AZURE_OPENAI_API_VERSION")
+        or os.getenv("OPENAI_API_VERSION"),
     }
 
-    Settings.embed_model = AzureOpenAIEmbedding(**embedding_config)
+    Settings.llm = AzureOpenAI(
+        model=os.getenv("MODEL"),
+        max_tokens=int(max_tokens) if max_tokens is not None else None,
+        temperature=float(temperature),
+        deployment_name=llm_deployment,
+        **azure_config,
+    )
+
+    Settings.embed_model = AzureOpenAIEmbedding(
+        model=os.getenv("EMBEDDING_MODEL"),
+        dimensions=int(dimensions) if dimensions is not None else None,
+        deployment_name=embedding_deployment,
+        **azure_config,
+    )
 
 
 def init_fastembed():
