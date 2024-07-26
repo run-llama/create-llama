@@ -62,12 +62,7 @@ export async function askAzureQuestions({
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
     isConfigured(): boolean {
-      if (config.apiKey) {
-        return true;
-      }
-      if (process.env["AZURE_OPENAI_KEY"]) {
-        return true;
-      }
+      // the Azure model provider can't be fully configured as endpoint and deployment names have to be configured with env variables
       return false;
     },
   };
