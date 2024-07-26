@@ -274,6 +274,33 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "azure-openai"
+      ? [
+          {
+            name: "AZURE_OPENAI_KEY",
+            description: "The Azure OpenAI key to use.",
+            value: modelConfig.apiKey,
+          },
+          {
+            name: "AZURE_OPENAI_ENDPOINT",
+            description: "The Azure OpenAI endpoint to use.",
+          },
+          {
+            name: "AZURE_OPENAI_API_VERSION",
+            description: "The Azure OpenAI API version to use.",
+          },
+          {
+            name: "AZURE_OPENAI_LLM_DEPLOYMENT",
+            description:
+              "The Azure OpenAI deployment to use for LLM deployment.",
+          },
+          {
+            name: "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
+            description:
+              "The Azure OpenAI deployment to use for embedding deployment.",
+          },
+        ]
+      : []),
     ...(modelConfig.provider === "t-systems"
       ? [
           {

@@ -78,24 +78,30 @@ def init_azure_openai():
     llm_deployment = os.getenv("AZURE_OPENAI_LLM_DEPLOYMENT")
     embedding_deployment = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
     max_tokens = os.getenv("LLM_MAX_TOKENS")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    llm_config = {
-        "api_key": api_key,
-        "deployment_name": llm_deployment,
-        "model": os.getenv("MODEL"),
-        "temperature": float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)),
-        "max_tokens": int(max_tokens) if max_tokens is not None else None,
-    }
-    Settings.llm = AzureOpenAI(**llm_config)
-
+    temperature = os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)
     dimensions = os.getenv("EMBEDDING_DIM")
-    embedding_config = {
-        "api_key": api_key,
-        "deployment_name": embedding_deployment,
-        "model": os.getenv("EMBEDDING_MODEL"),
-        "dimensions": int(dimensions) if dimensions is not None else None,
+
+    azure_config = {
+        "api_key": os.getenv("AZURE_OPENAI_KEY"),
+        "azure_endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
+        "api_version": os.getenv("AZURE_OPENAI_API_VERSION")
+        or os.getenv("OPENAI_API_VERSION"),
     }
-    Settings.embed_model = AzureOpenAIEmbedding(**embedding_config)
+
+    Settings.llm = AzureOpenAI(
+        model=os.getenv("MODEL"),
+        max_tokens=int(max_tokens) if max_tokens is not None else None,
+        temperature=float(temperature),
+        deployment_name=llm_deployment,
+        **azure_config,
+    )
+
+    Settings.embed_model = AzureOpenAIEmbedding(
+        model=os.getenv("EMBEDDING_MODEL"),
+        dimensions=int(dimensions) if dimensions is not None else None,
+        deployment_name=embedding_deployment,
+        **azure_config,
+    )
 
 
 def init_fastembed():
@@ -108,13 +114,14 @@ def init_fastembed():
         # Small and multilingual
         "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
         # Large and multilingual
-        "paraphrase-multilingual-mpnet-base-v2": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",   # noqa: E501
+        "paraphrase-multilingual-mpnet-base-v2": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",  # noqa: E501
     }
 
     # This will download the model automatically if it is not already downloaded
     Settings.embed_model = FastEmbedEmbedding(
         model_name=embed_model_map[os.getenv("EMBEDDING_MODEL")]
     )
+
 
 def init_groq():
     from llama_index.llms.groq import Groq
@@ -124,7 +131,6 @@ def init_groq():
         "llama3-70b": "llama3-70b-8192",
         "mixtral-8x7b": "mixtral-8x7b-32768",
     }
-
 
     Settings.llm = Groq(model=model_map[os.getenv("MODEL")])
     # Groq does not provide embeddings, so we use FastEmbed instead

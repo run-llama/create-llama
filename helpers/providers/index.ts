@@ -3,6 +3,7 @@ import prompts from "prompts";
 import { questionHandlers } from "../../questions";
 import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
+import { askAzureQuestions } from "./azure";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
 import { askLLMHubQuestions } from "./llmhub";
@@ -34,6 +35,7 @@ export async function askModelConfig({
       { title: "Anthropic", value: "anthropic" },
       { title: "Gemini", value: "gemini" },
       { title: "Mistral", value: "mistral" },
+      { title: "AzureOpenAI", value: "azure-openai" },
     ];
 
     if (framework === "fastapi") {
@@ -68,6 +70,9 @@ export async function askModelConfig({
       break;
     case "mistral":
       modelConfig = await askMistralQuestions({ askModels });
+      break;
+    case "azure-openai":
+      modelConfig = await askAzureQuestions({ askModels });
       break;
     case "t-systems":
       modelConfig = await askLLMHubQuestions({ askModels });
