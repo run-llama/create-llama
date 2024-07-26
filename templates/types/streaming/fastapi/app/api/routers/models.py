@@ -237,6 +237,7 @@ class ChatConfig(BaseModel):
     starter_questions: Optional[List[str]] = Field(
         default=None,
         description="List of starter questions",
+        serialization_alias="starterQuestions"
     )
 
     class Config:
@@ -248,4 +249,5 @@ class ChatConfig(BaseModel):
                 ]
             }
         }
-        alias_generator = to_camel
+        
+        
