@@ -291,11 +291,13 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
           {
             name: "AZURE_OPENAI_LLM_DEPLOYMENT",
-            description: "The Azure OpenAI deployment to use for LLM deployment.",
+            description:
+              "The Azure OpenAI deployment to use for LLM deployment.",
           },
           {
             name: "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
-            description: "The Azure OpenAI deployment to use for embedding deployment.",
+            description:
+              "The Azure OpenAI deployment to use for embedding deployment.",
           },
         ]
       : []),
