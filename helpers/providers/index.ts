@@ -35,7 +35,7 @@ export async function askModelConfig({
       { title: "Anthropic", value: "anthropic" },
       { title: "Gemini", value: "gemini" },
       { title: "Mistral", value: "mistral" },
-      { title: "AzureOpenAI", value: "azure" },
+      { title: "AzureOpenAI", value: "azure-openai" },
     ];
 
     if (framework === "fastapi") {
