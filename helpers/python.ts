@@ -193,7 +193,7 @@ const getAdditionalDependencies = (
         version: "0.1.4",
       });
       break;
-    case "azure":
+    case "azure-openai":
       dependencies.push({
         name: "llama-index-llms-azure-openai",
         version: "0.1.10",

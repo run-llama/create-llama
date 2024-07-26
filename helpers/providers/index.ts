@@ -71,7 +71,7 @@ export async function askModelConfig({
     case "mistral":
       modelConfig = await askMistralQuestions({ askModels });
       break;
-    case "azure":
+    case "azure-openai":
       modelConfig = await askAzureQuestions({ askModels });
       break;
     case "t-systems":

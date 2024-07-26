@@ -274,7 +274,7 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
-    ...(modelConfig.provider === "azure"
+    ...(modelConfig.provider === "azure-openai"
       ? [
           {
             name: "AZURE_OPENAI_KEY",
