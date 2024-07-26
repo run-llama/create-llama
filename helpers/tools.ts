@@ -188,6 +188,35 @@ For better results, you can specify the region parameter to get results from a s
       },
     ],
   },
+  {
+    display: "Azure Code Interpreter",
+    name: "azure_code_interpreter.AzureCodeInterpreterToolSpec",
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
+    type: ToolType.LLAMAHUB,
+    dependencies: [
+      {
+        name: "llama-index-tools-azure-code-interpreter",
+        version: "0.2.0",
+      },
+    ],
+    envVars: [
+      {
+        name: "AZURE_POOL_MANAGEMENT_ENDPOINT",
+        description:
+          "Please follow this guideline to create and get the pool management endpoint: https://learn.microsoft.com/azure/container-apps/sessions?tabs=azure-cli",
+      },
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for Azure code interpreter tool.",
+        value: `-You are a Python interpreter that can run any python code in a secure environment.
+- The python code runs in a Jupyter notebook. Every time you call the 'interpreter' tool, the python code is executed in a separate cell. 
+- You are given tasks to complete and you run python code to solve them.
+- It's okay to make multiple calls to interpreter tool. If you get an error or the result is not what you expected, you can call the tool again. Don't give up too soon!
+- Plot visualizations using matplotlib or any other visualization library directly in the notebook.
+- You can install any pip package (if it exists) by running a cell with pip install.`,
+      },
+    ],
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {
