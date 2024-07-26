@@ -648,24 +648,27 @@ export const askQuestions = async (
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = preferences.useLlamaParse = true;
   } else {
-    if (program.dataSources.some((ds) => ds.type === "file")) {
-      if (ciInfo.isCI) {
-        program.useLlamaParse = getPrefOrDefault("useLlamaParse");
-      } else {
-        const { useLlamaParse } = await prompts(
-          {
-            type: "toggle",
-            name: "useLlamaParse",
-            message:
-              "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-            initial: false,
-            active: "yes",
-            inactive: "no",
-          },
-          questionHandlers,
-        );
-        program.useLlamaParse = useLlamaParse;
-        preferences.useLlamaParse = useLlamaParse;
+    if (program.useLlamaParse === undefined) {
+      // if already set useLlamaParse, don't ask again
+      if (program.dataSources.some((ds) => ds.type === "file")) {
+        if (ciInfo.isCI) {
+          program.useLlamaParse = getPrefOrDefault("useLlamaParse");
+        } else {
+          const { useLlamaParse } = await prompts(
+            {
+              type: "toggle",
+              name: "useLlamaParse",
+              message:
+                "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
+              initial: false,
+              active: "yes",
+              inactive: "no",
+            },
+            questionHandlers,
+          );
+          program.useLlamaParse = useLlamaParse;
+          preferences.useLlamaParse = useLlamaParse;
+        }
       }
     }
   }
