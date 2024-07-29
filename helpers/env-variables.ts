@@ -155,6 +155,11 @@ const getVectorDBEnvs = (
             "The base URL for the LlamaCloud API. Only change this for non-production environments",
           value: "https://api.cloud.llamaindex.ai",
         },
+        {
+          name: "LLAMA_CLOUD_ORGANIZATION_ID",
+          description:
+            "The organization ID for the LlamaCloud project (uses default organization if not specified - Python only)",
+        },
       ];
     case "chroma":
       const envs = [
