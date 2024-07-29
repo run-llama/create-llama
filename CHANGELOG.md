@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.1.24
+
+### Patch Changes
+
+- 43474a5: Configure LlamaCloud organization ID for Python
+- cf11b23: Add Azure code interpreter for Python and TS
+- fd9fb42: Add Azure OpenAI as model provider
+- 5c13646: Fix starter questions not working in python backend
+
 ## 0.1.23
 
 ### Patch Changes
