@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Config llamacloud organization ID
+Configure LlamaCloud organization ID for Python
