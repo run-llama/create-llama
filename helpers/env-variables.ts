@@ -158,7 +158,7 @@ const getVectorDBEnvs = (
         {
           name: "LLAMA_CLOUD_ORGANIZATION_ID",
           description:
-            "The organization ID for the LlamaCloud project (uses default organization if not specified)",
+            "The organization ID for the LlamaCloud project (uses default organization if not specified - Python only)",
         },
       ];
     case "chroma":
