@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add azure model provider
+Add Azure OpenAI as model provider
