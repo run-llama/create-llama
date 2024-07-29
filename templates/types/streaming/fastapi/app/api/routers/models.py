@@ -249,5 +249,3 @@ class ChatConfig(BaseModel):
                 ]
             }
         }
-        
-        
