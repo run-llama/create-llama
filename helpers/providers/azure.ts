@@ -57,7 +57,7 @@ export async function askAzureQuestions({
   askModels,
 }: ModelConfigQuestionsParams): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
-    apiKey: openAiKey,
+    apiKey: openAiKey || process.env.AZURE_OPENAI_KEY,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
@@ -66,29 +66,6 @@ export async function askAzureQuestions({
       return false;
     },
   };
-
-  if (!config.apiKey) {
-    const { key } = await prompts(
-      {
-        type: "text",
-        name: "key",
-        message: askModels
-          ? "Please provide your Azure OpenAI API key (or leave blank to use AZURE_OPENAI_KEY env variable):"
-          : "Please provide your Azure OpenAI API key (leave blank to skip):",
-        validate: (value: string) => {
-          if (askModels && !value) {
-            if (process.env.AZURE_OPENAI_KEY) {
-              return true;
-            }
-            return "AZURE_OPENAI_KEY env variable is not set - key is required";
-          }
-          return true;
-        },
-      },
-      questionHandlers,
-    );
-    config.apiKey = key || process.env.AZURE_OPENAI_KEY;
-  }
 
   // use default model values in CI or if user should not be asked
   const useDefaults = ciInfo.isCI || !askModels;
