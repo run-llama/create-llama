@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.25
+
+### Patch Changes
+
+- c67daeb: fix: missing set private to false for default generate.py
+
 ## 0.1.24
 
 ### Patch Changes
