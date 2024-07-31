@@ -7,10 +7,8 @@ import {
   HoverCardTrigger,
 } from "../../hover-card";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
-import { SourceData } from "../index";
+import { SourceData, SourceNode } from "../index";
 import PdfDialog from "../widgets/PdfDialog";
-
-const SCORE_THRESHOLD = 0.3;
 
 function SourceNumberButton({ index }: { index: number }) {
   return (
@@ -25,22 +23,56 @@ type NodeInfo = {
   url?: string;
 };
 
-export function ChatSources({ data }: { data: SourceData }) {
-  const sources: NodeInfo[] = useMemo(() => {
-    // aggregate nodes by url or file_path (get the highest one by score)
-    const nodesByPath: { [path: string]: NodeInfo } = {};
+type Citation = {
+  order: number;
+  id: string;
+  display: string;
+  node?: SourceNode;
+};
 
-    data.nodes
-      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
-      .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
-      .forEach((node) => {
-        const nodeInfo = {
-          id: node.id,
-          url: node.url,
-        };
-        const key = nodeInfo.url ?? nodeInfo.id; // use id as key for UNKNOWN type
-        if (!nodesByPath[key]) {
-          nodesByPath[key] = nodeInfo;
+function extractCitations(text: string): Citation[] {
+  // Define the regular expression to match the references
+  const referenceRegex = /\[(\d+)\]:\s+(.+)\s+'(.+)'/g;
+  const citations: Citation[] = [];
+  let match;
+
+  // Find all the references in the text
+  while ((match = referenceRegex.exec(text)) !== null) {
+    citations.push({
+      order: parseInt(match[1], 10),
+      id: match[2],
+      display: match[3],
+    });
+  }
+
+  return citations;
+}
+
+export function ChatSources({
+  data,
+  messageContent,
+}: {
+  data: SourceData;
+  messageContent: string;
+}) {
+  const sources: NodeInfo[] = useMemo(() => {
+    const nodesByPath: { [path: string]: NodeInfo } = {};
+    const citations = extractCitations(messageContent);
+
+    // Map citations to nodes
+    citations
+      .map((citation) => {
+        const node = data.nodes.find((node) => node.id === citation.id);
+        citation.node = node;
+        return citation;
+      })
+      .sort((a, b) => (a.order ?? 1) - (b.order ?? 1))
+      .filter((citation) => citation.node !== undefined)
+      .forEach((citation) => {
+        const nodeInfo = citation.node;
+        const key = nodeInfo?.url ?? nodeInfo?.id; // use id as key for UNKNOWN type
+        if (key !== undefined && !nodesByPath[key]) {
+          nodesByPath[key + `:${citation.order}`] = nodeInfo;
         }
       });
 
