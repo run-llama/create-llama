@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.26
+
+### Patch Changes
+
+- f43399c: Add metadatafilters to context chat engine (Typescript)
+
 ## 0.1.25
 
 ### Patch Changes
