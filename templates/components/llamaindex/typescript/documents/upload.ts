@@ -1,11 +1,10 @@
 import { VectorStoreIndex } from "llamaindex";
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
-import { getDataSource } from "../engine";
 import { loadDocuments, saveDocument } from "./helper";
 import { runPipeline } from "./pipeline";
 
 export async function uploadDocument(
-  currentIndex: VectorStoreIndex | LlamaCloudIndex,
+  index: VectorStoreIndex | LlamaCloudIndex,
   raw: string,
 ): Promise<string[]> {
   const [header, content] = raw.split(",");
@@ -13,7 +12,6 @@ export async function uploadDocument(
   const fileBuffer = Buffer.from(content, "base64");
   const documents = await loadDocuments(fileBuffer, mimeType);
   const { filename } = await saveDocument(fileBuffer, mimeType);
-  const index = await getDataSource();
 
   // Update documents with metadata
   for (const document of documents) {
