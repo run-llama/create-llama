@@ -18,8 +18,9 @@ export function getMilvusClient() {
   });
 }
 
-export function checkRequiredEnvVars(opts?: { checkCollectionEnv: boolean }) {
-  if (opts?.checkCollectionEnv) {
+export function checkRequiredEnvVars(opts?: { checkCollectionEnv?: boolean }) {
+  const shouldCheckCollectionEnv = opts?.checkCollectionEnv ?? true; // default to true
+  if (shouldCheckCollectionEnv) {
     REQUIRED_ENV_VARS.push("MILVUS_COLLECTION");
   }
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {
