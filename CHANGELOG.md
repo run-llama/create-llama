@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.27
+
+### Patch Changes
+
+- c5c7eee: Make components reusable for chat-llamaindex
+
 ## 0.1.26
 
 ### Patch Changes
