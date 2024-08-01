@@ -50,9 +50,7 @@ export function useFile() {
 
   const uploadContent = async (
     base64: string,
-    requestParams: {
-      datasource?: string;
-    } = {},
+    requestParams: any = {},
   ): Promise<string[]> => {
     const uploadAPI = `${backend}/api/chat/upload`;
     const response = await fetch(uploadAPI, {
@@ -62,7 +60,7 @@ export function useFile() {
       },
       body: JSON.stringify({
         base64,
-        ...requestParams
+        ...requestParams,
       }),
     });
     if (!response.ok) throw new Error("Failed to upload document.");
@@ -104,12 +102,7 @@ export function useFile() {
     return content;
   };
 
-  const uploadFile = async (
-    file: File,
-    requestParams: {
-      datasource?: string;
-    } = {},
-  ) => {
+  const uploadFile = async (file: File, requestParams: any = {}) => {
     if (file.type.startsWith("image/")) {
       const base64 = await readContent({ file, asUrl: true });
       return setImageUrl(base64);

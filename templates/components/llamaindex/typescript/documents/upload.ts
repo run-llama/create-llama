@@ -18,7 +18,7 @@ export async function uploadDocument(
     document.metadata = {
       ...document.metadata,
       file_name: filename,
-      private: "true", // to separate from other public documents
+      private: "true", // to separate private uploads from public documents
     };
   }
 

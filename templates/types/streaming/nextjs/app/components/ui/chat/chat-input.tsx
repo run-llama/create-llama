@@ -22,9 +22,7 @@ export default function ChatInput(
     | "setInput"
     | "append"
   > & {
-    requestParams?: {
-      datasource?: string;
-    };
+    requestParams?: any;
   },
 ) {
   const {

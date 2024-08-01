@@ -48,7 +48,7 @@ export async function createChatEngine(documentIds?: string[]) {
   });
 }
 
-function generateFilters(documentIds: string[]): MetadataFilters | undefined {
+export function generateFilters(documentIds: string[]): MetadataFilters {
   // public documents don't have the "private" field or it's set to "false"
   const publicDocumentsFilter: MetadataFilter = {
     key: "private",
