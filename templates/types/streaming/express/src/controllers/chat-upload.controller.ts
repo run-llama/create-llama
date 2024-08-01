@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getDataSource } from "../engine";
+import { getDataSource } from "./engine";
 import { uploadDocument } from "./llamaindex/documents/upload";
 
 export const chatUpload = async (req: Request, res: Response) => {
