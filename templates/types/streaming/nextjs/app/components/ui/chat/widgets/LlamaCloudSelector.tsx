@@ -35,8 +35,8 @@ export function LlamaCloudSelector() {
       onValueChange={handlePipelineSelect}
       defaultValue={toSelectValue(llamaCloud.config)}
     >
-      <SelectTrigger className="w-[280px]">
-        <SelectValue placeholder="Default " />
+      <SelectTrigger className="w-[200px]">
+        <SelectValue placeholder="Select a pipeline" />
       </SelectTrigger>
       <SelectContent>
         {llamaCloud.projects.map((project) => (
