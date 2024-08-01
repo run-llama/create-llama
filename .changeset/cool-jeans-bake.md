@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Make components resuable for chat llm
+Make components reusable for chat-llamaindex
