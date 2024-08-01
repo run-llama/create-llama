@@ -4,7 +4,6 @@ const REQUIRED_ENV_VARS = [
   "MILVUS_ADDRESS",
   "MILVUS_USERNAME",
   "MILVUS_PASSWORD",
-  "MILVUS_COLLECTION",
 ];
 
 export function getMilvusClient() {
@@ -19,7 +18,10 @@ export function getMilvusClient() {
   });
 }
 
-export function checkRequiredEnvVars() {
+export function checkRequiredEnvVars(shouldCheckCollection = true) {
+  if (shouldCheckCollection) {
+    REQUIRED_ENV_VARS.push("MILVUS_COLLECTION");
+  }
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {
     return !process.env[envVar];
   });
