@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { LLamaCloudFileService } from "../llamaindex/streaming/service";
 
 /**
@@ -7,15 +7,36 @@ import { LLamaCloudFileService } from "../llamaindex/streaming/service";
 export async function GET() {
   const config = {
     starterQuestions: process.env.CONVERSATION_STARTERS?.trim().split("\n"),
-    llamaCloud: await getLLamaCloudConfig(),
+    llamaCloud: {
+      config: LLamaCloudFileService.getConfig(),
+      projects: await LLamaCloudFileService.getAllProjectsAndPipelines(),
+    },
   };
   return NextResponse.json(config, { status: 200 });
 }
 
-async function getLLamaCloudConfig() {
-  if (!process.env.LLAMA_CLOUD_API_KEY) return undefined;
-  const projects = await LLamaCloudFileService.getAllProjectsAndPipelines();
-  return {
-    projects,
-  };
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const { project, pipeline }: { project: string; pipeline: string } = body;
+
+  if (!project || !pipeline) {
+    return NextResponse.json(
+      { message: "Please provide project and pipeline names" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await LLamaCloudFileService.updateConfig({ project, pipeline });
+    return NextResponse.json(
+      { message: "Successfully updated LlamaCloud configs" },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { message: "Failed to update LlamaCloud configs" },
+      { status: 500 },
+    );
+  }
 }
