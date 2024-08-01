@@ -1,28 +1,16 @@
 import {
-  BaseNode,
   Document,
   IngestionPipeline,
-  Metadata,
   Settings,
   SimpleNodeParser,
-  storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
-import { getDataSource } from "../../engine";
 
-export async function runPipeline(documents: Document[], filename: string) {
-  const currentIndex = await getDataSource();
-
-  // Update documents with metadata
-  for (const document of documents) {
-    document.metadata = {
-      ...document.metadata,
-      file_name: filename,
-      private: "true", // to separate from other public documents
-    };
-  }
-
+export async function runPipeline(
+  currentIndex: VectorStoreIndex | LlamaCloudIndex,
+  documents: Document[],
+) {
   if (currentIndex instanceof LlamaCloudIndex) {
     // LlamaCloudIndex processes the documents automatically
     // so we don't need ingestion pipeline, just insert the documents directly
@@ -41,25 +29,10 @@ export async function runPipeline(documents: Document[], filename: string) {
       ],
     });
     const nodes = await pipeline.run({ documents });
-    await addNodesToVectorStore(nodes, currentIndex);
+    await currentIndex.insertNodes(nodes);
+    currentIndex.storageContext.docStore.persist();
+    console.log("Added nodes to the vector store.");
   }
 
   return documents.map((document) => document.id_);
-}
-
-async function addNodesToVectorStore(
-  nodes: BaseNode<Metadata>[],
-  currentIndex: VectorStoreIndex | null,
-) {
-  if (currentIndex) {
-    await currentIndex.insertNodes(nodes);
-  } else {
-    // Not using vectordb and haven't generated local index yet
-    const storageContext = await storageContextFromDefaults({
-      persistDir: "./cache",
-    });
-    currentIndex = await VectorStoreIndex.init({ nodes, storageContext });
-  }
-  currentIndex.storageContext.docStore.persist();
-  console.log("Added nodes to the vector store.");
 }

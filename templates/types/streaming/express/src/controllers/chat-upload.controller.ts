@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getDataSource } from "../engine";
 import { uploadDocument } from "./llamaindex/documents/upload";
 
 export const chatUpload = async (req: Request, res: Response) => {
@@ -8,5 +9,6 @@ export const chatUpload = async (req: Request, res: Response) => {
       error: "base64 is required in the request body",
     });
   }
-  return res.status(200).json(await uploadDocument(base64));
+  const index = await getDataSource();
+  return res.status(200).json(await uploadDocument(index, base64));
 };

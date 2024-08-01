@@ -21,7 +21,11 @@ export default function ChatInput(
     | "messages"
     | "setInput"
     | "append"
-  >,
+  > & {
+    requestParams?: {
+      datasource?: string;
+    };
+  },
 ) {
   const {
     imageUrl,
@@ -64,7 +68,7 @@ export default function ChatInput(
       return;
     }
     try {
-      await uploadFile(file);
+      await uploadFile(file, props.requestParams);
       props.onFileUpload?.(file);
     } catch (error: any) {
       props.onFileError?.(error.message);
