@@ -6,6 +6,7 @@ import path from "node:path";
 const LLAMA_CLOUD_OUTPUT_DIR = "output/llamacloud";
 const LLAMA_CLOUD_BASE_URL = "https://cloud.llamaindex.ai/api/v1";
 const FILE_DELIMITER = "$"; // delimiter between pipelineId and filename
+const LLAMA_CLOUD_CONFIG_FILE = path.join("config", "llamacloud.json");
 
 interface LlamaCloudFile {
   name: string;
@@ -26,6 +27,11 @@ interface LLamaCloudPipeline {
   project_id: string;
 }
 
+interface LLamaCloudConfig {
+  project: string;
+  pipeline: string;
+}
+
 export class LLamaCloudFileService {
   private static readonly headers = {
     Accept: "application/json",
@@ -43,6 +49,26 @@ export class LLamaCloudFileService {
     } catch (error) {
       console.error("Error listing projects and pipelines:", error);
       return [];
+    }
+  }
+
+  public static getConfig(): LLamaCloudConfig | undefined {
+    try {
+      return JSON.parse(fs.readFileSync(LLAMA_CLOUD_CONFIG_FILE, "utf-8"));
+    } catch (error) {
+      // If file doesn't exist, return undefined
+      return undefined;
+    }
+  }
+
+  public static async updateConfig(config: LLamaCloudConfig) {
+    try {
+      await fs.promises.writeFile(
+        LLAMA_CLOUD_CONFIG_FILE,
+        JSON.stringify(config, null, 2),
+      );
+    } catch (error) {
+      throw new Error(`Error updating LlamaCloud config: ${error}`);
     }
   }
 
