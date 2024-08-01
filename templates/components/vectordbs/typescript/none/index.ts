@@ -11,7 +11,9 @@ export async function getDataSource() {
     (storageContext.docStore as SimpleDocumentStore).toDict(),
   ).length;
   if (numberOfDocs === 0) {
-    return null;
+    throw new Error(
+      `StorageContext is empty - call 'npm run generate' to generate the storage first`,
+    );
   }
   return await VectorStoreIndex.init({
     storageContext,
