@@ -13,7 +13,39 @@ interface LlamaCloudFile {
   project_id: string;
 }
 
+interface LLamaCloudProject {
+  id: string;
+  organization_id: string;
+  name: string;
+  is_default: boolean;
+}
+
+interface LLamaCloudPipeline {
+  id: string;
+  name: string;
+  project_id: string;
+}
+
 export class LLamaCloudFileService {
+  private static readonly headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
+  };
+
+  public static async getAllProjectsAndPipelines() {
+    try {
+      const projects = await this.getAllProjects();
+      const pipelines = await this.getAllPipelines();
+      return projects.map((project) => ({
+        ...project,
+        pipelines: pipelines.filter((p) => p.project_id === project.id),
+      }));
+    } catch (error) {
+      console.error("Error listing projects and pipelines:", error);
+      return [];
+    }
+  }
+
   public static async downloadFiles(nodes: NodeWithScore<Metadata>[]) {
     const files = this.nodesToDownloadFiles(nodes);
     if (!files.length) return;
@@ -104,11 +136,7 @@ export class LLamaCloudFileService {
     fileId: string,
   ): Promise<string> {
     const url = `${LLAMA_CLOUD_BASE_URL}/files/${fileId}/content?project_id=${projectId}`;
-    const headers = {
-      Accept: "application/json",
-      Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
-    };
-    const response = await fetch(url, { method: "GET", headers });
+    const response = await fetch(url, { method: "GET", headers: this.headers });
     const data = (await response.json()) as { url: string };
     return data.url;
   }
@@ -117,12 +145,22 @@ export class LLamaCloudFileService {
     pipelineId: string,
   ): Promise<LlamaCloudFile[]> {
     const url = `${LLAMA_CLOUD_BASE_URL}/pipelines/${pipelineId}/files`;
-    const headers = {
-      Accept: "application/json",
-      Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
-    };
-    const response = await fetch(url, { method: "GET", headers });
+    const response = await fetch(url, { method: "GET", headers: this.headers });
     const data = await response.json();
+    return data;
+  }
+
+  private static async getAllProjects(): Promise<LLamaCloudProject[]> {
+    const url = `${LLAMA_CLOUD_BASE_URL}/projects`;
+    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const data = (await response.json()) as LLamaCloudProject[];
+    return data;
+  }
+
+  private static async getAllPipelines(): Promise<LLamaCloudPipeline[]> {
+    const url = `${LLAMA_CLOUD_BASE_URL}/pipelines`;
+    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const data = (await response.json()) as LLamaCloudPipeline[];
     return data;
   }
 }
