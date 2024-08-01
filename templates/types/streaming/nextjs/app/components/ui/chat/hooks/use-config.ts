@@ -2,9 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+export interface LLamaCloudProject {
+  id: string;
+  organization_id: string;
+  name: string;
+  is_default: boolean;
+}
+
+export interface LLamaCloudPipeline {
+  id: string;
+  name: string;
+  project_id: string;
+}
+
 export interface ChatConfig {
   backend?: string;
   starterQuestions?: string[];
+  llamaCloud?: {
+    projects: Array<
+      LLamaCloudProject & {
+        pipelines: LLamaCloudPipeline[];
+      }
+    >;
+  };
 }
 
 export function useClientConfig(): ChatConfig {
@@ -27,5 +47,6 @@ export function useClientConfig(): ChatConfig {
   return {
     backend: backendOrigin,
     starterQuestions: config?.starterQuestions,
+    llamaCloud: config?.llamaCloud,
   };
 }
