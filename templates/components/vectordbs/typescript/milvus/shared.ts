@@ -18,8 +18,8 @@ export function getMilvusClient() {
   });
 }
 
-export function checkRequiredEnvVars(shouldCheckCollection = true) {
-  if (shouldCheckCollection) {
+export function checkRequiredEnvVars(opts?: { checkCollectionEnv: boolean }) {
+  if (opts?.checkCollectionEnv) {
     REQUIRED_ENV_VARS.push("MILVUS_COLLECTION");
   }
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {
