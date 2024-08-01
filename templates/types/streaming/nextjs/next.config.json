@@ -1,7 +1,8 @@
 {
   "experimental": {
     "outputFileTracingIncludes": {
-      "/*": ["./cache/**/*"]
+      "/*": ["./cache/**/*"],
+      "/api/**/*": ["./node_modules/**/*.wasm"]
     }
   }
 }
