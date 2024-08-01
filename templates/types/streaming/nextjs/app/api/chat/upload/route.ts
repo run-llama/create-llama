@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDataSource } from "../engine";
 import { initSettings } from "../engine/settings";
 import { uploadDocument } from "../llamaindex/documents/upload";
 
@@ -16,7 +17,13 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    return NextResponse.json(await uploadDocument(base64));
+    const index = await getDataSource();
+    if (!index) {
+      throw new Error(
+        `StorageContext is empty - call 'npm run generate' to generate the storage first`,
+      );
+    }
+    return NextResponse.json(await uploadDocument(index, base64));
   } catch (error) {
     console.error("[Upload API]", error);
     return NextResponse.json(
