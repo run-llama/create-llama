@@ -34,8 +34,8 @@ export class LLamaCloudFileService {
 
   public static async getAllProjectsWithPipelines() {
     try {
-      const projects = await this.getAllProjects();
-      const pipelines = await this.getAllPipelines();
+      const projects = await LLamaCloudFileService.getAllProjects();
+      const pipelines = await LLamaCloudFileService.getAllPipelines();
       return projects.map((project) => ({
         ...project,
         pipelines: pipelines.filter((p) => p.project_id === project.id),
@@ -47,11 +47,11 @@ export class LLamaCloudFileService {
   }
 
   public static async downloadFiles(nodes: NodeWithScore<Metadata>[]) {
-    const files = this.nodesToDownloadFiles(nodes);
+    const files = LLamaCloudFileService.nodesToDownloadFiles(nodes);
     if (!files.length) return;
     console.log("Downloading files from LlamaCloud...");
     for (const file of files) {
-      await this.downloadFile(file.pipelineId, file.fileName);
+      await LLamaCloudFileService.downloadFile(file.pipelineId, file.fileName);
     }
   }
 
@@ -91,13 +91,19 @@ export class LLamaCloudFileService {
 
   private static async downloadFile(pipelineId: string, fileName: string) {
     try {
-      const downloadedName = this.toDownloadedName(pipelineId, fileName);
+      const downloadedName = LLamaCloudFileService.toDownloadedName(
+        pipelineId,
+        fileName,
+      );
       const downloadedPath = path.join(LLAMA_CLOUD_OUTPUT_DIR, downloadedName);
 
       // Check if file already exists
       if (fs.existsSync(downloadedPath)) return;
 
-      const urlToDownload = await this.getFileUrlByName(pipelineId, fileName);
+      const urlToDownload = await LLamaCloudFileService.getFileUrlByName(
+        pipelineId,
+        fileName,
+      );
       if (!urlToDownload) throw new Error("File not found in LlamaCloud");
 
       const file = fs.createWriteStream(downloadedPath);
@@ -125,10 +131,13 @@ export class LLamaCloudFileService {
     pipelineId: string,
     name: string,
   ): Promise<string | null> {
-    const files = await this.getAllFiles(pipelineId);
+    const files = await LLamaCloudFileService.getAllFiles(pipelineId);
     const file = files.find((file) => file.name === name);
     if (!file) return null;
-    return await this.getFileUrlById(file.project_id, file.file_id);
+    return await LLamaCloudFileService.getFileUrlById(
+      file.project_id,
+      file.file_id,
+    );
   }
 
   private static async getFileUrlById(
@@ -136,7 +145,10 @@ export class LLamaCloudFileService {
     fileId: string,
   ): Promise<string> {
     const url = `${LLAMA_CLOUD_BASE_URL}/files/${fileId}/content?project_id=${projectId}`;
-    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const response = await fetch(url, {
+      method: "GET",
+      headers: LLamaCloudFileService.headers,
+    });
     const data = (await response.json()) as { url: string };
     return data.url;
   }
@@ -145,21 +157,30 @@ export class LLamaCloudFileService {
     pipelineId: string,
   ): Promise<LlamaCloudFile[]> {
     const url = `${LLAMA_CLOUD_BASE_URL}/pipelines/${pipelineId}/files`;
-    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const response = await fetch(url, {
+      method: "GET",
+      headers: LLamaCloudFileService.headers,
+    });
     const data = await response.json();
     return data;
   }
 
   private static async getAllProjects(): Promise<LLamaCloudProject[]> {
     const url = `${LLAMA_CLOUD_BASE_URL}/projects`;
-    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const response = await fetch(url, {
+      method: "GET",
+      headers: LLamaCloudFileService.headers,
+    });
     const data = (await response.json()) as LLamaCloudProject[];
     return data;
   }
 
   private static async getAllPipelines(): Promise<LLamaCloudPipeline[]> {
     const url = `${LLAMA_CLOUD_BASE_URL}/pipelines`;
-    const response = await fetch(url, { method: "GET", headers: this.headers });
+    const response = await fetch(url, {
+      method: "GET",
+      headers: LLamaCloudFileService.headers,
+    });
     const data = (await response.json()) as LLamaCloudPipeline[];
     return data;
   }
