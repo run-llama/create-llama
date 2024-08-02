@@ -7,24 +7,24 @@ const LLAMA_CLOUD_OUTPUT_DIR = "output/llamacloud";
 const LLAMA_CLOUD_BASE_URL = "https://cloud.llamaindex.ai/api/v1";
 const FILE_DELIMITER = "$"; // delimiter between pipelineId and filename
 
-interface LlamaCloudFile {
+type LlamaCloudFile = {
   name: string;
   file_id: string;
   project_id: string;
-}
+};
 
-interface LLamaCloudProject {
+type LLamaCloudProject = {
   id: string;
   organization_id: string;
   name: string;
   is_default: boolean;
-}
+};
 
-interface LLamaCloudPipeline {
+type LLamaCloudPipeline = {
   id: string;
   name: string;
   project_id: string;
-}
+};
 
 export class LLamaCloudFileService {
   private static readonly headers = {
