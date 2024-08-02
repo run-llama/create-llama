@@ -7,8 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../select";
-import { LLamaCloudProject } from "../hooks/use-config";
-import { PipelineConfig } from "../hooks/use-llama-cloud";
+import { LLamaCloudProject, PipelineConfig } from "../hooks/use-llama-cloud";
 
 const DEFAULT_SELECT_VALUE = "default_env";
 

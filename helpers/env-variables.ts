@@ -503,6 +503,10 @@ export const createFrontendEnvFile = async (
         ? opts.customApiPath
         : "http://localhost:8000/api/chat",
     },
+    {
+      name: "NEXT_PUBLIC_USE_LLAMACLOUD",
+      description: "Let user change indexes in LlamaCloud projects",
+    },
   ];
   const content = renderEnvVar(defaultFrontendEnvs);
   await fs.writeFile(path.join(root, ".env"), content);
