@@ -1,7 +1,7 @@
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
 
-export async function getDataSource(configs?: any) {
-  const { project, pipeline } = configs?.llamaCloudPipeline ?? {};
+export async function getDataSource(params?: any) {
+  const { project, pipeline } = params?.llamaCloudPipeline ?? {};
   const projectName = project ?? process.env.LLAMA_CLOUD_PROJECT_NAME;
   const pipelineName = pipeline ?? process.env.LLAMA_CLOUD_INDEX_NAME;
   const apiKey = process.env.LLAMA_CLOUD_API_KEY;
