@@ -10,12 +10,12 @@ import path from "node:path";
 import { getDataSource } from "./index";
 import { createTools } from "./tools";
 
-export async function createChatEngine(documentIds?: string[]) {
+export async function createChatEngine(documentIds?: string[], params?: any) {
   const tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
-  const index = await getDataSource();
+  const index = await getDataSource(params);
   if (index) {
     tools.push(
       new QueryEngineTool({
