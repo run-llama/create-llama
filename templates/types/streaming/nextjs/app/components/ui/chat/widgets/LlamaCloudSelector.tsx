@@ -10,12 +10,6 @@ import {
 import { LLamaCloudProject } from "../hooks/use-config";
 import { PipelineConfig } from "../hooks/use-llama-cloud";
 
-// stringify the config to store in the select value
-const toSelectValue = (llamaCloudConfig?: PipelineConfig) => {
-  if (!llamaCloudConfig) return undefined;
-  return JSON.stringify(llamaCloudConfig);
-};
-
 const DEFAULT_SELECT_VALUE = "default_env";
 
 export interface LlamaCloudSelectorProps {
@@ -45,8 +39,8 @@ export function LlamaCloudSelector({
       <SelectContent>
         <SelectGroup>
           <SelectLabel>Environment</SelectLabel>
-          <SelectItem value={DEFAULT_SELECT_VALUE}>
-            Use default pipeline
+          <SelectItem value={DEFAULT_SELECT_VALUE} className="border-b">
+            <span className="pl-2">Use default pipeline</span>
           </SelectItem>
         </SelectGroup>
         {projects.map((project) => (
@@ -57,14 +51,13 @@ export function LlamaCloudSelector({
             {project.pipelines.map((pipeline) => (
               <SelectItem
                 key={pipeline.id}
-                value={
-                  toSelectValue({
-                    project: project.name,
-                    pipeline: pipeline.name,
-                  })!
-                }
+                className="last:border-b"
+                value={JSON.stringify({
+                  project: project.name,
+                  pipeline: pipeline.name,
+                })}
               >
-                {pipeline.name}
+                <span className="pl-2">{pipeline.name}</span>
               </SelectItem>
             ))}
           </SelectGroup>
