@@ -7,39 +7,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../select";
-import { LlamaCloudConfig, useClientConfig } from "../hooks/use-config";
+import { LLamaCloudProject } from "../hooks/use-config";
+import { PipelineConfig } from "../hooks/use-llama-cloud";
 
 // stringify the config to store in the select value
-const toSelectValue = (llamaCloudConfig?: LlamaCloudConfig) => {
+const toSelectValue = (llamaCloudConfig?: PipelineConfig) => {
   if (!llamaCloudConfig) return undefined;
   return JSON.stringify(llamaCloudConfig);
 };
 
-export function LlamaCloudSelector() {
-  const { llamaCloud, updateLlamaCloudConfig } = useClientConfig({
-    shouldFetchConfig: true,
-  });
-  if (!llamaCloud?.projects.length) return null;
+const DEFAULT_SELECT_VALUE = "default_env";
+
+export interface LlamaCloudSelectorProps {
+  projects: LLamaCloudProject[];
+  setPipeline: (pipelineConfig: PipelineConfig | undefined) => void;
+}
+
+export function LlamaCloudSelector({
+  projects,
+  setPipeline,
+}: LlamaCloudSelectorProps) {
+  if (!projects.length) return null;
 
   const handlePipelineSelect = async (value: string) => {
-    try {
-      const { project, pipeline } = JSON.parse(value) as LlamaCloudConfig;
-      await updateLlamaCloudConfig({ project, pipeline });
-    } catch (error) {
-      console.error("Failed to update LlamaCloud config", error);
-    }
+    if (value === DEFAULT_SELECT_VALUE) return setPipeline(undefined);
+    setPipeline(JSON.parse(value) as PipelineConfig);
   };
 
   return (
     <Select
       onValueChange={handlePipelineSelect}
-      defaultValue={toSelectValue(llamaCloud.config)}
+      defaultValue={DEFAULT_SELECT_VALUE}
     >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Select a pipeline" />
       </SelectTrigger>
       <SelectContent>
-        {llamaCloud.projects.map((project) => (
+        <SelectGroup>
+          <SelectLabel>Environment</SelectLabel>
+          <SelectItem value={DEFAULT_SELECT_VALUE}>
+            Use default pipeline
+          </SelectItem>
+        </SelectGroup>
+        {projects.map((project) => (
           <SelectGroup key={project.id}>
             <SelectLabel className="capitalize">
               Project: {project.name}

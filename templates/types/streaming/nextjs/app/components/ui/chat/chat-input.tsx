@@ -6,6 +6,7 @@ import { Input } from "../input";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useFile } from "./hooks/use-file";
+import { useLlamaCloud } from "./hooks/use-llama-cloud";
 import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
 const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
@@ -35,6 +36,12 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
+  const { projects, pipeline, setPipeline } = useLlamaCloud();
+
+  // Additional data to be sent to the API endpoint.
+  const requestAdditionalData = {
+    llamaCloudPipeline: pipeline,
+  };
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -43,12 +50,15 @@ export default function ChatInput(
     annotations: JSONValue[] | undefined,
   ) => {
     e.preventDefault();
-    props.append!({
-      content: props.input,
-      role: "user",
-      createdAt: new Date(),
-      annotations,
-    });
+    props.append!(
+      {
+        content: props.input,
+        role: "user",
+        createdAt: new Date(),
+        annotations,
+      },
+      { data: requestAdditionalData },
+    );
     props.setInput!("");
   };
 
@@ -58,7 +68,7 @@ export default function ChatInput(
       handleSubmitWithAnnotations(e, annotations);
       return reset();
     }
-    props.handleSubmit(e);
+    props.handleSubmit(e, { data: requestAdditionalData });
   };
 
   const handleUploadFile = async (file: File) => {
@@ -110,7 +120,7 @@ export default function ChatInput(
             disabled: props.isLoading,
           }}
         />
-        <LlamaCloudSelector />
+        <LlamaCloudSelector projects={projects} setPipeline={setPipeline} />
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
         </Button>

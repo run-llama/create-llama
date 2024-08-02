@@ -2,23 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-export interface LLamaCloudPipeline {
-  id: string;
-  name: string;
-  project_id: string;
-}
-
 export interface LLamaCloudProject {
   id: string;
   organization_id: string;
   name: string;
   is_default: boolean;
-  pipelines: LLamaCloudPipeline[];
-}
-
-export interface LlamaCloudConfig {
-  project: string; // project name
-  pipeline: string; // pipeline name
+  pipelines: Array<{
+    id: string;
+    name: string;
+  }>;
 }
 
 export interface ChatConfig {
@@ -26,9 +18,7 @@ export interface ChatConfig {
   starterQuestions?: string[];
   llamaCloud?: {
     projects: LLamaCloudProject[];
-    config?: LlamaCloudConfig;
   };
-  updateLlamaCloudConfig: (config: LlamaCloudConfig) => Promise<void>;
 }
 
 export function useClientConfig(opts?: {
@@ -55,23 +45,9 @@ export function useClientConfig(opts?: {
     }
   }, [chatAPI, configAPI, shouldFetchConfig]);
 
-  const updateLlamaCloudConfig = async (config: LlamaCloudConfig) => {
-    const response = await fetch(configAPI, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(config),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to update LlamaCloud config");
-    }
-  };
-
   return {
     backend: backendOrigin,
     starterQuestions: config?.starterQuestions,
     llamaCloud: config?.llamaCloud,
-    updateLlamaCloudConfig,
   };
 }
