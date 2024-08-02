@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.28
+
+### Patch Changes
+
+- 9a09e8c: Fix Vercel deployment
+
 ## 0.1.27
 
 ### Patch Changes
