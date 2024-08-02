@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Implement a selector to configure LlamaCloud parameters
+Let user change indexes in LlamaCloud projects
