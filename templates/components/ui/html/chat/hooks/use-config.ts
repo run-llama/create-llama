@@ -13,7 +13,7 @@ export function useClientConfig(): ChatConfig {
 
   const backendOrigin = useMemo(() => {
     if (chatAPI) {
-      return chatAPI || "";
+      return new URL(chatAPI).origin;
     } else {
       if (typeof window !== "undefined") {
         // Use BASE_URL from window.ENV
