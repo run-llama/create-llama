@@ -36,7 +36,8 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
-  const { projects, pipeline, setPipeline } = useLlamaCloud();
+  const { isUsingLLamaCloud, projects, pipeline, setPipeline } =
+    useLlamaCloud();
 
   // Additional data to be sent to the API endpoint.
   const requestAdditionalData = {
@@ -120,7 +121,9 @@ export default function ChatInput(
             disabled: props.isLoading,
           }}
         />
-        <LlamaCloudSelector projects={projects} setPipeline={setPipeline} />
+        {isUsingLLamaCloud && (
+          <LlamaCloudSelector projects={projects} setPipeline={setPipeline} />
+        )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
         </Button>
