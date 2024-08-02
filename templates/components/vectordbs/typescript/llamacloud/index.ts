@@ -1,10 +1,9 @@
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
-import { LLamaCloudFileService } from "../llamaindex/streaming/service";
 
-export async function getDataSource() {
-  const { project, pipeline } = LLamaCloudFileService.getConfig() || {};
-  const projectName = project || process.env.LLAMA_CLOUD_PROJECT_NAME;
-  const pipelineName = pipeline || process.env.LLAMA_CLOUD_INDEX_NAME;
+export async function getDataSource(configs?: any) {
+  const { project, pipeline } = configs?.llamaCloudPipeline ?? {};
+  const projectName = project ?? process.env.LLAMA_CLOUD_PROJECT_NAME;
+  const pipelineName = pipeline ?? process.env.LLAMA_CLOUD_INDEX_NAME;
   const apiKey = process.env.LLAMA_CLOUD_API_KEY;
   if (!projectName || !pipelineName || !apiKey) {
     throw new Error(

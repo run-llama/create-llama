@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { messages }: { messages: Message[] } = body;
+    const { messages, data }: { messages: Message[]; data?: any } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       },
     );
     const ids = retrieveDocumentIds(allAnnotations);
-    const chatEngine = await createChatEngine(ids);
+    const chatEngine = await createChatEngine(ids, data);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(

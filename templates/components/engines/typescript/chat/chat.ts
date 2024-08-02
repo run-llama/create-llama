@@ -6,8 +6,8 @@ import {
 } from "llamaindex";
 import { getDataSource } from "./index";
 
-export async function createChatEngine(documentIds?: string[]) {
-  const index = await getDataSource();
+export async function createChatEngine(documentIds?: string[], configs?: any) {
+  const index = await getDataSource(configs);
   if (!index) {
     throw new Error(
       `StorageContext is empty - call 'npm run generate' to generate the storage first`,
