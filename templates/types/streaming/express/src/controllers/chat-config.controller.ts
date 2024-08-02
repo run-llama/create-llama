@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { LLamaCloudFileService } from "./llamaindex/streaming/service";
 
 export const chatConfig = async (_req: Request, res: Response) => {
   let starterQuestions = undefined;
@@ -11,4 +12,11 @@ export const chatConfig = async (_req: Request, res: Response) => {
   return res.status(200).json({
     starterQuestions,
   });
+};
+
+export const chatLlamaCloudConfig = async (_req: Request, res: Response) => {
+  const config = {
+    projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
+  };
+  return res.status(200).json(config);
 };
