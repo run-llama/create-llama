@@ -118,6 +118,7 @@ async def chat_request(
         nodes=SourceNodes.from_source_nodes(response.source_nodes),
     )
 
+
 @r.get("/config")
 async def chat_config() -> ChatConfig:
     starter_questions = None
@@ -126,7 +127,22 @@ async def chat_config() -> ChatConfig:
         starter_questions = conversation_starters.strip().split("\n")
     return ChatConfig(starter_questions=starter_questions)
 
+
 @r.get("/config/llamacloud")
 async def chat_llama_cloud_config():
     projects = LLamaCloudFileService.get_all_projects_with_pipelines()
-    return {"projects": projects}
+    pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+    project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+    pipeline_config = (
+        pipeline
+        and project
+        and {
+            "pipeline": pipeline,
+            "project": project,
+        }
+        or None
+    )
+    return {
+        "projects": projects,
+        "pipeline": pipeline_config,
+    }

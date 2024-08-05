@@ -122,7 +122,11 @@ export default function ChatInput(
           }}
         />
         {isUsingLLamaCloud && (
-          <LlamaCloudSelector projects={projects} setPipeline={setPipeline} />
+          <LlamaCloudSelector
+            projects={projects}
+            pipeline={pipeline}
+            setPipeline={setPipeline}
+          />
         )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message

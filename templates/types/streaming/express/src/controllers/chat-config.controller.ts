@@ -17,6 +17,10 @@ export const chatConfig = async (_req: Request, res: Response) => {
 export const chatLlamaCloudConfig = async (_req: Request, res: Response) => {
   const config = {
     projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
+    pipeline: {
+      pipeline: process.env.LLAMA_CLOUD_INDEX_NAME,
+      project: process.env.LLAMA_CLOUD_PROJECT_NAME,
+    },
   };
   return res.status(200).json(config);
 };
