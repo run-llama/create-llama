@@ -12,18 +12,14 @@ from ..templates import template
 
 @template(
     route="/",
-    title="Upload",
+    title="Extractor",
     on_load=[
         SchemaState.init_schema,
         UploadedFilesState.load_files,
     ]
 )
-def upload() -> rx.Component:
-    """The upload page.
-
-    Returns:
-        The UI for the upload page.
-    """
+def index() -> rx.Component:
+    """The main index page."""
     return rx.stack(
         rx.vstack(
             upload_component(),
