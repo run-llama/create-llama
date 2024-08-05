@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../select";
-import { RequestData } from "../chat-input";
 import { useClientConfig } from "../hooks/use-config";
 
 export type LLamaCloudProject = {
@@ -32,8 +31,8 @@ export type LlamaCloudConfig = {
 };
 
 export interface LlamaCloudSelectorProps {
-  requestData: RequestData | undefined;
-  setRequestData: (requestData: RequestData | undefined) => void;
+  requestData: any;
+  setRequestData: (requestData: any) => void;
 }
 
 export function LlamaCloudSelector({

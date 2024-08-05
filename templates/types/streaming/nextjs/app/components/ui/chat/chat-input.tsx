@@ -11,13 +11,6 @@ import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
 const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
 
-export type RequestData = {
-  llamaCloudPipeline?: {
-    project: string;
-    pipeline: string;
-  };
-};
-
 export default function ChatInput(
   props: Pick<
     ChatHandler,
@@ -43,7 +36,7 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
-  const [requestData, setRequestData] = useState<RequestData>();
+  const [requestData, setRequestData] = useState<any>();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
