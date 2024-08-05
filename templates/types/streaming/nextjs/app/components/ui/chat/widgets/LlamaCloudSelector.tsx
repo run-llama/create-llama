@@ -28,15 +28,14 @@ export type PipelineConfig = {
 
 export type LlamaCloudConfig = {
   projects?: LLamaCloudProject[];
+  pipeline?: PipelineConfig;
 };
 
 export interface LlamaCloudSelectorProps {
-  requestData: any;
-  setRequestData: (requestData: any) => void;
+  setRequestData: React.Dispatch<any>;
 }
 
 export function LlamaCloudSelector({
-  requestData,
   setRequestData,
 }: LlamaCloudSelectorProps) {
   const { backend } = useClientConfig();
@@ -49,29 +48,33 @@ export function LlamaCloudSelector({
         .then((data) => {
           setConfig(data);
           setRequestData({
-            ...requestData,
             llamaCloudPipeline: data.pipeline,
           });
         })
         .catch((error) => console.error("Error fetching config", error));
     }
-  }, [backend, config, requestData, setRequestData]);
+  }, [backend, config, setRequestData]);
 
   const setPipeline = (pipelineConfig?: PipelineConfig) => {
-    setRequestData({
-      ...requestData,
-      llamaCloudPipeline: pipelineConfig,
+    setConfig((prevConfig) => ({
+      ...prevConfig,
+      pipeline: pipelineConfig,
+    }));
+    setRequestData((prevData: any) => {
+      if (!prevData) return { llamaCloudPipeline: pipelineConfig };
+      return {
+        ...prevData,
+        llamaCloudPipeline: pipelineConfig,
+      };
     });
   };
 
-  const projects = config?.projects;
+  const { projects, pipeline } = config ?? {};
   if (!projects?.length) return null;
 
   const handlePipelineSelect = async (value: string) => {
     setPipeline(JSON.parse(value) as PipelineConfig);
   };
-
-  const pipeline = requestData?.llamaCloudPipeline;
 
   return (
     <Select

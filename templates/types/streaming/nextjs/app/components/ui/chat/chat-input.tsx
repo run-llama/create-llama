@@ -116,10 +116,7 @@ export default function ChatInput(
           }}
         />
         {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && (
-          <LlamaCloudSelector
-            requestData={requestData}
-            setRequestData={setRequestData}
-          />
+          <LlamaCloudSelector setRequestData={setRequestData} />
         )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
