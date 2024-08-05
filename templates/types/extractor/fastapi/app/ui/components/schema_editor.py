@@ -8,7 +8,7 @@ class SchemaState(rx.State):
         self.schema = schema
 
     def init_schema(self):
-        from app.api.routers.output import Output
+        from app.api.models.output import Output
 
         self.schema = Output.schema_json(indent=2)
 

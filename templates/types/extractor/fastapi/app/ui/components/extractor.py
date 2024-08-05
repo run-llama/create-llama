@@ -21,10 +21,8 @@ class StructureQuery(rx.State):
             "query": self.query,
             "schema": str(schema),
         }
-        print("Extracting data with query", dump_data)
         response = await query_request(RequestData(**dump_data))
-        print("Response", response)
-        self.response = str(response)
+        self.response = response.json(indent=2)
 
 
 def extract_data_component() -> rx.Component:
