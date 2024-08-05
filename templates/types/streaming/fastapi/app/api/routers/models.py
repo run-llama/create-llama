@@ -75,6 +75,7 @@ class Message(BaseModel):
 
 class ChatData(BaseModel):
     messages: List[Message]
+    data: Any | None
 
     class Config:
         json_schema_extra = {
@@ -84,7 +85,13 @@ class ChatData(BaseModel):
                         "role": "user",
                         "content": "What standards for letters exist?",
                     }
-                ]
+                ],
+                "data": {
+                    "llamaCloudPipeline": {
+                        "project": "Default",
+                        "pipeline": "jonas"
+                    }
+                }
             }
         }
 

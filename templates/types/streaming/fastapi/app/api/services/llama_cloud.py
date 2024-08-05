@@ -15,6 +15,32 @@ class LLamaCloudFileService:
     DOWNLOAD_FILE_NAME_TPL = "{pipeline_id}${filename}"
 
     @classmethod
+    def get_all_projects(cls) -> List[Dict[str, Any]]:
+        url = f"{cls.LLAMA_CLOUD_URL}/projects"
+        return cls._make_request(url)
+    
+    @classmethod
+    def get_all_pipelines(cls) -> List[Dict[str, Any]]:
+        url = f"{cls.LLAMA_CLOUD_URL}/pipelines"
+        return cls._make_request(url)
+    
+    @classmethod
+    def get_all_projects_with_pipelines(cls) -> List[Dict[str, Any]]:
+        try:
+            projects = cls.get_all_projects()
+            pipelines = cls.get_all_pipelines()
+            return [
+                {
+                    **project,
+                    "pipelines": [p for p in pipelines if p["project_id"] == project["id"]],
+                }
+                for project in projects
+            ]
+        except Exception as error:
+            logger.error(f"Error listing projects and pipelines: {error}")
+            return []
+
+    @classmethod
     def _get_files(cls, pipeline_id: str) -> List[Dict[str, Any]]:
         url = f"{cls.LLAMA_CLOUD_URL}/pipelines/{pipeline_id}/files"
         return cls._make_request(url)
