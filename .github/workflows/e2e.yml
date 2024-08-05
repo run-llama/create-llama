@@ -18,6 +18,7 @@ jobs:
         node-version: [18, 20]
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
+        frameworks: ["nextjs", "express", "fastapi"]
     defaults:
       run:
         shell: bash
@@ -63,6 +64,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
+          FRAMEWORKS: ${{ matrix.frameworks }}
         working-directory: .
 
       - uses: actions/upload-artifact@v3
