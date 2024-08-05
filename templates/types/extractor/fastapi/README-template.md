@@ -1,4 +1,4 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) project using [FastAPI](https://fastapi.tiangolo.com/) bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama) featuring [structured extraction](https://docs.llamaindex.ai/en/stable/examples/structured_outputs/structured_outputs/?h=structured+output).
+This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Reflex](https://reflex.dev/) bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama) featuring [structured extraction](https://docs.llamaindex.ai/en/stable/examples/structured_outputs/structured_outputs/?h=structured+output).
 
 ## Getting Started
 
@@ -19,14 +19,14 @@ Second, generate the embeddings of the documents in the `./data` directory (if t
 poetry run generate
 ```
 
-Third, run the API in one command:
+Third, start app with `reflex` command:
 
 ```shell
-poetry run python main.py
+poetry run reflex run
 ```
 
-The example provides the `/api/extractor/query` API endpoint.
-
+You now can access the UI at http://localhost:3000 to testing the structure extractor interactively.  
+Or checking the API documentation at: http://localhost:8000/docs. The example provides the `/api/extractor/query` API endpoint.
 This query endpoint returns structured data in the format of the [Output](./app/api/routers/output.py) class. Modify this class to change the output format.
 
 You can test the endpoint with the following curl request:
@@ -51,12 +51,10 @@ To retrieve a response with low confidence since the question is not related to 
 
 You can start editing the API endpoint by modifying [`extractor.py`](./app/api/routers/extractor.py). The endpoints auto-update as you save the file.
 
-Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
-
 The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
 
 ```
-ENVIRONMENT=prod python main.py
+poetry run reflex run --env prod
 ```
 
 ## Learn More
