@@ -17,7 +17,7 @@ const templateFrameworks: TemplateFramework[] = [
   "express",
   "fastapi",
 ];
-const dataSources: string[] = ["--no-files", "--llamacloud"];
+const dataSources: string[] = ["--no-files"];
 const templateUIs: TemplateUI[] = ["shadcn", "html"];
 const templatePostInstallActions: TemplatePostInstallAction[] = [
   "none",
