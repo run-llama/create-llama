@@ -1,4 +1,4 @@
-# Create Llama
+# Create Llama test
 
 The easiest way to get started with [LlamaIndex](https://www.llamaindex.ai/) is by using `create-llama`. This CLI tool enables you to quickly start building a new LlamaIndex application, with everything set up for you.
 
