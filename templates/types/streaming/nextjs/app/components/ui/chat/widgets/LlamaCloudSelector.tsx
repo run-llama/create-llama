@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Select,
@@ -10,23 +11,25 @@ import {
 } from "../../select";
 import { useClientConfig } from "../hooks/use-config";
 
-export type LLamaCloudProject = {
+type LLamaCloudPipeline = {
+  id: string;
+  name: string;
+};
+
+type LLamaCloudProject = {
   id: string;
   organization_id: string;
   name: string;
   is_default: boolean;
-  pipelines: Array<{
-    id: string;
-    name: string;
-  }>;
+  pipelines: Array<LLamaCloudPipeline>;
 };
 
-export type PipelineConfig = {
+type PipelineConfig = {
   project: string; // project name
   pipeline: string; // pipeline name
 };
 
-export type LlamaCloudConfig = {
+type LlamaCloudConfig = {
   projects?: LLamaCloudProject[];
   pipeline?: PipelineConfig;
 };
@@ -56,7 +59,7 @@ export function LlamaCloudSelector({
   }, [backend, config, setRequestData]);
 
   const setPipeline = (pipelineConfig?: PipelineConfig) => {
-    setConfig((prevConfig) => ({
+    setConfig((prevConfig: any) => ({
       ...prevConfig,
       pipeline: pipelineConfig,
     }));
@@ -69,30 +72,36 @@ export function LlamaCloudSelector({
     });
   };
 
-  const { projects, pipeline } = config ?? {};
-  if (!projects?.length) return null;
-
   const handlePipelineSelect = async (value: string) => {
     setPipeline(JSON.parse(value) as PipelineConfig);
   };
 
+  if (!config) {
+    return (
+      <div className="flex justify-center items-center p-3">
+        <Loader2 className="h-4 w-4 animate-spin" />
+      </div>
+    );
+  }
+  if (!isValid(config)) {
+    return (
+      <p className="text-red-500">
+        Invalid LlamaCloud configuration. Check console logs.
+      </p>
+    );
+  }
+  const { projects, pipeline } = config;
+
   return (
     <Select
       onValueChange={handlePipelineSelect}
-      defaultValue={
-        pipeline
-          ? JSON.stringify({
-              project: pipeline.project,
-              pipeline: pipeline.pipeline,
-            })
-          : undefined
-      }
+      defaultValue={JSON.stringify(pipeline)}
     >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Select a pipeline" />
       </SelectTrigger>
       <SelectContent>
-        {projects.map((project) => (
+        {projects.map((project: LLamaCloudProject) => (
           <SelectGroup key={project.id}>
             <SelectLabel className="capitalize">
               Project: {project.name}
@@ -102,8 +111,8 @@ export function LlamaCloudSelector({
                 key={pipeline.id}
                 className="last:border-b"
                 value={JSON.stringify({
-                  project: project.name,
                   pipeline: pipeline.name,
+                  project: project.name,
                 })}
               >
                 <span className="pl-2">{pipeline.name}</span>
@@ -114,4 +123,29 @@ export function LlamaCloudSelector({
       </SelectContent>
     </Select>
   );
+}
+
+function isValid(config: LlamaCloudConfig): boolean {
+  const { projects, pipeline } = config ?? {};
+  if (!projects?.length) return false;
+  if (!pipeline) return false;
+  const matchedProject = projects.find(
+    (project: LLamaCloudProject) => project.name === pipeline.project,
+  );
+  if (!matchedProject) {
+    console.error(
+      `LlamaCloud project ${pipeline.project} not found. Check LLAMA_CLOUD_PROJECT_NAME variable`,
+    );
+    return false;
+  }
+  const pipelineExists = matchedProject.pipelines.some(
+    (p) => p.name === pipeline.pipeline,
+  );
+  if (!pipelineExists) {
+    console.error(
+      `LlamaCloud pipeline ${pipeline.pipeline} not found. Check LLAMA_CLOUD_INDEX_NAME variable`,
+    );
+    return false;
+  }
+  return true;
 }
