@@ -3,7 +3,7 @@ import { VectorStoreIndex } from "llamaindex";
 import { PineconeVectorStore } from "llamaindex/storage/vectorStore/PineconeVectorStore";
 import { checkRequiredEnvVars } from "./shared";
 
-export async function getDataSource() {
+export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
   const store = new PineconeVectorStore();
   return await VectorStoreIndex.fromVectorStore(store);

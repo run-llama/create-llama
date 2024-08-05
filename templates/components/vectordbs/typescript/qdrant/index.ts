@@ -5,7 +5,7 @@ import { checkRequiredEnvVars, getQdrantClient } from "./shared";
 
 dotenv.config();
 
-export async function getDataSource() {
+export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
   const collectionName = process.env.QDRANT_COLLECTION;
   const store = new QdrantVectorStore({
