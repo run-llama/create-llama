@@ -1,4 +1,5 @@
 import { JSONValue } from "ai";
+import { useState } from "react";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
@@ -6,10 +7,16 @@ import { Input } from "../input";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useFile } from "./hooks/use-file";
-import { useLlamaCloud } from "./hooks/use-llama-cloud";
 import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
 const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
+
+export type RequestData = {
+  llamaCloudPipeline?: {
+    project: string;
+    pipeline: string;
+  };
+};
 
 export default function ChatInput(
   props: Pick<
@@ -36,10 +43,7 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
-  const { projects, pipeline, setPipeline } = useLlamaCloud();
-
-  // Additional data to be sent to the API endpoint.
-  const requestData = { llamaCloudPipeline: pipeline };
+  const [requestData, setRequestData] = useState<RequestData>();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -120,9 +124,8 @@ export default function ChatInput(
         />
         {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && (
           <LlamaCloudSelector
-            projects={projects}
-            pipeline={pipeline}
-            setPipeline={setPipeline}
+            requestData={requestData}
+            setRequestData={setRequestData}
           />
         )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
