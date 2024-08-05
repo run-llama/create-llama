@@ -75,7 +75,7 @@ class Message(BaseModel):
 
 class ChatData(BaseModel):
     messages: List[Message]
-    data: Any | None
+    data: Any = None
 
     class Config:
         json_schema_extra = {
@@ -238,7 +238,7 @@ class ChatConfig(BaseModel):
     starter_questions: Optional[List[str]] = Field(
         default=None,
         description="List of starter questions",
-        serialization_alias="starterQuestions"
+        serialization_alias="starterQuestions",
     )
 
     class Config:
