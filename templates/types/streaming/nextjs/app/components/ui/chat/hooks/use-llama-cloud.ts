@@ -35,7 +35,7 @@ export function useLlamaCloud() {
         .then((data) => setConfig(data))
         .catch((error) => console.error("Error fetching config", error));
     }
-  }, [backend, config, isUsingLLamaCloud]);
+  }, [backend, config]);
 
   const setPipeline = (pipelineConfig?: PipelineConfig) => {
     setConfig({ ...config, pipeline: pipelineConfig });
