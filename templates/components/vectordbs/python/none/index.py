@@ -17,7 +17,7 @@ def get_storage_context(persist_dir: str) -> StorageContext:
     return StorageContext.from_defaults(persist_dir=persist_dir)
 
 
-def get_index():
+def get_index(params=None):
     storage_dir = os.getenv("STORAGE_DIR", "storage")
     # check if storage already exists
     if not os.path.exists(storage_dir):

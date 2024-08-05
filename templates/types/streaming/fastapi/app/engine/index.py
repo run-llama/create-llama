@@ -6,7 +6,7 @@ from app.engine.vectordb import get_vector_store
 logger = logging.getLogger("uvicorn")
 
 
-def get_index():
+def get_index(params=None):
     logger.info("Connecting vector store...")
     store = get_vector_store()
     # Load the index from the vector store

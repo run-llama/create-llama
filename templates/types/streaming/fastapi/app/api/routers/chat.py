@@ -52,8 +52,9 @@ async def chat(
 
         doc_ids = data.get_chat_document_ids()
         filters = generate_filters(doc_ids)
+        params = data.data or {}
         logger.info("Creating chat engine with filters", filters.dict())
-        chat_engine = get_chat_engine(filters=filters)
+        chat_engine = get_chat_engine(filters=filters, params=params)
 
         event_handler = EventCallbackHandler()
         chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
@@ -125,3 +126,23 @@ async def chat_config() -> ChatConfig:
     if conversation_starters and conversation_starters.strip():
         starter_questions = conversation_starters.strip().split("\n")
     return ChatConfig(starter_questions=starter_questions)
+
+
+@r.get("/config/llamacloud")
+async def chat_llama_cloud_config():
+    projects = LLamaCloudFileService.get_all_projects_with_pipelines()
+    pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+    project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+    pipeline_config = (
+        pipeline
+        and project
+        and {
+            "pipeline": pipeline,
+            "project": project,
+        }
+        or None
+    )
+    return {
+        "projects": projects,
+        "pipeline": pipeline_config,
+    }
