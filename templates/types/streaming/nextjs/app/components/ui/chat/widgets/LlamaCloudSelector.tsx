@@ -101,7 +101,7 @@ export function LlamaCloudSelector({
         <SelectValue placeholder="Select a pipeline" />
       </SelectTrigger>
       <SelectContent>
-        {projects.map((project: LLamaCloudProject) => (
+        {projects!.map((project: LLamaCloudProject) => (
           <SelectGroup key={project.id}>
             <SelectLabel className="capitalize">
               Project: {project.name}
@@ -126,7 +126,7 @@ export function LlamaCloudSelector({
 }
 
 function isValid(config: LlamaCloudConfig): boolean {
-  const { projects, pipeline } = config ?? {};
+  const { projects, pipeline } = config;
   if (!projects?.length) return false;
   if (!pipeline) return false;
   const matchedProject = projects.find(
