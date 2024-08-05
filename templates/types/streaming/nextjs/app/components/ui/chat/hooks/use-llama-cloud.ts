@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useClientConfig } from "./use-config";
 
@@ -25,10 +27,9 @@ export type LlamaCloudConfig = {
 export function useLlamaCloud() {
   const { backend } = useClientConfig();
   const [config, setConfig] = useState<LlamaCloudConfig>();
-  const isUsingLLamaCloud = process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true";
 
   useEffect(() => {
-    if (isUsingLLamaCloud && !config) {
+    if (process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && !config) {
       fetch(`${backend}/api/chat/config/llamacloud`)
         .then((response) => response.json())
         .then((data) => setConfig(data))
@@ -41,7 +42,6 @@ export function useLlamaCloud() {
   };
 
   return {
-    isUsingLLamaCloud,
     projects: config?.projects ?? [],
     pipeline: config?.pipeline,
     setPipeline,

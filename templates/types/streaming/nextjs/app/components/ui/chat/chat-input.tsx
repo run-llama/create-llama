@@ -36,13 +36,10 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
-  const { isUsingLLamaCloud, projects, pipeline, setPipeline } =
-    useLlamaCloud();
+  const { projects, pipeline, setPipeline } = useLlamaCloud();
 
   // Additional data to be sent to the API endpoint.
-  const requestAdditionalData = {
-    llamaCloudPipeline: pipeline,
-  };
+  const requestData = { llamaCloudPipeline: pipeline };
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -58,7 +55,7 @@ export default function ChatInput(
         createdAt: new Date(),
         annotations,
       },
-      { data: requestAdditionalData },
+      { data: requestData },
     );
     props.setInput!("");
   };
@@ -69,7 +66,7 @@ export default function ChatInput(
       handleSubmitWithAnnotations(e, annotations);
       return reset();
     }
-    props.handleSubmit(e, { data: requestAdditionalData });
+    props.handleSubmit(e, { data: requestData });
   };
 
   const handleUploadFile = async (file: File) => {
@@ -121,7 +118,7 @@ export default function ChatInput(
             disabled: props.isLoading,
           }}
         />
-        {isUsingLLamaCloud && (
+        {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && (
           <LlamaCloudSelector
             projects={projects}
             pipeline={pipeline}

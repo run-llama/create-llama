@@ -85,13 +85,7 @@ class ChatData(BaseModel):
                         "role": "user",
                         "content": "What standards for letters exist?",
                     }
-                ],
-                "data": {
-                    "llamaCloudPipeline": {
-                        "project": "Default",
-                        "pipeline": "jonas"
-                    }
-                }
+                ]
             }
         }
 
