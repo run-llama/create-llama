@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.api.models.output import Output
-from app.services.engine import get_query_engine
+from app.engine import get_query_engine
 
 extractor_router = r = APIRouter()
 
@@ -33,5 +33,3 @@ async def query_request(
 
     output_data = response.response.dict()
     return Output(**output_data)
-
-

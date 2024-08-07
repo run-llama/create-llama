@@ -6,7 +6,7 @@ from typing import Callable
 
 import reflex as rx
 
-from .. import styles
+from . import styles
 
 # Meta tags for the app.
 default_meta = [

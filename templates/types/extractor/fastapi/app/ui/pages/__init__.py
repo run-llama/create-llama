@@ -1,1 +1,1 @@
-from .index import upload
+from .index import index
