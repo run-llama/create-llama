@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.29
+
+### Patch Changes
+
+- 8890e27: Let user change indexes in LlamaCloud projects
+
 ## 0.1.28
 
 ### Patch Changes

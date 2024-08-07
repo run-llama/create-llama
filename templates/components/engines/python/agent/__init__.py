@@ -6,7 +6,7 @@ from app.engine.tools import ToolFactory
 from app.engine.index import get_index
 
 
-def get_chat_engine(filters=None):
+def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = os.getenv("TOP_K", "3")
     tools = []

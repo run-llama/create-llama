@@ -1,4 +1,5 @@
 import { JSONValue } from "ai";
+import { useState } from "react";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
@@ -6,6 +7,7 @@ import { Input } from "../input";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useFile } from "./hooks/use-file";
+import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
 const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"];
 
@@ -34,6 +36,7 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
+  const [requestData, setRequestData] = useState<any>();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -42,12 +45,15 @@ export default function ChatInput(
     annotations: JSONValue[] | undefined,
   ) => {
     e.preventDefault();
-    props.append!({
-      content: props.input,
-      role: "user",
-      createdAt: new Date(),
-      annotations,
-    });
+    props.append!(
+      {
+        content: props.input,
+        role: "user",
+        createdAt: new Date(),
+        annotations,
+      },
+      { data: requestData },
+    );
     props.setInput!("");
   };
 
@@ -57,7 +63,7 @@ export default function ChatInput(
       handleSubmitWithAnnotations(e, annotations);
       return reset();
     }
-    props.handleSubmit(e);
+    props.handleSubmit(e, { data: requestData });
   };
 
   const handleUploadFile = async (file: File) => {
@@ -109,6 +115,9 @@ export default function ChatInput(
             disabled: props.isLoading,
           }}
         />
+        {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && (
+          <LlamaCloudSelector setRequestData={setRequestData} />
+        )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
         </Button>

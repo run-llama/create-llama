@@ -4,7 +4,7 @@ import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDB
 import { MongoClient } from "mongodb";
 import { checkRequiredEnvVars } from "./shared";
 
-export async function getDataSource() {
+export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
   const client = new MongoClient(process.env.MONGO_URI!);
   const store = new MongoDBAtlasVectorSearch({

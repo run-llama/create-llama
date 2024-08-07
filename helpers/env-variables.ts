@@ -160,6 +160,17 @@ const getVectorDBEnvs = (
           description:
             "The organization ID for the LlamaCloud project (uses default organization if not specified - Python only)",
         },
+        ...(framework === "nextjs"
+          ? // activate index selector per default (not needed for non-NextJS backends as it's handled by createFrontendEnvFile)
+            [
+              {
+                name: "NEXT_PUBLIC_USE_LLAMACLOUD",
+                description:
+                  "Let's the user change indexes in LlamaCloud projects",
+                value: "true",
+              },
+            ]
+          : []),
       ];
     case "chroma":
       const envs = [
@@ -493,6 +504,7 @@ export const createFrontendEnvFile = async (
   root: string,
   opts: {
     customApiPath?: string;
+    vectorDb?: TemplateVectorDB;
   },
 ) => {
   const defaultFrontendEnvs = [
@@ -502,6 +514,11 @@ export const createFrontendEnvFile = async (
       value: opts.customApiPath
         ? opts.customApiPath
         : "http://localhost:8000/api/chat",
+    },
+    {
+      name: "NEXT_PUBLIC_USE_LLAMACLOUD",
+      description: "Let's the user change indexes in LlamaCloud projects",
+      value: opts.vectorDb === "llamacloud" ? "true" : "false",
     },
   ];
   const content = renderEnvVar(defaultFrontendEnvs);

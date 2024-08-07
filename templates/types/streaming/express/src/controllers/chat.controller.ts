@@ -17,7 +17,7 @@ export const chat = async (req: Request, res: Response) => {
   const vercelStreamData = new StreamData();
   const streamTimeout = createStreamTimeout(vercelStreamData);
   try {
-    const { messages }: { messages: Message[] } = req.body;
+    const { messages, data }: { messages: Message[]; data?: any } = req.body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return res.status(400).json({
@@ -46,7 +46,7 @@ export const chat = async (req: Request, res: Response) => {
       },
     );
     const ids = retrieveDocumentIds(allAnnotations);
-    const chatEngine = await createChatEngine(ids);
+    const chatEngine = await createChatEngine(ids, data);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(

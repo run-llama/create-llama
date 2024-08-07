@@ -5,10 +5,11 @@ from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
 
 logger = logging.getLogger("uvicorn")
 
-
-def get_index():
-    name = os.getenv("LLAMA_CLOUD_INDEX_NAME")
-    project_name = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+def get_index(params=None):
+    configParams = params or {}
+    pipelineConfig = configParams.get("llamaCloudPipeline", {})
+    name = pipelineConfig.get("pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME"))
+    project_name = pipelineConfig.get("project", os.getenv("LLAMA_CLOUD_PROJECT_NAME"))
     api_key = os.getenv("LLAMA_CLOUD_API_KEY")
     base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
     organization_id = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")

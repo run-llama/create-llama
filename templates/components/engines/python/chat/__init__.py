@@ -3,11 +3,11 @@ from app.engine.index import get_index
 from fastapi import HTTPException
 
 
-def get_chat_engine(filters=None):
+def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = os.getenv("TOP_K", 3)
 
-    index = get_index()
+    index = get_index(params)
     if index is None:
         raise HTTPException(
             status_code=500,

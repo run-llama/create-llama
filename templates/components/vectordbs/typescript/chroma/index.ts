@@ -3,7 +3,7 @@ import { VectorStoreIndex } from "llamaindex";
 import { ChromaVectorStore } from "llamaindex/storage/vectorStore/ChromaVectorStore";
 import { checkRequiredEnvVars } from "./shared";
 
-export async function getDataSource() {
+export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
   const chromaUri = `http://${process.env.CHROMA_HOST}:${process.env.CHROMA_PORT}`;
 
