@@ -1,1 +1,1 @@
-from .engine import get_index, get_query_engine
+from .engine import get_query_engine
