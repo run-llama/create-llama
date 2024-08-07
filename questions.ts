@@ -648,6 +648,7 @@ export const askQuestions = async (
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = preferences.useLlamaParse = true;
   } else {
+    // Extractor template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
     if (
       program.useLlamaParse === undefined &&
       program.template !== "extractor"
