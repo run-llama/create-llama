@@ -13,7 +13,7 @@ export default function ChatMessages(
     "messages" | "isLoading" | "reload" | "stop" | "append"
   >,
 ) {
-  const { starterQuestions } = useClientConfig();
+  const { starterQuestions } = useClientConfig({ shouldFetch: true });
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
   const messageLength = props.messages.length;
   const lastMessage = props.messages[messageLength - 1];
