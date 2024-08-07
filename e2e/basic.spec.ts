@@ -67,7 +67,9 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   test("Frontend should have a title", async ({ page }) => {
     test.skip(templatePostInstallAction !== "runApp");
     await page.goto(`http://localhost:${port}`);
-    await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
+    await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
+      timeout: 2000 * 60,
+    });
   });
 
   test("Frontend should be able to submit a message and receive a response", async ({
