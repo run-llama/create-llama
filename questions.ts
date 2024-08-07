@@ -648,7 +648,10 @@ export const askQuestions = async (
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = preferences.useLlamaParse = true;
   } else {
-    if (program.useLlamaParse === undefined) {
+    if (
+      program.useLlamaParse === undefined &&
+      program.template !== "extractor"
+    ) {
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
         if (ciInfo.isCI) {
