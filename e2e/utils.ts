@@ -19,48 +19,6 @@ export type CreateLlamaResult = {
 };
 
 // eslint-disable-next-line max-params
-export async function checkAppHasStarted(
-  frontend: boolean,
-  framework: TemplateFramework,
-  port: number,
-  externalPort: number,
-  timeout: number,
-) {
-  if (frontend) {
-    await Promise.all([
-      waitPort({
-        host: "localhost",
-        port: port,
-        timeout,
-      }),
-      waitPort({
-        host: "localhost",
-        port: externalPort,
-        timeout,
-      }),
-    ]).catch((err) => {
-      console.error(err);
-      throw err;
-    });
-  } else {
-    let wPort: number;
-    if (framework === "nextjs") {
-      wPort = port;
-    } else {
-      wPort = externalPort;
-    }
-    await waitPort({
-      host: "localhost",
-      port: wPort,
-      timeout,
-    }).catch((err) => {
-      console.error(err);
-      throw err;
-    });
-  }
-}
-
-// eslint-disable-next-line max-params
 export async function runCreateLlama(
   cwd: string,
   templateType: TemplateType,
@@ -142,25 +100,10 @@ export async function runCreateLlama(
       templateFramework,
       port,
       externalPort,
-      1000 * 60 * 5,
     );
   } else {
-    // wait create-llama to exit
-    // we don't test install dependencies for now, so just set timeout for 10 seconds
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("create-llama timeout error"));
-      }, 1000 * 10);
-      appProcess.on("exit", (code) => {
-        if (code !== 0 && code !== null) {
-          clearTimeout(timeout);
-          reject(new Error("create-llama command was failed!"));
-        } else {
-          clearTimeout(timeout);
-          resolve(undefined);
-        }
-      });
-    });
+    // wait 10 seconds for create-llama to exit
+    await waitForProcess(appProcess, 1000 * 10);
   }
 
   return {
@@ -173,4 +116,54 @@ export async function createTestDir() {
   const cwd = path.join(__dirname, "cache", crypto.randomUUID());
   await mkdir(cwd, { recursive: true });
   return cwd;
+}
+
+// eslint-disable-next-line max-params
+async function checkAppHasStarted(
+  frontend: boolean,
+  framework: TemplateFramework,
+  port: number,
+  externalPort: number,
+) {
+  const portsToWait = frontend
+    ? [port, externalPort]
+    : [framework === "nextjs" ? port : externalPort];
+  await waitPorts(portsToWait);
+}
+
+async function waitPorts(ports: number[]): Promise<void> {
+  const waitForPort = async (port: number): Promise<void> => {
+    await waitPort({
+      host: "localhost",
+      port: port,
+      // wait max. 5 mins for start up of app
+      timeout: 1000 * 60 * 5,
+    });
+  };
+  try {
+    await Promise.all(ports.map(waitForPort));
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+async function waitForProcess(
+  process: ChildProcess,
+  timeoutMs: number,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error("Process timeout error"));
+    }, timeoutMs);
+
+    process.on("exit", (code) => {
+      clearTimeout(timeout);
+      if (code !== 0 && code !== null) {
+        reject(new Error("Process exited with non-zero code"));
+      } else {
+        resolve();
+      }
+    });
+  });
 }
