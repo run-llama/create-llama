@@ -64,7 +64,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
   );
 }
 
-const FileIcon: Record<DocumentFileType, string> = {
+export const FileIcon: Record<DocumentFileType, string> = {
   csv: SheetIcon,
   pdf: PdfIcon,
   docx: DocxIcon,

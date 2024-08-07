@@ -31,7 +31,7 @@ const PdfFocusProvider = dynamic(
 export default function PdfDialog(props: PdfDialogProps) {
   return (
     <Drawer direction="left">
-      <DrawerTrigger>{props.trigger}</DrawerTrigger>
+      <DrawerTrigger asChild>{props.trigger}</DrawerTrigger>
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
