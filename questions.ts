@@ -486,7 +486,10 @@ export const askQuestions = async (
           message: "Would you like to set up observability?",
           choices: [
             { title: "No", value: "none" },
-            { title: "OpenTelemetry", value: "opentelemetry" },
+            ...(program.framework === "fastapi"
+              ? [{ title: "LlamaTrace", value: "llamatrace" }]
+              : []),
+            { title: "Traceloop", value: "traceloop" },
           ],
           initial: 0,
         },

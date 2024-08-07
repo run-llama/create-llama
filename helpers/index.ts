@@ -168,16 +168,7 @@ export const installTemplate = async (
       props.template === "multiagent" ||
       props.template === "extractor"
     ) {
-      await createBackendEnvFile(props.root, {
-        modelConfig: props.modelConfig,
-        llamaCloudKey: props.llamaCloudKey,
-        vectorDb: props.vectorDb,
-        framework: props.framework,
-        dataSources: props.dataSources,
-        port: props.externalPort,
-        tools: props.tools,
-        template: props.template,
-      });
+      await createBackendEnvFile(props.root, props);
     }
 
     if (props.dataSources.length > 0) {

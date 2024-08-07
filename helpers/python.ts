@@ -380,18 +380,27 @@ export const installPythonTemplate = async ({
     tools,
   );
 
-  if (observability === "opentelemetry") {
-    addOnDependencies.push({
-      name: "traceloop-sdk",
-      version: "^0.15.11",
-    });
+  if (observability && observability !== "none") {
+    if (observability === "traceloop") {
+      addOnDependencies.push({
+        name: "traceloop-sdk",
+        version: "^0.15.11",
+      });
+    }
+
+    if (observability === "llamatrace") {
+      addOnDependencies.push({
+        name: "llama-index-callbacks-arize-phoenix",
+        version: "^0.1.6",
+      });
+    }
 
     const templateObservabilityPath = path.join(
       templatesDir,
       "components",
       "observability",
       "python",
-      "opentelemetry",
+      observability,
     );
     await copy("**", path.join(root, "app"), {
       cwd: templateObservabilityPath,
