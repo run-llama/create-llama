@@ -9,7 +9,7 @@ import { makeDir } from "./helpers/make-dir";
 
 import fs from "fs";
 import terminalLink from "terminal-link";
-import type { InstallTemplateArgs } from "./helpers";
+import type { InstallTemplateArgs, TemplateObservability } from "./helpers";
 import { installTemplate } from "./helpers";
 import { writeDevcontainer } from "./helpers/devcontainer";
 import { templatesDir } from "./helpers/dir";
@@ -142,14 +142,7 @@ export async function createApp({
     )} and learn how to get started.`,
   );
 
-  if (args.observability === "opentelemetry") {
-    console.log(
-      `\n${yellow("Observability")}: Visit the ${terminalLink(
-        "documentation",
-        "https://traceloop.com/docs/openllmetry/integrations",
-      )} to set up the environment variables and start seeing execution traces.`,
-    );
-  }
+  outputObservability(args.observability);
 
   if (
     dataSources.some((dataSource) => dataSource.type === "file") &&
@@ -166,4 +159,25 @@ export async function createApp({
   }
 
   console.log();
+}
+
+function outputObservability(observability?: TemplateObservability) {
+  switch (observability) {
+    case "traceloop":
+      console.log(
+        `\n${yellow("Observability")}: Visit the ${terminalLink(
+          "documentation",
+          "https://traceloop.com/docs/openllmetry/integrations",
+        )} to set up the environment variables and start seeing execution traces.`,
+      );
+      break;
+    case "llamatrace":
+      console.log(
+        `\n${yellow("Observability")}: LlamaTrace has been configured for your project. Visit the ${terminalLink(
+          "LlamaTrace dashboard",
+          "https://llamatrace.com/login",
+        )} to view your traces and monitor your application.`,
+      );
+      break;
+  }
 }
