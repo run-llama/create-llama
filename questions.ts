@@ -139,7 +139,7 @@ export const getDataSourceChoices = (
     });
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
-    if (template !== "multiagent") {
+    if (template !== "multiagent" && template !== "extractor") {
       choices.push({
         title: "No datasource",
         value: "none",
@@ -171,7 +171,7 @@ export const getDataSourceChoices = (
     );
   }
 
-  if (framework === "fastapi") {
+  if (framework === "fastapi" && template !== "extractor") {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",
@@ -182,7 +182,7 @@ export const getDataSourceChoices = (
     });
   }
 
-  if (!selectedDataSource.length) {
+  if (!selectedDataSource.length && template !== "extractor") {
     choices.push({
       title: "Use managed index from LlamaCloud",
       value: "llamacloud",
