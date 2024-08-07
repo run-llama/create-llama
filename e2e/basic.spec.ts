@@ -11,7 +11,9 @@ import type {
 } from "../helpers";
 import { createTestDir, runCreateLlama, type AppType } from "./utils";
 
-const templateType: TemplateType = "streaming";
+const templateType: TemplateType = process.env.TEMPLATE
+  ? (process.env.TEMPLATE as TemplateType)
+  : "streaming";
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
@@ -36,7 +38,7 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   // Only test without using vector db for now
   const vectorDb = "none";
 
-  test.beforeAll(async () => {
+  test.beforeEach(async () => {
     port = Math.floor(Math.random() * 10000) + 10000;
     externalPort = port + 1;
     cwd = await createTestDir();
@@ -64,6 +66,7 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   });
   test("Frontend should have a title", async ({ page }) => {
     test.skip(templatePostInstallAction !== "runApp");
+    test.skip(templateType === "extractor");
     await page.goto(`http://localhost:${port}`);
     await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
   });
@@ -72,6 +75,7 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
     page,
   }) => {
     test.skip(templatePostInstallAction !== "runApp");
+    test.skip(templateType === "extractor");
     await page.goto(`http://localhost:${port}`);
     await page.fill("form input", userMessage);
     const [response] = await Promise.all([
@@ -95,6 +99,7 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   }) => {
     test.skip(templatePostInstallAction !== "runApp");
     test.skip(templateFramework === "nextjs");
+    test.skip(templateType === "extractor");
     const response = await request.post(
       `http://localhost:${externalPort}/api/chat/request`,
       {

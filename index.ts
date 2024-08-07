@@ -344,6 +344,7 @@ Please check ${cyan(
     console.log(`Running app in ${root}...`);
     await runApp(
       root,
+      program.template,
       program.frontend,
       program.framework,
       program.port,
