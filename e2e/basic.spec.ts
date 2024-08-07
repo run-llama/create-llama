@@ -38,7 +38,7 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   // Only test without using vector db for now
   const vectorDb = "none";
 
-  test.beforeEach(async () => {
+  test.beforeAll(async () => {
     port = Math.floor(Math.random() * 10000) + 10000;
     externalPort = port + 1;
     cwd = await createTestDir();
