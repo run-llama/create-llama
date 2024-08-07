@@ -1,37 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export interface ChatConfig {
   backend?: string;
   starterQuestions?: string[];
 }
 
-const getBackendOrigin = () => {
+export function useClientConfig(): ChatConfig {
   const chatAPI = process.env.NEXT_PUBLIC_CHAT_API;
-  return chatAPI ? new URL(chatAPI).origin : "";
-};
-
-export function useClientConfig(
-  opts: { shouldFetch?: boolean } = { shouldFetch: false },
-): ChatConfig {
   const [config, setConfig] = useState<ChatConfig>();
 
-  useEffect(() => {
-    if (opts.shouldFetch) {
-      const backend = getBackendOrigin();
-      const configAPI = `${backend}/api/chat/config`;
-      fetch(configAPI)
-        .then((response) => response.json())
-        .then((data) =>
-          setConfig({
-            backend,
-            starterQuestions: data?.starterQuestions,
-          }),
-        )
-        .catch((error) => console.error("Error fetching config", error));
+  const backendOrigin = useMemo(() => {
+    if (chatAPI) {
+      return new URL(chatAPI).origin;
+    } else {
+      if (typeof window !== "undefined") {
+        // Use BASE_URL from window.ENV
+        return (window as any).ENV?.BASE_URL || "";
+      }
+      return "";
     }
-  }, [opts.shouldFetch]);
+  }, [chatAPI]);
 
-  return config || { backend: getBackendOrigin() };
+  const configAPI = `${backendOrigin}/api/chat/config`;
+
+  useEffect(() => {
+    fetch(configAPI)
+      .then((response) => response.json())
+      .then((data) => setConfig({ ...data, chatAPI }))
+      .catch((error) => console.error("Error fetching config", error));
+  }, [chatAPI, configAPI]);
+
+  return {
+    backend: backendOrigin,
+    starterQuestions: config?.starterQuestions,
+  };
 }
