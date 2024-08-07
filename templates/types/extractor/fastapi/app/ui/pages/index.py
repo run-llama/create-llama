@@ -12,7 +12,7 @@ from ..templates import template
 
 @template(
     route="/",
-    title="Extractor",
+    title="Built by LlamaIndex",
     on_load=[
         SchemaState.init_schema,
         UploadedFilesState.load_files,

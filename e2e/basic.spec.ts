@@ -66,7 +66,6 @@ test.describe(`try create-llama ${templateType} ${templateFramework} ${dataSourc
   });
   test("Frontend should have a title", async ({ page }) => {
     test.skip(templatePostInstallAction !== "runApp");
-    test.skip(templateType === "extractor");
     await page.goto(`http://localhost:${port}`);
     await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
   });

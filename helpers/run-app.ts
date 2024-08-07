@@ -35,10 +35,10 @@ export async function runApp(
   if (template === "extractor") {
     const commandArgs = ["run", "reflex", "run"];
     if (port) {
-      commandArgs.push("--frontend_port", port.toString());
+      commandArgs.push("--frontend-port", port.toString());
     }
     if (externalPort) {
-      commandArgs.push("--backend_port", externalPort.toString());
+      commandArgs.push("--backend-port", externalPort.toString());
     }
     return new Promise((resolve, reject) => {
       createProcess("poetry", commandArgs, {
