@@ -17,7 +17,7 @@ class UploadedFilesState(rx.State):
     async def handle_upload(self, files: list[rx.UploadFile]):
         for file in files:
             upload_data = await file.read()
-            outfile = outfile = os.path.join(self._uploaded_dir, file.filename)
+            outfile = os.path.join(self._uploaded_dir, file.filename)
             with open(outfile, "wb") as f:
                 f.write(upload_data)
 
