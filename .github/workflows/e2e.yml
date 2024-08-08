@@ -30,7 +30,7 @@ jobs:
             frameworks: "nextjs"
           - templates: "extractor"
             frameworks: "express"
-          - templates: "streaming"
+          - templates: "extractor"
             datasources: "--no-files"
     defaults:
       run:
