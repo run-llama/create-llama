@@ -18,7 +18,6 @@ class UploadedFilesState(rx.State):
         for file in files:
             upload_data = await file.read()
             outfile = outfile = os.path.join(self._uploaded_dir, file.filename)
-            print("Uploading file to", outfile)
             with open(outfile, "wb") as f:
                 f.write(upload_data)
 
@@ -27,7 +26,16 @@ class UploadedFilesState(rx.State):
             self.uploaded_files.append(new_file)
 
             # Run indexing
-            generate_datasource()
+            try:
+                generate_datasource()
+            except Exception as e:
+                print("Error generating datasource", e)
+                os.remove(outfile)
+                self.uploaded_files.remove(new_file)
+                return rx.toast.error(
+                    f"Error generating index for the uploaded files. {str(e)}",
+                    position="top-center",
+                )
 
         return rx.toast.success("Files uploaded successfully", position="top-center")
 

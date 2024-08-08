@@ -79,7 +79,6 @@ def template(
                         "100%",
                         "100%",
                         "100%",
-                        styles.max_width,
                     ],
                 ),
                 flex_direction=[

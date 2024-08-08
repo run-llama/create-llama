@@ -5,14 +5,15 @@ load_dotenv()
 import logging
 import os
 
-from app.engine.loaders import get_documents
-from app.engine.vectordb import get_vector_store
-from app.settings import init_settings
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.settings import Settings
 from llama_index.core.storage import StorageContext
 from llama_index.core.storage.docstore import SimpleDocumentStore
+
+from app.engine.loaders import get_documents
+from app.engine.vectordb import get_vector_store
+from app.settings import init_settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -64,9 +65,6 @@ def generate_datasource():
 
     # Get the stores and documents or create new ones
     documents = get_documents()
-    # Set private=false to mark the document as public (required for filtering)
-    for doc in documents:
-        doc.metadata["private"] = "false"
     docstore = get_doc_store()
     vector_store = get_vector_store()
 
