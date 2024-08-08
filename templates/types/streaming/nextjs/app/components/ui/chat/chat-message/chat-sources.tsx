@@ -133,7 +133,12 @@ function DocumentInfo({ document }: { document: Document }) {
     </div>
   );
 
-  if (file_ext === "pdf" || url.endsWith(".pdf")) {
+  if (!isValidUrl(url)) {
+    // only display document card if no valid url
+    return DocumentDetail;
+  }
+
+  if (url.endsWith(".pdf")) {
     // open internal pdf dialog for pdf files when click document card
     return (
       <PdfDialog
@@ -143,16 +148,8 @@ function DocumentInfo({ document }: { document: Document }) {
       />
     );
   }
-
-  if (isValidUrl(url)) {
-    // open external link for other file types
-    return (
-      <div onClick={() => window.open(url, "_blank")}>{DocumentDetail}</div>
-    );
-  }
-
-  // only display document card if no valid url
-  return DocumentDetail;
+  // open external link when click document card for other file types
+  return <div onClick={() => window.open(url, "_blank")}>{DocumentDetail}</div>;
 }
 
 function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
@@ -179,7 +176,14 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
         </Button>
       </div>
       {nodeInfo.url?.endsWith(".pdf") && (
-        <p>On page {nodeInfo.metadata?.page_number as number}:</p>
+        <p>
+          On page{" "}
+          {
+            (nodeInfo.metadata?.page_number ??
+              nodeInfo.metadata?.page_label) as number
+          }
+          :
+        </p>
       )}
       {nodeInfo.url && !nodeInfo.url.endsWith(".pdf") && (
         <a
@@ -191,7 +195,9 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
         </a>
       )}
       {nodeInfo.text && (
-        <pre className="max-h-[200px] overflow-auto">{nodeInfo.text}</pre>
+        <pre className="max-h-[200px] overflow-auto whitespace-pre-line">
+          {nodeInfo.text}
+        </pre>
       )}
     </div>
   );
