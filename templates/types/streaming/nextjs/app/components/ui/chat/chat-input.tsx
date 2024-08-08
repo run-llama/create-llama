@@ -1,5 +1,4 @@
 import { JSONValue } from "ai";
-import { useState } from "react";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
@@ -25,6 +24,7 @@ export default function ChatInput(
     | "append"
   > & {
     requestParams?: any;
+    setRequestData?: React.Dispatch<any>;
   },
 ) {
   const {
@@ -36,7 +36,6 @@ export default function ChatInput(
     reset,
     getAnnotations,
   } = useFile();
-  const [requestData, setRequestData] = useState<any>();
 
   // default submit function does not handle including annotations in the message
   // so we need to use append function to submit new message with annotations
@@ -45,15 +44,12 @@ export default function ChatInput(
     annotations: JSONValue[] | undefined,
   ) => {
     e.preventDefault();
-    props.append!(
-      {
-        content: props.input,
-        role: "user",
-        createdAt: new Date(),
-        annotations,
-      },
-      { data: requestData },
-    );
+    props.append!({
+      content: props.input,
+      role: "user",
+      createdAt: new Date(),
+      annotations,
+    });
     props.setInput!("");
   };
 
@@ -63,7 +59,7 @@ export default function ChatInput(
       handleSubmitWithAnnotations(e, annotations);
       return reset();
     }
-    props.handleSubmit(e, { data: requestData });
+    props.handleSubmit(e);
   };
 
   const handleUploadFile = async (file: File) => {
@@ -115,9 +111,10 @@ export default function ChatInput(
             disabled: props.isLoading,
           }}
         />
-        {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && (
-          <LlamaCloudSelector setRequestData={setRequestData} />
-        )}
+        {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" &&
+          props.setRequestData && (
+            <LlamaCloudSelector setRequestData={props.setRequestData} />
+          )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
         </Button>

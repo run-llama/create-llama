@@ -2,9 +2,10 @@ import fs from "fs/promises";
 import path from "path";
 import { TOOL_SYSTEM_PROMPT_ENV_VAR, Tool } from "./tools";
 import {
+  InstallTemplateArgs,
   ModelConfig,
-  TemplateDataSource,
   TemplateFramework,
+  TemplateObservability,
   TemplateType,
   TemplateVectorDB,
 } from "./types";
@@ -461,18 +462,35 @@ const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
   }
 };
 
+const getObservabilityEnvs = (
+  observability?: TemplateObservability,
+): EnvVar[] => {
+  if (observability === "llamatrace") {
+    return [
+      {
+        name: "PHOENIX_API_KEY",
+        description:
+          "API key for LlamaTrace observability. Retrieve from https://llamatrace.com/login",
+      },
+    ];
+  }
+  return [];
+};
+
 export const createBackendEnvFile = async (
   root: string,
-  opts: {
-    llamaCloudKey?: string;
-    vectorDb?: TemplateVectorDB;
-    modelConfig: ModelConfig;
-    framework: TemplateFramework;
-    dataSources?: TemplateDataSource[];
-    template?: TemplateType;
-    port?: number;
-    tools?: Tool[];
-  },
+  opts: Pick<
+    InstallTemplateArgs,
+    | "llamaCloudKey"
+    | "vectorDb"
+    | "modelConfig"
+    | "framework"
+    | "dataSources"
+    | "template"
+    | "externalPort"
+    | "tools"
+    | "observability"
+  >,
 ) => {
   // Init env values
   const envFileName = ".env";
@@ -482,16 +500,14 @@ export const createBackendEnvFile = async (
       description: `The Llama Cloud API key.`,
       value: opts.llamaCloudKey,
     },
-    // Add model environment variables
+    // Add environment variables of each component
     ...getModelEnvs(opts.modelConfig),
-    // Add engine environment variables
     ...getEngineEnvs(),
-    // Add vector database environment variables
     ...getVectorDBEnvs(opts.vectorDb, opts.framework),
-    ...getFrameworkEnvs(opts.framework, opts.port),
+    ...getFrameworkEnvs(opts.framework, opts.externalPort),
     ...getToolEnvs(opts.tools),
-    // Add template environment variables
     ...getTemplateEnvs(opts.template),
+    ...getObservabilityEnvs(opts.observability),
     getSystemPromptEnv(opts.tools),
   ];
   // Render and write env file

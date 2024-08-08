@@ -1,11 +1,13 @@
 "use client";
 
 import { useChat } from "ai/react";
+import { useState } from "react";
 import { ChatInput, ChatMessages } from "./ui/chat";
 import { useClientConfig } from "./ui/chat/hooks/use-config";
 
 export default function ChatSection() {
   const { backend } = useClientConfig();
+  const [requestData, setRequestData] = useState<any>();
   const {
     messages,
     input,
@@ -17,6 +19,7 @@ export default function ChatSection() {
     append,
     setInput,
   } = useChat({
+    body: { data: requestData },
     api: `${backend}/api/chat`,
     headers: {
       "Content-Type": "application/json", // using JSON because of vercel/ai 2.2.26
@@ -45,6 +48,7 @@ export default function ChatSection() {
         messages={messages}
         append={append}
         setInput={setInput}
+        setRequestData={setRequestData}
       />
     </div>
   );

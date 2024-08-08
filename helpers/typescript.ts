@@ -70,7 +70,7 @@ export const installTSTemplate = async ({
     );
 
     const webpackConfigOtelFile = path.join(root, "webpack.config.o11y.mjs");
-    if (observability === "opentelemetry") {
+    if (observability === "traceloop") {
       const webpackConfigDefaultFile = path.join(root, "webpack.config.mjs");
       await fs.rm(webpackConfigDefaultFile);
       await fs.rename(webpackConfigOtelFile, webpackConfigDefaultFile);
@@ -248,7 +248,7 @@ async function updatePackageJson({
     };
   }
 
-  if (observability === "opentelemetry") {
+  if (observability === "traceloop") {
     packageJson.dependencies = {
       ...packageJson.dependencies,
       "@traceloop/node-server-sdk": "^0.5.19",
