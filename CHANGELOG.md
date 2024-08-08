@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.1.30
+
+### Patch Changes
+
+- 09e3022: Add support for LlamaTrace (Python)
+- c06ec4f: Fix imports for MongoDB
+- b6dd7a9: Always send chat data when submit message
+
 ## 0.1.29
 
 ### Patch Changes
