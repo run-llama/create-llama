@@ -1,4 +1,4 @@
-import { ChildProcess, SpawnOptions, spawn } from "child_process";
+import { SpawnOptions, spawn } from "child_process";
 import path from "path";
 import { TemplateFramework } from "./types";
 
@@ -23,7 +23,61 @@ const createProcess = (
     });
 };
 
-// eslint-disable-next-line max-params
+export async function runExtractorApp(
+  appPath: string,
+  frontendPort?: number,
+  backendPort?: number,
+): Promise<any> {
+  const commandArgs = ["run", "reflex", "run"];
+  if (frontendPort) {
+    commandArgs.push("--frontend-port", frontendPort.toString());
+  }
+  if (backendPort) {
+    commandArgs.push("--backend-port", backendPort.toString());
+  }
+  return new Promise((resolve, reject) => {
+    createProcess("poetry", commandArgs, {
+      stdio: "inherit",
+      cwd: path.join(appPath),
+    });
+  });
+}
+
+export async function runNextApp(
+  appPath: string,
+  port: number,
+  fullstack = false,
+) {
+  const cwd = fullstack ? path.join(appPath) : path.join(appPath, "frontend");
+  return new Promise((resolve, reject) => {
+    createProcess("npm", ["run", "dev"], {
+      stdio: "inherit",
+      cwd,
+      env: { ...process.env, PORT: `${port}` },
+    });
+  });
+}
+
+export async function runFastAPIApp(appPath: string, port: number) {
+  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
+
+  return new Promise((resolve, reject) => {
+    createProcess("poetry", commandArgs, {
+      stdio: "inherit",
+      cwd: path.join(appPath, "backend"),
+    });
+  });
+}
+
+export async function runExpressApp(appPath: string, port: number) {
+  return new Promise((resolve, reject) => {
+    createProcess("npm", ["run", "dev"], {
+      stdio: "inherit",
+      cwd: path.join(appPath, "backend"),
+    });
+  });
+}
+
 export async function runApp(
   appPath: string,
   template: string,
@@ -33,73 +87,30 @@ export async function runApp(
   externalPort?: number,
 ): Promise<any> {
   if (template === "extractor") {
-    const commandArgs = ["run", "reflex", "run"];
-    if (port) {
-      commandArgs.push("--frontend-port", port.toString());
-    }
-    if (externalPort) {
-      commandArgs.push("--backend-port", externalPort.toString());
-    }
-    return new Promise((resolve, reject) => {
-      createProcess("poetry", commandArgs, {
-        stdio: "inherit",
-        cwd: path.join(appPath),
-      });
-    });
-  } else {
-    let backendAppProcess: ChildProcess;
-    let frontendAppProcess: ChildProcess | undefined;
-    const frontendPort = port || 3000;
-    let backendPort = externalPort || 8000;
-
-    // Callback to kill app processes
-    process.on("exit", () => {
-      console.log("Killing app processes...");
-      backendAppProcess.kill();
-      frontendAppProcess?.kill();
-    });
-
-    let backendCommand = "";
-    let backendArgs: string[];
+    return runExtractorApp(appPath, port, externalPort);
+  }
+  if (template === "streaming") {
+    // FastAPI
     if (framework === "fastapi") {
-      backendCommand = "poetry";
-      backendArgs = [
-        "run",
-        "uvicorn",
-        "main:app",
-        "--host=0.0.0.0",
-        "--port=" + backendPort,
-      ];
-    } else if (framework === "nextjs") {
-      backendCommand = "npm";
-      backendArgs = ["run", "dev"];
-      backendPort = frontendPort;
-    } else {
-      backendCommand = "npm";
-      backendArgs = ["run", "dev"];
+      const process = [];
+      process.push(runFastAPIApp(appPath, port || 8000));
+      if (frontend) {
+        process.push(runNextApp(appPath, port || 3000, true));
+      }
+      return Promise.all(process);
     }
-
-    if (frontend) {
-      return new Promise((resolve, reject) => {
-        backendAppProcess = createProcess(backendCommand, backendArgs, {
-          stdio: "inherit",
-          cwd: path.join(appPath, "backend"),
-          env: { ...process.env, PORT: `${backendPort}` },
-        });
-        frontendAppProcess = createProcess("npm", ["run", "dev"], {
-          stdio: "inherit",
-          cwd: path.join(appPath, "frontend"),
-          env: { ...process.env, PORT: `${frontendPort}` },
-        });
-      });
-    } else {
-      return new Promise((resolve, reject) => {
-        backendAppProcess = createProcess(backendCommand, backendArgs, {
-          stdio: "inherit",
-          cwd: path.join(appPath),
-          env: { ...process.env, PORT: `${backendPort}` },
-        });
-      });
+    // Express
+    if (framework === "express") {
+      const process = [];
+      process.push(runExpressApp(appPath, port || 8000));
+      if (frontend) {
+        process.push(runNextApp(appPath, port || 3000, true));
+      }
+      return Promise.all(process);
+    }
+    // NextJs
+    if (framework === "nextjs") {
+      return runNextApp(appPath, port || 3000);
     }
   }
 }
