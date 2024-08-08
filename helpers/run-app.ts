@@ -93,10 +93,10 @@ export async function runApp(
       const backendRunner =
         framework === "fastapi" ? runFastAPIApp : runExpressApp;
       if (frontend) {
-        processes.push(backendRunner(backendPath, port || 8000));
+        processes.push(backendRunner(backendPath, externalPort || 8000));
         processes.push(runNextJsApp(frontendPath, port || 3000));
       } else {
-        processes.push(backendRunner(appPath, port || 8000));
+        processes.push(backendRunner(appPath, externalPort || 8000));
       }
     } else if (framework === "nextjs") {
       processes.push(runNextJsApp(appPath, port || 3000));
