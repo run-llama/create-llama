@@ -21,6 +21,10 @@ jobs:
         frameworks: ["nextjs", "express", "fastapi"]
         datasources: ["--no-files", "--example-file"]
         templates: ["streaming", "extractor"]
+      exclude:
+        # Extractor template is not supported on Windows for now
+        - os: windows-latest
+          templates: "extractor"
     defaults:
       run:
         shell: bash
