@@ -35,11 +35,15 @@ type LlamaCloudConfig = {
 };
 
 export interface LlamaCloudSelectorProps {
-  setRequestData: React.Dispatch<any>;
+  onSelect: (pipeline: PipelineConfig | undefined) => void;
+  defaultPipeline?: PipelineConfig;
+  shouldCheckValid?: boolean;
 }
 
 export function LlamaCloudSelector({
-  setRequestData,
+  onSelect,
+  defaultPipeline,
+  shouldCheckValid = true,
 }: LlamaCloudSelectorProps) {
   const { backend } = useClientConfig();
   const [config, setConfig] = useState<LlamaCloudConfig>();
@@ -49,27 +53,20 @@ export function LlamaCloudSelector({
       fetch(`${backend}/api/chat/config/llamacloud`)
         .then((response) => response.json())
         .then((data) => {
-          setConfig(data);
-          setRequestData({
-            llamaCloudPipeline: data.pipeline,
-          });
+          const pipeline = defaultPipeline ?? data.pipeline; // defaultPipeline will override pipeline in .env
+          setConfig({ ...data, pipeline });
+          onSelect?.(pipeline);
         })
         .catch((error) => console.error("Error fetching config", error));
     }
-  }, [backend, config, setRequestData]);
+  }, [backend, config, onSelect, defaultPipeline]);
 
   const setPipeline = (pipelineConfig?: PipelineConfig) => {
     setConfig((prevConfig: any) => ({
       ...prevConfig,
       pipeline: pipelineConfig,
     }));
-    setRequestData((prevData: any) => {
-      if (!prevData) return { llamaCloudPipeline: pipelineConfig };
-      return {
-        ...prevData,
-        llamaCloudPipeline: pipelineConfig,
-      };
-    });
+    onSelect?.(pipelineConfig);
   };
 
   const handlePipelineSelect = async (value: string) => {
@@ -83,7 +80,7 @@ export function LlamaCloudSelector({
       </div>
     );
   }
-  if (!isValid(config)) {
+  if (!isValid(config) && shouldCheckValid) {
     return (
       <p className="text-red-500">
         Invalid LlamaCloud configuration. Check console logs.
