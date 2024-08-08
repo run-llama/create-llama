@@ -2,12 +2,11 @@ import os
 
 from fastapi import HTTPException
 from llama_index.core.settings import Settings
-from pydantic import BaseModel
 
 from app.engine.index import get_index
 
 
-def get_query_engine(output_cls: BaseModel):
+def get_query_engine(output_cls):
     top_k = os.getenv("TOP_K", 3)
 
     index = get_index()
