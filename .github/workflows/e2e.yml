@@ -20,6 +20,18 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs", "express", "fastapi"]
         datasources: ["--no-files", "--example-file"]
+        templates: ["streaming", "extractor"]
+        exclude:
+          # The extractor template currently only works with FastAPI and files,
+          # and it's not compatible with Windows at the moment.
+          - templates: "extractor"
+            os: windows-latest
+          - templates: "extractor"
+            frameworks: "nextjs"
+          - templates: "extractor"
+            frameworks: "express"
+          - templates: "extractor"
+            datasources: "--no-files"
     defaults:
       run:
         shell: bash
@@ -65,6 +77,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
+          TEMPLATE: ${{ matrix.templates }}
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
         working-directory: .
