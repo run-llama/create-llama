@@ -84,6 +84,13 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "weaviate": {
+      dependencies.push({
+        name: "llama-index-vector-stores-weaviate",
+        version: "^1.0.2",
+      });
+      break;
+    }
   }
 
   // Add data source dependencies

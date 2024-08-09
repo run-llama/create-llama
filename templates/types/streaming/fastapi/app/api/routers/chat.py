@@ -1,15 +1,12 @@
 import logging
-import os
 from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
-from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
-    ChatConfig,
     ChatData,
     Message,
     Result,
@@ -18,6 +15,7 @@ from app.api.routers.models import (
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.api.services.llama_cloud import LLamaCloudFileService
 from app.engine import get_chat_engine
+from app.engine.query_filter import generate_filters
 
 chat_router = r = APIRouter()
 
@@ -71,38 +69,6 @@ async def chat(
         ) from e
 
 
-def generate_filters(doc_ids):
-    if len(doc_ids) > 0:
-        filters = MetadataFilters(
-            filters=[
-                MetadataFilter(
-                    key="private",
-                    value=["true"],
-                    operator="nin",  # type: ignore
-                ),
-                MetadataFilter(
-                    key="doc_id",
-                    value=doc_ids,
-                    operator="in",  # type: ignore
-                ),
-            ],
-            condition="or",  # type: ignore
-        )
-    else:
-        filters = MetadataFilters(
-            # Use the "NIN" - "not in" operator to include all public documents (don't have the private key set)
-            filters=[
-                MetadataFilter(
-                    key="private",
-                    value=["true"],
-                    operator="nin",  # type: ignore
-                ),
-            ]
-        )
-
-    return filters
-
-
 # non-streaming endpoint - delete if not needed
 @r.post("/request")
 async def chat_request(
@@ -117,32 +83,3 @@ async def chat_request(
         result=Message(role=MessageRole.ASSISTANT, content=response.response),
         nodes=SourceNodes.from_source_nodes(response.source_nodes),
     )
-
-
-@r.get("/config")
-async def chat_config() -> ChatConfig:
-    starter_questions = None
-    conversation_starters = os.getenv("CONVERSATION_STARTERS")
-    if conversation_starters and conversation_starters.strip():
-        starter_questions = conversation_starters.strip().split("\n")
-    return ChatConfig(starter_questions=starter_questions)
-
-
-@r.get("/config/llamacloud")
-async def chat_llama_cloud_config():
-    projects = LLamaCloudFileService.get_all_projects_with_pipelines()
-    pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
-    project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
-    pipeline_config = (
-        pipeline
-        and project
-        and {
-            "pipeline": pipeline,
-            "project": project,
-        }
-        or None
-    )
-    return {
-        "projects": projects,
-        "pipeline": pipeline_config,
-    }
