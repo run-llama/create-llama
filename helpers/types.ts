@@ -35,7 +35,8 @@ export type TemplateVectorDB =
   | "astra"
   | "qdrant"
   | "chroma"
-  | "llamacloud";
+  | "llamacloud"
+  | "weaviate";
 export type TemplatePostInstallAction =
   | "none"
   | "VSCode"
