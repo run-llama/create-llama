@@ -1,6 +1,6 @@
 import reflex as rx
-
-from app.api.routers.extractor import RequestData, query_request
+from app.models.request import RequestData
+from app.services.extractor import ExtractorService
 
 from .schema_editor import SchemaState
 
@@ -21,8 +21,7 @@ class StructureQuery(rx.State):
             "query": self.query,
             "schema": str(schema),
         }
-        response = await query_request(RequestData(**dump_data))
-        self.response = response.json(indent=2)
+        self.response = await ExtractorService.extract(RequestData(**dump_data))
 
 
 def extract_data_component() -> rx.Component:
