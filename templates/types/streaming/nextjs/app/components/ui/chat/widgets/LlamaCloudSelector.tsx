@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -35,18 +35,33 @@ type LlamaCloudConfig = {
 };
 
 export interface LlamaCloudSelectorProps {
-  onSelect: (pipeline: PipelineConfig | undefined) => void;
+  setRequestData?: React.Dispatch<any>;
+  onSelect?: (pipeline: PipelineConfig | undefined) => void;
   defaultPipeline?: PipelineConfig;
   shouldCheckValid?: boolean;
 }
 
 export function LlamaCloudSelector({
+  setRequestData,
   onSelect,
   defaultPipeline,
   shouldCheckValid = true,
 }: LlamaCloudSelectorProps) {
   const { backend } = useClientConfig();
   const [config, setConfig] = useState<LlamaCloudConfig>();
+
+  const updateRequestParams = useCallback(
+    (pipeline?: PipelineConfig) => {
+      if (setRequestData) {
+        setRequestData({
+          llamaCloudPipeline: pipeline,
+        });
+      } else {
+        onSelect?.(pipeline);
+      }
+    },
+    [onSelect, setRequestData],
+  );
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && !config) {
@@ -55,18 +70,18 @@ export function LlamaCloudSelector({
         .then((data) => {
           const pipeline = defaultPipeline ?? data.pipeline; // defaultPipeline will override pipeline in .env
           setConfig({ ...data, pipeline });
-          onSelect?.(pipeline);
+          updateRequestParams(pipeline);
         })
         .catch((error) => console.error("Error fetching config", error));
     }
-  }, [backend, config, onSelect, defaultPipeline]);
+  }, [backend, config, defaultPipeline, updateRequestParams]);
 
   const setPipeline = (pipelineConfig?: PipelineConfig) => {
     setConfig((prevConfig: any) => ({
       ...prevConfig,
       pipeline: pipelineConfig,
     }));
-    onSelect?.(pipelineConfig);
+    updateRequestParams(pipelineConfig);
   };
 
   const handlePipelineSelect = async (value: string) => {

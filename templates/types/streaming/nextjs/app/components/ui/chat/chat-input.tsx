@@ -113,17 +113,7 @@ export default function ChatInput(
         />
         {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" &&
           props.setRequestData && (
-            <LlamaCloudSelector
-              onSelect={(pipeline) => {
-                props.setRequestData?.((prevData: any) => {
-                  if (!prevData) return { llamaCloudPipeline: pipeline };
-                  return {
-                    ...prevData,
-                    llamaCloudPipeline: pipeline,
-                  };
-                });
-              }}
-            />
+            <LlamaCloudSelector setRequestData={props.setRequestData} />
           )}
         <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
           Send message
