@@ -8,6 +8,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../../hover-card";
+import { cn } from "../../lib/utils";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import { DocumentFileType, SourceData, SourceNode } from "../index";
 import PdfDialog from "../widgets/PdfDialog";
@@ -28,7 +29,7 @@ export function ChatSources({ data }: { data: SourceData }) {
       .filter((node) => isValidUrl(node.url))
       .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
       .forEach((node) => {
-        const key = node.url!;
+        const key = node.url!.replace(/\/$/, ""); // remove trailing slash
         nodesByUrl[key] ??= [];
         nodesByUrl[key].push(node);
       });
@@ -74,8 +75,14 @@ function DocumentInfo({ document }: { document: Document }) {
       key={url}
       className="h-28 w-48 flex flex-col justify-between p-4 border rounded-md shadow-md cursor-pointer"
     >
-      <p title={fileName} className="truncate text-left">
-        {fileName}
+      <p
+        title={fileName}
+        className={cn(
+          fileName ? "truncate" : "text-blue-900 break-words",
+          "text-left",
+        )}
+      >
+        {fileName ?? url}
       </p>
       <div className="flex justify-between items-center">
         <div className="space-x-2 flex">
@@ -143,7 +150,7 @@ function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="font-semibold">
-          {pageNumber ? `On page ${pageNumber}:` : "Node content"}
+          {pageNumber ? `On page ${pageNumber}:` : "Node content:"}
         </span>
         {nodeInfo.text && (
           <Button
@@ -163,15 +170,6 @@ function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
           </Button>
         )}
       </div>
-      {nodeInfo.url && !nodeInfo.url.endsWith(".pdf") && (
-        <a
-          href={nodeInfo.url}
-          target="_blank"
-          className="text-blue-900 truncate block"
-        >
-          {nodeInfo.url}
-        </a>
-      )}
 
       {nodeInfo.text && (
         <pre className="max-h-[200px] overflow-auto whitespace-pre-line">
