@@ -16,7 +16,7 @@ export function appendSourceData(
   if (!sourceNodes?.length) return;
   try {
     const nodes = sourceNodes.map((node) => ({
-      ...node.node.toMutableJSON(),
+      metadata: node.node.metadata,
       id: node.node.id_,
       score: node.score ?? null,
       url: getNodeUrl(node.node.metadata),

@@ -9,59 +9,28 @@ import {
   HoverCardTrigger,
 } from "../../hover-card";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
-import { DocumentFileType, SourceData } from "../index";
+import { DocumentFileType, SourceData, SourceNode } from "../index";
 import PdfDialog from "../widgets/PdfDialog";
 
-function SourceNumberButton({ index }: { index: number }) {
-  return (
-    <div className="text-xs w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:text-white hover:bg-primary hover:cursor-pointer">
-      {index + 1}
-    </div>
-  );
-}
-
-type NodeInfo = {
-  id: string;
-  url?: string;
-  text?: string;
-  file_name?: string;
-  metadata?: Record<string, unknown>;
-};
+const SCORE_THRESHOLD = 0.25;
 
 type Document = {
   url: string;
-  sources: NodeInfo[];
+  sources: SourceNode[];
 };
-
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
 
 export function ChatSources({ data }: { data: SourceData }) {
   const documents: Document[] = useMemo(() => {
-    // group nodes by url
-    const nodesByUrl: { [path: string]: NodeInfo[] } = {};
+    // group nodes by document (a document must have a URL)
+    const nodesByUrl: Record<string, SourceNode[]> = {};
     data.nodes
+      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
+      .filter((node) => isValidUrl(node.url))
       .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
       .forEach((node) => {
-        const nodeInfo = {
-          id: node.id,
-          url: node.url,
-          text: node.text,
-          file_name: node.metadata?.file_name as string | undefined,
-          metadata: node.metadata,
-        };
-        const key = nodeInfo.url ?? nodeInfo.id; // use id as key for UNKNOWN type
-        if (!nodesByUrl[key]) {
-          nodesByUrl[key] = [nodeInfo];
-        } else {
-          nodesByUrl[key].push(nodeInfo);
-        }
+        const key = node.url!;
+        nodesByUrl[key] ??= [];
+        nodesByUrl[key].push(node);
       });
 
     // convert to array of documents
@@ -85,32 +54,46 @@ export function ChatSources({ data }: { data: SourceData }) {
   );
 }
 
+function SourceNumberButton({ index }: { index: number }) {
+  return (
+    <div className="text-xs w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:text-white hover:bg-primary ">
+      {index + 1}
+    </div>
+  );
+}
+
 function DocumentInfo({ document }: { document: Document }) {
   if (!document.sources.length) return null;
   const { url, sources } = document;
-  const file_name = sources[0].file_name;
-  const file_ext = file_name?.split(".").pop();
-  const fileImage = FileIcon[file_ext as DocumentFileType];
+  const fileName = sources[0].metadata.file_name as string | undefined;
+  const fileExt = fileName?.split(".").pop();
+  const fileImage = fileExt ? FileIcon[fileExt as DocumentFileType] : null;
 
   const DocumentDetail = (
     <div
       key={url}
       className="h-28 w-48 flex flex-col justify-between p-4 border rounded-md shadow-md cursor-pointer"
     >
-      <p title={file_name} className="truncate text-left">
-        {file_name}
+      <p title={fileName} className="truncate text-left">
+        {fileName}
       </p>
       <div className="flex justify-between items-center">
         <div className="space-x-2 flex">
-          {sources.map((nodeInfo: NodeInfo, index: number) => {
+          {sources.map((node: SourceNode, index: number) => {
             return (
-              <div key={nodeInfo.id}>
+              <div key={node.id}>
                 <HoverCard>
-                  <HoverCardTrigger>
+                  <HoverCardTrigger
+                    className="cursor-default"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
                     <SourceNumberButton index={index} />
                   </HoverCardTrigger>
                   <HoverCardContent className="w-[400px]">
-                    <NodeInfo nodeInfo={nodeInfo} />
+                    <NodeInfo nodeInfo={node} />
                   </HoverCardContent>
                 </HoverCard>
               </div>
@@ -133,11 +116,6 @@ function DocumentInfo({ document }: { document: Document }) {
     </div>
   );
 
-  if (!isValidUrl(url)) {
-    // only display document card if no valid url
-    return DocumentDetail;
-  }
-
   if (url.endsWith(".pdf")) {
     // open internal pdf dialog for pdf files when click document card
     return (
@@ -152,39 +130,39 @@ function DocumentInfo({ document }: { document: Document }) {
   return <div onClick={() => window.open(url, "_blank")}>{DocumentDetail}</div>;
 }
 
-function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
+function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 1000 });
+
+  const pageNumber =
+    // XXX: page_label is used in Python, but page_number is used by Typescript
+    (nodeInfo.metadata?.page_number as number) ??
+    (nodeInfo.metadata?.page_label as number) ??
+    null;
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <span className="font-semibold">Node content</span>
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            nodeInfo.text && copyToClipboard(nodeInfo.text);
-          }}
-          size="icon"
-          variant="ghost"
-          className="h-12 w-12 shrink-0"
-        >
-          {isCopied ? (
-            <Check className="h-4 w-4" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-        </Button>
+        <span className="font-semibold">
+          {pageNumber ? `On page ${pageNumber}:` : "Node content"}
+        </span>
+        {nodeInfo.text && (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              copyToClipboard(nodeInfo.text);
+            }}
+            size="icon"
+            variant="ghost"
+            className="h-12 w-12 shrink-0"
+          >
+            {isCopied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
-      {nodeInfo.url?.endsWith(".pdf") && (
-        <p>
-          On page{" "}
-          {
-            (nodeInfo.metadata?.page_number ??
-              nodeInfo.metadata?.page_label) as number
-          }
-          :
-        </p>
-      )}
       {nodeInfo.url && !nodeInfo.url.endsWith(".pdf") && (
         <a
           href={nodeInfo.url}
@@ -194,11 +172,22 @@ function NodeInfo({ nodeInfo }: { nodeInfo: NodeInfo }) {
           {nodeInfo.url}
         </a>
       )}
+
       {nodeInfo.text && (
         <pre className="max-h-[200px] overflow-auto whitespace-pre-line">
-          {nodeInfo.text}
+          &ldquo;{nodeInfo.text}&rdquo;
         </pre>
       )}
     </div>
   );
+}
+
+function isValidUrl(url?: string): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
