@@ -10,7 +10,8 @@ def generate_filters(doc_ids):
         value="true",
         operator="!=",  # type: ignore
     )
-    # TODO: Use "in" operator when weaviate supports it
+    # Weaviate doesn't support "in" filter right now, so use "any" instead - it has the same behavior.
+    # TODO: Use "in" operator, once Weaviate supports it
     selected_doc_filter = MetadataFilter(
         key="doc_id",
         value=doc_ids,

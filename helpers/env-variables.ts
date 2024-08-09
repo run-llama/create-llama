@@ -198,6 +198,23 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
         });
       }
       return envs;
+    case "weaviate":
+      return [
+        {
+          name: "WEAVIATE_CLUSTER_URL",
+          description:
+            "The URL of the Weaviate cloud cluster, see: https://weaviate.io/developers/wcs/connect",
+        },
+        {
+          name: "WEAVIATE_API_KEY",
+          description: "The API key for the Weaviate cloud cluster",
+        },
+        {
+          name: "WEAVIATE_INDEX_NAME",
+          description:
+            "(Optional) The collection name to use, default is LlamaIndex if not specified",
+        },
+      ];
     default:
       return [];
   }

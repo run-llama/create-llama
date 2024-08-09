@@ -17,7 +17,7 @@ def _create_weaviate_client():
 
 
 def get_vector_store():
-    index_name = os.getenv("INDEX_NAME", DEFAULT_INDEX_NAME)
+    index_name = os.getenv("WEAVIATE_INDEX_NAME", DEFAULT_INDEX_NAME)
     client = _create_weaviate_client()
     vector_store = WeaviateVectorStore(
         weaviate_client=client,
