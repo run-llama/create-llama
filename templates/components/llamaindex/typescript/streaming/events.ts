@@ -2,6 +2,7 @@ import { StreamData } from "ai";
 import {
   CallbackManager,
   Metadata,
+  MetadataMode,
   NodeWithScore,
   ToolCall,
   ToolOutput,
@@ -15,10 +16,11 @@ export function appendSourceData(
   if (!sourceNodes?.length) return;
   try {
     const nodes = sourceNodes.map((node) => ({
-      ...node.node.toMutableJSON(),
+      metadata: node.node.metadata,
       id: node.node.id_,
       score: node.score ?? null,
       url: getNodeUrl(node.node.metadata),
+      text: node.node.getContent(MetadataMode.NONE),
     }));
     data.appendMessageAnnotation({
       type: "sources",
