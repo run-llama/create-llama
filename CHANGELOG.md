@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.31
+
+### Patch Changes
+
+- 04a9c71: Cluster nodes by document
+
 ## 0.1.30
 
 ### Patch Changes
