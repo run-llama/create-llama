@@ -50,18 +50,11 @@ export function runFastAPIApp(appPath: string, port: number) {
   });
 }
 
-export function runNextJsApp(appPath: string, port: number, fullstack = false) {
+export function runTSApp(appPath: string, port: number) {
   return createProcess("npm", ["run", "dev"], {
     stdio: "inherit",
     cwd: appPath,
     env: { ...process.env, PORT: `${port}` },
-  });
-}
-
-export function runExpressApp(appPath: string, port: number) {
-  return createProcess("npm", ["run", "dev"], {
-    stdio: "inherit",
-    cwd: appPath,
   });
 }
 
@@ -90,16 +83,15 @@ export async function runApp(
   }
   if (template === "streaming") {
     if (framework === "fastapi" || framework === "express") {
-      const backendRunner =
-        framework === "fastapi" ? runFastAPIApp : runExpressApp;
+      const backendRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
       if (frontend) {
         processes.push(backendRunner(backendPath, externalPort || 8000));
-        processes.push(runNextJsApp(frontendPath, port || 3000));
+        processes.push(runTSApp(frontendPath, port || 3000));
       } else {
         processes.push(backendRunner(appPath, externalPort || 8000));
       }
     } else if (framework === "nextjs") {
-      processes.push(runNextJsApp(appPath, port || 3000));
+      processes.push(runTSApp(appPath, port || 3000));
     }
   }
 
