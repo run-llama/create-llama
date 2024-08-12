@@ -71,7 +71,8 @@ export default function ChatInput(
       await uploadFile(file, props.requestParams);
       props.onFileUpload?.(file);
     } catch (error: any) {
-      props.onFileError?.(error.message);
+      const onFileUploadError = props.onFileError || window.alert;
+      onFileUploadError(error.message);
     }
   };
 
