@@ -27,11 +27,9 @@ class WeaviateClientSingleton:
         client = weaviate.connect_to_weaviate_cloud(cluster_url, auth_credentials)
         return client
 
-    # Get the client
     def get_client(self):
         return self.client
 
-    # Close the client
     def close(self):
         self.client.close()
         WeaviateClientSingleton._instance = None
