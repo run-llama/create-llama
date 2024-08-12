@@ -51,7 +51,9 @@ async def chat(
         doc_ids = data.get_chat_document_ids()
         filters = generate_filters(doc_ids)
         params = data.data or {}
-        logger.info("Creating chat engine with filters", filters.dict())
+        logger.info(
+            f"Creating chat engine with filters: {str(filters)}",
+        )
         chat_engine = get_chat_engine(filters=filters, params=params)
 
         event_handler = EventCallbackHandler()

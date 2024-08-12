@@ -80,7 +80,7 @@ class VercelStreamResponse(StreamingResponse):
                     "type": "sources",
                     "data": {
                         "nodes": [
-                            SourceNodes.from_source_node(node).dict()
+                            SourceNodes.from_source_node(node).model_dump()
                             for node in response.source_nodes
                         ]
                     },
