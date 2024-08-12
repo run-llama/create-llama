@@ -23,7 +23,7 @@ const createProcess = (
     });
 };
 
-export function runExtractorApp(
+export function runReflexApp(
   appPath: string,
   frontendPort?: number,
   backendPort?: number,
@@ -79,7 +79,7 @@ export async function runApp(
   const frontendPath = path.join(appPath, "frontend");
 
   if (template === "extractor") {
-    processes.push(runExtractorApp(appPath, port, externalPort));
+    processes.push(runReflexApp(appPath, port, externalPort));
   }
   if (template === "streaming") {
     if (framework === "fastapi" || framework === "express") {

@@ -1,5 +1,4 @@
 import reflex as rx
-from app.models.request import RequestData
 from app.services.extractor import ExtractorService
 
 from .schema_editor import SchemaState
@@ -8,6 +7,7 @@ from .schema_editor import SchemaState
 class StructureQuery(rx.State):
     query: str
     response: str
+    loading: bool = False
 
     def set_query(self, query: str):
         self.query = query
@@ -17,11 +17,9 @@ class StructureQuery(rx.State):
         schema = SchemaState.schema
 
         # Extract data
-        dump_data = {
-            "query": self.query,
-            "schema": str(schema),
-        }
-        self.response = await ExtractorService.extract(RequestData(**dump_data))
+        self.response = await ExtractorService.extract(
+            query=self.query, json_schema=str(schema)
+        )
 
 
 def extract_data_component() -> rx.Component:

@@ -45,7 +45,7 @@ export async function runCreateLlama(
     templateUI,
     appType,
   ].join("-");
-  const command_args = [
+  const commandArgs = [
     "create-llama",
     name,
     "--template",
@@ -74,13 +74,13 @@ export async function runCreateLlama(
   ];
 
   if (templateUI) {
-    command_args.push("--ui", templateUI);
+    commandArgs.push("--ui", templateUI);
   }
   if (appType) {
-    command_args.push(appType);
+    commandArgs.push(appType);
   }
 
-  const command = command_args.join(" ");
+  const command = commandArgs.join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {
     cwd,

@@ -1,5 +1,5 @@
 import reflex as rx
-from app.services.schema import SchemaService
+from app.models.output import Output
 
 
 class SchemaState(rx.State):
@@ -9,7 +9,7 @@ class SchemaState(rx.State):
         self.schema = schema
 
     def init_schema(self):
-        self.schema = SchemaService().get_current_schema()
+        self.schema = Output.schema_json(indent=2)
 
 
 def schema_editor_component() -> rx.Component:
