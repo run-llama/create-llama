@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.32
+
+### Patch Changes
+
+- 3ec5163: Add Weaviate vector database support (Python)
+
 ## 0.1.31
 
 ### Patch Changes
