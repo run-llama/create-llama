@@ -21,9 +21,3 @@
 .custom-markdown ol ol {
   margin-left: 20px;
 }
-
-/* Underline the link in markdown */
-.custom-markdown a {
-  text-decoration: underline;
-  font-weight: 500;
-}

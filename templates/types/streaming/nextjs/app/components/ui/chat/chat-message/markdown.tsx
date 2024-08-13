@@ -35,6 +35,9 @@ const preprocessMedia = (content: string) => {
   return content.replace(/(sandbox|attachment|snt):/g, "");
 };
 
+/**
+ * Update the citation flag [citation:id]() to the new format [citation:index](url)
+ */
 const preprocessCitations = (content: string, sources: SourceData) => {
   if (sources !== undefined) {
     const citationRegex = /\[citation:(.+?)\]\(\)/g;
@@ -115,7 +118,7 @@ export default function Markdown({
           );
         },
         a({ href, children }) {
-          // If the link is a citation, display it differently
+          // If a text link starts with 'citation:', then render it as a citation reference
           if (
             Array.isArray(children) &&
             typeof children[0] === "string" &&
