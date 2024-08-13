@@ -9,13 +9,7 @@ dotenv.config();
 
 async function loadAndIndex() {
   const documents = await getDocuments();
-  // Set private=false to mark the document as public (required for filtering)
-  for (const document of documents) {
-    document.metadata = {
-      ...document.metadata,
-      private: "false",
-    };
-  }
+
   await getDataSource();
   await LlamaCloudIndex.fromDocuments({
     documents,
