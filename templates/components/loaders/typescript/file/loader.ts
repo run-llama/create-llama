@@ -10,7 +10,15 @@ export function getExtractors() {
 }
 
 export async function getDocuments() {
-  return await new SimpleDirectoryReader().loadData({
+  const documents = await new SimpleDirectoryReader().loadData({
     directoryPath: DATA_DIR,
   });
+  // Set private=false to mark the document as public (required for filtering)
+  for (const document of documents) {
+    document.metadata = {
+      ...document.metadata,
+      private: "false",
+    };
+  }
+  return documents;
 }
