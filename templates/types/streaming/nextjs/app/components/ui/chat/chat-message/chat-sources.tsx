@@ -49,7 +49,7 @@ export function ChatSources({ data }: { data: SourceData }) {
   );
 }
 
-function SourceNumberButton({ index }: { index: number }) {
+export function SourceNumberButton({ index }: { index: number }) {
   return (
     <div className="text-xs w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:text-white hover:bg-primary ">
       {index + 1}

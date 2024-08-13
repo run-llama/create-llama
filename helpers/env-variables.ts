@@ -429,21 +429,25 @@ const getSystemPromptEnv = (
   dataSources?: TemplateDataSource[],
 ): EnvVar => {
   let defaultSystemPrompt =
-    "'You are a helpful assistant who helps users with their questions.'";
+    "You are a helpful assistant who helps users with their questions.";
   if (dataSources?.find((ds) => ds.type === "file" || ds.type === "web")) {
-    defaultSystemPrompt += `You have provided information from a knowledge base that has been passed to you in nodes of information.
+    defaultSystemPrompt =
+      `'` +
+      defaultSystemPrompt +
+      `You have provided information from a knowledge base that has been passed to you in nodes of information.
 Each node has useful metadata such as node ID, file name, page, etc.
 Please add the citation to the data node for each sentence or paragraph that you reference in the provided information.
 The citation format is: . [citation:<node_id>]()
 Where the <node_id> is the unique identifier of the data node.
-Example:
 
-We have two sources: {node_id="xyz", file_name="llama.pdf"} and {node_id="abc", citation_name="animal.pdf"}
+Example:
+We have two nodes: {node_id="xyz", file_name="llama.pdf"} and {node_id="abc", citation_name="animal.pdf"}
 User question: Tell me a fun fact about Llama.
 Your answer:
 A baby llama is called "Cria" [citation:xyz]().
 It often live in desert [citation:abc]().
-It\\'s cute animal.'`;
+It\\'s cute animal.
+'`;
   }
 
   // build tool system prompt by merging all tool system prompts

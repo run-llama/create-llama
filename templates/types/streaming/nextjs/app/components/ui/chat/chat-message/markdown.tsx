@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
 import { SourceData } from "..";
+import { SourceNumberButton } from "./chat-sources";
 import { CodeBlock } from "./codeblock";
 
 const MemoizedReactMarkdown: FC<Options> = memo(
@@ -126,14 +127,12 @@ export default function Markdown({
           ) {
             return (
               <sup>
-                <a
-                  href={href}
-                  target="_blank"
-                  className="inline-flex w-5 h-5 rounded-full items-center justify-center bg-gray-100 hover:text-white hover:bg-primary overflow-hidden"
-                >
-                  {
-                    href ? children[0].replace("citation:", "") : "*" // Once the link is empty we only show a star for better UX
-                  }
+                <a href={href} target="_blank" className="inline-flex">
+                  <SourceNumberButton
+                    index={
+                      href ? parseInt(children[0].replace("citation:", "")) : 0
+                    }
+                  />
                 </a>
               </sup>
             );
