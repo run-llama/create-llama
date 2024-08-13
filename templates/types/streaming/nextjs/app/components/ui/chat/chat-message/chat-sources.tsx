@@ -20,105 +20,25 @@ type Document = {
   sources: SourceNode[];
 };
 
-type Citation = {
-  order: number;
-  id: string;
-  node?: SourceNode;
-};
-
-function extractCitations(text: string): Citation[] {
-  // Define the regular expression to match the references
-  const referenceRegex = /\[(\d+)\]:\s+(.+)\s+["'](.+?)["']/g;
-  const citations: Citation[] = [];
-  let match;
-
-  // Find all the references in the text
-  while ((match = referenceRegex.exec(text)) !== null) {
-    citations.push({
-      order: parseInt(match[1], 10),
-      id: match[2],
-    });
-  }
-
-  return citations;
-}
-
-/**
- * Filter the source nodes mentioned in the citation
- */
-function filterSourcesByCitation({
-  data,
-  messageContent,
-}: {
-  data: SourceData;
-  messageContent: string;
-}) {
-  // group nodes by document (a document must have a URL)
-  const nodesByUrl: Record<string, SourceNode[]> = {};
-  const citations = extractCitations(messageContent);
-
-  // Update nodes with citations
-  citations
-    .map((citation) => {
-      // Remove hashtag from id (temporarily for now to identify the link in markdown is a citation)
-      const citationNodeId = citation.id.replace(/^#/, "");
-      const node = data.nodes.find((node) => node.id === citationNodeId);
-      citation.node = node;
-      return citation;
-    })
-    .sort((a, b) => (a.order ?? 1) - (b.order ?? 1))
-    .filter((citation) => citation.node !== undefined)
-    .forEach((citation) => {
-      const key = citation.node?.url!.replace(/\/$/, ""); // remove trailing slash
-      if (key !== undefined && citation.node) {
-        nodesByUrl[key] ??= [];
-        nodesByUrl[key].push(citation.node);
-      }
-    });
-
-  // convert to array of documents
-  return Object.entries(nodesByUrl).map(([url, sources]) => ({
-    url,
-    sources,
-  }));
-}
-
-/**
- * Filter the source nodes have score greater than SCORE_THRESHOLD
- */
-function filterSourcesByScores({ data }: { data: SourceData }) {
-  // group nodes by document (a document must have a URL)
-  const nodesByUrl: Record<string, SourceNode[]> = {};
-  data.nodes
-    .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
-    .filter((node) => isValidUrl(node.url))
-    .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
-    .forEach((node) => {
-      const key = node.url!.replace(/\/$/, ""); // remove trailing slash
-      nodesByUrl[key] ??= [];
-      nodesByUrl[key].push(node);
-    });
-
-  // convert to array of documents
-  return Object.entries(nodesByUrl).map(([url, sources]) => ({
-    url,
-    sources,
-  }));
-}
-
-export function ChatSources({
-  data,
-  messageContent,
-}: {
-  data: SourceData;
-  messageContent: string;
-}) {
+export function ChatSources({ data }: { data: SourceData }) {
   const documents: Document[] = useMemo(() => {
-    // Try extracting sources by citation first
-    const sources = filterSourcesByCitation({ data, messageContent });
-    if (sources.length > 0) return sources;
-    // If no citation sources are found, extract sources by scores
-    else return filterSourcesByScores({ data });
+    // group nodes by document (a document must have a URL)
+    const nodesByUrl: Record<string, SourceNode[]> = {};
+    data.nodes
+      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
+      .filter((node) => isValidUrl(node.url))
+      .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
+      .forEach((node) => {
+        const key = node.url!.replace(/\/$/, ""); // remove trailing slash
+        nodesByUrl[key] ??= [];
+        nodesByUrl[key].push(node);
+      });
+
+    // convert to array of documents
+    return Object.entries(nodesByUrl).map(([url, sources]) => ({
+      url,
+      sources,
+    }));
   }, [data.nodes]);
 
   if (documents.length === 0) return null;
@@ -230,7 +150,7 @@ function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="font-semibold">
-          {pageNumber ? `On page ${pageNumber}: ` : "Node content:"}
+          {pageNumber ? `On page ${pageNumber}:` : "Node content:"}
         </span>
         {nodeInfo.text && (
           <Button

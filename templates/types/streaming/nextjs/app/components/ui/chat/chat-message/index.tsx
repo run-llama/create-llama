@@ -40,7 +40,13 @@ function ChatMessageContent({
   append: Pick<ChatHandler, "append">["append"];
 }) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
-  if (!annotations?.length) return <Markdown content={message.content} />;
+  if (!annotations?.length)
+    return (
+      <Markdown
+        content={message.content}
+        sources={{ nodes: [] } as SourceData}
+      />
+    );
 
   const imageData = getAnnotationData<ImageData>(
     annotations,
@@ -91,7 +97,7 @@ function ChatMessageContent({
     },
     {
       order: 0,
-      component: <Markdown content={message.content} />,
+      component: <Markdown content={message.content} sources={sourceData[0]} />,
     },
     {
       order: 3,
