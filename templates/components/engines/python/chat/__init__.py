@@ -4,7 +4,7 @@ from typing import List, Optional
 from app.engine.index import get_index
 from fastapi import HTTPException
 from llama_index.core import QueryBundle
-from llama_index.core.chat_engine import ContextChatEngine
+from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore
 
@@ -42,7 +42,7 @@ def get_chat_engine(filters=None, params=None):
         filters=filters,
     )
 
-    return ContextChatEngine.from_defaults(
+    return CondensePlusContextChatEngine.from_defaults(
         system_prompt=system_prompt,
         retriever=retriever,
         node_postprocessors=[NodeCitationProcessor()],
