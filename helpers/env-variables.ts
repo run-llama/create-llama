@@ -4,6 +4,7 @@ import { TOOL_SYSTEM_PROMPT_ENV_VAR, Tool } from "./tools";
 import {
   InstallTemplateArgs,
   ModelConfig,
+  TemplateDataSource,
   TemplateFramework,
   TemplateObservability,
   TemplateType,
@@ -423,9 +424,37 @@ const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
   return toolEnvs;
 };
 
-const getSystemPromptEnv = (tools?: Tool[]): EnvVar => {
-  const defaultSystemPrompt =
-    "You are a helpful assistant who helps users with their questions.";
+const getSystemPromptEnv = (
+  tools?: Tool[],
+  dataSources?: TemplateDataSource[],
+): EnvVar => {
+  let defaultSystemPrompt = "";
+  if (dataSources?.find((ds) => ds.type === "file" || ds.type === "web")) {
+    defaultSystemPrompt = `'You\\'re a helpful assistant! You have provided information from a knowledge base that has been passed to you in nodes of information.
+Each node has useful metadata such as node ID, file name, page, etc.
+Please add the citation to the data node for each sentence or paragraph that you reference in the provided information.
+The citation format is: . [(<citation_order_number>)][<citation_order_number>]
+At the end of the answer, please provide the citation details in the following format:
+[<citation_order_number>]: <node_id> "<node_id> or <file_name> or <url>"
+IMPORTANT! The "citation order number" should start from 1 at the beginning and be unique for each citation ID.
+
+Example:
+We have two sources: {node_id="xyz", file_name="llama.pdf"} and {node_id="abc", citation_name="animal.pdf"}
+
+User question: Tell me a fun fact about Llama.
+
+Your answer:
+A baby llama is called "Cria" [(1)][1] .
+It often live in desert [(2)][2] .
+It\\'s cute animal.
+
+[1]: #xyz "Llama information"
+[2]: #abc "Desert information"
+'`;
+  } else {
+    defaultSystemPrompt =
+      "You are a helpful assistant who helps users with their questions.";
+  }
 
   // build tool system prompt by merging all tool system prompts
   let toolSystemPrompt = "";
@@ -525,7 +554,7 @@ export const createBackendEnvFile = async (
     ...getToolEnvs(opts.tools),
     ...getTemplateEnvs(opts.template),
     ...getObservabilityEnvs(opts.observability),
-    getSystemPromptEnv(opts.tools),
+    getSystemPromptEnv(opts.tools, opts.dataSources),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);
