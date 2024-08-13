@@ -13,8 +13,6 @@ import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import { DocumentFileType, SourceData, SourceNode } from "../index";
 import PdfDialog from "../widgets/PdfDialog";
 
-const SCORE_THRESHOLD = 0.25;
-
 type Document = {
   url: string;
   sources: SourceNode[];
@@ -24,15 +22,11 @@ export function ChatSources({ data }: { data: SourceData }) {
   const documents: Document[] = useMemo(() => {
     // group nodes by document (a document must have a URL)
     const nodesByUrl: Record<string, SourceNode[]> = {};
-    data.nodes
-      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
-      .filter((node) => isValidUrl(node.url))
-      .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
-      .forEach((node) => {
-        const key = node.url!.replace(/\/$/, ""); // remove trailing slash
-        nodesByUrl[key] ??= [];
-        nodesByUrl[key].push(node);
-      });
+    data.nodes.forEach((node) => {
+      const key = node.url!.replace(/\/$/, ""); // remove trailing slash
+      nodesByUrl[key] ??= [];
+      nodesByUrl[key].push(node);
+    });
 
     // convert to array of documents
     return Object.entries(nodesByUrl).map(([url, sources]) => ({
@@ -178,14 +172,4 @@ function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
       )}
     </div>
   );
-}
-
-function isValidUrl(url?: string): boolean {
-  if (!url) return false;
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
 }

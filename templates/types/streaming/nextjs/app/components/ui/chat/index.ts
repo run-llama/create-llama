@@ -83,9 +83,41 @@ export type MessageAnnotation = {
   data: AnnotationData;
 };
 
+const NODE_SCORE_THRESHOLD = 0.25;
+
 export function getAnnotationData<T extends AnnotationData>(
   annotations: MessageAnnotation[],
   type: MessageAnnotationType,
 ): T[] {
-  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
+  const data = annotations
+    .filter((a) => a.type === type)
+    .map((a) => a.data as T);
+
+  if (type === MessageAnnotationType.SOURCES && data.length > 0) {
+    // Filter and update the index of the source node
+    const sourceData = data[0] as SourceData;
+    if (sourceData.nodes) {
+      sourceData.nodes = preprocessSourceNodes(sourceData.nodes);
+    }
+  }
+  return data;
+}
+
+function preprocessSourceNodes(nodes: SourceNode[]): SourceNode[] {
+  // Filter source nodes has lower score
+  nodes = nodes
+    .filter((node) => (node.score ?? 1) > NODE_SCORE_THRESHOLD)
+    .filter((node) => isValidUrl(node.url))
+    .sort((a, b) => (b.score ?? 1) - (a.score ?? 1));
+  return nodes;
+}
+
+function isValidUrl(url?: string): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }

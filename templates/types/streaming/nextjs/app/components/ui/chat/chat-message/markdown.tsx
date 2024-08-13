@@ -58,8 +58,8 @@ const preprocessCitations = (content: string, sources: SourceData) => {
         content = content.replace(match[0], "");
       }
     }
-    return content;
   }
+  return content;
 };
 
 const preprocessContent = (content: string, sources: SourceData) => {
@@ -129,9 +129,11 @@ export default function Markdown({
                 <a
                   href={href}
                   target="_blank"
-                  className="inline-flex w-5 h-5 rounded-full items-center justify-center bg-gray-100 hover:text-white hover:bg-primary"
+                  className="inline-flex w-5 h-5 rounded-full items-center justify-center bg-gray-100 hover:text-white hover:bg-primary overflow-hidden"
                 >
-                  {children[0].replace("citation:", "")}
+                  {
+                    href ? children[0].replace("citation:", "") : "*" // Once the link is empty we only show a star for better UX
+                  }
                 </a>
               </sup>
             );

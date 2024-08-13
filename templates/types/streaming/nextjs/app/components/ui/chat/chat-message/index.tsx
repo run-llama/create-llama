@@ -101,9 +101,7 @@ function ChatMessageContent({
     },
     {
       order: 3,
-      component: sourceData[0] ? (
-        <ChatSources data={sourceData[0]} messageContent={message.content} />
-      ) : null,
+      component: sourceData[0] ? <ChatSources data={sourceData[0]} /> : null,
     },
     {
       order: 4,
