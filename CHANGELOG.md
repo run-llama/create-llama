@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.33
+
+### Patch Changes
+
+- d746c75: Add Weaviate vector store (Typescript)
+
 ## 0.1.32
 
 ### Patch Changes
