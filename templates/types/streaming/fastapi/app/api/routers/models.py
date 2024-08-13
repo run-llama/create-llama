@@ -193,8 +193,8 @@ class SourceNodes(BaseModel):
         if file_name and url_prefix:
             # file_name exists and file server is configured
             pipeline_id = metadata.get("pipeline_id")
-            if pipeline_id and metadata.get("private") is None:
-                # file is from LlamaCloud and was not ingested locally
+            if pipeline_id:
+                # file is from LlamaCloud
                 file_name = f"{pipeline_id}${file_name}"
                 return f"{url_prefix}/output/llamacloud/{file_name}"
             is_private = metadata.get("private", "false") == "true"
@@ -219,9 +219,7 @@ class SourceNodes(BaseModel):
             )
             for node in source_nodes
             if (
-                node.metadata.get("private")
-                is None  # Only download files are from LlamaCloud and were not ingested locally
-                and node.metadata.get("pipeline_id") is not None
+                node.metadata.get("pipeline_id") is not None
                 and node.metadata.get("file_name") is not None
             )
         ]

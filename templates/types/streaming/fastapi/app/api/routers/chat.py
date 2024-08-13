@@ -31,9 +31,7 @@ def process_response_nodes(
     """
     files_to_download = SourceNodes.get_download_files(nodes)
     for file in files_to_download:
-        background_tasks.add_task(
-            LLamaCloudFileService.download_llamacloud_pipeline_file, file
-        )
+        background_tasks.add_task(LLamaCloudFileService.download_pipeline_file, file)
 
 
 # streaming endpoint - delete if not needed

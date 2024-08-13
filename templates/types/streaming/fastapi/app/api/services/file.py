@@ -19,6 +19,8 @@ from llama_index.core.schema import Document
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 
+from app.api.services.llama_cloud import LLamaCloudFileService
+
 
 def get_llamaparse_parser():
     from app.engine.loaders import load_configs
@@ -79,47 +81,22 @@ class PrivateFileService:
         return documents
 
     @staticmethod
-    def process_file(filename: str, base64_content: str) -> List[str]:
+    def process_file(file_name: str, base64_content: str) -> List[str]:
         file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
 
         # Add the nodes to the index and persist it
+        # TODO: get params to select index
         current_index = get_index()
 
         # Insert the documents into the index
         if isinstance(current_index, LlamaCloudIndex):
-            from llama_cloud import ManagedIngestionStatus
-
-            # LlamaCloudIndex is a managed index so we can directly use the files
-            client = current_index._client
-            file_data = (filename, BytesIO(file_data))
-            file = client.files.upload_file(upload_file=file_data)
-            files = [
-                {
-                    "file_id": file.id,
-                    "custom_metadata": {
-                        "private": "true",
-                        "file_id": file.id,
-                    },
-                }
-            ]
             pipeline_id = current_index._get_pipeline_id()
-            files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)
-
-            # Wait 2s for the file to be processed
-            max_attempts = 20
-            attempt = 0
-            while attempt < max_attempts:
-                result = client.pipelines.get_pipeline_file_status(pipeline_id, file.id)
-                if result.status == ManagedIngestionStatus.ERROR:
-                    raise Exception(f"File processing failed: {str(result)}")
-                if result.status == ManagedIngestionStatus.SUCCESS:
-                    # File is ingested - return the file id
-                    return [file.id]
-                attempt += 1
-                time.sleep(0.1)  # Sleep for 100ms
-            raise Exception(
-                f"File processing did not complete after {max_attempts} attempts."
-            )
+            # LlamaCloudIndex is a managed index so we can directly use the files
+            return [
+                LLamaCloudFileService.add_file_to_pipeline(
+                    pipeline_id, file_name, file_data
+                )
+            ]
         else:
             # First process documents into nodes
             documents = PrivateFileService.store_and_parse_file(file_data, extension)
