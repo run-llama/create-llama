@@ -89,11 +89,13 @@ class PrivateFileService:
         if isinstance(current_index, LlamaCloudIndex):
             from app.engine.service import LLamaCloudFileService
 
+            project_id = current_index._get_project_id()
             pipeline_id = current_index._get_pipeline_id()
             # LlamaCloudIndex is a managed index so we can directly use the files
             upload_file = (file_name, BytesIO(file_data))
             return [
                 LLamaCloudFileService.add_file_to_pipeline(
+                    project_id,
                     pipeline_id,
                     upload_file,
                     custom_metadata={

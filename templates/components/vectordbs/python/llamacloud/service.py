@@ -60,12 +60,13 @@ class LLamaCloudFileService:
     @classmethod
     def add_file_to_pipeline(
         cls,
+        project_id: str,
         pipeline_id: str,
         upload_file: Union[typing.IO, Tuple[str, BytesIO]],
         custom_metadata: Optional[Dict[str, PipelineFileCreateCustomMetadataValue]],
     ) -> str:
         client = get_client()
-        file = client.files.upload_file(upload_file=upload_file)
+        file = client.files.upload_file(project_id=project_id, upload_file=upload_file)
         files = [
             {
                 "file_id": file.id,

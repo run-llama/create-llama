@@ -16,6 +16,7 @@ def generate_datasource():
     logger.info("Generate index for the provided data")
 
     index = get_index()
+    project_id = index._get_project_id()
     pipeline_id = index._get_pipeline_id()
 
     # use SimpleDirectoryReader to retrieve the files to process
@@ -32,6 +33,7 @@ def generate_datasource():
                 f"Adding file {input_file} to pipeline {index.name} in project {index.project_name}"
             )
             LLamaCloudFileService.add_file_to_pipeline(
+                project_id,
                 pipeline_id,
                 f,
                 custom_metadata={
