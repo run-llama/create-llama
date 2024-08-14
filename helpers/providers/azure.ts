@@ -35,10 +35,6 @@ const ALL_AZURE_OPENAI_EMBEDDING_MODELS: Record<
     openAIModel: string;
   }
 > = {
-  "text-embedding-ada-002": {
-    dimensions: 1536,
-    openAIModel: "text-embedding-ada-002",
-  },
   "text-embedding-3-small": {
     dimensions: 1536,
     openAIModel: "text-embedding-3-small",
