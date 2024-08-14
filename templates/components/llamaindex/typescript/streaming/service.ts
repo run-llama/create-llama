@@ -1,3 +1,9 @@
+import {
+  FilesService,
+  OpenAPI,
+  PipelinesService,
+  ProjectsService,
+} from "@llamaindex/cloud/api";
 import { Metadata, NodeWithScore } from "llamaindex";
 import fs from "node:fs";
 import https from "node:https";
@@ -13,18 +19,14 @@ type LlamaCloudFile = {
   project_id: string;
 };
 
-type LLamaCloudProject = {
-  id: string;
-  organization_id: string;
-  name: string;
-  is_default: boolean;
-};
-
-type LLamaCloudPipeline = {
-  id: string;
-  name: string;
-  project_id: string;
-};
+function initClient() {
+  const apiKey = process.env.LLAMA_CLOUD_API_KEY;
+  const baseUrl = process.env.LLAMA_CLOUD_BASE_URL;
+  if (!apiKey) throw new Error("LLamaCloud API Key is required");
+  OpenAPI.TOKEN = apiKey;
+  if (baseUrl) OpenAPI.BASE = baseUrl;
+}
+initClient();
 
 export class LLamaCloudFileService {
   private static readonly headers = {
@@ -32,10 +34,60 @@ export class LLamaCloudFileService {
     Authorization: `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`,
   };
 
+  public static async addFileToPipeline(
+    projectId: string,
+    pipelineId: string,
+    uploadFile: File | Blob,
+    customMetadata: Record<string, any> = {},
+  ) {
+    const file = await FilesService.uploadFileApiV1FilesPost({
+      projectId,
+      formData: {
+        upload_file: uploadFile,
+      },
+    });
+    const files = [
+      {
+        file_id: file.id,
+        custom_metadata: { file_id: file.id, ...customMetadata },
+      },
+    ];
+    await PipelinesService.addFilesToPipelineApiV1PipelinesPipelineIdFilesPut({
+      pipelineId,
+      requestBody: files,
+    });
+
+    // Wait 2s for the file to be processed
+    const maxAttempts = 20;
+    let attempt = 0;
+    while (attempt < maxAttempts) {
+      const result =
+        await PipelinesService.getPipelineFileStatusApiV1PipelinesPipelineIdFilesFileIdStatusGet(
+          {
+            pipelineId,
+            fileId: file.id,
+          },
+        );
+      if (result.status === "ERROR") {
+        throw new Error(`File processing failed: ${JSON.stringify(result)}`);
+      }
+      if (result.status === "SUCCESS") {
+        // File is ingested - return the file id
+        return file.id;
+      }
+      attempt += 1;
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Sleep for 100ms
+    }
+    throw new Error(
+      `File processing did not complete after ${maxAttempts} attempts.`,
+    );
+  }
+
   public static async getAllProjectsWithPipelines() {
     try {
-      const projects = await LLamaCloudFileService.getAllProjects();
-      const pipelines = await LLamaCloudFileService.getAllPipelines();
+      const projects = await ProjectsService.listProjectsApiV1ProjectsGet();
+      const pipelines =
+        await PipelinesService.searchPipelinesApiV1PipelinesGet();
       return projects.map((project) => ({
         ...project,
         pipelines: pipelines.filter((p) => p.project_id === project.id),
@@ -75,10 +127,9 @@ export class LLamaCloudFileService {
       fileName: string;
     }> = [];
     for (const node of nodes) {
-      const isLocalFile = node.node.metadata["private"] != null;
       const pipelineId = node.node.metadata["pipeline_id"];
       const fileName = node.node.metadata["file_name"];
-      if (isLocalFile || !pipelineId || !fileName) continue;
+      if (!pipelineId || !fileName) continue;
       const isDuplicate = downloadFiles.some(
         (f) => f.pipelineId === pipelineId && f.fileName === fileName,
       );
@@ -140,6 +191,7 @@ export class LLamaCloudFileService {
     );
   }
 
+  // TODO: replace all REST API calls with LlamaCloudClient
   private static async getFileUrlById(
     projectId: string,
     fileId: string,
@@ -162,26 +214,6 @@ export class LLamaCloudFileService {
       headers: LLamaCloudFileService.headers,
     });
     const data = await response.json();
-    return data;
-  }
-
-  private static async getAllProjects(): Promise<LLamaCloudProject[]> {
-    const url = `${LLAMA_CLOUD_BASE_URL}/projects`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: LLamaCloudFileService.headers,
-    });
-    const data = (await response.json()) as LLamaCloudProject[];
-    return data;
-  }
-
-  private static async getAllPipelines(): Promise<LLamaCloudPipeline[]> {
-    const url = `${LLAMA_CLOUD_BASE_URL}/pipelines`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: LLamaCloudFileService.headers,
-    });
-    const data = (await response.json()) as LLamaCloudPipeline[];
     return data;
   }
 }
