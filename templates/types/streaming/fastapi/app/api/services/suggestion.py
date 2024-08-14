@@ -61,5 +61,5 @@ class NextQuestionSuggestion:
 
             return questions
         except Exception as e:
-            logger.error(f"Error in generating next question: {e}")
+            logger.error(f"Error when generating next question: {e}")
             return []
