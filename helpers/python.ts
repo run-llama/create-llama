@@ -350,12 +350,15 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "vectordbs", "python", vectorDb ?? "none"),
   });
 
-  // Copy all loaders to enginePath
-  const loaderPath = path.join(enginePath, "loaders");
-  await copy("**", loaderPath, {
-    parents: true,
-    cwd: path.join(compPath, "loaders", "python"),
-  });
+  if (vectorDb !== "llamacloud") {
+    // Copy all loaders to enginePath
+    // Not needed for LlamaCloud as it has its own loaders
+    const loaderPath = path.join(enginePath, "loaders");
+    await copy("**", loaderPath, {
+      parents: true,
+      cwd: path.join(compPath, "loaders", "python"),
+    });
+  }
 
   // Copy settings.py to app
   await copy("**", path.join(root, "app"), {

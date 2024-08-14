@@ -2,9 +2,10 @@ from io import BytesIO
 import logging
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple, Union
+import typing
 
-from llama_cloud import ManagedIngestionStatus
+from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
 import requests
 from app.api.routers.models import LlamaCloudFile
 from app.engine.index import get_client
@@ -42,19 +43,15 @@ class LLamaCloudFileService:
     def add_file_to_pipeline(
         cls,
         pipeline_id: str,
-        file_name: str,
-        file_data: bytes,
+        upload_file: Union[typing.IO, Tuple[str, BytesIO]],
+        custom_metadata: Optional[Dict[str, PipelineFileCreateCustomMetadataValue]],
     ) -> str:
         client = get_client()
-        upload_file = (file_name, BytesIO(file_data))
         file = client.files.upload_file(upload_file=upload_file)
         files = [
             {
                 "file_id": file.id,
-                "custom_metadata": {
-                    "private": "true",
-                    "file_id": file.id,
-                },
+                "custom_metadata": {"file_id": file.id, **(custom_metadata or {})},
             }
         ]
         files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)

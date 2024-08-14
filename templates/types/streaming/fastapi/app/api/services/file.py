@@ -91,9 +91,15 @@ class PrivateFileService:
         if isinstance(current_index, LlamaCloudIndex):
             pipeline_id = current_index._get_pipeline_id()
             # LlamaCloudIndex is a managed index so we can directly use the files
+            upload_file = (file_name, BytesIO(file_data))
             return [
                 LLamaCloudFileService.add_file_to_pipeline(
-                    pipeline_id, file_name, file_data
+                    pipeline_id,
+                    upload_file,
+                    custom_metadata={
+                        # Set private=true to mark the document as private user docs (required for filtering)
+                        "private": "true",
+                    },
                 )
             ]
         else:
