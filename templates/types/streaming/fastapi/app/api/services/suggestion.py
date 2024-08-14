@@ -10,7 +10,7 @@ NEXT_QUESTIONS_SUGGESTION_PROMPT = PromptTemplate(
     "You're a helpful assistant! Your task is to suggest the next question that user might ask. "
     "\nHere is the conversation history"
     "\n---------------------\n{conversation}\n---------------------"
-    "Given the conversation history, please give me $number_of_questions questions that you might ask next!"
+    "Given the conversation history, please give me {number_of_questions} questions that you might ask next!"
 )
 N_QUESTION_TO_GENERATE = 3
 
@@ -52,14 +52,10 @@ class NextQuestionSuggestion:
                 NextQuestions,
                 prompt=NEXT_QUESTIONS_SUGGESTION_PROMPT,
                 conversation=conversation,
-                nun_questions=number_of_questions,
+                number_of_questions=number_of_questions,
             )
 
-            # Sometimes, the number of questions generated is larger than the requested number
-            # In this case, we only return the first N questions to respect the request
-            questions = output.questions[:min(number_of_questions, len(output.questions))]
-
-            return questions
+            return output.questions
         except Exception as e:
             logger.error(f"Error when generating next question: {e}")
             return []
