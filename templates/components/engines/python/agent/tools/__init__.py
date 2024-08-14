@@ -1,8 +1,6 @@
 import os
 import yaml
-import json
 import importlib
-from cachetools import cached, LRUCache
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 from llama_index.core.tools.function_tool import FunctionTool
 

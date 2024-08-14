@@ -30,3 +30,13 @@ jobs:
 
       - name: Run Prettier
         run: pnpm run format
+
+      - name: Run Python format check
+        uses: chartboost/ruff-action@v1
+        with:
+          args: "format --check"
+
+      - name: Run Python lint
+        uses: chartboost/ruff-action@v1
+        with:
+          args: "check --ignore E402"
