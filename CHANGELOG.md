@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.35
+
+### Patch Changes
+
+- 81ef7f0: Use LlamaCloud pipeline for data ingestion (private file uploads and generate script)
+
 ## 0.1.34
 
 ### Patch Changes
