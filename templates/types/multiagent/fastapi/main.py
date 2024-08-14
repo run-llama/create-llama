@@ -1,3 +1,4 @@
+# flake8: noqa: E402
 from dotenv import load_dotenv
 from app.settings import init_settings
 

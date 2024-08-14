@@ -39,4 +39,4 @@ jobs:
       - name: Run Python lint
         uses: chartboost/ruff-action@v1
         with:
-          args: "check --ignore E402"
+          args: "check"
