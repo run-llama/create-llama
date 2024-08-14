@@ -5,6 +5,9 @@ import { LLamaCloudFileService } from "../../llamaindex/streaming/service";
  * This API is to get config from the backend envs and expose them to the frontend
  */
 export async function GET() {
+  if (!process.env.LLAMA_CLOUD_API_KEY) {
+    return NextResponse.json({ status: 404 });
+  }
   const config = {
     projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
     pipeline: {
