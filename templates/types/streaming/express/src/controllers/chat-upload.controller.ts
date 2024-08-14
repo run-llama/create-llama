@@ -3,12 +3,16 @@ import { getDataSource } from "./engine";
 import { uploadDocument } from "./llamaindex/documents/upload";
 
 export const chatUpload = async (req: Request, res: Response) => {
-  const { base64, params }: { base64: string; params?: any } = req.body;
-  if (!base64) {
+  const {
+    filename,
+    base64,
+    params,
+  }: { filename: string; base64: string; params?: any } = req.body;
+  if (!base64 || !filename) {
     return res.status(400).json({
-      error: "base64 is required in the request body",
+      error: "base64 and filename is required in the request body",
     });
   }
   const index = await getDataSource(params);
-  return res.status(200).json(await uploadDocument(index, base64));
+  return res.status(200).json(await uploadDocument(index, filename, base64));
 };
