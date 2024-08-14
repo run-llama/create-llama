@@ -13,7 +13,6 @@ from app.api.routers.models import (
     SourceNodes,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
-from app.api.services.llama_cloud import LLamaCloudFileService
 from app.engine import get_chat_engine
 from app.engine.query_filter import generate_filters
 
@@ -22,25 +21,12 @@ chat_router = r = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 
-def process_response_nodes(
-    nodes: List[NodeWithScore],
-    background_tasks: BackgroundTasks,
-):
-    """
-    Start background tasks on the source nodes if needed.
-    """
-    files_to_download = SourceNodes.get_download_files(nodes)
-    for file in files_to_download:
-        background_tasks.add_task(LLamaCloudFileService.download_pipeline_file, file)
-
-
 # streaming endpoint - delete if not needed
 @r.post("")
 async def chat(
     request: Request,
     data: ChatData,
     background_tasks: BackgroundTasks,
-    chat_engine: BaseChatEngine = Depends(get_chat_engine),
 ):
     try:
         last_message_content = data.get_last_message_content()
@@ -83,3 +69,18 @@ async def chat_request(
         result=Message(role=MessageRole.ASSISTANT, content=response.response),
         nodes=SourceNodes.from_source_nodes(response.source_nodes),
     )
+
+
+def process_response_nodes(
+    nodes: List[NodeWithScore],
+    background_tasks: BackgroundTasks,
+):
+    files_to_download = SourceNodes.get_download_files(nodes)
+    if files_to_download:
+        # Start background tasks to download documents from LlamaCloud if needed
+        from app.api.services.llama_cloud import LLamaCloudFileService
+
+        for file in files_to_download:
+            background_tasks.add_task(
+                LLamaCloudFileService.download_pipeline_file, file
+            )
