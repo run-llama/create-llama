@@ -3,7 +3,7 @@ import logging
 import base64
 import uuid
 from pydantic import BaseModel
-from typing import List, Tuple, Dict, Optional
+from typing import List, Dict, Optional
 from llama_index.core.tools import FunctionTool
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
