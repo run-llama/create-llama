@@ -116,8 +116,8 @@ function getNodeUrl(metadata: Metadata) {
   if (fileName && process.env.FILESERVER_URL_PREFIX) {
     // file_name exists and file server is configured
     const pipelineId = metadata["pipeline_id"];
-    if (pipelineId && metadata["private"] == null) {
-      // file is from LlamaCloud and was not ingested locally
+    if (pipelineId) {
+      // file is from LlamaCloud
       const name = LLamaCloudFileService.toDownloadedName(pipelineId, fileName);
       return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
     }
