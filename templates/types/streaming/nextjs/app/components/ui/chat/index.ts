@@ -1,4 +1,5 @@
 import { JSONValue } from "ai";
+import { isValidUrl } from "../lib/utils";
 import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 
@@ -89,12 +90,17 @@ export function getAnnotationData<T extends AnnotationData>(
   annotations: MessageAnnotation[],
   type: MessageAnnotationType,
 ): T[] {
-  const data = annotations
-    .filter((a) => a.type === type)
-    .map((a) => a.data as T);
+  return annotations.filter((a) => a.type === type).map((a) => a.data as T);
+}
 
-  if (type === MessageAnnotationType.SOURCES && data.length > 0) {
-    // Filter and update the index of the source node
+export function getSourceAnnotationData(
+  annotations: MessageAnnotation[],
+): SourceData[] {
+  const data = getAnnotationData<SourceData>(
+    annotations,
+    MessageAnnotationType.SOURCES,
+  );
+  if (data.length > 0) {
     const sourceData = data[0] as SourceData;
     if (sourceData.nodes) {
       sourceData.nodes = preprocessSourceNodes(sourceData.nodes);
@@ -110,14 +116,4 @@ function preprocessSourceNodes(nodes: SourceNode[]): SourceNode[] {
     .filter((node) => isValidUrl(node.url))
     .sort((a, b) => (b.score ?? 1) - (a.score ?? 1));
   return nodes;
-}
-
-function isValidUrl(url?: string): boolean {
-  if (!url) return false;
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
 }

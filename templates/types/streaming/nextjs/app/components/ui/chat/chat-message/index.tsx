@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react";
 
 import { Message } from "ai";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
@@ -15,6 +15,7 @@ import {
   SuggestedQuestionsData,
   ToolData,
   getAnnotationData,
+  getSourceAnnotationData,
 } from "../index";
 import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
@@ -60,10 +61,12 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.EVENTS,
   );
-  const sourceData = getAnnotationData<SourceData>(
-    annotations,
-    MessageAnnotationType.SOURCES,
+
+  const sourceData = useMemo(
+    () => getSourceAnnotationData(annotations),
+    [annotations],
   );
+
   const toolData = getAnnotationData<ToolData>(
     annotations,
     MessageAnnotationType.TOOLS,
