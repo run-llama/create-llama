@@ -4,7 +4,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 import time
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 from uuid import uuid4
 
 
@@ -81,12 +81,11 @@ class PrivateFileService:
         return documents
 
     @staticmethod
-    def process_file(file_name: str, base64_content: str) -> List[str]:
+    def process_file(file_name: str, base64_content: str, params: Any) -> List[str]:
         file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
 
         # Add the nodes to the index and persist it
-        # TODO: get params to select index
-        current_index = get_index()
+        current_index = get_index(params)
 
         # Insert the documents into the index
         if isinstance(current_index, LlamaCloudIndex):
