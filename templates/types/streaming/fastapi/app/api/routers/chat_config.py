@@ -30,15 +30,12 @@ try:
         projects = LLamaCloudFileService.get_all_projects_with_pipelines()
         pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
         project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
-        pipeline_config = (
-            pipeline
-            and project
-            and {
+        pipeline_config = None
+        if pipeline and project:
+            pipeline_config = {
                 "pipeline": pipeline,
                 "project": project,
             }
-            or None
-        )
         return {
             "projects": projects,
             "pipeline": pipeline_config,
