@@ -147,21 +147,6 @@ class ChatData(BaseModel):
         return list(set(document_ids))
 
 
-class LlamaCloudFile(BaseModel):
-    file_name: str
-    pipeline_id: str
-
-    def __eq__(self, other):
-        if not isinstance(other, LlamaCloudFile):
-            return NotImplemented
-        return (
-            self.file_name == other.file_name and self.pipeline_id == other.pipeline_id
-        )
-
-    def __hash__(self):
-        return hash((self.file_name, self.pipeline_id))
-
-
 class SourceNodes(BaseModel):
     id: str
     metadata: Dict[str, Any]
@@ -208,23 +193,6 @@ class SourceNodes(BaseModel):
     @classmethod
     def from_source_nodes(cls, source_nodes: List[NodeWithScore]):
         return [cls.from_source_node(node) for node in source_nodes]
-
-    @staticmethod
-    def get_download_files(nodes: List[NodeWithScore]) -> Set[LlamaCloudFile]:
-        source_nodes = SourceNodes.from_source_nodes(nodes)
-        llama_cloud_files = [
-            LlamaCloudFile(
-                file_name=node.metadata.get("file_name"),
-                pipeline_id=node.metadata.get("pipeline_id"),
-            )
-            for node in source_nodes
-            if (
-                node.metadata.get("pipeline_id") is not None
-                and node.metadata.get("file_name") is not None
-            )
-        ]
-        # Remove duplicates and return
-        return set(llama_cloud_files)
 
 
 class Result(BaseModel):

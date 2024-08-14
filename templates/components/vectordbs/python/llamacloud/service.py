@@ -2,16 +2,34 @@ from io import BytesIO
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import typing
 
+from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
+from pydantic import BaseModel
 import requests
-from app.api.routers.models import LlamaCloudFile
+from app.api.routers.models import SourceNodes
 from app.engine.index import get_client
+from llama_index.core.schema import NodeWithScore
 
 
 logger = logging.getLogger("uvicorn")
+
+
+class LlamaCloudFile(BaseModel):
+    file_name: str
+    pipeline_id: str
+
+    def __eq__(self, other):
+        if not isinstance(other, LlamaCloudFile):
+            return NotImplemented
+        return (
+            self.file_name == other.file_name and self.pipeline_id == other.pipeline_id
+        )
+
+    def __hash__(self):
+        return hash((self.file_name, self.pipeline_id))
 
 
 class LLamaCloudFileService:
@@ -105,6 +123,34 @@ class LLamaCloudFileService:
             logger.info(f"Error fetching file from LlamaCloud: {error}")
 
     @classmethod
+    def download_files_from_nodes(
+        cls, nodes: List[NodeWithScore], background_tasks: BackgroundTasks
+    ):
+        files = cls._get_files_to_download(nodes)
+        for file in files:
+            logger.info(f"Adding download of {file.file_name} to background tasks")
+            background_tasks.add_task(
+                LLamaCloudFileService.download_pipeline_file, file
+            )
+
+    @classmethod
+    def _get_files_to_download(cls, nodes: List[NodeWithScore]) -> Set[LlamaCloudFile]:
+        source_nodes = SourceNodes.from_source_nodes(nodes)
+        llama_cloud_files = [
+            LlamaCloudFile(
+                file_name=node.metadata.get("file_name"),
+                pipeline_id=node.metadata.get("pipeline_id"),
+            )
+            for node in source_nodes
+            if (
+                node.metadata.get("pipeline_id") is not None
+                and node.metadata.get("file_name") is not None
+            )
+        ]
+        # Remove duplicates and return
+        return set(llama_cloud_files)
+
+    @classmethod
     def _get_file_name(cls, name: str, pipeline_id: str) -> str:
         return cls.DOWNLOAD_FILE_NAME_TPL.format(pipeline_id=pipeline_id, filename=name)
 
@@ -114,7 +160,7 @@ class LLamaCloudFileService:
 
     @classmethod
     def _download_file(cls, url: str, local_file_path: str):
-        logger.info(f"Downloading file to {local_file_path}")
+        logger.info(f"Saving file to {local_file_path}")
         # Create directory if it doesn't exist
         os.makedirs(cls.LOCAL_STORE_PATH, exist_ok=True)
         # Download the file

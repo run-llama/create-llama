@@ -1,10 +1,14 @@
+import logging
 import os
 
 from fastapi import APIRouter
 
 from app.api.routers.models import ChatConfig
 
+
 config_router = r = APIRouter()
+
+logger = logging.getLogger("uvicorn")
 
 
 @r.get("")
@@ -16,9 +20,10 @@ async def chat_config() -> ChatConfig:
     return ChatConfig(starter_questions=starter_questions)
 
 
-if os.getenv("LLAMA_CLOUD_API_KEY"):
-    # add config route for LlamaCloud
-    from app.api.services.llama_cloud import LLamaCloudFileService
+try:
+    from app.engine.service import LLamaCloudFileService
+
+    logger.info("LlamaCloud is configured. Adding /config/llamacloud route.")
 
     @r.get("/llamacloud")
     async def chat_llama_cloud_config():
@@ -38,3 +43,9 @@ if os.getenv("LLAMA_CLOUD_API_KEY"):
             "projects": projects,
             "pipeline": pipeline_config,
         }
+
+except ImportError:
+    logger.debug(
+        "LlamaCloud is not configured. Skipping adding /config/llamacloud route."
+    )
+    pass

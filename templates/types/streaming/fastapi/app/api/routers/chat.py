@@ -75,12 +75,11 @@ def process_response_nodes(
     nodes: List[NodeWithScore],
     background_tasks: BackgroundTasks,
 ):
-    files_to_download = SourceNodes.get_download_files(nodes)
-    if files_to_download:
+    try:
         # Start background tasks to download documents from LlamaCloud if needed
-        from app.api.services.llama_cloud import LLamaCloudFileService
+        from app.engine.service import LLamaCloudFileService
 
-        for file in files_to_download:
-            background_tasks.add_task(
-                LLamaCloudFileService.download_pipeline_file, file
-            )
+        LLamaCloudFileService.download_files_from_nodes(nodes, background_tasks)
+    except ImportError:
+        logger.debug("LlamaCloud is not configured. Skipping post processing of nodes")
+        pass

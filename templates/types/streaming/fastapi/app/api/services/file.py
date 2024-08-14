@@ -19,8 +19,6 @@ from llama_index.core.schema import Document
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 
-from app.api.services.llama_cloud import LLamaCloudFileService
-
 
 def get_llamaparse_parser():
     from app.engine.loaders import load_configs
@@ -89,6 +87,8 @@ class PrivateFileService:
 
         # Insert the documents into the index
         if isinstance(current_index, LlamaCloudIndex):
+            from app.engine.service import LLamaCloudFileService
+
             pipeline_id = current_index._get_pipeline_id()
             # LlamaCloudIndex is a managed index so we can directly use the files
             upload_file = (file_name, BytesIO(file_data))

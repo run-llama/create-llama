@@ -6,7 +6,7 @@ load_dotenv()
 
 import logging
 from llama_index.core.readers import SimpleDirectoryReader
-from app.api.services.llama_cloud import LLamaCloudFileService
+from app.engine.service import LLamaCloudFileService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
