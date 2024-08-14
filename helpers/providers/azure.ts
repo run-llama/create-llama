@@ -9,6 +9,7 @@ const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
     openAIModel: "gpt-3.5-turbo-16k",
   },
   "gpt-4o": { openAIModel: "gpt-4o" },
+  "gpt-4o-mini": { openAIModel: "gpt-4o-mini" },
   "gpt-4": { openAIModel: "gpt-4" },
   "gpt-4-32k": { openAIModel: "gpt-4-32k" },
   "gpt-4-turbo": {
@@ -25,6 +26,9 @@ const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
   },
   "gpt-4o-2024-05-13": {
     openAIModel: "gpt-4o-2024-05-13",
+  },
+  "gpt-4o-mini-2024-07-18": {
+    openAIModel: "gpt-4o-mini-2024-07-18",
   },
 };
 
