@@ -12,7 +12,7 @@ def generate_filters(doc_ids):
         operator="nin",  # type: ignore
     )
     selected_doc_filter = MetadataFilter(
-        key="doc_id",
+        key="file_id",  # Note: LLamaCloud uses "file_id" to reference private document ids as "doc_id" is a restricted field in LlamaCloud
         value=doc_ids,
         operator="in",  # type: ignore
     )

@@ -142,12 +142,15 @@ export const installTemplate = async (
 
   if (props.framework === "fastapi") {
     await installPythonTemplate(props);
-    // write loaders configuration (currently Python only)
-    await writeLoadersConfig(
-      props.root,
-      props.dataSources,
-      props.useLlamaParse,
-    );
+    if (props.vectorDb !== "llamacloud") {
+      // write loaders configuration (currently Python only)
+      // not needed for LlamaCloud as it has its own loaders
+      await writeLoadersConfig(
+        props.root,
+        props.dataSources,
+        props.useLlamaParse,
+      );
+    }
   } else {
     await installTSTemplate(props);
   }
