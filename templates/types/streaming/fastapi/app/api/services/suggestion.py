@@ -25,7 +25,6 @@ class NextQuestions(BaseModel):
 
 
 class NextQuestionSuggestion:
-
     @staticmethod
     async def suggest_next_questions(
         messages: List[Message],

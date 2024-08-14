@@ -17,8 +17,10 @@ def _create_weaviate_client():
     client = weaviate.connect_to_weaviate_cloud(cluster_url, auth_credentials)
     return client
 
+
 # Global variable to store the Weaviate client
 client = None
+
 
 def get_vector_store():
     global client

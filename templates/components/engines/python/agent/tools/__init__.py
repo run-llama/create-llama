@@ -13,7 +13,6 @@ class ToolType:
 
 
 class ToolFactory:
-
     TOOL_SOURCE_PACKAGE_MAP = {
         ToolType.LLAMAHUB: "llama_index.tools",
         ToolType.LOCAL: "app.engine.tools",
