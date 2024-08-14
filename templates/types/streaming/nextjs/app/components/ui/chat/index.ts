@@ -114,6 +114,11 @@ function preprocessSourceNodes(nodes: SourceNode[]): SourceNode[] {
   nodes = nodes
     .filter((node) => (node.score ?? 1) > NODE_SCORE_THRESHOLD)
     .filter((node) => isValidUrl(node.url))
-    .sort((a, b) => (b.score ?? 1) - (a.score ?? 1));
+    .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
+    .map((node) => {
+      // remove trailing slash for node url if exists
+      node.url = node.url!.replace(/\/$/, "");
+      return node;
+    });
   return nodes;
 }
