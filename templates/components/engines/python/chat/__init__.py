@@ -1,32 +1,21 @@
 import os
-from typing import List, Optional
 
 from app.engine.index import get_index
+from app.engine.node_postprocessors import NodeCitationProcessor
 from fastapi import HTTPException
-from llama_index.core import QueryBundle
 from llama_index.core.chat_engine import CondensePlusContextChatEngine
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore
-
-
-class NodeCitationProcessor(BaseNodePostprocessor):
-    """
-    Append node_id into metadata. This is useful for citation.
-    """
-
-    def _postprocess_nodes(
-        self,
-        nodes: List[NodeWithScore],
-        query_bundle: Optional[QueryBundle] = None,
-    ) -> List[NodeWithScore]:
-        for node_score in nodes:
-            node_score.node.metadata["node_id"] = node_score.node.node_id
-        return nodes
 
 
 def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
+    citation_prompt = os.getenv("SYSTEM_CITATION_PROMPT", None)
     top_k = int(os.getenv("TOP_K", 3))
+    
+    node_postprocessors = []
+    if citation_prompt:
+        node_postprocessors = [NodeCitationProcessor()]
+        system_prompt = f"{system_prompt}\n{citation_prompt}"
+        
 
     index = get_index(params)
     if index is None:
@@ -45,5 +34,5 @@ def get_chat_engine(filters=None, params=None):
     return CondensePlusContextChatEngine.from_defaults(
         system_prompt=system_prompt,
         retriever=retriever,
-        node_postprocessors=[NodeCitationProcessor()],
+        node_postprocessors=node_postprocessors,
     )

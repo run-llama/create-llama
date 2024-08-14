@@ -52,7 +52,7 @@ const preprocessCitations = (content: string, sources: SourceData) => {
       if (sourceNode !== undefined) {
         content = content.replace(
           match[0],
-          `[citation:${sources.nodes.indexOf(sourceNode) + 1}](${sourceNode.url})`,
+          `[citation:${sources.nodes.indexOf(sourceNode)}](${sourceNode.url})`,
         );
       } else {
         // If the source node is not found, remove the citation reference
