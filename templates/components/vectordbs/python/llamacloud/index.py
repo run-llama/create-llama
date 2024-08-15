@@ -1,9 +1,19 @@
 import logging
 import os
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-
+from llama_index.core.ingestion.api_utils import (
+    get_client as llama_cloud_get_client,
+)
 
 logger = logging.getLogger("uvicorn")
+
+
+def get_client():
+    return llama_cloud_get_client(
+        os.getenv("LLAMA_CLOUD_API_KEY"),
+        os.getenv("LLAMA_CLOUD_BASE_URL"),
+    )
+
 
 def get_index(params=None):
     configParams = params or {}
@@ -25,7 +35,7 @@ def get_index(params=None):
         project_name=project_name,
         api_key=api_key,
         base_url=base_url,
-        organization_id=organization_id
+        organization_id=organization_id,
     )
 
     return index

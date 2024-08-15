@@ -1,5 +1,24 @@
 # create-llama
 
+## 0.1.36
+
+### Patch Changes
+
+- 2b7a5d8: Fix: private file upload not working in Python without LlamaCloud
+
+## 0.1.35
+
+### Patch Changes
+
+- 81ef7f0: Use LlamaCloud pipeline for data ingestion (private file uploads and generate script)
+
+## 0.1.34
+
+### Patch Changes
+
+- c49a5e1: Add error handling for generating the next question
+- c49a5e1: Fix wrong api key variable in Azure OpenAI provider
+
 ## 0.1.33
 
 ### Patch Changes

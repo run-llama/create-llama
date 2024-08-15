@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from app.api.routers.models import Message
@@ -9,9 +10,12 @@ NEXT_QUESTIONS_SUGGESTION_PROMPT = PromptTemplate(
     "You're a helpful assistant! Your task is to suggest the next question that user might ask. "
     "\nHere is the conversation history"
     "\n---------------------\n{conversation}\n---------------------"
-    "Given the conversation history, please give me $number_of_questions questions that you might ask next!"
+    "Given the conversation history, please give me {number_of_questions} questions that you might ask next!"
 )
 N_QUESTION_TO_GENERATE = 3
+
+
+logger = logging.getLogger("uvicorn")
 
 
 class NextQuestions(BaseModel):
@@ -26,23 +30,31 @@ class NextQuestionSuggestion:
         messages: List[Message],
         number_of_questions: int = N_QUESTION_TO_GENERATE,
     ) -> List[str]:
-        # Reduce the cost by only using the last two messages
-        last_user_message = None
-        last_assistant_message = None
-        for message in reversed(messages):
-            if message.role == "user":
-                last_user_message = f"User: {message.content}"
-            elif message.role == "assistant":
-                last_assistant_message = f"Assistant: {message.content}"
-            if last_user_message and last_assistant_message:
-                break
-        conversation: str = f"{last_user_message}\n{last_assistant_message}"
+        """
+        Suggest the next questions that user might ask based on the conversation history
+        Return as empty list if there is an error
+        """
+        try:
+            # Reduce the cost by only using the last two messages
+            last_user_message = None
+            last_assistant_message = None
+            for message in reversed(messages):
+                if message.role == "user":
+                    last_user_message = f"User: {message.content}"
+                elif message.role == "assistant":
+                    last_assistant_message = f"Assistant: {message.content}"
+                if last_user_message and last_assistant_message:
+                    break
+            conversation: str = f"{last_user_message}\n{last_assistant_message}"
 
-        output: NextQuestions = await Settings.llm.astructured_predict(
-            NextQuestions,
-            prompt=NEXT_QUESTIONS_SUGGESTION_PROMPT,
-            conversation=conversation,
-            nun_questions=number_of_questions,
-        )
+            output: NextQuestions = await Settings.llm.astructured_predict(
+                NextQuestions,
+                prompt=NEXT_QUESTIONS_SUGGESTION_PROMPT,
+                conversation=conversation,
+                number_of_questions=number_of_questions,
+            )
 
-        return output.questions
+            return output.questions
+        except Exception as e:
+            logger.error(f"Error when generating next question: {e}")
+            return []

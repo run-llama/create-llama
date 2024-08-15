@@ -1,11 +1,14 @@
+import logging
 import os
 
 from fastapi import APIRouter
 
 from app.api.routers.models import ChatConfig
-from app.api.services.llama_cloud import LLamaCloudFileService
+
 
 config_router = r = APIRouter()
+
+logger = logging.getLogger("uvicorn")
 
 
 @r.get("")
@@ -17,21 +20,29 @@ async def chat_config() -> ChatConfig:
     return ChatConfig(starter_questions=starter_questions)
 
 
-@r.get("/llamacloud")
-async def chat_llama_cloud_config():
-    projects = LLamaCloudFileService.get_all_projects_with_pipelines()
-    pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
-    project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
-    pipeline_config = (
-        pipeline
-        and project
-        and {
-            "pipeline": pipeline,
-            "project": project,
+try:
+    from app.engine.service import LLamaCloudFileService
+
+    logger.info("LlamaCloud is configured. Adding /config/llamacloud route.")
+
+    @r.get("/llamacloud")
+    async def chat_llama_cloud_config():
+        projects = LLamaCloudFileService.get_all_projects_with_pipelines()
+        pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+        project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+        pipeline_config = None
+        if pipeline and project:
+            pipeline_config = {
+                "pipeline": pipeline,
+                "project": project,
+            }
+        return {
+            "projects": projects,
+            "pipeline": pipeline_config,
         }
-        or None
+
+except ImportError:
+    logger.debug(
+        "LlamaCloud is not configured. Skipping adding /config/llamacloud route."
     )
-    return {
-        "projects": projects,
-        "pipeline": pipeline_config,
-    }
+    pass

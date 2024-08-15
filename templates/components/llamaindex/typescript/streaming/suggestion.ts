@@ -33,8 +33,8 @@ export async function generateNextQuestions(
     const questions = extractQuestions(response.text);
     return questions;
   } catch (error) {
-    console.error("Error: ", error);
-    throw error;
+    console.error("Error when generating the next questions: ", error);
+    return [];
   }
 }
 

@@ -1,48 +1,47 @@
+# flake8: noqa: E402
 from dotenv import load_dotenv
+
+from app.engine.index import get_index
 
 load_dotenv()
 
-import os
 import logging
-from app.settings import init_settings
-from app.engine.loaders import get_documents
-from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-
+from llama_index.core.readers import SimpleDirectoryReader
+from app.engine.service import LLamaCloudFileService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
 def generate_datasource():
-    init_settings()
     logger.info("Generate index for the provided data")
 
-    name = os.getenv("LLAMA_CLOUD_INDEX_NAME")
-    project_name = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
-    api_key = os.getenv("LLAMA_CLOUD_API_KEY")
-    base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
-    organization_id = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
+    index = get_index()
+    project_id = index._get_project_id()
+    pipeline_id = index._get_pipeline_id()
 
-    if name is None or project_name is None or api_key is None:
-        raise ValueError(
-            "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
-            " to your environment variables or config them in .env file"
-        )
-
-    documents = get_documents()
-
-    # Set private=false to mark the document as public (required for filtering)
-    for doc in documents:
-        doc.metadata["private"] = "false"
-
-    LlamaCloudIndex.from_documents(
-        documents=documents,
-        name=name,
-        project_name=project_name,
-        api_key=api_key,
-        base_url=base_url,
-        organization_id=organization_id
+    # use SimpleDirectoryReader to retrieve the files to process
+    reader = SimpleDirectoryReader(
+        "data",
+        recursive=True,
     )
+    files_to_process = reader.input_files
+
+    # add each file to the LlamaCloud pipeline
+    for input_file in files_to_process:
+        with open(input_file, "rb") as f:
+            logger.info(
+                f"Adding file {input_file} to pipeline {index.name} in project {index.project_name}"
+            )
+            LLamaCloudFileService.add_file_to_pipeline(
+                project_id,
+                pipeline_id,
+                f,
+                custom_metadata={
+                    # Set private=false to mark the document as public (required for filtering)
+                    "private": "false",
+                },
+            )
 
     logger.info("Finished generating the index")
 
