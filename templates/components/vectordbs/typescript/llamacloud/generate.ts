@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 import { LLamaCloudFileService } from "llamaindex";
+import fs from "node:fs";
 import { getDataSource } from "./index";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
@@ -14,17 +15,12 @@ async function loadAndIndex() {
   const llamaCloudFileService = new LLamaCloudFileService();
 
   const documents = await getDocuments();
-
   for (const document of documents) {
-    console.log(
-      `Adding file ${document.id_} to pipeline ${index.params.name} in project ${index.params.projectName}`,
-    );
-    await llamaCloudFileService.addFileToPipeline(
-      projectId,
-      pipelineId,
-      document,
-      { private: "false" },
-    );
+    const buffer = await fs.promises.readFile(document.metadata.file_path);
+    const file = new File([buffer], document.metadata.file_name);
+    await llamaCloudFileService.addFileToPipeline(projectId, pipelineId, file, {
+      private: "false",
+    });
   }
 
   console.log(`Successfully created embeddings!`);
