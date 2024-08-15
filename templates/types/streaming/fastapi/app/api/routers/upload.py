@@ -21,7 +21,9 @@ class FileUploadRequest(BaseModel):
 def upload_file(request: FileUploadRequest) -> List[str]:
     try:
         logger.info("Processing file")
-        return PrivateFileService.process_file(request.filename, request.base64, request.params)
+        return PrivateFileService.process_file(
+            request.filename, request.base64, request.params
+        )
     except Exception as e:
         logger.error(f"Error processing file: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error processing file")

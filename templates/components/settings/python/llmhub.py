@@ -6,10 +6,12 @@ import os
 DEFAULT_MODEL = "gpt-3.5-turbo"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 
+
 class TSIEmbedding(OpenAIEmbedding):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._query_engine = self._text_engine = self.model_name
+
 
 def llm_config_from_env() -> Dict:
     from llama_index.core.constants import DEFAULT_TEMPERATURE
@@ -32,7 +34,7 @@ def llm_config_from_env() -> Dict:
 
 def embedding_config_from_env() -> Dict:
     from llama_index.core.constants import DEFAULT_EMBEDDING_DIM
-    
+
     model = os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
     dimension = os.getenv("EMBEDDING_DIM", DEFAULT_EMBEDDING_DIM)
     api_key = os.getenv("T_SYSTEMS_LLMHUB_API_KEY")
@@ -45,6 +47,7 @@ def embedding_config_from_env() -> Dict:
         "api_base": api_base,
     }
     return config
+
 
 def init_llmhub():
     from llama_index.llms.openai_like import OpenAILike

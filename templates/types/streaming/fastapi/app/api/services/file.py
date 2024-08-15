@@ -3,8 +3,7 @@ import mimetypes
 import os
 from io import BytesIO
 from pathlib import Path
-import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 from uuid import uuid4
 
 
@@ -14,7 +13,6 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
 )
-from llama_index.core.readers.file.base import default_file_metadata_func
 from llama_index.core.schema import Document
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
