@@ -45,11 +45,12 @@ if environment == "dev":
 
 def mount_static_files(directory, path):
     if os.path.exists(directory):
-        for dir, _, _ in os.walk(directory):
-            relative_path = os.path.relpath(dir, directory)
-            mount_path = path if relative_path == "." else f"{path}/{relative_path}"
-            logger.info(f"Mounting static files '{dir}' at {mount_path}")
-            app.mount(mount_path, StaticFiles(directory=dir), name=f"{dir}-static")
+        logger.info(f"Mounting static files '{directory}' at '{path}'")
+        app.mount(
+            path,
+            StaticFiles(directory=directory, check_dir=False),
+            name=f"{directory}-static",
+        )
 
 
 # Mount the data files to serve the file viewer
