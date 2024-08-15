@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.36
+
+### Patch Changes
+
+- 2b7a5d8: Fix: private file upload not working in Python without LlamaCloud
+
 ## 0.1.35
 
 ### Patch Changes
