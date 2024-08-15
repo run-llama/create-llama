@@ -11,7 +11,6 @@ import {
 import { downloadFile } from "./helpers";
 
 const DOWNLOAD_FOLDER = "output/uploaded";
-const llamaCloudFileService = new LLamaCloudFileService();
 
 export function appendSourceData(
   data: StreamData,
@@ -122,6 +121,7 @@ function getNodeUrl(metadata: Metadata) {
     const pipelineId = metadata["pipeline_id"];
     if (pipelineId) {
       // file is from LlamaCloud
+      const llamaCloudFileService = new LLamaCloudFileService();
       const filePath = llamaCloudFileService.getLocalFilePath(
         pipelineId,
         fileName,
@@ -138,6 +138,7 @@ function getNodeUrl(metadata: Metadata) {
 }
 
 async function downloadFilesFromNodes(nodes: NodeWithScore<Metadata>[]) {
+  const llamaCloudFileService = new LLamaCloudFileService();
   const fileUrls = await llamaCloudFileService.getDownloadFileUrls(nodes);
   for (const fileUrl of fileUrls) {
     await downloadFile(fileUrl.url, fileUrl.name, DOWNLOAD_FOLDER);
