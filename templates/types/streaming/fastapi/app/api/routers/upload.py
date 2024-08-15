@@ -14,7 +14,7 @@ logger = logging.getLogger("uvicorn")
 class FileUploadRequest(BaseModel):
     base64: str
     filename: str
-    params: Any
+    params: Any = None
 
 
 @r.post("")
