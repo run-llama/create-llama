@@ -10,12 +10,11 @@ def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     citation_prompt = os.getenv("SYSTEM_CITATION_PROMPT", None)
     top_k = int(os.getenv("TOP_K", 3))
-    
+
     node_postprocessors = []
     if citation_prompt:
         node_postprocessors = [NodeCitationProcessor()]
         system_prompt = f"{system_prompt}\n{citation_prompt}"
-        
 
     index = get_index(params)
     if index is None:

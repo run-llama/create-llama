@@ -43,7 +43,7 @@ export type SourceNode = {
   metadata: Record<string, unknown>;
   score?: number;
   text: string;
-  url?: string;
+  url: string;
 };
 
 export type SourceData = {
@@ -117,7 +117,7 @@ function preprocessSourceNodes(nodes: SourceNode[]): SourceNode[] {
     .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
     .map((node) => {
       // remove trailing slash for node url if exists
-      node.url = node.url!.replace(/\/$/, "");
+      node.url = node.url.replace(/\/$/, "");
       return node;
     });
   return nodes;

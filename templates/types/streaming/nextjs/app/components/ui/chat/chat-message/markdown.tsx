@@ -39,8 +39,8 @@ const preprocessMedia = (content: string) => {
 /**
  * Update the citation flag [citation:id]() to the new format [citation:index](url)
  */
-const preprocessCitations = (content: string, sources: SourceData) => {
-  if (sources !== undefined) {
+const preprocessCitations = (content: string, sources?: SourceData) => {
+  if (sources) {
     const citationRegex = /\[citation:(.+?)\]\(\)/g;
     let match;
     // Find all the citation references in the content
@@ -52,7 +52,7 @@ const preprocessCitations = (content: string, sources: SourceData) => {
       if (sourceNode !== undefined) {
         content = content.replace(
           match[0],
-          `[citation:${sources.nodes.indexOf(sourceNode)}](${sourceNode.url})`,
+          `[citation:${sources.nodes.indexOf(sourceNode)}]()`,
         );
       } else {
         // If the source node is not found, remove the citation reference
@@ -63,7 +63,7 @@ const preprocessCitations = (content: string, sources: SourceData) => {
   return content;
 };
 
-const preprocessContent = (content: string, sources: SourceData) => {
+const preprocessContent = (content: string, sources?: SourceData) => {
   return preprocessCitations(
     preprocessMedia(preprocessLaTeX(content)),
     sources,
@@ -75,7 +75,7 @@ export default function Markdown({
   sources,
 }: {
   content: string;
-  sources: SourceData;
+  sources?: SourceData;
 }) {
   const processedContent = preprocessContent(content, sources);
 
@@ -125,17 +125,13 @@ export default function Markdown({
             typeof children[0] === "string" &&
             children[0].startsWith("citation:")
           ) {
-            return (
-              <sup>
-                <a href={href} target="_blank" className="inline-flex">
-                  <SourceNumberButton
-                    index={
-                      href ? parseInt(children[0].replace("citation:", "")) : 0
-                    }
-                  />
-                </a>
-              </sup>
-            );
+            const index = Number(children[0].replace("citation:", ""));
+            if (!isNaN(index)) {
+              return <SourceNumberButton index={index} />;
+            } else {
+              // citation is not looked up yet, don't render anything
+              return <></>;
+            }
           }
           return <a href={href}>{children}</a>;
         },

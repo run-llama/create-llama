@@ -23,7 +23,7 @@ export function ChatSources({ data }: { data: SourceData }) {
     // group nodes by document (a document must have a URL)
     const nodesByUrl: Record<string, SourceNode[]> = {};
     data.nodes.forEach((node) => {
-      const key = node.url ?? "";
+      const key = node.url;
       nodesByUrl[key] ??= [];
       nodesByUrl[key].push(node);
     });
@@ -49,11 +49,51 @@ export function ChatSources({ data }: { data: SourceData }) {
   );
 }
 
-export function SourceNumberButton({ index }: { index: number }) {
+export function SourceInfo({
+  node,
+  index,
+}: {
+  node?: SourceNode;
+  index: number;
+}) {
+  if (!node) return <SourceNumberButton index={index} />;
   return (
-    <div className="text-xs w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:text-white hover:bg-primary ">
+    <HoverCard>
+      <HoverCardTrigger
+        className="cursor-default"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <SourceNumberButton
+          index={index}
+          className="hover:text-white hover:bg-primary"
+        />
+      </HoverCardTrigger>
+      <HoverCardContent className="w-[400px]">
+        <NodeInfo nodeInfo={node} />
+      </HoverCardContent>
+    </HoverCard>
+  );
+}
+
+export function SourceNumberButton({
+  index,
+  className,
+}: {
+  index: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "text-xs w-5 h-5 rounded-full bg-gray-100 inline-flex items-center justify-center",
+        className,
+      )}
+    >
       {index + 1}
-    </div>
+    </span>
   );
 }
 
@@ -83,20 +123,7 @@ function DocumentInfo({ document }: { document: Document }) {
           {sources.map((node: SourceNode, index: number) => {
             return (
               <div key={node.id}>
-                <HoverCard>
-                  <HoverCardTrigger
-                    className="cursor-default"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <SourceNumberButton index={index} />
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-[400px]">
-                    <NodeInfo nodeInfo={node} />
-                  </HoverCardContent>
-                </HoverCard>
+                <SourceInfo node={node} index={index} />
               </div>
             );
           })}
@@ -119,13 +146,7 @@ function DocumentInfo({ document }: { document: Document }) {
 
   if (url.endsWith(".pdf")) {
     // open internal pdf dialog for pdf files when click document card
-    return (
-      <PdfDialog
-        documentId={document.url}
-        url={document.url}
-        trigger={DocumentDetail}
-      />
-    );
+    return <PdfDialog documentId={url} url={url} trigger={DocumentDetail} />;
   }
   // open external link when click document card for other file types
   return <div onClick={() => window.open(url, "_blank")}>{DocumentDetail}</div>;

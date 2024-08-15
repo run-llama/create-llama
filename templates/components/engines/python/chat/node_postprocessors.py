@@ -19,4 +19,3 @@ class NodeCitationProcessor(BaseNodePostprocessor):
         for node_score in nodes:
             node_score.node.metadata["node_id"] = node_score.node.node_id
         return nodes
-
