@@ -1,6 +1,8 @@
 # flake8: noqa: E402
 from dotenv import load_dotenv
 
+from app.config import DATA_DIR
+
 load_dotenv()
 
 import logging
@@ -51,7 +53,7 @@ def mount_static_files(directory, path):
 
 
 # Mount the data files to serve the file viewer
-mount_static_files("data", "/api/files/data")
+mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
 
