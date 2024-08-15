@@ -13,6 +13,7 @@ async function loadAndIndex() {
   await getDataSource();
   await LlamaCloudIndex.fromDocuments({
     documents,
+    organizationId: process.env.LLAMA_CLOUD_ORGANIZATION_ID!,
     name: process.env.LLAMA_CLOUD_INDEX_NAME!,
     projectName: process.env.LLAMA_CLOUD_PROJECT_NAME!,
     apiKey: process.env.LLAMA_CLOUD_API_KEY,
