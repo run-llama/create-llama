@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { LlamaCloudIndex } from "llamaindex";
+import { LLamaCloudFileService } from "llamaindex";
 import { getDataSource } from "./index";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
@@ -8,17 +8,25 @@ import { checkRequiredEnvVars } from "./shared";
 dotenv.config();
 
 async function loadAndIndex() {
+  const index = await getDataSource();
+  const projectId = await index.getProjectId();
+  const pipelineId = await index.getPipelineId();
+  const llamaCloudFileService = new LLamaCloudFileService();
+
   const documents = await getDocuments();
 
-  await getDataSource();
-  await LlamaCloudIndex.fromDocuments({
-    documents,
-    organizationId: process.env.LLAMA_CLOUD_ORGANIZATION_ID!,
-    name: process.env.LLAMA_CLOUD_INDEX_NAME!,
-    projectName: process.env.LLAMA_CLOUD_PROJECT_NAME!,
-    apiKey: process.env.LLAMA_CLOUD_API_KEY,
-    baseUrl: process.env.LLAMA_CLOUD_BASE_URL,
-  });
+  for (const document of documents) {
+    console.log(
+      `Adding file ${document.id_} to pipeline ${index.params.name} in project ${index.params.projectName}`,
+    );
+    await llamaCloudFileService.addFileToPipeline(
+      projectId,
+      pipelineId,
+      document,
+      { private: "false" },
+    );
+  }
+
   console.log(`Successfully created embeddings!`);
 }
 
