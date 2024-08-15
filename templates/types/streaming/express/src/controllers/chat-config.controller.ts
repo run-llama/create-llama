@@ -16,7 +16,9 @@ export const chatConfig = async (_req: Request, res: Response) => {
 
 export const chatLlamaCloudConfig = async (_req: Request, res: Response) => {
   if (!process.env.LLAMA_CLOUD_API_KEY) {
-    return res.status(404).json();
+    return res.status(404).json({
+      error: "env variable LLAMA_CLOUD_API_KEY is required to use LlamaCloud",
+    });
   }
   const config = {
     projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),

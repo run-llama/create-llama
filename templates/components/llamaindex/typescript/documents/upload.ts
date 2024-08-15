@@ -1,6 +1,5 @@
-import { VectorStoreIndex } from "llamaindex";
+import { LLamaCloudFileService, VectorStoreIndex } from "llamaindex";
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
-import { LLamaCloudFileService } from "../streaming/service";
 import { storeAndParseFile } from "./helper";
 import { runPipeline } from "./pipeline";
 
@@ -15,12 +14,11 @@ export async function uploadDocument(
 
   if (index instanceof LlamaCloudIndex) {
     // trigger LlamaCloudIndex API to upload the file and run the pipeline
-    // @ts-ignore TODO: implement getProjectId in LITS
-    const projectId = index.getProjectId();
-    // @ts-ignore TODO: make getPipelineId public in LITS
-    const pipelineId = index.getPipelineId();
+    const projectId = await index.getProjectId();
+    const pipelineId = await index.getPipelineId();
+    const llamaCloudFileService = new LLamaCloudFileService();
     return [
-      await LLamaCloudFileService.addFileToPipeline(
+      await llamaCloudFileService.addFileToPipeline(
         projectId,
         pipelineId,
         new File([fileBuffer], filename, { type: mimeType }),

@@ -1,15 +1,21 @@
+import { LLamaCloudFileService } from "llamaindex";
 import { NextResponse } from "next/server";
-import { LLamaCloudFileService } from "../../llamaindex/streaming/service";
 
 /**
  * This API is to get config from the backend envs and expose them to the frontend
  */
 export async function GET() {
   if (!process.env.LLAMA_CLOUD_API_KEY) {
-    return NextResponse.json({ status: 404 });
+    return NextResponse.json(
+      {
+        error: "env variable LLAMA_CLOUD_API_KEY is required to use LlamaCloud",
+      },
+      { status: 404 },
+    );
   }
+  const lLamaCloudFileService = new LLamaCloudFileService();
   const config = {
-    projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
+    projects: await lLamaCloudFileService.getAllProjectsWithPipelines(),
     pipeline: {
       pipeline: process.env.LLAMA_CLOUD_INDEX_NAME,
       project: process.env.LLAMA_CLOUD_PROJECT_NAME,
