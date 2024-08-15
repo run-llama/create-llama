@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.37
+
+### Patch Changes
+
+- 9fd832c: Add in-text citation references
+
 ## 0.1.36
 
 ### Patch Changes
