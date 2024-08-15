@@ -11,10 +11,10 @@ import {
   ImageData,
   MessageAnnotation,
   MessageAnnotationType,
-  SourceData,
   SuggestedQuestionsData,
   ToolData,
   getAnnotationData,
+  getSourceAnnotationData,
 } from "../index";
 import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
@@ -54,10 +54,9 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.EVENTS,
   );
-  const sourceData = getAnnotationData<SourceData>(
-    annotations,
-    MessageAnnotationType.SOURCES,
-  );
+
+  const sourceData = getSourceAnnotationData(annotations);
+
   const toolData = getAnnotationData<ToolData>(
     annotations,
     MessageAnnotationType.TOOLS,
@@ -91,7 +90,7 @@ function ChatMessageContent({
     },
     {
       order: 0,
-      component: <Markdown content={message.content} />,
+      component: <Markdown content={message.content} sources={sourceData[0]} />,
     },
     {
       order: 3,

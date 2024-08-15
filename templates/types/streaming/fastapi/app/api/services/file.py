@@ -4,7 +4,6 @@ import os
 from io import BytesIO
 from pathlib import Path
 from typing import Any, List, Tuple
-from uuid import uuid4
 
 
 from app.engine.index import get_index
@@ -48,12 +47,9 @@ class PrivateFileService:
         return base64.b64decode(data), extension
 
     @staticmethod
-    def store_and_parse_file(file_data, extension) -> List[Document]:
+    def store_and_parse_file(file_name, file_data, extension) -> List[Document]:
         # Store file to the private directory
         os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
-
-        # random file name
-        file_name = f"{uuid4().hex}{extension}"
         file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
 
         # write file
@@ -104,7 +100,9 @@ class PrivateFileService:
             ]
         else:
             # First process documents into nodes
-            documents = PrivateFileService.store_and_parse_file(file_data, extension)
+            documents = PrivateFileService.store_and_parse_file(
+                file_name, file_data, extension
+            )
             pipeline = IngestionPipeline()
             nodes = pipeline.run(documents=documents)
 
