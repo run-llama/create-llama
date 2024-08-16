@@ -1,6 +1,8 @@
 # flake8: noqa: E402
 from dotenv import load_dotenv
 
+from app.config import DATA_DIR
+
 load_dotenv()
 
 import logging
@@ -43,15 +45,16 @@ if environment == "dev":
 
 def mount_static_files(directory, path):
     if os.path.exists(directory):
-        for dir, _, _ in os.walk(directory):
-            relative_path = os.path.relpath(dir, directory)
-            mount_path = path if relative_path == "." else f"{path}/{relative_path}"
-            logger.info(f"Mounting static files '{dir}' at {mount_path}")
-            app.mount(mount_path, StaticFiles(directory=dir), name=f"{dir}-static")
+        logger.info(f"Mounting static files '{directory}' at '{path}'")
+        app.mount(
+            path,
+            StaticFiles(directory=directory, check_dir=False),
+            name=f"{directory}-static",
+        )
 
 
 # Mount the data files to serve the file viewer
-mount_static_files("data", "/api/files/data")
+mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
 
