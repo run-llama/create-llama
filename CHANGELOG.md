@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.38
+
+### Patch Changes
+
+- bd5e39a: Fix error that files in sub folders of 'data' are not displayed
+
 ## 0.1.37
 
 ### Patch Changes
