@@ -142,19 +142,23 @@ function getNodeUrl(metadata: Metadata) {
 }
 
 async function downloadFilesFromNodes(nodes: NodeWithScore<Metadata>[]) {
-  const files = nodesToLlamaCloudFiles(nodes);
-  for (const { pipelineId, fileName, downloadedName } of files) {
-    const downloadUrl = await LLamaCloudFileService.getFileUrl(
-      pipelineId,
-      fileName,
-    );
-    if (downloadUrl) {
-      await downloadFile(
-        downloadUrl,
-        downloadedName,
-        LLAMA_CLOUD_DOWNLOAD_FOLDER,
+  try {
+    const files = nodesToLlamaCloudFiles(nodes);
+    for (const { pipelineId, fileName, downloadedName } of files) {
+      const downloadUrl = await LLamaCloudFileService.getFileUrl(
+        pipelineId,
+        fileName,
       );
+      if (downloadUrl) {
+        await downloadFile(
+          downloadUrl,
+          downloadedName,
+          LLAMA_CLOUD_DOWNLOAD_FOLDER,
+        );
+      }
     }
+  } catch (error) {
+    console.error("Error downloading files from nodes:", error);
   }
 }
 
