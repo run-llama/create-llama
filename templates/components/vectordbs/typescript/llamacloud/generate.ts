@@ -12,18 +12,17 @@ async function loadAndIndex() {
   const index = await getDataSource();
   const projectId = await index.getProjectId();
   const pipelineId = await index.getPipelineId();
-  const llamaCloudFileService = new LLamaCloudFileService();
 
   const documents = await getDocuments();
   for (const document of documents) {
     const buffer = await fs.promises.readFile(document.metadata.file_path);
     const file = new File([buffer], document.metadata.file_name);
-    await llamaCloudFileService.addFileToPipeline(projectId, pipelineId, file, {
+    await LLamaCloudFileService.addFileToPipeline(projectId, pipelineId, file, {
       private: "false",
     });
   }
 
-  console.log(`Successfully created embeddings!`);
+  console.log(`Successfully uploaded documents to LlamaCloud!`);
 }
 
 (async () => {

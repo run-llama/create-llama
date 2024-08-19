@@ -16,9 +16,8 @@ export async function uploadDocument(
     // trigger LlamaCloudIndex API to upload the file and run the pipeline
     const projectId = await index.getProjectId();
     const pipelineId = await index.getPipelineId();
-    const llamaCloudFileService = new LLamaCloudFileService();
     return [
-      await llamaCloudFileService.addFileToPipeline(
+      await LLamaCloudFileService.addFileToPipeline(
         projectId,
         pipelineId,
         new File([fileBuffer], filename, { type: mimeType }),

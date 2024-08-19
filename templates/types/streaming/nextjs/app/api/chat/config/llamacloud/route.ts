@@ -10,12 +10,11 @@ export async function GET() {
       {
         error: "env variable LLAMA_CLOUD_API_KEY is required to use LlamaCloud",
       },
-      { status: 404 },
+      { status: 500 },
     );
   }
-  const lLamaCloudFileService = new LLamaCloudFileService();
   const config = {
-    projects: await lLamaCloudFileService.getAllProjectsWithPipelines(),
+    projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
     pipeline: {
       pipeline: process.env.LLAMA_CLOUD_INDEX_NAME,
       project: process.env.LLAMA_CLOUD_PROJECT_NAME,
