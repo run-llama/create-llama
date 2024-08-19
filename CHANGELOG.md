@@ -1,5 +1,29 @@
 # create-llama
 
+## 0.1.38
+
+### Patch Changes
+
+- bd5e39a: Fix error that files in sub folders of 'data' are not displayed
+
+## 0.1.37
+
+### Patch Changes
+
+- 9fd832c: Add in-text citation references
+
+## 0.1.36
+
+### Patch Changes
+
+- 2b7a5d8: Fix: private file upload not working in Python without LlamaCloud
+
+## 0.1.35
+
+### Patch Changes
+
+- 81ef7f0: Use LlamaCloud pipeline for data ingestion (private file uploads and generate script)
+
 ## 0.1.34
 
 ### Patch Changes

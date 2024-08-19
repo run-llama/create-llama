@@ -3,7 +3,7 @@ import logging
 import base64
 import uuid
 from pydantic import BaseModel
-from typing import List, Tuple, Dict, Optional
+from typing import List, Dict, Optional
 from llama_index.core.tools import FunctionTool
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
@@ -26,7 +26,6 @@ class E2BToolOutput(BaseModel):
 
 
 class E2BCodeInterpreter:
-
     output_dir = "output/tool"
 
     def __init__(self, api_key: str = None):

@@ -13,8 +13,6 @@ import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import { DocumentFileType, SourceData, SourceNode } from "../index";
 import PdfDialog from "../widgets/PdfDialog";
 
-const SCORE_THRESHOLD = 0.25;
-
 type Document = {
   url: string;
   sources: SourceNode[];
@@ -24,15 +22,11 @@ export function ChatSources({ data }: { data: SourceData }) {
   const documents: Document[] = useMemo(() => {
     // group nodes by document (a document must have a URL)
     const nodesByUrl: Record<string, SourceNode[]> = {};
-    data.nodes
-      .filter((node) => (node.score ?? 1) > SCORE_THRESHOLD)
-      .filter((node) => isValidUrl(node.url))
-      .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
-      .forEach((node) => {
-        const key = node.url!.replace(/\/$/, ""); // remove trailing slash
-        nodesByUrl[key] ??= [];
-        nodesByUrl[key].push(node);
-      });
+    data.nodes.forEach((node) => {
+      const key = node.url;
+      nodesByUrl[key] ??= [];
+      nodesByUrl[key].push(node);
+    });
 
     // convert to array of documents
     return Object.entries(nodesByUrl).map(([url, sources]) => ({
@@ -55,11 +49,51 @@ export function ChatSources({ data }: { data: SourceData }) {
   );
 }
 
-function SourceNumberButton({ index }: { index: number }) {
+export function SourceInfo({
+  node,
+  index,
+}: {
+  node?: SourceNode;
+  index: number;
+}) {
+  if (!node) return <SourceNumberButton index={index} />;
   return (
-    <div className="text-xs w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:text-white hover:bg-primary ">
+    <HoverCard>
+      <HoverCardTrigger
+        className="cursor-default"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <SourceNumberButton
+          index={index}
+          className="hover:text-white hover:bg-primary"
+        />
+      </HoverCardTrigger>
+      <HoverCardContent className="w-[400px]">
+        <NodeInfo nodeInfo={node} />
+      </HoverCardContent>
+    </HoverCard>
+  );
+}
+
+export function SourceNumberButton({
+  index,
+  className,
+}: {
+  index: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "text-xs w-5 h-5 rounded-full bg-gray-100 inline-flex items-center justify-center",
+        className,
+      )}
+    >
       {index + 1}
-    </div>
+    </span>
   );
 }
 
@@ -89,20 +123,7 @@ function DocumentInfo({ document }: { document: Document }) {
           {sources.map((node: SourceNode, index: number) => {
             return (
               <div key={node.id}>
-                <HoverCard>
-                  <HoverCardTrigger
-                    className="cursor-default"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <SourceNumberButton index={index} />
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-[400px]">
-                    <NodeInfo nodeInfo={node} />
-                  </HoverCardContent>
-                </HoverCard>
+                <SourceInfo node={node} index={index} />
               </div>
             );
           })}
@@ -125,13 +146,7 @@ function DocumentInfo({ document }: { document: Document }) {
 
   if (url.endsWith(".pdf")) {
     // open internal pdf dialog for pdf files when click document card
-    return (
-      <PdfDialog
-        documentId={document.url}
-        url={document.url}
-        trigger={DocumentDetail}
-      />
-    );
+    return <PdfDialog documentId={url} url={url} trigger={DocumentDetail} />;
   }
   // open external link when click document card for other file types
   return <div onClick={() => window.open(url, "_blank")}>{DocumentDetail}</div>;
@@ -178,14 +193,4 @@ function NodeInfo({ nodeInfo }: { nodeInfo: SourceNode }) {
       )}
     </div>
   );
-}
-
-function isValidUrl(url?: string): boolean {
-  if (!url) return false;
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
 }

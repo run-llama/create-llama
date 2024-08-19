@@ -1,16 +1,15 @@
 import { StreamData } from "ai";
 import {
   CallbackManager,
-  LLamaCloudFileService,
   Metadata,
   MetadataMode,
   NodeWithScore,
   ToolCall,
   ToolOutput,
 } from "llamaindex";
-import { downloadFile } from "./helpers";
-
-const DOWNLOAD_FOLDER = "output/uploaded";
+import path from "node:path";
+import { DATA_DIR } from "../../engine/loader";
+import { LLamaCloudFileService } from "./service";
 
 export function appendSourceData(
   data: StreamData,
@@ -87,7 +86,7 @@ export function createCallbackManager(stream: StreamData) {
       stream,
       `Retrieved ${nodes.length} sources to use as context for the query`,
     );
-    downloadFilesFromNodes(nodes); // don't await to avoid blocking chat streaming
+    LLamaCloudFileService.downloadFiles(nodes); // don't await to avoid blocking chat streaming
   });
 
   callbackManager.on("llm-tool-call", (event) => {
@@ -119,28 +118,23 @@ function getNodeUrl(metadata: Metadata) {
   if (fileName && process.env.FILESERVER_URL_PREFIX) {
     // file_name exists and file server is configured
     const pipelineId = metadata["pipeline_id"];
-    if (pipelineId) {
-      // file is from LlamaCloud
-      const llamaCloudFileService = new LLamaCloudFileService();
-      const filePath = llamaCloudFileService.getLocalFilePath(
-        pipelineId,
-        fileName,
-        DOWNLOAD_FOLDER,
-      );
-      return `${process.env.FILESERVER_URL_PREFIX}/${filePath}`;
+    if (pipelineId && metadata["private"] == null) {
+      // file is from LlamaCloud and was not ingested locally
+      const name = LLamaCloudFileService.toDownloadedName(pipelineId, fileName);
+      return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
     }
     const isPrivate = metadata["private"] === "true";
-    const folder = isPrivate ? DOWNLOAD_FOLDER : "data";
-    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
+    if (isPrivate) {
+      return `${process.env.FILESERVER_URL_PREFIX}/output/uploaded/${fileName}`;
+    }
+    const filePath = metadata["file_path"];
+    const dataDir = path.resolve(DATA_DIR);
+
+    if (filePath && dataDir) {
+      const relativePath = path.relative(dataDir, filePath);
+      return `${process.env.FILESERVER_URL_PREFIX}/data/${relativePath}`;
+    }
   }
   // fallback to URL in metadata (e.g. for websites)
   return metadata["URL"];
-}
-
-async function downloadFilesFromNodes(nodes: NodeWithScore<Metadata>[]) {
-  const llamaCloudFileService = new LLamaCloudFileService();
-  const fileUrls = await llamaCloudFileService.getDownloadFileUrls(nodes);
-  for (const fileUrl of fileUrls) {
-    await downloadFile(fileUrl.url, fileUrl.name, DOWNLOAD_FOLDER);
-  }
 }

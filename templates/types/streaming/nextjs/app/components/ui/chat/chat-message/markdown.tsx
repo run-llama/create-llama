@@ -5,6 +5,8 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
+import { SourceData } from "..";
+import { SourceNumberButton } from "./chat-sources";
 import { CodeBlock } from "./codeblock";
 
 const MemoizedReactMarkdown: FC<Options> = memo(
@@ -34,12 +36,48 @@ const preprocessMedia = (content: string) => {
   return content.replace(/(sandbox|attachment|snt):/g, "");
 };
 
-const preprocessContent = (content: string) => {
-  return preprocessMedia(preprocessLaTeX(content));
+/**
+ * Update the citation flag [citation:id]() to the new format [citation:index](url)
+ */
+const preprocessCitations = (content: string, sources?: SourceData) => {
+  if (sources) {
+    const citationRegex = /\[citation:(.+?)\]\(\)/g;
+    let match;
+    // Find all the citation references in the content
+    while ((match = citationRegex.exec(content)) !== null) {
+      const citationId = match[1];
+      // Find the source node with the id equal to the citation-id, also get the index of the source node
+      const sourceNode = sources.nodes.find((node) => node.id === citationId);
+      // If the source node is found, replace the citation reference with the new format
+      if (sourceNode !== undefined) {
+        content = content.replace(
+          match[0],
+          `[citation:${sources.nodes.indexOf(sourceNode)}]()`,
+        );
+      } else {
+        // If the source node is not found, remove the citation reference
+        content = content.replace(match[0], "");
+      }
+    }
+  }
+  return content;
 };
 
-export default function Markdown({ content }: { content: string }) {
-  const processedContent = preprocessContent(content);
+const preprocessContent = (content: string, sources?: SourceData) => {
+  return preprocessCitations(
+    preprocessMedia(preprocessLaTeX(content)),
+    sources,
+  );
+};
+
+export default function Markdown({
+  content,
+  sources,
+}: {
+  content: string;
+  sources?: SourceData;
+}) {
+  const processedContent = preprocessContent(content, sources);
 
   return (
     <MemoizedReactMarkdown
@@ -79,6 +117,23 @@ export default function Markdown({ content }: { content: string }) {
               {...props}
             />
           );
+        },
+        a({ href, children }) {
+          // If a text link starts with 'citation:', then render it as a citation reference
+          if (
+            Array.isArray(children) &&
+            typeof children[0] === "string" &&
+            children[0].startsWith("citation:")
+          ) {
+            const index = Number(children[0].replace("citation:", ""));
+            if (!isNaN(index)) {
+              return <SourceNumberButton index={index} />;
+            } else {
+              // citation is not looked up yet, don't render anything
+              return <></>;
+            }
+          }
+          return <a href={href}>{children}</a>;
         },
       }}
     >

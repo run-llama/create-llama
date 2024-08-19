@@ -4,6 +4,7 @@ import { TOOL_SYSTEM_PROMPT_ENV_VAR, Tool } from "./tools";
 import {
   InstallTemplateArgs,
   ModelConfig,
+  TemplateDataSource,
   TemplateFramework,
   TemplateObservability,
   TemplateType,
@@ -423,7 +424,11 @@ const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
   return toolEnvs;
 };
 
-const getSystemPromptEnv = (tools?: Tool[]): EnvVar => {
+const getSystemPromptEnv = (
+  tools?: Tool[],
+  dataSources?: TemplateDataSource[],
+  framework?: TemplateFramework,
+): EnvVar[] => {
   const defaultSystemPrompt =
     "You are a helpful assistant who helps users with their questions.";
 
@@ -442,11 +447,49 @@ const getSystemPromptEnv = (tools?: Tool[]): EnvVar => {
     ? `\"${toolSystemPrompt}\"`
     : defaultSystemPrompt;
 
-  return {
-    name: "SYSTEM_PROMPT",
-    description: "The system prompt for the AI model.",
-    value: systemPrompt,
-  };
+  const systemPromptEnv = [
+    {
+      name: "SYSTEM_PROMPT",
+      description: "The system prompt for the AI model.",
+      value: systemPrompt,
+    },
+  ];
+
+  // Citation only works with FastAPI along with the chat engine and data source provided for now.
+  if (
+    framework === "fastapi" &&
+    tools?.length == 0 &&
+    (dataSources?.length ?? 0 > 0)
+  ) {
+    const citationPrompt = `'You have provided information from a knowledge base that has been passed to you in nodes of information.
+Each node has useful metadata such as node ID, file name, page, etc.
+Please add the citation to the data node for each sentence or paragraph that you reference in the provided information.
+The citation format is: . [citation:<node_id>]()
+Where the <node_id> is the unique identifier of the data node.
+
+Example:
+We have two nodes:
+  node_id: xyz
+  file_name: llama.pdf
+  
+  node_id: abc
+  file_name: animal.pdf
+
+User question: Tell me a fun fact about Llama.
+Your answer:
+A baby llama is called "Cria" [citation:xyz]().
+It often live in desert [citation:abc]().
+It\\'s cute animal.
+'`;
+    systemPromptEnv.push({
+      name: "SYSTEM_CITATION_PROMPT",
+      description:
+        "An additional system prompt to add citation when responding to user questions.",
+      value: citationPrompt,
+    });
+  }
+
+  return systemPromptEnv;
 };
 
 const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
@@ -525,7 +568,7 @@ export const createBackendEnvFile = async (
     ...getToolEnvs(opts.tools),
     ...getTemplateEnvs(opts.template),
     ...getObservabilityEnvs(opts.observability),
-    getSystemPromptEnv(opts.tools),
+    ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.framework),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);

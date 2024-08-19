@@ -1,11 +1,13 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional, Set
+from typing import Any, Dict, List, Literal, Optional
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
+
+from app.config import DATA_DIR
 
 logger = logging.getLogger("uvicorn")
 
@@ -175,6 +177,7 @@ class SourceNodes(BaseModel):
                 "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
             )
         file_name = metadata.get("file_name")
+
         if file_name and url_prefix:
             # file_name exists and file server is configured
             pipeline_id = metadata.get("pipeline_id")
@@ -184,11 +187,17 @@ class SourceNodes(BaseModel):
                 return f"{url_prefix}/output/llamacloud/{file_name}"
             is_private = metadata.get("private", "false") == "true"
             if is_private:
+                # file is a private upload
                 return f"{url_prefix}/output/uploaded/{file_name}"
-            return f"{url_prefix}/data/{file_name}"
-        else:
-            # fallback to URL in metadata (e.g. for websites)
-            return metadata.get("URL")
+            # file is from calling the 'generate' script
+            # Get the relative path of file_path to data_dir
+            file_path = metadata.get("file_path")
+            data_dir = os.path.abspath(DATA_DIR)
+            if file_path and data_dir:
+                relative_path = os.path.relpath(file_path, data_dir)
+                return f"{url_prefix}/data/{relative_path}"
+        # fallback to URL in metadata (e.g. for websites)
+        return metadata.get("URL")
 
     @classmethod
     def from_source_nodes(cls, source_nodes: List[NodeWithScore]):

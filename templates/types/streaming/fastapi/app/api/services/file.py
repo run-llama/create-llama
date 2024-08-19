@@ -3,9 +3,7 @@ import mimetypes
 import os
 from io import BytesIO
 from pathlib import Path
-import time
-from typing import Any, Dict, List, Tuple
-from uuid import uuid4
+from typing import Any, List, Tuple
 
 
 from app.engine.index import get_index
@@ -14,7 +12,6 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
 )
-from llama_index.core.readers.file.base import default_file_metadata_func
 from llama_index.core.schema import Document
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
@@ -50,12 +47,9 @@ class PrivateFileService:
         return base64.b64decode(data), extension
 
     @staticmethod
-    def store_and_parse_file(file_data, extension) -> List[Document]:
+    def store_and_parse_file(file_name, file_data, extension) -> List[Document]:
         # Store file to the private directory
         os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
-
-        # random file name
-        file_name = f"{uuid4().hex}{extension}"
         file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
 
         # write file
@@ -106,7 +100,9 @@ class PrivateFileService:
             ]
         else:
             # First process documents into nodes
-            documents = PrivateFileService.store_and_parse_file(file_data, extension)
+            documents = PrivateFileService.store_and_parse_file(
+                file_name, file_data, extension
+            )
             pipeline = IngestionPipeline()
             nodes = pipeline.run(documents=documents)
 
