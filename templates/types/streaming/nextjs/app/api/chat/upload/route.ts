@@ -10,14 +10,15 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const { base64 }: { base64: string } = await request.json();
+    const { base64, params }: { base64: string; params?: any } =
+      await request.json();
     if (!base64) {
       return NextResponse.json(
         { error: "base64 is required in the request body" },
         { status: 400 },
       );
     }
-    const index = await getDataSource();
+    const index = await getDataSource(params);
     if (!index) {
       throw new Error(
         `StorageContext is empty - call 'npm run generate' to generate the storage first`,

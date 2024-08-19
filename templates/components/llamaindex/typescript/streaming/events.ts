@@ -2,10 +2,13 @@ import { StreamData } from "ai";
 import {
   CallbackManager,
   Metadata,
+  MetadataMode,
   NodeWithScore,
   ToolCall,
   ToolOutput,
 } from "llamaindex";
+import path from "node:path";
+import { DATA_DIR } from "../../engine/loader";
 import { LLamaCloudFileService } from "./service";
 
 export function appendSourceData(
@@ -15,10 +18,11 @@ export function appendSourceData(
   if (!sourceNodes?.length) return;
   try {
     const nodes = sourceNodes.map((node) => ({
-      ...node.node.toMutableJSON(),
+      metadata: node.node.metadata,
       id: node.node.id_,
       score: node.score ?? null,
       url: getNodeUrl(node.node.metadata),
+      text: node.node.getContent(MetadataMode.NONE),
     }));
     data.appendMessageAnnotation({
       type: "sources",
@@ -120,8 +124,16 @@ function getNodeUrl(metadata: Metadata) {
       return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
     }
     const isPrivate = metadata["private"] === "true";
-    const folder = isPrivate ? "output/uploaded" : "data";
-    return `${process.env.FILESERVER_URL_PREFIX}/${folder}/${fileName}`;
+    if (isPrivate) {
+      return `${process.env.FILESERVER_URL_PREFIX}/output/uploaded/${fileName}`;
+    }
+    const filePath = metadata["file_path"];
+    const dataDir = path.resolve(DATA_DIR);
+
+    if (filePath && dataDir) {
+      const relativePath = path.relative(dataDir, filePath);
+      return `${process.env.FILESERVER_URL_PREFIX}/data/${relativePath}`;
+    }
   }
   // fallback to URL in metadata (e.g. for websites)
   return metadata["URL"];

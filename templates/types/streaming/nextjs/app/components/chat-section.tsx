@@ -48,6 +48,7 @@ export default function ChatSection() {
         messages={messages}
         append={append}
         setInput={setInput}
+        requestParams={{ params: requestData }}
         setRequestData={setRequestData}
       />
     </div>

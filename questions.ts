@@ -103,6 +103,7 @@ const getVectorDbChoices = (framework: TemplateFramework) => {
     { title: "Astra", value: "astra" },
     { title: "Qdrant", value: "qdrant" },
     { title: "ChromaDB", value: "chroma" },
+    { title: "Weaviate", value: "weaviate" },
   ];
 
   const vectordbLang = framework === "fastapi" ? "python" : "typescript";

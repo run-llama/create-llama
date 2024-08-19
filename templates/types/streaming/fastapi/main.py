@@ -1,19 +1,23 @@
+# flake8: noqa: E402
 from dotenv import load_dotenv
+
+from app.config import DATA_DIR
 
 load_dotenv()
 
 import logging
 import os
+
 import uvicorn
+from app.api.routers.chat import chat_router
+from app.api.routers.chat_config import config_router
+from app.api.routers.upload import file_upload_router
+from app.observability import init_observability
+from app.settings import init_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from app.api.routers.chat import chat_router
-from app.api.routers.upload import file_upload_router
-from app.settings import init_settings
-from app.observability import init_observability
 from fastapi.staticfiles import StaticFiles
-
 
 app = FastAPI()
 
@@ -41,19 +45,21 @@ if environment == "dev":
 
 def mount_static_files(directory, path):
     if os.path.exists(directory):
-        for dir, _, _ in os.walk(directory):
-            relative_path = os.path.relpath(dir, directory)
-            mount_path = path if relative_path == "." else f"{path}/{relative_path}"
-            logger.info(f"Mounting static files '{dir}' at {mount_path}")
-            app.mount(mount_path, StaticFiles(directory=dir), name=f"{dir}-static")
+        logger.info(f"Mounting static files '{directory}' at '{path}'")
+        app.mount(
+            path,
+            StaticFiles(directory=directory, check_dir=False),
+            name=f"{directory}-static",
+        )
 
 
 # Mount the data files to serve the file viewer
-mount_static_files("data", "/api/files/data")
+mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
 
 app.include_router(chat_router, prefix="/api/chat")
+app.include_router(config_router, prefix="/api/chat/config")
 app.include_router(file_upload_router, prefix="/api/chat/upload")
 
 if __name__ == "__main__":

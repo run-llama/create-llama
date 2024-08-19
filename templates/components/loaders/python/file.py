@@ -2,20 +2,15 @@ import os
 import logging
 from typing import Dict
 from llama_parse import LlamaParse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
+
+from app.config import DATA_DIR
 
 logger = logging.getLogger(__name__)
 
 
 class FileLoaderConfig(BaseModel):
-    data_dir: str = "data"
     use_llama_parse: bool = False
-
-    @validator("data_dir")
-    def data_dir_must_exist(cls, v):
-        if not os.path.isdir(v):
-            raise ValueError(f"Directory '{v}' does not exist")
-        return v
 
 
 def llama_parse_parser():
@@ -54,7 +49,7 @@ def get_file_documents(config: FileLoaderConfig):
 
             file_extractor = llama_parse_extractor()
         reader = SimpleDirectoryReader(
-            config.data_dir,
+            DATA_DIR,
             recursive=True,
             filename_as_id=True,
             raise_on_error=True,

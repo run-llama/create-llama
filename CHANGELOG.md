@@ -1,5 +1,56 @@
 # create-llama
 
+## 0.1.37
+
+### Patch Changes
+
+- 9fd832c: Add in-text citation references
+
+## 0.1.36
+
+### Patch Changes
+
+- 2b7a5d8: Fix: private file upload not working in Python without LlamaCloud
+
+## 0.1.35
+
+### Patch Changes
+
+- 81ef7f0: Use LlamaCloud pipeline for data ingestion (private file uploads and generate script)
+
+## 0.1.34
+
+### Patch Changes
+
+- c49a5e1: Add error handling for generating the next question
+- c49a5e1: Fix wrong api key variable in Azure OpenAI provider
+
+## 0.1.33
+
+### Patch Changes
+
+- d746c75: Add Weaviate vector store (Typescript)
+
+## 0.1.32
+
+### Patch Changes
+
+- 3ec5163: Add Weaviate vector database support (Python)
+
+## 0.1.31
+
+### Patch Changes
+
+- 04a9c71: Cluster nodes by document
+
+## 0.1.30
+
+### Patch Changes
+
+- 09e3022: Add support for LlamaTrace (Python)
+- c06ec4f: Fix imports for MongoDB
+- b6dd7a9: Always send chat data when submit message
+
 ## 0.1.29
 
 ### Patch Changes

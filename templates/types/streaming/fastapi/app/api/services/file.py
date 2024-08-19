@@ -1,18 +1,16 @@
 import base64
 import mimetypes
 import os
+from io import BytesIO
 from pathlib import Path
-from typing import Dict, List
-from uuid import uuid4
+from typing import Any, List, Tuple
+
 
 from app.engine.index import get_index
 from llama_index.core import VectorStoreIndex
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
-)
-from llama_index.core.readers.file.base import (
-    default_file_metadata_func,
 )
 from llama_index.core.schema import Document
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
@@ -41,7 +39,7 @@ class PrivateFileService:
     PRIVATE_STORE_PATH = "output/uploaded"
 
     @staticmethod
-    def preprocess_base64_file(base64_content: str) -> tuple:
+    def preprocess_base64_file(base64_content: str) -> Tuple[bytes, str | None]:
         header, data = base64_content.split(",", 1)
         mime_type = header.split(";")[0].split(":", 1)[1]
         extension = mimetypes.guess_extension(mime_type)
@@ -49,12 +47,9 @@ class PrivateFileService:
         return base64.b64decode(data), extension
 
     @staticmethod
-    def store_and_parse_file(file_data, extension) -> List[Document]:
+    def store_and_parse_file(file_name, file_data, extension) -> List[Document]:
         # Store file to the private directory
         os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
-
-        # random file name
-        file_name = f"{uuid4().hex}{extension}"
         file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
 
         # write file
@@ -78,25 +73,36 @@ class PrivateFileService:
         return documents
 
     @staticmethod
-    def process_file(base64_content: str) -> List[str]:
+    def process_file(file_name: str, base64_content: str, params: Any) -> List[str]:
         file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
-        documents = PrivateFileService.store_and_parse_file(file_data, extension)
-
-        # Only process nodes, no store the index
-        pipeline = IngestionPipeline()
-        nodes = pipeline.run(documents=documents)
 
         # Add the nodes to the index and persist it
-        current_index = get_index()
+        current_index = get_index(params)
 
         # Insert the documents into the index
         if isinstance(current_index, LlamaCloudIndex):
-            # LlamaCloudIndex is a managed index so we don't need to process the nodes
-            # just insert the documents
-            for doc in documents:
-                current_index.insert(doc)
+            from app.engine.service import LLamaCloudFileService
+
+            project_id = current_index._get_project_id()
+            pipeline_id = current_index._get_pipeline_id()
+            # LlamaCloudIndex is a managed index so we can directly use the files
+            upload_file = (file_name, BytesIO(file_data))
+            return [
+                LLamaCloudFileService.add_file_to_pipeline(
+                    project_id,
+                    pipeline_id,
+                    upload_file,
+                    custom_metadata={
+                        # Set private=true to mark the document as private user docs (required for filtering)
+                        "private": "true",
+                    },
+                )
+            ]
         else:
-            # Only process nodes, no store the index
+            # First process documents into nodes
+            documents = PrivateFileService.store_and_parse_file(
+                file_name, file_data, extension
+            )
             pipeline = IngestionPipeline()
             nodes = pipeline.run(documents=documents)
 
@@ -109,5 +115,5 @@ class PrivateFileService:
                 persist_dir=os.environ.get("STORAGE_DIR", "storage")
             )
 
-        # Return the document ids
-        return [doc.doc_id for doc in documents]
+            # Return the document ids
+            return [doc.doc_id for doc in documents]
