@@ -1,3 +1,9 @@
-from .extractor import StructureQuery, extract_data_component
-from .schema_editor import SchemaState, schema_editor_component
-from .upload import UploadedFilesState, upload_component
+from .extractor import (
+    StructureQuery as StructureQuery,
+    extract_data_component as extract_data_component,
+)
+from .schema_editor import schema_editor_component as schema_editor_component
+from .upload import (
+    UploadedFilesState as UploadedFilesState,
+    upload_component as upload_component,
+)

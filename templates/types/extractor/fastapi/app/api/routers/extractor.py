@@ -12,4 +12,4 @@ logger = logging.getLogger("uvicorn")
 
 @r.post("/query")
 async def query_request(data: RequestData):
-    return ExtractorService.extract(query=data.query, json_schema=None)
+    return await ExtractorService.extract(query=data.query, model_code=data.code)

@@ -43,7 +43,7 @@ def template(
         route: The route to reach the page.
         title: The title of the page.
         description: The description of the page.
-        meta: Additionnal meta to add to the page.
+        meta: Additional meta to add to the page.
         on_load: The event handler(s) called when the page load.
         script_tags: Scripts to attach to the page.
 

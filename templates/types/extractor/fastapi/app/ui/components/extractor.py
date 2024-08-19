@@ -1,29 +1,51 @@
 import reflex as rx
-from app.services.extractor import ExtractorService
-
-from .schema_editor import SchemaState
+from app.services.model import DEFAULT_MODEL
+from app.services.extractor import ExtractorService, InvalidModelCode
 
 
 class StructureQuery(rx.State):
     query: str
     response: str
     loading: bool = False
+    code: str = DEFAULT_MODEL
+    error: str = None
 
-    def set_query(self, query: str):
-        self.query = query
-
+    @rx.background
     async def handle_query(self):
-        # Get current schema
-        schema = SchemaState.schema
+        async with self:
+            if not self.query:
+                self.error = "Please enter a query."
+                return
+            self.error = None
+            self.loading = True
 
         # Extract data
-        self.response = await ExtractorService.extract(
-            query=self.query, json_schema=str(schema)
-        )
+        # Await long operations outside the context to avoid blocking UI
+        try:
+            response = await ExtractorService.extract(
+                query=self.query, model_code=self.code
+            )
+        except InvalidModelCode:
+            async with self:
+                self.error = "Invalid Python code"
+                response = None
+
+        async with self:
+            self.response = response
+            self.loading = False
 
 
 def extract_data_component() -> rx.Component:
     return rx.vstack(
+        rx.cond(
+            StructureQuery.error,
+            rx.callout(
+                StructureQuery.error,
+                icon="triangle_alert",
+                color_scheme="red",
+                role="alert",
+            ),
+        ),
         rx.text_area(
             id="query",
             placeholder="Enter query",
@@ -33,8 +55,8 @@ def extract_data_component() -> rx.Component:
         ),
         rx.button(
             "Query",
-            color_scheme="tomato",
             on_click=StructureQuery.handle_query,
+            loading=StructureQuery.loading,
         ),
         rx.cond(
             StructureQuery.response,
@@ -46,7 +68,6 @@ def extract_data_component() -> rx.Component:
                 width="100%",
                 height="70vh",
             ),
-            rx.text("", size="sm"),
         ),
         width="100%",
     )

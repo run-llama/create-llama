@@ -1,1 +1,0 @@
-from .extractor import query_request

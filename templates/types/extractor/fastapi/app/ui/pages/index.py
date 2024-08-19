@@ -1,7 +1,6 @@
 import reflex as rx
 
 from ..components import (
-    SchemaState,
     UploadedFilesState,
     extract_data_component,
     schema_editor_component,
@@ -14,7 +13,6 @@ from ..templates import template
     route="/",
     title="Structure extractor",
     on_load=[
-        SchemaState.init_schema,
         UploadedFilesState.load_files,
     ],
 )
