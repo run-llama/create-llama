@@ -160,7 +160,7 @@ const getVectorDBEnvs = (
         {
           name: "LLAMA_CLOUD_ORGANIZATION_ID",
           description:
-            "The organization ID for the LlamaCloud project (uses default organization if not specified - Python only)",
+            "The organization ID for the LlamaCloud project (uses default organization if not specified)",
         },
         ...(framework === "nextjs"
           ? // activate index selector per default (not needed for non-NextJS backends as it's handled by createFrontendEnvFile)

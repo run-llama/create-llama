@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { LLamaCloudFileService } from "./llamaindex/streaming/service";
+import { LLamaCloudFileService } from "llamaindex";
 
 export const chatConfig = async (_req: Request, res: Response) => {
   let starterQuestions = undefined;
@@ -15,6 +15,11 @@ export const chatConfig = async (_req: Request, res: Response) => {
 };
 
 export const chatLlamaCloudConfig = async (_req: Request, res: Response) => {
+  if (!process.env.LLAMA_CLOUD_API_KEY) {
+    return res.status(500).json({
+      error: "env variable LLAMA_CLOUD_API_KEY is required to use LlamaCloud",
+    });
+  }
   const config = {
     projects: await LLamaCloudFileService.getAllProjectsWithPipelines(),
     pipeline: {

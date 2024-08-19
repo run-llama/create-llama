@@ -12,7 +12,7 @@ export function generateFilters(documentIds: string[]): MetadataFilters {
   if (!documentIds.length) return { filters: [publicDocumentsFilter] };
 
   const privateDocumentsFilter: MetadataFilter = {
-    key: "doc_id",
+    key: "file_id", // Note: LLamaCloud uses "file_id" to reference private document ids as "doc_id" is a restricted field in LlamaCloud
     value: documentIds,
     operator: "in",
   };

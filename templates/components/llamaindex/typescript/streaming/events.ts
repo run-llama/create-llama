@@ -1,6 +1,7 @@
 import { StreamData } from "ai";
 import {
   CallbackManager,
+  LLamaCloudFileService,
   Metadata,
   MetadataMode,
   NodeWithScore,
@@ -9,7 +10,9 @@ import {
 } from "llamaindex";
 import path from "node:path";
 import { DATA_DIR } from "../../engine/loader";
-import { LLamaCloudFileService } from "./service";
+import { downloadFile } from "./file";
+
+const LLAMA_CLOUD_DOWNLOAD_FOLDER = "output/llamacloud";
 
 export function appendSourceData(
   data: StreamData,
@@ -86,7 +89,7 @@ export function createCallbackManager(stream: StreamData) {
       stream,
       `Retrieved ${nodes.length} sources to use as context for the query`,
     );
-    LLamaCloudFileService.downloadFiles(nodes); // don't await to avoid blocking chat streaming
+    downloadFilesFromNodes(nodes); // don't await to avoid blocking chat streaming
   });
 
   callbackManager.on("llm-tool-call", (event) => {
@@ -118,10 +121,9 @@ function getNodeUrl(metadata: Metadata) {
   if (fileName && process.env.FILESERVER_URL_PREFIX) {
     // file_name exists and file server is configured
     const pipelineId = metadata["pipeline_id"];
-    if (pipelineId && metadata["private"] == null) {
-      // file is from LlamaCloud and was not ingested locally
-      const name = LLamaCloudFileService.toDownloadedName(pipelineId, fileName);
-      return `${process.env.FILESERVER_URL_PREFIX}/output/llamacloud/${name}`;
+    if (pipelineId) {
+      const name = toDownloadedName(pipelineId, fileName);
+      return `${process.env.FILESERVER_URL_PREFIX}/${LLAMA_CLOUD_DOWNLOAD_FOLDER}/${name}`;
     }
     const isPrivate = metadata["private"] === "true";
     if (isPrivate) {
@@ -137,4 +139,53 @@ function getNodeUrl(metadata: Metadata) {
   }
   // fallback to URL in metadata (e.g. for websites)
   return metadata["URL"];
+}
+
+async function downloadFilesFromNodes(nodes: NodeWithScore<Metadata>[]) {
+  try {
+    const files = nodesToLlamaCloudFiles(nodes);
+    for (const { pipelineId, fileName, downloadedName } of files) {
+      const downloadUrl = await LLamaCloudFileService.getFileUrl(
+        pipelineId,
+        fileName,
+      );
+      if (downloadUrl) {
+        await downloadFile(
+          downloadUrl,
+          downloadedName,
+          LLAMA_CLOUD_DOWNLOAD_FOLDER,
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error downloading files from nodes:", error);
+  }
+}
+
+function nodesToLlamaCloudFiles(nodes: NodeWithScore<Metadata>[]) {
+  const files: Array<{
+    pipelineId: string;
+    fileName: string;
+    downloadedName: string;
+  }> = [];
+  for (const node of nodes) {
+    const pipelineId = node.node.metadata["pipeline_id"];
+    const fileName = node.node.metadata["file_name"];
+    if (!pipelineId || !fileName) continue;
+    const isDuplicate = files.some(
+      (f) => f.pipelineId === pipelineId && f.fileName === fileName,
+    );
+    if (!isDuplicate) {
+      files.push({
+        pipelineId,
+        fileName,
+        downloadedName: toDownloadedName(pipelineId, fileName),
+      });
+    }
+  }
+  return files;
+}
+
+function toDownloadedName(pipelineId: string, fileName: string) {
+  return `${pipelineId}$${fileName}`;
 }
