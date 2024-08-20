@@ -34,6 +34,8 @@ It allows you to remove and add your own documents, modify the Pydantic model us
 
 For example, keep the provided Pydantic model and query: "What is the maximum weight for a parcel?".
 
+> Note: the Pydantic model used is the last element in the code provided by the user.
+
 ### API
 
 Alternatively, check the API documentation at http://localhost:8000/docs. This example provides the `/api/extractor/query` API endpoint.
