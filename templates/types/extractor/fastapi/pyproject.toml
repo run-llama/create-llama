@@ -15,6 +15,7 @@ uvicorn = { extras = ["standard"], version = "^0.23.2" }
 python-dotenv = "^1.0.0"
 llama-index = "^0.10.58"
 cachetools = "^5.3.3"
+reflex = "^0.5.9"
 
 [build-system]
 requires = ["poetry-core"]

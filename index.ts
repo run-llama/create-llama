@@ -188,7 +188,10 @@ if (process.argv.includes("--tools")) {
     program.tools = getTools(program.tools.split(","));
   }
 }
-if (process.argv.includes("--no-llama-parse")) {
+if (
+  process.argv.includes("--no-llama-parse") ||
+  program.template === "extractor"
+) {
   program.useLlamaParse = false;
 }
 program.askModels = process.argv.includes("--ask-models");
@@ -341,6 +344,7 @@ Please check ${cyan(
     console.log(`Running app in ${root}...`);
     await runApp(
       root,
+      program.template,
       program.frontend,
       program.framework,
       program.port,

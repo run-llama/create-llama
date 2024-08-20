@@ -23,66 +23,77 @@ const createProcess = (
     });
 };
 
-// eslint-disable-next-line max-params
+export function runReflexApp(
+  appPath: string,
+  frontendPort?: number,
+  backendPort?: number,
+) {
+  const commandArgs = ["run", "reflex", "run"];
+  if (frontendPort) {
+    commandArgs.push("--frontend-port", frontendPort.toString());
+  }
+  if (backendPort) {
+    commandArgs.push("--backend-port", backendPort.toString());
+  }
+  return createProcess("poetry", commandArgs, {
+    stdio: "inherit",
+    cwd: appPath,
+  });
+}
+
+export function runFastAPIApp(appPath: string, port: number) {
+  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
+
+  return createProcess("poetry", commandArgs, {
+    stdio: "inherit",
+    cwd: appPath,
+  });
+}
+
+export function runTSApp(appPath: string, port: number) {
+  return createProcess("npm", ["run", "dev"], {
+    stdio: "inherit",
+    cwd: appPath,
+    env: { ...process.env, PORT: `${port}` },
+  });
+}
+
 export async function runApp(
   appPath: string,
+  template: string,
   frontend: boolean,
   framework: TemplateFramework,
   port?: number,
   externalPort?: number,
 ): Promise<any> {
-  let backendAppProcess: ChildProcess;
-  let frontendAppProcess: ChildProcess | undefined;
-  const frontendPort = port || 3000;
-  let backendPort = externalPort || 8000;
+  const processes: ChildProcess[] = [];
 
-  // Callback to kill app processes
+  // Callback to kill all sub processes if the main process is killed
   process.on("exit", () => {
     console.log("Killing app processes...");
-    backendAppProcess.kill();
-    frontendAppProcess?.kill();
+    processes.forEach((p) => p.kill());
   });
 
-  let backendCommand = "";
-  let backendArgs: string[];
-  if (framework === "fastapi") {
-    backendCommand = "poetry";
-    backendArgs = [
-      "run",
-      "uvicorn",
-      "main:app",
-      "--host=0.0.0.0",
-      "--port=" + backendPort,
-    ];
-  } else if (framework === "nextjs") {
-    backendCommand = "npm";
-    backendArgs = ["run", "dev"];
-    backendPort = frontendPort;
-  } else {
-    backendCommand = "npm";
-    backendArgs = ["run", "dev"];
+  // Default sub app paths
+  const backendPath = path.join(appPath, "backend");
+  const frontendPath = path.join(appPath, "frontend");
+
+  if (template === "extractor") {
+    processes.push(runReflexApp(appPath, port, externalPort));
+  }
+  if (template === "streaming") {
+    if (framework === "fastapi" || framework === "express") {
+      const backendRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
+      if (frontend) {
+        processes.push(backendRunner(backendPath, externalPort || 8000));
+        processes.push(runTSApp(frontendPath, port || 3000));
+      } else {
+        processes.push(backendRunner(appPath, externalPort || 8000));
+      }
+    } else if (framework === "nextjs") {
+      processes.push(runTSApp(appPath, port || 3000));
+    }
   }
 
-  if (frontend) {
-    return new Promise((resolve, reject) => {
-      backendAppProcess = createProcess(backendCommand, backendArgs, {
-        stdio: "inherit",
-        cwd: path.join(appPath, "backend"),
-        env: { ...process.env, PORT: `${backendPort}` },
-      });
-      frontendAppProcess = createProcess("npm", ["run", "dev"], {
-        stdio: "inherit",
-        cwd: path.join(appPath, "frontend"),
-        env: { ...process.env, PORT: `${frontendPort}` },
-      });
-    });
-  } else {
-    return new Promise((resolve, reject) => {
-      backendAppProcess = createProcess(backendCommand, backendArgs, {
-        stdio: "inherit",
-        cwd: path.join(appPath),
-        env: { ...process.env, PORT: `${backendPort}` },
-      });
-    });
-  }
+  return Promise.all(processes);
 }

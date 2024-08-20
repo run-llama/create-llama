@@ -172,7 +172,7 @@ export const getDataSourceChoices = (
     );
   }
 
-  if (framework === "fastapi") {
+  if (framework === "fastapi" && template !== "extractor") {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",
@@ -183,7 +183,7 @@ export const getDataSourceChoices = (
     });
   }
 
-  if (!selectedDataSource.length) {
+  if (!selectedDataSource.length && template !== "extractor") {
     choices.push({
       title: "Use managed index from LlamaCloud",
       value: "llamacloud",
@@ -407,8 +407,13 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
-  if (program.template === "multiagent" || program.template === "extractor") {
+  if (program.template === "multiagent") {
     // TODO: multi-agents currently only supports FastAPI
+    program.framework = preferences.framework = "fastapi";
+  } else if (program.template === "extractor") {
+    // Extractor template only supports FastAPI, empty data sources, and llamacloud
+    // So we just use example file for extractor template, this allows user to choose vector database later
+    program.dataSources = [EXAMPLE_FILE];
     program.framework = preferences.framework = "fastapi";
   }
   if (!program.framework) {
@@ -652,7 +657,11 @@ export const askQuestions = async (
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = preferences.useLlamaParse = true;
   } else {
-    if (program.useLlamaParse === undefined) {
+    // Extractor template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
+    if (
+      program.useLlamaParse === undefined &&
+      program.template !== "extractor"
+    ) {
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
         if (ciInfo.isCI) {

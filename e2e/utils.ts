@@ -24,14 +24,14 @@ export async function runCreateLlama(
   templateType: TemplateType,
   templateFramework: TemplateFramework,
   dataSource: string,
-  templateUI: TemplateUI,
   vectorDb: TemplateVectorDB,
-  appType: AppType,
   port: number,
   externalPort: number,
   postInstallAction: TemplatePostInstallAction,
-  llamaCloudProjectName: string,
-  llamaCloudIndexName: string,
+  templateUI?: TemplateUI,
+  appType?: AppType,
+  llamaCloudProjectName?: string,
+  llamaCloudIndexName?: string,
 ): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
@@ -45,7 +45,7 @@ export async function runCreateLlama(
     templateUI,
     appType,
   ].join("-");
-  const command = [
+  const commandArgs = [
     "create-llama",
     name,
     "--template",
@@ -53,13 +53,10 @@ export async function runCreateLlama(
     "--framework",
     templateFramework,
     dataSource,
-    "--ui",
-    templateUI,
     "--vector-db",
     vectorDb,
     "--open-ai-key",
     process.env.OPENAI_API_KEY,
-    appType,
     "--use-pnpm",
     "--port",
     port,
@@ -74,7 +71,16 @@ export async function runCreateLlama(
     "none",
     "--llama-cloud-key",
     process.env.LLAMA_CLOUD_API_KEY,
-  ].join(" ");
+  ];
+
+  if (templateUI) {
+    commandArgs.push("--ui", templateUI);
+  }
+  if (appType) {
+    commandArgs.push(appType);
+  }
+
+  const command = commandArgs.join(" ");
   console.log(`running command '${command}' in ${cwd}`);
   const appProcess = exec(command, {
     cwd,
