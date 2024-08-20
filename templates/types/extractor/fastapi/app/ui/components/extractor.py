@@ -1,9 +1,12 @@
+import logging
 import reflex as rx
 from app.services.model import DEFAULT_MODEL
 from app.services.extractor import ExtractorService, InvalidModelCode
 
+logger = logging.getLogger("uvicorn")
 
-class StructureQuery(rx.State):
+
+class StructuredQuery(rx.State):
     query: str
     response: str
     loading: bool = False
@@ -29,6 +32,15 @@ class StructureQuery(rx.State):
             async with self:
                 self.error = "Invalid Python code"
                 response = None
+        except Exception as e:
+            import traceback
+
+            logger.error(
+                f"Error occurred: {str(e)}\nStack trace:\n{traceback.format_exc()}"
+            )
+            async with self:
+                self.error = f"Error: {str(e)}"
+                response = None
 
         async with self:
             self.response = response
@@ -38,9 +50,9 @@ class StructureQuery(rx.State):
 def extract_data_component() -> rx.Component:
     return rx.vstack(
         rx.cond(
-            StructureQuery.error,
+            StructuredQuery.error,
             rx.callout(
-                StructureQuery.error,
+                StructuredQuery.error,
                 icon="triangle_alert",
                 color_scheme="red",
                 role="alert",
@@ -49,20 +61,22 @@ def extract_data_component() -> rx.Component:
         rx.text_area(
             id="query",
             placeholder="Enter query",
-            on_change=StructureQuery.set_query,
+            on_change=StructuredQuery.set_query,
             width="100%",
             height="10vh",
         ),
         rx.button(
             "Query",
-            on_click=StructureQuery.handle_query,
-            loading=StructureQuery.loading,
+            on_click=StructuredQuery.handle_query,
+            loading=StructuredQuery.loading,
         ),
         rx.cond(
-            StructureQuery.response,
-            rx.text_area(
-                id="response",
-                value=StructureQuery.response,
+            StructuredQuery.response,
+            rx.code_block(
+                StructuredQuery.response,
+                language="json",
+                show_line_numbers=True,
+                wrap_long_lines=True,
                 size="3",
                 resize="vertical",
                 width="100%",

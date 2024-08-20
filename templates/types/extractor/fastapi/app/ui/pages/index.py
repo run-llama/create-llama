@@ -22,7 +22,7 @@ def index() -> rx.Component:
         rx.vstack(
             rx.heading("Built by LlamaIndex", size="6"),
             rx.text(
-                "Upload a file then enter the query to extract the data in the file according to the schema."
+                "Upload a file then enter a query. The response will be according to the provided Pydantic model."
             ),
             background_color="var(--gray-3)",
             align_items="left",

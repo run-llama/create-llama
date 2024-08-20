@@ -1,6 +1,7 @@
 IMPORTS = """
-from typing import List
 from llama_index.core.schema import BaseModel, Field
+from typing import List, Optional
+from datetime import date
 """
 
 DEFAULT_MODEL = """class Output(BaseModel):

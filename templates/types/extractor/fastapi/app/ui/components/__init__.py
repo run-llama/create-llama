@@ -1,5 +1,5 @@
 from .extractor import (
-    StructureQuery as StructureQuery,
+    StructuredQuery as StructuredQuery,
     extract_data_component as extract_data_component,
 )
 from .schema_editor import schema_editor_component as schema_editor_component
