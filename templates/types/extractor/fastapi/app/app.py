@@ -9,7 +9,7 @@ from fastapi import FastAPI
 
 from app.api.routers.extractor import extractor_router
 from app.settings import init_settings
-from app.ui.pages import *  # Keep this import all pages in the app
+from app.ui.pages import *  # Keep this import all pages in the app  # noqa: F403
 
 init_settings()
 

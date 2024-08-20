@@ -1,1 +1,1 @@
-from .engine import get_chat_engine
+from .engine import get_chat_engine as get_chat_engine
