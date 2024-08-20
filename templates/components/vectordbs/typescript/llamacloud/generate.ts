@@ -1,24 +1,44 @@
 import * as dotenv from "dotenv";
-import { LlamaCloudIndex } from "llamaindex";
+import * as fs from "fs/promises";
+import { LLamaCloudFileService } from "llamaindex";
+import * as path from "path";
 import { getDataSource } from "./index";
-import { getDocuments } from "./loader";
+import { DATA_DIR } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
 
 dotenv.config();
 
-async function loadAndIndex() {
-  const documents = await getDocuments();
+async function* walk(dir: string): AsyncGenerator<string> {
+  const directory = await fs.opendir(dir);
 
-  await getDataSource();
-  await LlamaCloudIndex.fromDocuments({
-    documents,
-    name: process.env.LLAMA_CLOUD_INDEX_NAME!,
-    projectName: process.env.LLAMA_CLOUD_PROJECT_NAME!,
-    apiKey: process.env.LLAMA_CLOUD_API_KEY,
-    baseUrl: process.env.LLAMA_CLOUD_BASE_URL,
-  });
-  console.log(`Successfully created embeddings!`);
+  for await (const dirent of directory) {
+    const entryPath = path.join(dir, dirent.name);
+
+    if (dirent.isDirectory()) {
+      yield* walk(entryPath); // Recursively walk through directories
+    } else if (dirent.isFile()) {
+      yield entryPath; // Yield file paths
+    }
+  }
+}
+
+async function loadAndIndex() {
+  const index = await getDataSource();
+  const projectId = await index.getProjectId();
+  const pipelineId = await index.getPipelineId();
+
+  // walk through the data directory and upload each file to LlamaCloud
+  for await (const filePath of walk(DATA_DIR)) {
+    const buffer = await fs.readFile(filePath);
+    const filename = path.basename(filePath);
+    const file = new File([buffer], filename);
+    await LLamaCloudFileService.addFileToPipeline(projectId, pipelineId, file, {
+      private: "false",
+    });
+  }
+
+  console.log(`Successfully uploaded documents to LlamaCloud!`);
 }
 
 (async () => {

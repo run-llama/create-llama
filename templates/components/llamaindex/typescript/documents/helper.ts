@@ -11,7 +11,20 @@ const MIME_TYPE_TO_EXT: Record<string, string> = {
 
 const UPLOADED_FOLDER = "output/uploaded";
 
-export async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
+export async function storeAndParseFile(fileBuffer: Buffer, mimeType: string) {
+  const documents = await loadDocuments(fileBuffer, mimeType);
+  const { filename } = await saveDocument(fileBuffer, mimeType);
+  for (const document of documents) {
+    document.metadata = {
+      ...document.metadata,
+      file_name: filename,
+      private: "true", // to separate private uploads from public documents
+    };
+  }
+  return documents;
+}
+
+async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   const extractors = getExtractors();
   const reader = extractors[MIME_TYPE_TO_EXT[mimeType]];
 
@@ -22,7 +35,7 @@ export async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   return await reader.loadDataAsContent(fileBuffer);
 }
 
-export async function saveDocument(fileBuffer: Buffer, mimeType: string) {
+async function saveDocument(fileBuffer: Buffer, mimeType: string) {
   const fileExt = MIME_TYPE_TO_EXT[mimeType];
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
