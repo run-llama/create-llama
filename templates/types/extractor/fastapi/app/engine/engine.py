@@ -7,7 +7,7 @@ from app.engine.index import get_index
 
 
 def get_query_engine(output_cls):
-    top_k = int(os.getenv("TOP_K", 0)) or None
+    top_k = int(os.getenv("TOP_K", 0))
 
     index = get_index()
     if index is None:
@@ -21,7 +21,7 @@ def get_query_engine(output_cls):
     sllm = Settings.llm.as_structured_llm(output_cls)
 
     return index.as_query_engine(
-        similarity_top_k=top_k,
         llm=sllm,
         response_mode="tree_summarize",
+        **({"similarity_top_k": top_k} if top_k != 0 else {}),
     )
