@@ -27,6 +27,7 @@ def generate_datasource():
         doc.metadata["private"] = "false"
     index = VectorStoreIndex.from_documents(
         documents,
+        show_progress=True,
     )
     # store it for later
     index.storage_context.persist(storage_dir)
