@@ -396,7 +396,6 @@ const getEngineEnvs = (): EnvVar[] => {
       name: "TOP_K",
       description:
         "The number of similar embeddings to return when retrieving documents.",
-      value: "3",
     },
     {
       name: "STREAM_TIMEOUT",

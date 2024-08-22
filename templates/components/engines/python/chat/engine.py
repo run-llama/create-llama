@@ -9,7 +9,7 @@ from llama_index.core.chat_engine import CondensePlusContextChatEngine
 def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     citation_prompt = os.getenv("SYSTEM_CITATION_PROMPT", None)
-    top_k = int(os.getenv("TOP_K", 3))
+    top_k = int(os.getenv("TOP_K", 0))
 
     node_postprocessors = []
     if citation_prompt:
@@ -26,8 +26,7 @@ def get_chat_engine(filters=None, params=None):
         )
 
     retriever = index.as_retriever(
-        similarity_top_k=top_k,
-        filters=filters,
+        filters=filters, **({"similarity_top_k": top_k} if top_k != 0 else {})
     )
 
     return CondensePlusContextChatEngine.from_defaults(
