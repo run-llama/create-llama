@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.41
+
+### Patch Changes
+
+- 57e7638: Use the retrieval defaults from LlamaCloud
+
 ## 0.1.40
 
 ### Patch Changes
