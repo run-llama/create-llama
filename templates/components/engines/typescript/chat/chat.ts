@@ -10,7 +10,7 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
     );
   }
   const retriever = index.asRetriever({
-    similarityTopK: process.env.TOP_K ? parseInt(process.env.TOP_K) : 3,
+    similarityTopK: process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined,
     filters: generateFilters(documentIds || []),
   });
 

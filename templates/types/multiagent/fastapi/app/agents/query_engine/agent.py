@@ -19,7 +19,8 @@ def get_query_engine_tool() -> QueryEngineTool:
     index = get_index()
     if index is None:
         raise ValueError("Index not found. Please create an index first.")
-    query_engine = index.as_query_engine(similarity_top_k=int(os.getenv("TOP_K", 3)))
+    top_k = int(os.getenv("TOP_K", 0)) or None
+    query_engine = index.as_query_engine(similarity_top_k=top_k)
     return QueryEngineTool(
         query_engine=query_engine,
         metadata=ToolMetadata(

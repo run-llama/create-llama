@@ -9,14 +9,15 @@ from llama_index.core.tools.query_engine import QueryEngineTool
 
 def get_chat_engine(filters=None, params=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
-    top_k = os.getenv("TOP_K", "3")
+    top_k = int(os.getenv("TOP_K", 0)) or None
     tools = []
 
     # Add query tool if index exists
     index = get_index()
     if index is not None:
         query_engine = index.as_query_engine(
-            similarity_top_k=int(top_k), filters=filters
+            similarity_top_k=top_k,
+            filters=filters,
         )
         query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
         tools.append(query_engine_tool)
