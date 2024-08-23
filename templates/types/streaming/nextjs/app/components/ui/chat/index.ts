@@ -57,6 +57,7 @@ export type EventData = {
 export type AgentEventData = {
   agent: string;
   text: string;
+  iconName?: string; // lucide icon name
 };
 
 export type ToolData = {
