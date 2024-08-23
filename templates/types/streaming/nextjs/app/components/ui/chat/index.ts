@@ -50,8 +50,8 @@ export type SourceData = {
 };
 
 export type EventData = {
+  agent?: string;
   title: string;
-  isCollapsed: boolean;
 };
 
 export type ToolData = {
