@@ -5,6 +5,7 @@ import { Fragment } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
+  AgentEventData,
   ChatHandler,
   DocumentFileData,
   EventData,
@@ -16,6 +17,7 @@ import {
   getAnnotationData,
   getSourceAnnotationData,
 } from "../index";
+import { ChatAgentEvents } from "./chat-agent-events";
 import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
 import { ChatFiles } from "./chat-files";
@@ -56,6 +58,10 @@ function ChatMessageContent({
     annotations,
     MessageAnnotationType.EVENTS,
   );
+  const agentEventData = getAnnotationData<AgentEventData>(
+    annotations,
+    MessageAnnotationType.AGENT_EVENTS,
+  );
 
   const sourceData = getSourceAnnotationData(annotations);
 
@@ -78,6 +84,13 @@ function ChatMessageContent({
       component:
         eventData.length > 0 ? (
           <ChatEvents isLoading={isLoading} data={eventData} />
+        ) : null,
+    },
+    {
+      order: -2,
+      component:
+        agentEventData.length > 0 ? (
+          <ChatAgentEvents data={agentEventData} />
         ) : null,
     },
     {

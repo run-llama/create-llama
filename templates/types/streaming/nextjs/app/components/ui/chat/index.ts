@@ -12,6 +12,7 @@ export enum MessageAnnotationType {
   EVENTS = "events",
   TOOLS = "tools",
   SUGGESTED_QUESTIONS = "suggested_questions",
+  AGENT_EVENTS = "agent_events",
 }
 
 export type ImageData = {
@@ -50,8 +51,12 @@ export type SourceData = {
 };
 
 export type EventData = {
-  agent?: string;
   title: string;
+};
+
+export type AgentEventData = {
+  agent: string;
+  text: string;
 };
 
 export type ToolData = {
@@ -75,6 +80,7 @@ export type AnnotationData =
   | DocumentFileData
   | SourceData
   | EventData
+  | AgentEventData
   | ToolData
   | SuggestedQuestionsData;
 
