@@ -50,12 +50,11 @@ export function appendEventData(data: StreamData, title?: string) {
 
 export function appendAgentEventData(
   data: StreamData,
-  text: string,
-  agent: string,
+  agentEventData: { text: string; agent: string; iconName?: string },
 ) {
   data.appendMessageAnnotation({
     type: "agent_events",
-    data: { text, agent },
+    data: agentEventData,
   });
 }
 
