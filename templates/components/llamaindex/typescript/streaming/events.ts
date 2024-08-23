@@ -1,6 +1,7 @@
 import { StreamData } from "ai";
 import {
   CallbackManager,
+  JSONObject,
   LLamaCloudFileService,
   Metadata,
   MetadataMode,
@@ -38,13 +39,15 @@ export function appendSourceData(
   }
 }
 
-export function appendEventData(data: StreamData, title?: string) {
+export function appendEventData(
+  data: StreamData,
+  title: string,
+  agent: string | null = null,
+) {
   if (!title) return;
   data.appendMessageAnnotation({
     type: "events",
-    data: {
-      title,
-    },
+    data: { title, agent },
   });
 }
 
@@ -100,11 +103,25 @@ export function createCallbackManager(stream: StreamData) {
     appendEventData(
       stream,
       `Using tool: '${name}' with inputs: '${inputString}'`,
+      name,
     );
   });
 
   callbackManager.on("llm-tool-result", (event) => {
     const { toolCall, toolResult } = event.detail;
+
+    // Fake delegate events
+    if (toolResult.output && typeof toolResult.output === "object") {
+      const delegatedAgent = (toolResult.output as JSONObject).delegatedAgent;
+      if (delegatedAgent) {
+        appendEventData(
+          stream,
+          `Delegate result to ${delegatedAgent}`,
+          toolResult.tool?.metadata.name,
+        );
+      }
+    }
+
     appendToolData(stream, toolCall, toolResult);
   });
 

@@ -1,6 +1,6 @@
 import { initObservability } from "@/app/observability";
 import { JSONValue, Message, StreamData, StreamingTextResponse } from "ai";
-import { ChatMessage, Settings } from "llamaindex";
+import { CallbackManager, ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
@@ -70,14 +70,101 @@ export async function POST(request: NextRequest) {
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
 
-    // Calling LlamaIndex's ChatEngine to get a streamed response
-    const response = await Settings.withCallbackManager(callbackManager, () => {
-      return chatEngine.chat({
-        message: userMessageContent,
-        chatHistory: messages as ChatMessage[],
-        stream: true,
+    const fakeDispatchEvent = async (callbackManager: CallbackManager) => {
+      const wait = (ms: number = 100) => {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      };
+
+      const dispatchToolCall = (agent: string, query: string) => {
+        callbackManager.dispatchEvent("llm-tool-call", {
+          toolCall: {
+            id: `ID-${agent}`,
+            name: agent,
+            input: { query },
+          },
+        });
+        return [agent, query];
+      };
+
+      const dispatchToolResult = (
+        agent: string,
+        query: string,
+        output: any,
+      ) => {
+        callbackManager.dispatchEvent("llm-tool-result", {
+          toolCall: {
+            id: `ID-${agent}`,
+            name: agent,
+            input: { query },
+          },
+          toolResult: {
+            tool: {
+              metadata: {
+                name: agent,
+                description: `${agent} description`,
+              },
+              call: (_input: any) => ({}),
+            },
+            output,
+            isError: false,
+            input: { query },
+          },
+        });
+      };
+
+      // Researcher
+      dispatchToolCall("Researcher", "Articles about LlamaIndex");
+      await wait();
+      dispatchToolResult("Researcher", "Articles about LlamaIndex", {
+        data: ["Introducing LlamaIndex", "LlamaIndex Newsletter"],
+        delegatedAgent: "Writer",
       });
-    });
+
+      // Writer
+      dispatchToolCall("Writer", "Write blog post");
+      await wait();
+      dispatchToolResult("Writer", "Write blog post", {
+        data: "LlamaIndex is a great LLM tool...",
+        delegatedAgent: "Reviewer",
+      });
+
+      // Reviewer
+      dispatchToolCall("Reviewer", "Review blog post");
+      await wait();
+      dispatchToolResult("Reviewer", "Review blog post", {
+        data: "The blog post is good",
+        delegatedAgent: "Writer",
+      });
+
+      // Writer
+      dispatchToolCall(
+        "Writer",
+        "Write a blog post to introduce the great LLM tool LlamaIndex",
+      );
+      await wait();
+      dispatchToolResult(
+        "Writer",
+        "Write a blog post to introduce the great LLM tool LlamaIndex",
+        {
+          data: "LlamaIndex is a great LLM tool...",
+        },
+      );
+
+      return "Write a blog post to introduce the great LLM tool LlamaIndex";
+    };
+
+    // Calling LlamaIndex's ChatEngine to get a streamed response
+    const response = await Settings.withCallbackManager(
+      callbackManager,
+      async () => {
+        const fakeSuggestion = await fakeDispatchEvent(callbackManager);
+        return chatEngine.chat({
+          message: userMessageContent + `\nExample: ${fakeSuggestion}`,
+          chatHistory: messages as ChatMessage[],
+          stream: true,
+        });
+      },
+    );
 
     // Transform LlamaIndex stream to Vercel/AI format
     const stream = LlamaIndexStream(
