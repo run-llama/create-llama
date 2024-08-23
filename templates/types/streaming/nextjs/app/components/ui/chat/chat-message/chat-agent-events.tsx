@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { AgentEventData } from "../index";
 
 type MergedEvent = {
-  agent?: string;
+  agent: string;
   texts: string[];
 };
 
@@ -10,7 +10,7 @@ export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
   const events = useMemo(() => mergeAdjacentEvents(data), [data]);
 
   return (
-    <div className="border-l-2 border-indigo-400 pl-2">
+    <div className="border-l-2 border-purple-400 pl-2">
       <div className="mt-4 text-sm space-y-4">
         {events.map((eventItem, index) => (
           <div key={index} className="flex gap-4 border-b pb-4">
@@ -39,11 +39,7 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
   for (const event of events) {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
-    if (
-      lastMergedEvent &&
-      lastMergedEvent.agent === event.agent &&
-      event.agent !== null
-    ) {
+    if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
       // If the last event in mergedEvents has the same non-null agent, add the title to it
       lastMergedEvent.texts.push(event.text);
     } else {
