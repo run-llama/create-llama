@@ -9,7 +9,7 @@ import { red } from "chalk";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1";
 
-async function getAvailableModelChoicesGroq(apiKey) {
+async function getAvailableModelChoicesGroq(apiKey: string) {
   if (!apiKey) {
     throw new Error("Need Groq API key to retrieve model choices");
   }
@@ -23,13 +23,13 @@ async function getAvailableModelChoicesGroq(apiKey) {
       timeout: 5000,
       responseType: "json",
     });
-    const data = await response.body;
+    const data = response.body;
     spinner.stop();
 
     // Filter out the Whisper model
     return data.data
-      .filter((model) => !model.id.startsWith("Whisper"))
-      .map((el) => {
+      .filter((model: any) => !model.id.startsWith("Whisper"))
+      .map((el: any) => {
         return {
           title: el.id,
           value: el.id,
@@ -51,60 +51,7 @@ async function getAvailableModelChoicesGroq(apiKey) {
   }
 }
 
-// Old version
-
-async function getAvailableModelChoicesGroq(selectEmbedding, apiKey) {
-  if (!apiKey) {
-    throw new Error("Need Groq API key to retrieve model choices");
-  }
-
-  // This should be all other models
-  const isLLMModel = (modelId) => {
-    return modelId.startsWith("gpt");
-  };
-
-  const isTranscriptModel = (modelId) => {
-    return modelId.startsWith("Whisper");
-  };
-
-  const spinner = ora("Fetching available models from Groq").start();
-  try {
-    const response = await got(`${GROQ_API_URL}/models`, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      timeout: 5000,
-      responseType: "json",
-    });
-    const data = await response.body;
-    spinner.stop();
-    return data.data
-      .filter((model) =>
-        selectEmbedding ? isEmbeddingModel(model.id) : isLLMModel(model.id)
-      )
-      .map((el) => {
-        return {
-          title: el.id,
-          value: el.id,
-        };
-      });
-  } catch (error) {
-    spinner.stop();
-    if (error.response?.statusCode === 401) {
-      console.log(
-        red(
-          "Invalid Groq API key provided! Please provide a valid key and try again!"
-        )
-      );
-    } else {
-      console.log(red("Request failed: " + error));
-    }
-    process.exit(1);
-  }
-}
-
-const MODELS = ["llama3-8b", "llama3-70b", "mixtral-8x7b"];
-const DEFAULT_MODEL = MODELS[0];
+const DEFAULT_MODEL = "llama3-8b";
 
 // Use huggingface embedding models for now as Groq doesn't support embedding models
 enum HuggingFaceEmbeddingModelType {
@@ -166,12 +113,14 @@ export async function askGroqQuestions({
   // use default model values in CI or if user should not be asked
   const useDefaults = ciInfo.isCI || !askModels;
   if (!useDefaults) {
+    const modelChoices = await getAvailableModelChoicesGroq(config.apiKey);
+
     const { model } = await prompts(
       {
         type: "select",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: MODELS.map(toChoice),
+        choices: modelChoices,
         initial: 0,
       },
       questionHandlers,
