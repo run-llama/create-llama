@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.1.42
+
+### Patch Changes
+
+- 8f670a9: Allow relative URL in documents
+
 ## 0.1.41
 
 ### Patch Changes
