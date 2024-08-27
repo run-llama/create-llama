@@ -5,7 +5,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request,
 from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
 
-from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
     ChatData,
     Message,
@@ -39,10 +38,7 @@ async def chat(
             f"Creating chat engine with filters: {str(filters)}",
         )
         chat_engine = get_chat_engine(filters=filters, params=params)
-
-        event_handler = EventCallbackHandler()
-        chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
-
+        event_handler = chat_engine.callback_manager.handlers[0]
         response = await chat_engine.astream_chat(last_message_content, messages)
         process_response_nodes(response.source_nodes, background_tasks)
 

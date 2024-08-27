@@ -5,9 +5,9 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
-from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message, SourceNodes
 from app.api.services.suggestion import NextQuestionSuggestion
+from app.engine.events import EventCallbackHandler
 
 
 class VercelStreamResponse(StreamingResponse):

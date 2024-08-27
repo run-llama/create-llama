@@ -1,12 +1,12 @@
-import json
 import asyncio
+import json
 import logging
-from typing import AsyncGenerator, Dict, Any, List, Optional
-from llama_index.core.callbacks.base import BaseCallbackHandler
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
+from llama_index.core.callbacks.base import BaseCallbackHandler, CallbackManager
 from llama_index.core.callbacks.schema import CBEventType
 from llama_index.core.tools.types import ToolOutput
 from pydantic import BaseModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +147,9 @@ class EventCallbackHandler(BaseCallbackHandler):
                 yield await asyncio.wait_for(self._aqueue.get(), timeout=0.1)
             except asyncio.TimeoutError:
                 pass
+
+
+def get_callback_manager() -> EventCallbackHandler:
+    return CallbackManager(
+        handlers=[EventCallbackHandler()],
+    )
