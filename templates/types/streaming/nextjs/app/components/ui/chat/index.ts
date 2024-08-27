@@ -1,5 +1,4 @@
 import { JSONValue } from "ai";
-import { isValidUrl } from "../lib/utils";
 import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 
@@ -113,7 +112,7 @@ function preprocessSourceNodes(nodes: SourceNode[]): SourceNode[] {
   // Filter source nodes has lower score
   nodes = nodes
     .filter((node) => (node.score ?? 1) > NODE_SCORE_THRESHOLD)
-    .filter((node) => isValidUrl(node.url))
+    .filter((node) => node.url && node.url !== "")
     .sort((a, b) => (b.score ?? 1) - (a.score ?? 1))
     .map((node) => {
       // remove trailing slash for node url if exists
