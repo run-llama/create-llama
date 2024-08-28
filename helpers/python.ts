@@ -12,6 +12,7 @@ import {
   InstallTemplateArgs,
   ModelConfig,
   TemplateDataSource,
+  TemplateType,
   TemplateVectorDB,
 } from "./types";
 
@@ -26,6 +27,7 @@ const getAdditionalDependencies = (
   vectorDb?: TemplateVectorDB,
   dataSources?: TemplateDataSource[],
   tools?: Tool[],
+  templateType?: TemplateType,
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -155,18 +157,20 @@ const getAdditionalDependencies = (
       });
       break;
     case "openai":
-      dependencies.push({
-        name: "llama-index-llms-openai",
-        version: "^0.2.0",
-      });
-      dependencies.push({
-        name: "llama-index-embeddings-openai",
-        version: "^0.2.3",
-      });
-      dependencies.push({
-        name: "llama-index-agent-openai",
-        version: "^0.3.0",
-      });
+      if (templateType !== "multiagent") {
+        dependencies.push({
+          name: "llama-index-llms-openai",
+          version: "^0.2.0",
+        });
+        dependencies.push({
+          name: "llama-index-embeddings-openai",
+          version: "^0.2.3",
+        });
+        dependencies.push({
+          name: "llama-index-agent-openai",
+          version: "^0.3.0",
+        });
+      }
       break;
     case "groq":
       dependencies.push({
@@ -396,6 +400,7 @@ export const installPythonTemplate = async ({
     vectorDb,
     dataSources,
     tools,
+    template,
   );
 
   if (observability && observability !== "none") {
