@@ -18,7 +18,6 @@ def get_chat_engine(filters=None, params=None, event_handlers=None):
         token_limit=llm.metadata.context_window - 256
     )
     callback_manager = CallbackManager(handlers=event_handlers or [])
-    llm.callback_manager = callback_manager
 
     node_postprocessors = []
     if citation_prompt:
