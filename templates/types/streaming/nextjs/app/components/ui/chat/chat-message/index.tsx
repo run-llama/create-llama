@@ -34,10 +34,12 @@ function ChatMessageContent({
   message,
   isLoading,
   append,
+  isLastMessage,
 }: {
   message: Message;
   isLoading: boolean;
   append: Pick<ChatHandler, "append">["append"];
+  isLastMessage: boolean;
 }) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
@@ -102,6 +104,7 @@ function ChatMessageContent({
         <SuggestedQuestions
           questions={suggestedQuestionsData[0]}
           append={append}
+          isLastMessage={isLastMessage}
         />
       ) : null,
     },
@@ -122,10 +125,12 @@ export default function ChatMessage({
   chatMessage,
   isLoading,
   append,
+  isLastMessage,
 }: {
   chatMessage: Message;
   isLoading: boolean;
   append: Pick<ChatHandler, "append">["append"];
+  isLastMessage: boolean;
 }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   return (
@@ -136,6 +141,7 @@ export default function ChatMessage({
           message={chatMessage}
           isLoading={isLoading}
           append={append}
+          isLastMessage={isLastMessage}
         />
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}
