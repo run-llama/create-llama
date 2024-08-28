@@ -9,11 +9,11 @@ from app.engine.vectordb import get_vector_store
 
 logger = logging.getLogger("uvicorn")
 
+
 class IndexConfig(BaseModel):
     callback_manager: Optional[CallbackManager] = Field(
         default=None,
     )
-
 
 
 def get_index(config: IndexConfig = None):
@@ -24,6 +24,8 @@ def get_index(config: IndexConfig = None):
     # Load the index from the vector store
     # If you are using a vector store that doesn't store text,
     # you must load the index from both the vector store and the document store
-    index = VectorStoreIndex.from_vector_store(store, callback_manager=config.callback_manager)
+    index = VectorStoreIndex.from_vector_store(
+        store, callback_manager=config.callback_manager
+    )
     logger.info("Finished load index from vector store.")
     return index

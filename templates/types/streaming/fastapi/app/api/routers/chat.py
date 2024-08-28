@@ -39,7 +39,9 @@ async def chat(
             f"Creating chat engine with filters: {str(filters)}",
         )
         event_handler = EventCallbackHandler()
-        chat_engine = get_chat_engine(filters=filters, params=params, event_handlers=[event_handler])
+        chat_engine = get_chat_engine(
+            filters=filters, params=params, event_handlers=[event_handler]
+        )
         response = await chat_engine.astream_chat(last_message_content, messages)
         process_response_nodes(response.source_nodes, background_tasks)
 

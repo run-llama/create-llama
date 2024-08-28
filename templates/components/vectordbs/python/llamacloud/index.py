@@ -25,8 +25,12 @@ class IndexConfig(BaseModel):
 def get_index(config: IndexConfig = None):
     if config is None:
         config = IndexConfig()
-    name = config.llama_cloud_pipeline_config.get("pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME"))
-    project_name = config.llama_cloud_pipeline_config.get("project", os.getenv("LLAMA_CLOUD_PROJECT_NAME"))
+    name = config.llama_cloud_pipeline_config.get(
+        "pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME")
+    )
+    project_name = config.llama_cloud_pipeline_config.get(
+        "project", os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+    )
     api_key = os.getenv("LLAMA_CLOUD_API_KEY")
     base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
     organization_id = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
@@ -47,6 +51,7 @@ def get_index(config: IndexConfig = None):
     )
 
     return index
+
 
 def get_client():
     return llama_cloud_get_client(

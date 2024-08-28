@@ -20,16 +20,12 @@ def get_chat_engine(filters=None, params=None, event_handlers=None):
     callback_manager = CallbackManager(handlers=event_handlers or [])
     llm.callback_manager = callback_manager
 
-
     node_postprocessors = []
     if citation_prompt:
         node_postprocessors = [NodeCitationProcessor()]
         system_prompt = f"{system_prompt}\n{citation_prompt}"
 
-    index_config = IndexConfig(
-        callback_manager=callback_manager,
-        **(params or {})
-    )
+    index_config = IndexConfig(callback_manager=callback_manager, **(params or {}))
     index = get_index(index_config)
     if index is None:
         raise HTTPException(
@@ -49,5 +45,5 @@ def get_chat_engine(filters=None, params=None, event_handlers=None):
         system_prompt=system_prompt,
         retriever=retriever,
         node_postprocessors=node_postprocessors,
-        callback_manager=callback_manager
+        callback_manager=callback_manager,
     )

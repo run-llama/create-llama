@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
 
+
 class IndexConfig(BaseModel):
     callback_manager: Optional[CallbackManager] = Field(
         default=None,
@@ -27,9 +28,12 @@ def get_index(config: IndexConfig = None):
     # load the existing index
     logger.info(f"Loading index from {storage_dir}...")
     storage_context = get_storage_context(storage_dir)
-    index = load_index_from_storage(storage_context, callback_manager=config.callback_manager)
+    index = load_index_from_storage(
+        storage_context, callback_manager=config.callback_manager
+    )
     logger.info(f"Finished loading index from {storage_dir}")
     return index
+
 
 @cached(
     TTLCache(maxsize=10, ttl=timedelta(minutes=5).total_seconds()),

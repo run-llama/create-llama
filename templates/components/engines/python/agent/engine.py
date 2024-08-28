@@ -17,10 +17,7 @@ def get_chat_engine(filters=None, params=None, event_handlers=None):
     llm.callback_manager = callback_manager
 
     # Add query tool if index exists
-    index_config = IndexConfig(
-        callback_manager=callback_manager,
-        **(params or {})
-    )
+    index_config = IndexConfig(callback_manager=callback_manager, **(params or {}))
     index = get_index(index_config)
     if index is not None:
         query_engine = index.as_query_engine(
