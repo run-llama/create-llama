@@ -1,25 +1,32 @@
 import logging
 import os
-from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
+from typing import Dict, Optional
+
+from llama_index.core.callbacks import CallbackManager
 from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
+from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
 
 
-def get_client():
-    return llama_cloud_get_client(
-        os.getenv("LLAMA_CLOUD_API_KEY"),
-        os.getenv("LLAMA_CLOUD_BASE_URL"),
+class IndexConfig(BaseModel):
+    llama_cloud_pipeline_config: Optional[Dict] = Field(
+        default=None,
+        alias="llamaCloudPipeline",
+    )
+    callback_manager: Optional[CallbackManager] = Field(
+        default=None,
     )
 
 
-def get_index(params=None):
-    configParams = params or {}
-    pipelineConfig = configParams.get("llamaCloudPipeline", {})
-    name = pipelineConfig.get("pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME"))
-    project_name = pipelineConfig.get("project", os.getenv("LLAMA_CLOUD_PROJECT_NAME"))
+def get_index(config: IndexConfig = None):
+    if config is None:
+        config = IndexConfig()
+    name = config.llama_cloud_pipeline_config.get("pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME"))
+    project_name = config.llama_cloud_pipeline_config.get("project", os.getenv("LLAMA_CLOUD_PROJECT_NAME"))
     api_key = os.getenv("LLAMA_CLOUD_API_KEY")
     base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
     organization_id = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
@@ -36,6 +43,13 @@ def get_index(params=None):
         api_key=api_key,
         base_url=base_url,
         organization_id=organization_id,
+        callback_manager=config.callback_manager,
     )
 
     return index
+
+def get_client():
+    return llama_cloud_get_client(
+        os.getenv("LLAMA_CLOUD_API_KEY"),
+        os.getenv("LLAMA_CLOUD_BASE_URL"),
+    )
