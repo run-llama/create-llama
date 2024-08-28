@@ -1,7 +1,6 @@
 import os
 from typing import Dict
 
-from app.engine.events import get_callback_manager
 from llama_index.core.settings import Settings
 
 
@@ -31,7 +30,6 @@ def init_settings():
 
     Settings.chunk_size = int(os.getenv("CHUNK_SIZE", "1024"))
     Settings.chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "20"))
-    Settings.callback_manager = get_callback_manager()
 
 
 def init_ollama():
