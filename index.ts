@@ -176,6 +176,13 @@ const program = new Commander.Command(packageJson.name)
   Select LLM and embedding models.
 `,
   )
+  .option(
+    "--ask-examples",
+    `
+
+  Select community templates and LlamaPacks.
+`,
+  )
   .allowUnknownOption()
   .parse(process.argv);
 if (process.argv.includes("--no-frontend")) {
@@ -195,6 +202,7 @@ if (
   program.useLlamaParse = false;
 }
 program.askModels = process.argv.includes("--ask-models");
+program.askExamples = process.argv.includes("--ask-examples");
 if (process.argv.includes("--no-files")) {
   program.dataSources = [];
 } else if (process.argv.includes("--example-file")) {
