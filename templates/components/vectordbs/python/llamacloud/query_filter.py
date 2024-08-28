@@ -5,11 +5,11 @@ def generate_filters(doc_ids):
     """
     Generate public/private document filters based on the doc_ids and the vector store.
     """
-    # Using "nin" filter to include the documents don't have the "private" key because they're uploaded in LlamaCloud UI
+    # Using "is_empty" filter to include the documents don't have the "private" key because they're uploaded in LlamaCloud UI
     public_doc_filter = MetadataFilter(
         key="private",
-        value=["true"],
-        operator="nin",  # type: ignore
+        value=None,
+        operator="is_empty",  # type: ignore
     )
     selected_doc_filter = MetadataFilter(
         key="file_id",  # Note: LLamaCloud uses "file_id" to reference private document ids as "doc_id" is a restricted field in LlamaCloud
