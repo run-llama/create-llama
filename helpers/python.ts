@@ -149,11 +149,11 @@ const getAdditionalDependencies = (
     case "ollama":
       dependencies.push({
         name: "llama-index-llms-ollama",
-        version: "0.1.2",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-ollama",
-        version: "0.1.2",
+        version: "0.3.0",
       });
       break;
     case "openai":
@@ -175,61 +175,61 @@ const getAdditionalDependencies = (
     case "groq":
       dependencies.push({
         name: "llama-index-llms-groq",
-        version: "0.1.4",
+        version: "0.2.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.1.4",
+        version: "^0.2.0",
       });
       break;
     case "anthropic":
       dependencies.push({
         name: "llama-index-llms-anthropic",
-        version: "0.1.10",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.1.4",
+        version: "^0.2.0",
       });
       break;
     case "gemini":
       dependencies.push({
         name: "llama-index-llms-gemini",
-        version: "0.1.10",
+        version: "0.3.4",
       });
       dependencies.push({
         name: "llama-index-embeddings-gemini",
-        version: "0.1.6",
+        version: "^0.2.0",
       });
       break;
     case "mistral":
       dependencies.push({
         name: "llama-index-llms-mistralai",
-        version: "0.1.17",
+        version: "0.2.1",
       });
       dependencies.push({
         name: "llama-index-embeddings-mistralai",
-        version: "0.1.4",
+        version: "0.2.0",
       });
       break;
     case "azure-openai":
       dependencies.push({
         name: "llama-index-llms-azure-openai",
-        version: "0.1.10",
+        version: "0.2.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-azure-openai",
-        version: "0.1.11",
+        version: "0.2.4",
       });
       break;
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",
-        version: "0.2.2",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-llms-openai-like",
-        version: "0.1.3",
+        version: "0.2.0",
       });
       break;
   }
