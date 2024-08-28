@@ -173,6 +173,12 @@ const getAdditionalDependencies = (
       }
       break;
     case "groq":
+      // Fastembed==0.2.0 does not support python3.13 at the moment
+      // Fixed the python version less than 3.13
+      dependencies.push({
+        name: "python",
+        version: "^3.11,<3.13",
+      });
       dependencies.push({
         name: "llama-index-llms-groq",
         version: "0.2.0",
@@ -183,6 +189,12 @@ const getAdditionalDependencies = (
       });
       break;
     case "anthropic":
+      // Fastembed==0.2.0 does not support python3.13 at the moment
+      // Fixed the python version less than 3.13
+      dependencies.push({
+        name: "python",
+        version: "^3.11,<3.13",
+      });
       dependencies.push({
         name: "llama-index-llms-anthropic",
         version: "0.3.0",
@@ -239,7 +251,7 @@ const getAdditionalDependencies = (
 
 const mergePoetryDependencies = (
   dependencies: Dependency[],
-  existingDependencies: Record<string, Omit<Dependency, "name">>,
+  existingDependencies: Record<string, Omit<Dependency, "name"> | string>,
 ) => {
   for (const dependency of dependencies) {
     let value = existingDependencies[dependency.name] ?? {};
@@ -258,7 +270,13 @@ const mergePoetryDependencies = (
       );
     }
 
-    existingDependencies[dependency.name] = value;
+    // Serialize separately only if extras are provided
+    if (value.extras && value.extras.length > 0) {
+      existingDependencies[dependency.name] = value;
+    } else {
+      // Otherwise, serialize just the version string
+      existingDependencies[dependency.name] = value.version;
+    }
   }
 };
 
