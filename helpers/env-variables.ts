@@ -454,12 +454,7 @@ const getSystemPromptEnv = (
     },
   ];
 
-  // Citation only works with FastAPI along with the chat engine and data source provided for now.
-  if (
-    framework === "fastapi" &&
-    tools?.length == 0 &&
-    (dataSources?.length ?? 0 > 0)
-  ) {
+  if (tools?.length == 0 && (dataSources?.length ?? 0 > 0)) {
     const citationPrompt = `'You have provided information from a knowledge base that has been passed to you in nodes of information.
 Each node has useful metadata such as node ID, file name, page, etc.
 Please add the citation to the data node for each sentence or paragraph that you reference in the provided information.
