@@ -2,8 +2,8 @@ import os
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
-from llama_index.callbacks import CallbackManager
 from llama_index.core.agent import AgentRunner
+from llama_index.core.callbacks import CallbackManager
 from llama_index.core.settings import Settings
 from llama_index.core.tools.query_engine import QueryEngineTool
 
