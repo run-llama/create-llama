@@ -19,11 +19,14 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
   const citationPrompt = process.env.SYSTEM_CITATION_PROMPT;
   const prompt =
     [systemPrompt, citationPrompt].filter((p) => p).join("\n") || undefined;
+  const nodePostprocessors = citationPrompt
+    ? [nodeCitationProcessor]
+    : undefined;
 
   return new ContextChatEngine({
     chatModel: Settings.llm,
     retriever,
     systemPrompt: prompt,
-    nodePostprocessors: [nodeCitationProcessor],
+    nodePostprocessors,
   });
 }

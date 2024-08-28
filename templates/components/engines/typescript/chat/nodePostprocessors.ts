@@ -14,6 +14,9 @@ class NodeCitationProcessor implements BaseNodePostprocessor {
     query?: MessageContent,
   ): Promise<NodeWithScore[]> {
     for (const nodeScore of nodes) {
+      if (!nodeScore.node || !nodeScore.node.metadata) {
+        continue; // Skip nodes with missing properties
+      }
       nodeScore.node.metadata["node_id"] = nodeScore.node.id_;
     }
     return nodes;
