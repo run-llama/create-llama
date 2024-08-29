@@ -4,8 +4,8 @@ export function generateFilters(documentIds: string[]): MetadataFilters {
   // public documents don't have the "private" field or it's set to "false"
   const publicDocumentsFilter: MetadataFilter = {
     key: "private",
-    value: ["true"],
-    operator: "nin",
+    value: null,
+    operator: "is_empty",
   };
 
   // if no documentIds are provided, only retrieve information from public documents
