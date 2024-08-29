@@ -1,20 +1,71 @@
 import logging
 import os
-from typing import Dict, Optional
+from typing import Optional
 
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger("uvicorn")
 
 
+class LlamaCloudConfig(BaseModel):
+    # Private attributes
+    api_key: str = Field(
+        default=os.getenv("LLAMA_CLOUD_API_KEY"),
+        exclude=True,  # Exclude from the model representation
+    )
+    base_url: Optional[str] = Field(
+        default=os.getenv("LLAMA_CLOUD_BASE_URL"),
+        exclude=True,
+    )
+    organization_id: Optional[str] = Field(
+        default=os.getenv("LLAMA_CLOUD_ORGANIZATION_ID"),
+        exclude=True,
+    )
+    # Configuration attributes, can be set by the user
+    pipeline: str = Field(
+        description="The name of the pipeline to use",
+        default=os.getenv("LLAMA_CLOUD_INDEX_NAME"),
+    )
+    project: str = Field(
+        description="The name of the LlamaCloud project",
+        default=os.getenv("LLAMA_CLOUD_PROJECT_NAME"),
+    )
+
+    # Validate and throw error if the env variables are not set before starting the app
+    @validator("pipeline", "project", "api_key", pre=True, always=True)
+    @classmethod
+    def validate_env_vars(cls, value):
+        if value is None:
+            raise ValueError(
+                "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
+                " to your environment variables or config them in .env file"
+            )
+        return value
+
+    def to_index_kwargs(self) -> dict:
+        return {
+            "name": self.pipeline,
+            "project_name": self.project,
+            "api_key": self.api_key,
+            "base_url": self.base_url,
+            "organization_id": self.organization_id,
+        }
+
+    def to_client_kwargs(self) -> dict:
+        return {
+            "api_key": self.api_key,
+            "base_url": self.base_url,
+        }
+
+
 class IndexConfig(BaseModel):
-    llama_cloud_pipeline_config: Optional[Dict] = Field(
-        default=None,
+    llama_cloud_pipeline_config: LlamaCloudConfig = Field(
+        default=LlamaCloudConfig(),
         alias="llamaCloudPipeline",
     )
     callback_manager: Optional[CallbackManager] = Field(
@@ -25,36 +76,14 @@ class IndexConfig(BaseModel):
 def get_index(config: IndexConfig = None):
     if config is None:
         config = IndexConfig()
-    name = config.llama_cloud_pipeline_config.get(
-        "pipeline", os.getenv("LLAMA_CLOUD_INDEX_NAME")
-    )
-    project_name = config.llama_cloud_pipeline_config.get(
-        "project", os.getenv("LLAMA_CLOUD_PROJECT_NAME")
-    )
-    api_key = os.getenv("LLAMA_CLOUD_API_KEY")
-    base_url = os.getenv("LLAMA_CLOUD_BASE_URL")
-    organization_id = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
+    index_kwargs = config.llama_cloud_pipeline_config.to_index_kwargs()
+    index_kwargs["callback_manager"] = config.callback_manager
 
-    if name is None or project_name is None or api_key is None:
-        raise ValueError(
-            "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
-            " to your environment variables or config them in .env file"
-        )
-
-    index = LlamaCloudIndex(
-        name=name,
-        project_name=project_name,
-        api_key=api_key,
-        base_url=base_url,
-        organization_id=organization_id,
-        callback_manager=config.callback_manager,
-    )
+    index = LlamaCloudIndex(**index_kwargs)
 
     return index
 
 
 def get_client():
-    return llama_cloud_get_client(
-        os.getenv("LLAMA_CLOUD_API_KEY"),
-        os.getenv("LLAMA_CLOUD_BASE_URL"),
-    )
+    config = LlamaCloudConfig()
+    return llama_cloud_get_client(**config.to_client_kwargs())
