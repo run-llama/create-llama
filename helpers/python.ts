@@ -12,6 +12,7 @@ import {
   InstallTemplateArgs,
   ModelConfig,
   TemplateDataSource,
+  TemplateType,
   TemplateVectorDB,
 } from "./types";
 
@@ -26,6 +27,7 @@ const getAdditionalDependencies = (
   vectorDb?: TemplateVectorDB,
   dataSources?: TemplateDataSource[],
   tools?: Tool[],
+  templateType?: TemplateType,
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -128,7 +130,7 @@ const getAdditionalDependencies = (
         case "llamacloud":
           dependencies.push({
             name: "llama-index-indices-managed-llama-cloud",
-            version: "^0.2.7",
+            version: "^0.3.0",
           });
           break;
       }
@@ -147,77 +149,99 @@ const getAdditionalDependencies = (
     case "ollama":
       dependencies.push({
         name: "llama-index-llms-ollama",
-        version: "0.1.2",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-ollama",
-        version: "0.1.2",
+        version: "0.3.0",
       });
       break;
     case "openai":
-      dependencies.push({
-        name: "llama-index-agent-openai",
-        version: "0.2.6",
-      });
+      if (templateType !== "multiagent") {
+        dependencies.push({
+          name: "llama-index-llms-openai",
+          version: "^0.2.0",
+        });
+        dependencies.push({
+          name: "llama-index-embeddings-openai",
+          version: "^0.2.3",
+        });
+        dependencies.push({
+          name: "llama-index-agent-openai",
+          version: "^0.3.0",
+        });
+      }
       break;
     case "groq":
+      // Fastembed==0.2.0 does not support python3.13 at the moment
+      // Fixed the python version less than 3.13
+      dependencies.push({
+        name: "python",
+        version: "^3.11,<3.13",
+      });
       dependencies.push({
         name: "llama-index-llms-groq",
-        version: "0.1.4",
+        version: "0.2.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.1.4",
+        version: "^0.2.0",
       });
       break;
     case "anthropic":
+      // Fastembed==0.2.0 does not support python3.13 at the moment
+      // Fixed the python version less than 3.13
+      dependencies.push({
+        name: "python",
+        version: "^3.11,<3.13",
+      });
       dependencies.push({
         name: "llama-index-llms-anthropic",
-        version: "0.1.10",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.1.4",
+        version: "^0.2.0",
       });
       break;
     case "gemini":
       dependencies.push({
         name: "llama-index-llms-gemini",
-        version: "0.1.10",
+        version: "0.3.4",
       });
       dependencies.push({
         name: "llama-index-embeddings-gemini",
-        version: "0.1.6",
+        version: "^0.2.0",
       });
       break;
     case "mistral":
       dependencies.push({
         name: "llama-index-llms-mistralai",
-        version: "0.1.17",
+        version: "0.2.1",
       });
       dependencies.push({
         name: "llama-index-embeddings-mistralai",
-        version: "0.1.4",
+        version: "0.2.0",
       });
       break;
     case "azure-openai":
       dependencies.push({
         name: "llama-index-llms-azure-openai",
-        version: "0.1.10",
+        version: "0.2.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-azure-openai",
-        version: "0.1.11",
+        version: "0.2.4",
       });
       break;
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",
-        version: "0.2.2",
+        version: "0.3.0",
       });
       dependencies.push({
         name: "llama-index-llms-openai-like",
-        version: "0.1.3",
+        version: "0.2.0",
       });
       break;
   }
@@ -227,7 +251,7 @@ const getAdditionalDependencies = (
 
 const mergePoetryDependencies = (
   dependencies: Dependency[],
-  existingDependencies: Record<string, Omit<Dependency, "name">>,
+  existingDependencies: Record<string, Omit<Dependency, "name"> | string>,
 ) => {
   for (const dependency of dependencies) {
     let value = existingDependencies[dependency.name] ?? {};
@@ -246,7 +270,13 @@ const mergePoetryDependencies = (
       );
     }
 
-    existingDependencies[dependency.name] = value;
+    // Serialize separately only if extras are provided
+    if (value.extras && value.extras.length > 0) {
+      existingDependencies[dependency.name] = value;
+    } else {
+      // Otherwise, serialize just the version string
+      existingDependencies[dependency.name] = value.version;
+    }
   }
 };
 
@@ -388,6 +418,7 @@ export const installPythonTemplate = async ({
     vectorDb,
     dataSources,
     tools,
+    template,
   );
 
   if (observability && observability !== "none") {

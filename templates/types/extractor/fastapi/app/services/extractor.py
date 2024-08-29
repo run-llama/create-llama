@@ -1,4 +1,5 @@
 import logging
+
 from app.engine import get_query_engine
 from app.services.model import IMPORTS
 
@@ -33,4 +34,4 @@ class ExtractorService:
         query_engine = get_query_engine(schema_model)
         response = await query_engine.aquery(query)
         output_data = response.response.dict()
-        return schema_model(**output_data).json(indent=2)
+        return schema_model(**output_data).model_dump_json(indent=2)

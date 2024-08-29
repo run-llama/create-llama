@@ -5,8 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, List, Tuple
 
-
-from app.engine.index import get_index
+from app.engine.index import IndexConfig, get_index
 from llama_index.core import VectorStoreIndex
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.readers.file.base import (
@@ -77,7 +76,8 @@ class PrivateFileService:
         file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
 
         # Add the nodes to the index and persist it
-        current_index = get_index(params)
+        index_config = IndexConfig(**params)
+        current_index = get_index(index_config)
 
         # Insert the documents into the index
         if isinstance(current_index, LlamaCloudIndex):

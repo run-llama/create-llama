@@ -13,7 +13,7 @@ python = "^3.11,<4.0"
 fastapi = "^0.109.1"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 python-dotenv = "^1.0.0"
-llama-index = "^0.10.58"
+llama-index = "^0.11.1"
 cachetools = "^5.3.3"
 reflex = "^0.5.9"
 

@@ -38,11 +38,10 @@ async def chat(
         logger.info(
             f"Creating chat engine with filters: {str(filters)}",
         )
-        chat_engine = get_chat_engine(filters=filters, params=params)
-
         event_handler = EventCallbackHandler()
-        chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
-
+        chat_engine = get_chat_engine(
+            filters=filters, params=params, event_handlers=[event_handler]
+        )
         response = await chat_engine.astream_chat(last_message_content, messages)
         process_response_nodes(response.source_nodes, background_tasks)
 
