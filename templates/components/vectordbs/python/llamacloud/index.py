@@ -47,15 +47,6 @@ class LlamaCloudConfig(BaseModel):
             )
         return value
 
-    def to_index_kwargs(self) -> dict:
-        return {
-            "name": self.pipeline,
-            "project_name": self.project,
-            "api_key": self.api_key,
-            "base_url": self.base_url,
-            "organization_id": self.organization_id,
-        }
-
     def to_client_kwargs(self) -> dict:
         return {
             "api_key": self.api_key,
@@ -72,14 +63,21 @@ class IndexConfig(BaseModel):
         default=None,
     )
 
+    def to_index_kwargs(self) -> dict:
+        return {
+            "name": self.llama_cloud_pipeline_config.pipeline,
+            "project_name": self.llama_cloud_pipeline_config.project,
+            "api_key": self.llama_cloud_pipeline_config.api_key,
+            "base_url": self.llama_cloud_pipeline_config.base_url,
+            "organization_id": self.llama_cloud_pipeline_config.organization_id,
+            "callback_manager": self.callback_manager,
+        }
+
 
 def get_index(config: IndexConfig = None):
     if config is None:
         config = IndexConfig()
-    index_kwargs = config.llama_cloud_pipeline_config.to_index_kwargs()
-    index_kwargs["callback_manager"] = config.callback_manager
-
-    index = LlamaCloudIndex(**index_kwargs)
+    index = LlamaCloudIndex(**config.to_index_kwargs())
 
     return index
 
