@@ -1,5 +1,15 @@
 # create-llama
 
+## 0.1.44
+
+### Patch Changes
+
+- bedde2b: Change metadata filters to use already existing documents in LlamaCloud Index
+- 5cd12fa: Use one callback manager per request
+- 5cd12fa: Bump llama_index version to 0.11.1
+- fd4abb3: Fix to use filename for uploaded documents in NextJS
+- 2f8feab: Simplify CLI interface
+
 ## 0.1.43
 
 ### Patch Changes
