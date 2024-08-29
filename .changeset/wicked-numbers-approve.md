@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-feat: simplify CLI interface
+Simplify CLI interface

@@ -173,14 +173,14 @@ const program = new Commander.Command(packageJson.name)
     "--ask-models",
     `
 
-  Select LLM and embedding models.
+  Allow interactive selection of LLM and embedding models of different model providers.
 `,
   )
   .option(
     "--ask-examples",
     `
 
-  Select community templates and LlamaPacks.
+  Allow interactive selection of community templates and LlamaPacks.
 `,
   )
   .allowUnknownOption()

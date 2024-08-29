@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-fix: keep origin upload filename
+Fix to use filename for uploaded documents in NextJS

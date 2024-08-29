@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Use is_empty filter for private files in LlamaCloud Index
+Change metadata filters to use already existing documents in LlamaCloud Index

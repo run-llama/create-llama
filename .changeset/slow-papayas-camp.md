@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Use callback manager properly
+Use one callback manager per request
