@@ -27,6 +27,6 @@ export async function uploadDocument(
   }
 
   // run the pipeline for other vector store indexes
-  const documents = await storeAndParseFile(fileBuffer, mimeType);
+  const documents = await storeAndParseFile(filename, fileBuffer, mimeType);
   return runPipeline(index, documents);
 }
