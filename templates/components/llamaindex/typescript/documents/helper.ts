@@ -1,5 +1,4 @@
 import fs from "fs";
-import crypto from "node:crypto";
 import { getExtractors } from "../../engine/loader";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
@@ -11,9 +10,13 @@ const MIME_TYPE_TO_EXT: Record<string, string> = {
 
 const UPLOADED_FOLDER = "output/uploaded";
 
-export async function storeAndParseFile(fileBuffer: Buffer, mimeType: string) {
+export async function storeAndParseFile(
+  filename: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+) {
   const documents = await loadDocuments(fileBuffer, mimeType);
-  const { filename } = await saveDocument(fileBuffer, mimeType);
+  await saveDocument(filename, fileBuffer, mimeType);
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
@@ -35,11 +38,14 @@ async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   return await reader.loadDataAsContent(fileBuffer);
 }
 
-async function saveDocument(fileBuffer: Buffer, mimeType: string) {
+async function saveDocument(
+  filename: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+) {
   const fileExt = MIME_TYPE_TO_EXT[mimeType];
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
-  const filename = `${crypto.randomUUID()}.${fileExt}`;
   const filepath = `${UPLOADED_FOLDER}/${filename}`;
   const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
 
