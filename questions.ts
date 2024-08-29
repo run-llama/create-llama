@@ -28,6 +28,7 @@ export type QuestionArgs = Omit<
   "appPath" | "packageManager"
 > & {
   askModels?: boolean;
+  askExamples?: boolean;
 };
 const supportedContextFileTypes = [
   ".pdf",
@@ -338,20 +339,24 @@ export const askQuestions = async (
           name: "template",
           message: "Which template would you like to use?",
           choices: [
-            { title: "Agentic RAG (single agent)", value: "streaming" },
+            { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
             {
               title: "Multi-agent app (using llama-agents)",
               value: "multiagent",
             },
             { title: "Structured Extractor", value: "extractor" },
-            {
-              title: `Community template from ${styledRepo}`,
-              value: "community",
-            },
-            {
-              title: "Example using a LlamaPack",
-              value: "llamapack",
-            },
+            ...(program.askExamples
+              ? [
+                  {
+                    title: `Community template from ${styledRepo}`,
+                    value: "community",
+                  },
+                  {
+                    title: "Example using a LlamaPack",
+                    value: "llamapack",
+                  },
+                ]
+              : []),
           ],
           initial: 0,
         },

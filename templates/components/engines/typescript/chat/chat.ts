@@ -1,5 +1,6 @@
 import { ContextChatEngine, Settings } from "llamaindex";
 import { getDataSource } from "./index";
+import { nodeCitationProcessor } from "./nodePostprocessors";
 import { generateFilters } from "./queryFilter";
 
 export async function createChatEngine(documentIds?: string[], params?: any) {
@@ -14,9 +15,18 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
     filters: generateFilters(documentIds || []),
   });
 
+  const systemPrompt = process.env.SYSTEM_PROMPT;
+  const citationPrompt = process.env.SYSTEM_CITATION_PROMPT;
+  const prompt =
+    [systemPrompt, citationPrompt].filter((p) => p).join("\n") || undefined;
+  const nodePostprocessors = citationPrompt
+    ? [nodeCitationProcessor]
+    : undefined;
+
   return new ContextChatEngine({
     chatModel: Settings.llm,
     retriever,
-    systemPrompt: process.env.SYSTEM_PROMPT,
+    systemPrompt: prompt,
+    nodePostprocessors,
   });
 }

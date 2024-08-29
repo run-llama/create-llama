@@ -94,7 +94,7 @@ Need to install the following packages:
   create-llama@latest
 Ok to proceed? (y) y
 ✔ What is your project named? … my-app
-✔ Which template would you like to use? › Agentic RAG (single agent)
+✔ Which template would you like to use? › Agentic RAG (e.g. chat with docs)
 ✔ Which framework would you like to use? › NextJS
 ✔ Would you like to set up observability? › No
 ✔ Please provide your OpenAI API key (leave blank to skip): …

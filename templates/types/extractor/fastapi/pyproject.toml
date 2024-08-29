@@ -14,9 +14,6 @@ fastapi = "^0.109.1"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 python-dotenv = "^1.0.0"
 llama-index = "^0.11.1"
-llama-index-llms-openai = "^0.2.0"
-llama-index-embeddings-openai = "^0.2.3"
-llama-index-agent-openai = "^0.3.0"
 cachetools = "^5.3.3"
 reflex = "^0.5.9"
 

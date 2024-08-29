@@ -12,9 +12,7 @@ def get_chat_engine(filters=None, params=None, event_handlers=None):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = int(os.getenv("TOP_K", 0))
     tools = []
-    llm = Settings.llm
     callback_manager = CallbackManager(handlers=event_handlers or [])
-    llm.callback_manager = callback_manager
 
     # Add query tool if index exists
     index_config = IndexConfig(callback_manager=callback_manager, **(params or {}))

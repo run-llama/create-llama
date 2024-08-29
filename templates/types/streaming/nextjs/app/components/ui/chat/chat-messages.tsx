@@ -69,6 +69,7 @@ export default function ChatMessages(
               chatMessage={m}
               isLoading={isLoadingMessage}
               append={props.append!}
+              isLastMessage={i === messageLength - 1}
             />
           );
         })}

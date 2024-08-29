@@ -1,15 +1,15 @@
-import { useState } from "react";
 import { ChatHandler, SuggestedQuestionsData } from "..";
 
 export function SuggestedQuestions({
   questions,
   append,
+  isLastMessage,
 }: {
   questions: SuggestedQuestionsData;
   append: Pick<ChatHandler, "append">["append"];
+  isLastMessage: boolean;
 }) {
-  const [showQuestions, setShowQuestions] = useState(questions.length > 0);
-
+  const showQuestions = isLastMessage && questions.length > 0;
   return (
     showQuestions &&
     append !== undefined && (
@@ -19,7 +19,6 @@ export function SuggestedQuestions({
             key={index}
             onClick={() => {
               append({ role: "user", content: question });
-              setShowQuestions(false);
             }}
             className="text-sm italic hover:underline cursor-pointer"
           >
