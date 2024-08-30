@@ -2,7 +2,7 @@
 import { VectorStoreIndex } from "llamaindex";
 import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
-import { checkRequiredEnvVars } from "./shared";
+import { checkRequiredEnvVars, POPULATED_METADATA_FIELDS } from "./shared";
 
 export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
@@ -12,6 +12,7 @@ export async function getDataSource(params?: any) {
     dbName: process.env.MONGODB_DATABASE!,
     collectionName: process.env.MONGODB_VECTORS!,
     indexName: process.env.MONGODB_VECTOR_INDEX,
+    populatedMetadataFields: POPULATED_METADATA_FIELDS,
   });
 
   return await VectorStoreIndex.fromVectorStore(store);

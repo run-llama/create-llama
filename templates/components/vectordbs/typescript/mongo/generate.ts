@@ -1,11 +1,11 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
 import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
-import { checkRequiredEnvVars } from "./shared";
+import { checkRequiredEnvVars, POPULATED_METADATA_FIELDS } from "./shared";
 
 dotenv.config();
 
@@ -27,6 +27,7 @@ async function loadAndIndex() {
     dbName: databaseName,
     collectionName: vectorCollectionName, // this is where your embeddings will be stored
     indexName: indexName, // this is the name of the index you will need to create
+    populatedMetadataFields: POPULATED_METADATA_FIELDS,
   });
 
   // now create an index from all the Documents and store them in Atlas

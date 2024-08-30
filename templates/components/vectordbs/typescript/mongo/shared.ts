@@ -5,6 +5,8 @@ const REQUIRED_ENV_VARS = [
   "MONGODB_VECTOR_INDEX",
 ];
 
+export const POPULATED_METADATA_FIELDS = ["private", "doc_id"]; // for filtering in MongoDB VectorSearchIndex
+
 export function checkRequiredEnvVars() {
   const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {
     return !process.env[envVar];
