@@ -1,11 +1,12 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
-import { MongoDBAtlasVectorSearch, VectorStoreIndex } from "llamaindex";
+import { VectorStoreIndex } from "llamaindex";
+import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
 import { checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
-  const client = new MongoClient(process.env.MONGO_URI!);
+  const client = new MongoClient(process.env.MONGODB_URI!);
   const store = new MongoDBAtlasVectorSearch({
     mongodbClient: client,
     dbName: process.env.MONGODB_DATABASE!,
