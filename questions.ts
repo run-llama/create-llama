@@ -341,7 +341,7 @@ export const askQuestions = async (
           choices: [
             { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
             {
-              title: "Multi-agent app (using llama-agents)",
+              title: "Multi-agent app (using workflows)",
               value: "multiagent",
             },
             { title: "Structured Extractor", value: "extractor" },
