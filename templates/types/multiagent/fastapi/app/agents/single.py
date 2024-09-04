@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, List, Optional
+from typing import Any, AsyncGenerator, List, Optional
 
 from llama_index.core.llms import ChatMessage, ChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -95,6 +95,9 @@ class FunctionCallingAgent(Workflow):
             system_msg = ChatMessage(role="system", content=self.system_prompt)
             self.memory.put(system_msg)
 
+        # set streaming
+        ctx.data["streaming"] = ev.streaming or False
+
         # get user input
         user_input = ev.input
         user_msg = ChatMessage(role="user", content=user_input)
@@ -112,14 +115,11 @@ class FunctionCallingAgent(Workflow):
     async def handle_llm_input(
         self, ctx: Context, ev: InputEvent
     ) -> ToolCallEvent | StopEvent:
+        if ctx.data["streaming"]:
+            return await self.handle_llm_input_stream(ctx, ev)
+
         chat_history = ev.input
 
-        # TODO: use astream_chat_with_tools and
-        # send each token via write_event_to_stream
-        # achat_stream = await self.llm.astream_chat_with_tools(
-        #     self.tools, chat_history=chat_history
-        # )
-        # chat_response = StreamingAgentChatResponse(achat_stream=achat_stream)
         response = await self.llm.achat_with_tools(
             self.tools, chat_history=chat_history
         )
@@ -139,6 +139,57 @@ class FunctionCallingAgent(Workflow):
             )
         else:
             return ToolCallEvent(tool_calls=tool_calls)
+
+    async def handle_llm_input_stream(
+        self, ctx: Context, ev: InputEvent
+    ) -> ToolCallEvent | StopEvent:
+        chat_history = ev.input
+
+        async def response_generator() -> AsyncGenerator:
+            response_stream = await self.llm.astream_chat_with_tools(
+                self.tools, chat_history=chat_history
+            )
+
+            full_response = None
+            yielded_indicator = False
+            async for chunk in response_stream:
+                if "tool_calls" not in chunk.message.additional_kwargs:
+                    # Yield a boolean to indicate whether the response is a tool call
+                    if not yielded_indicator:
+                        yield False
+                        yielded_indicator = True
+
+                    # if not a tool call, yield the chunks!
+                    yield chunk
+                elif not yielded_indicator:
+                    # Yield the indicator for a tool call
+                    yield True
+                    yielded_indicator = True
+
+                full_response = chunk
+
+            # Write the full response to memory
+            self.memory.put(full_response.message)
+
+            # Yield the final response
+            yield full_response
+
+        # Start the generator
+        generator = response_generator()
+
+        # Check for immediate tool call
+        is_tool_call = await generator.__anext__()
+        if is_tool_call:
+            full_response = await generator.__anext__()
+            tool_calls = self.llm.get_tool_calls_from_response(full_response)
+            return ToolCallEvent(tool_calls=tool_calls)
+
+        # If we've reached here, it's not an immediate tool call, so we return the generator
+        if self.write_events:
+            ctx.write_event_to_stream(
+                AgentRunEvent(name=self.name, msg="Finished task")
+            )
+        return StopEvent(result=generator)
 
     @step()
     async def handle_tool_calls(self, ctx: Context, ev: ToolCallEvent) -> InputEvent:

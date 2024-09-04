@@ -16,7 +16,6 @@ from app.agents.planner import StructuredPlannerAgent
 class AgentCallTool(ContextAwareTool):
     def __init__(self, agent: Workflow) -> None:
         self.agent = agent
-        # create the schema without the context
         name = f"call_{agent.name}"
 
         async def schema_call(input: str) -> str:

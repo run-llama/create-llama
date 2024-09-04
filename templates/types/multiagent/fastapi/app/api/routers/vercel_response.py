@@ -35,7 +35,7 @@ class VercelStreamResponse(StreamingResponse):
     def __init__(
         self,
         request: Request,
-        task: Task,
+        task: Task[AgentRunResult | AsyncGenerator],
         events: AsyncGenerator[AgentRunEvent, None],
         chat_data: ChatData,
         verbose: bool = True,
@@ -49,18 +49,22 @@ class VercelStreamResponse(StreamingResponse):
     async def content_generator(
         cls,
         request: Request,
-        task: Task[AgentRunResult],
+        task: Task[AgentRunResult | AsyncGenerator],
         events: AsyncGenerator[AgentRunEvent, None],
         chat_data: ChatData,
         verbose: bool = True,
     ):
         # Yield the text response
         async def _chat_response_generator():
-            # TODO: stream final result
             result = await task
 
-            for token in result.response.message.content:
-                yield VercelStreamResponse.convert_text(token)
+            if isinstance(result, AgentRunResult):
+                for token in result.response.message.content:
+                    yield VercelStreamResponse.convert_text(token)
+
+            if isinstance(result, AsyncGenerator):
+                async for token in result:
+                    yield VercelStreamResponse.convert_text(token.delta)
 
             # TODO: stream NextQuestionSuggestion
             # TODO: stream sources
@@ -70,12 +74,19 @@ class VercelStreamResponse(StreamingResponse):
             async for event in events():
                 event_response = _event_to_response(event)
                 if verbose:
-                    logger.info(event_response)
+                    logger.debug(event_response)
                 if event_response is not None:
                     yield VercelStreamResponse.convert_data(event_response)
 
         combine = stream.merge(_chat_response_generator(), _event_generator())
+
+        is_stream_started = False
         async with combine.stream() as streamer:
+            if not is_stream_started:
+                is_stream_started = True
+                # Stream a blank message to start the stream
+                yield VercelStreamResponse.convert_text("")
+            
             async for output in streamer:
                 yield output
                 if await request.is_disconnected():
