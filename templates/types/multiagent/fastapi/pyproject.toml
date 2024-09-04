@@ -14,6 +14,10 @@ python = "^3.11"
 llama-index-agent-openai = ">=0.3.0,<0.4.0"
 llama-index = "^0.11.4"
 fastapi = "^0.112.2"
+python-dotenv = "^1.0.0"
+uvicorn = { extras = ["standard"], version = "^0.23.2" }
+cachetools = "^5.3.3"
+aiostream = "^0.5.2"
 
 [tool.poetry.dependencies.docx2txt]
 version = "^0.8"
