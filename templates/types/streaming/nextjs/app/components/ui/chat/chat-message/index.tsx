@@ -90,7 +90,10 @@ function ChatMessageContent({
       order: -2,
       component:
         agentEventData.length > 0 ? (
-          <ChatAgentEvents data={agentEventData} />
+          <ChatAgentEvents
+            data={agentEventData}
+            isFinished={!!message.content}
+          />
         ) : null,
     },
     {

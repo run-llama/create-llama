@@ -15,13 +15,24 @@ type MergedEvent = {
   icon: LucideIcon;
 };
 
-export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
+export function ChatAgentEvents({
+  data,
+  isFinished,
+}: {
+  data: AgentEventData[];
+  isFinished: boolean;
+}) {
   const events = useMemo(() => mergeAdjacentEvents(data), [data]);
   return (
     <div className="pl-2">
       <div className="text-sm space-y-4">
         {events.map((eventItem, index) => (
-          <AgentEventContent key={index} event={eventItem} />
+          <AgentEventContent
+            key={index}
+            event={eventItem}
+            isLast={index === events.length - 1}
+            isFinished={isFinished}
+          />
         ))}
       </div>
     </div>
@@ -30,7 +41,15 @@ export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
 
 const MAX_TEXT_LENGTH = 80;
 
-function AgentEventContent({ event }: { event: MergedEvent }) {
+function AgentEventContent({
+  event,
+  isLast,
+  isFinished,
+}: {
+  event: MergedEvent;
+  isLast: boolean;
+  isFinished: boolean;
+}) {
   const [showFull, setShowFull] = useState(false);
   const toggleShowFull = () => {
     setShowFull((prev) => !prev);
@@ -40,7 +59,17 @@ function AgentEventContent({ event }: { event: MergedEvent }) {
   return (
     <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
       <div className="w-[100px] flex flex-col items-center gap-2">
-        <AgentIcon />
+        <div className="relative">
+          {isLast && !isFinished && (
+            <div className="absolute -top-0 -right-4">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+              </span>
+            </div>
+          )}
+          <AgentIcon />
+        </div>
         <span className="font-bold">{agent}</span>
       </div>
       <ul className="flex-1 list-decimal space-y-2">
