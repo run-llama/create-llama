@@ -1,6 +1,16 @@
 import { icons, LucideIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Button } from "../../button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "../../drawer";
 import { AgentEventData } from "../index";
+import Markdown from "./markdown";
 
 const AgentIcons: Record<string, LucideIcon> = {
   bot: icons.Bot,
@@ -39,7 +49,7 @@ export function ChatAgentEvents({
   );
 }
 
-const MAX_TEXT_LENGTH = 80;
+const MAX_TEXT_LENGTH = 150;
 
 function AgentEventContent({
   event,
@@ -50,10 +60,6 @@ function AgentEventContent({
   isLast: boolean;
   isFinished: boolean;
 }) {
-  const [showFull, setShowFull] = useState(false);
-  const toggleShowFull = () => {
-    setShowFull((prev) => !prev);
-  };
   const { agent, texts } = event;
   const AgentIcon = event.icon;
   return (
@@ -78,21 +84,48 @@ function AgentEventContent({
             {text.length <= MAX_TEXT_LENGTH && <span>{text}</span>}
             {text.length > MAX_TEXT_LENGTH && (
               <div>
-                <span>
-                  {showFull ? text : `${text.slice(0, MAX_TEXT_LENGTH)}...`}
-                </span>
-                <span
-                  className="font-semibold underline cursor-pointer ml-2"
-                  onClick={toggleShowFull}
+                <span>{text.slice(0, MAX_TEXT_LENGTH)}...</span>
+                <AgentEventDialog
+                  content={text}
+                  title={`Agent "${agent}" - Step: ${index + 1}`}
                 >
-                  {showFull ? "Show less" : "Show more"}
-                </span>
+                  <span className="font-semibold underline cursor-pointer ml-2">
+                    Show more
+                  </span>
+                </AgentEventDialog>
               </div>
             )}
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+type AgentEventDialogProps = {
+  title: string;
+  content: string;
+  children: React.ReactNode;
+};
+
+function AgentEventDialog(props: AgentEventDialogProps) {
+  return (
+    <Drawer direction="left">
+      <DrawerTrigger asChild>{props.children}</DrawerTrigger>
+      <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
+        <DrawerHeader className="flex justify-between">
+          <div className="space-y-2">
+            <DrawerTitle>{props.title}</DrawerTitle>
+          </div>
+          <DrawerClose asChild>
+            <Button variant="outline">Close</Button>
+          </DrawerClose>
+        </DrawerHeader>
+        <div className="m-4 overflow-auto">
+          <Markdown content={props.content} />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
