@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from app.agents.single import FunctionCallingAgent
 from app.agents.multi import AgentOrchestrator
 from app.examples.researcher import create_researcher
@@ -6,7 +6,7 @@ from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 
 
-def create_orchestrator(chat_history: List[ChatMessage]):
+def create_orchestrator(chat_history: Optional[List[ChatMessage]] = None):
     researcher = create_researcher(chat_history)
     writer = FunctionCallingAgent(
         name="writer",

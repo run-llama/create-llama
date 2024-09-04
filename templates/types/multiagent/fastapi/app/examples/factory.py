@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 from app.examples.choreography import create_choreography
 from app.examples.orchestrator import create_orchestrator
 from app.examples.workflow import create_workflow
@@ -14,7 +14,7 @@ import os
 logger = logging.getLogger("uvicorn")
 
 
-def create_agent(chat_history: List[ChatMessage]) -> Workflow:
+def create_agent(chat_history: Optional[List[ChatMessage]] = None) -> Workflow:
     agent_type = os.getenv("EXAMPLE_TYPE", "").lower()
     match agent_type:
         case "choreography":
