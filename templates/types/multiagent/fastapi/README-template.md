@@ -32,13 +32,32 @@ Second, generate the embeddings of the documents in the `./data` directory:
 poetry run generate
 ```
 
-Third, run the agents in one command:
+Third, run the development server:
 
 ```shell
 poetry run python main.py
 ```
 
 Per default, the example is using the explicit workflow. You can change the example by setting the `EXAMPLE_TYPE` environment variable to `choreography` or `orchestrator`.
+
+The example provides one streaming API endpoint `/api/chat`.
+You can test the endpoint with the following curl request:
+
+```
+curl --location 'localhost:8000/api/chat' \
+--header 'Content-Type: application/json' \
+--data '{ "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
+```
+
+You can start editing the API endpoint by modifying `app/api/routers/chat.py`. The endpoint auto-updates as you save the file.
+
+Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
+
+The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
+
+```
+ENVIRONMENT=prod poetry run python main.py
+```
 
 ## Learn More
 
