@@ -1,5 +1,5 @@
 import asyncio
-from typing import List
+from typing import AsyncGenerator, List, Optional
 
 
 from llama_index.core.workflow import (
@@ -15,7 +15,7 @@ from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgen
 from app.examples.researcher import create_researcher
 
 
-def create_workflow(chat_history: List[ChatMessage]):
+def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     researcher = create_researcher(
         chat_history=chat_history,
     )
@@ -42,6 +42,7 @@ class ResearchEvent(Event):
 
 class WriteEvent(Event):
     input: str
+    is_good: bool = False
 
 
 class ReviewEvent(Event):
@@ -68,7 +69,21 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def write(
         self, ctx: Context, ev: WriteEvent, writer: FunctionCallingAgent
-    ) -> ReviewEvent:
+    ) -> ReviewEvent | StopEvent:
+        MAX_ATTEMPTS = 3
+        ctx.data["attempts"] = ctx.data.get("attempts", 0) + 1
+        too_many_attempts = ctx.data["attempts"] >= MAX_ATTEMPTS
+        if too_many_attempts:
+            ctx.write_event_to_stream(
+                AgentRunEvent(
+                    name=writer.name,
+                    msg=f"Too many attempts ({ctx.data['attempts']}) to write the blog post. Proceeding with the current version.",
+                )
+            )
+        if ev.is_good or too_many_attempts:
+            # too many attempts or the blog post is good - stream the final response
+            result = await self.run_agent(ctx, writer, ev.input, streaming=True)
+            return StopEvent(result=result)
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
         ctx.data["result"] = result
         return ReviewEvent(input=result.response.message.content)
@@ -76,22 +91,22 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def review(
         self, ctx: Context, ev: ReviewEvent, reviewer: FunctionCallingAgent
-    ) -> WriteEvent | StopEvent:
+    ) -> WriteEvent:
         result: AgentRunResult = await self.run_agent(ctx, reviewer, ev.input)
-        ctx.data["reviews"] = ctx.data.get("reviews", 0) + 1
         review = result.response.message.content
-        if "post is good" in review.lower() or ctx.data["reviews"] > 3:
-            # blog post is good enough for the review, or we did already three reviews:
-            # we can stop the workflow
-            return StopEvent(result=ctx.data["result"])
-        else:
-            ctx.write_event_to_stream(
-                AgentRunEvent(
-                    name=reviewer.name,
-                    msg="The post is not good enough for publishing. Sending back to the writer",
-                )
+        old_content = ctx.data["result"].response.message.content
+        post_is_good = "post is good" in review.lower()
+        ctx.write_event_to_stream(
+            AgentRunEvent(
+                name=reviewer.name,
+                msg=f"The post is {'not ' if not post_is_good else ''}good enough for publishing. Sending back to the writer{' for publication.' if post_is_good else '.'}",
             )
-            old_content = ctx.data["result"].response.message.content
+        )
+        if post_is_good:
+            return WriteEvent(
+                input=f"You're blog post is ready for publication. Blog post: ```{old_content}```"
+            )
+        else:
             return WriteEvent(
                 input=f"""Improve the writing of a given blog post by using a given review.
 Blog post:
@@ -106,11 +121,14 @@ Review:
             )
 
     async def run_agent(
-        self, ctx: Context, agent: FunctionCallingAgent, input: str
-    ) -> AgentRunResult:
-        task = asyncio.create_task(agent.run(input=input))
+        self,
+        ctx: Context,
+        agent: FunctionCallingAgent,
+        input: str,
+        streaming: bool = False,
+    ) -> AgentRunResult | AsyncGenerator:
+        task = asyncio.create_task(agent.run(input=input, streaming=streaming))
         # bubble all events while running the executor to the planner
         async for event in agent.stream_events():
             ctx.write_event_to_stream(event)
-        ret: AgentRunResult = await task
-        return ret
+        return await task
