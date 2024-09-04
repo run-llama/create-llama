@@ -15,7 +15,6 @@ chat_router = r = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 
-# streaming endpoint - delete if not needed
 @r.post("")
 async def chat(
     request: Request,
@@ -31,7 +30,9 @@ async def chat(
         # params = data.data or {}
 
         agent: Workflow = create_agent(chat_history=messages)
-        task = asyncio.create_task(agent.run(input=last_message_content))
+        task = asyncio.create_task(
+            agent.run(input=last_message_content, streaming=True)
+        )
 
         return VercelStreamResponse(request, task, agent.stream_events, data)
     except Exception as e:

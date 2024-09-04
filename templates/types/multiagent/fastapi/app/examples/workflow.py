@@ -52,6 +52,8 @@ class ReviewEvent(Event):
 class BlogPostWorkflow(Workflow):
     @step()
     async def start(self, ctx: Context, ev: StartEvent) -> ResearchEvent:
+        # set streaming
+        ctx.data["streaming"] = getattr(ev, "streaming", False)
         # start the workflow with researching about a topic
         ctx.data["task"] = ev.input
         return ResearchEvent(input=f"Research for this task: {ev.input}")
@@ -70,19 +72,21 @@ class BlogPostWorkflow(Workflow):
     async def write(
         self, ctx: Context, ev: WriteEvent, writer: FunctionCallingAgent
     ) -> ReviewEvent | StopEvent:
-        MAX_ATTEMPTS = 3
+        MAX_ATTEMPTS = 2
         ctx.data["attempts"] = ctx.data.get("attempts", 0) + 1
-        too_many_attempts = ctx.data["attempts"] >= MAX_ATTEMPTS
+        too_many_attempts = ctx.data["attempts"] > MAX_ATTEMPTS
         if too_many_attempts:
             ctx.write_event_to_stream(
                 AgentRunEvent(
                     name=writer.name,
-                    msg=f"Too many attempts ({ctx.data['attempts']}) to write the blog post. Proceeding with the current version.",
+                    msg=f"Too many attempts ({MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.",
                 )
             )
         if ev.is_good or too_many_attempts:
-            # too many attempts or the blog post is good - stream the final response
-            result = await self.run_agent(ctx, writer, ev.input, streaming=True)
+            # too many attempts or the blog post is good - stream final response if requested
+            result = await self.run_agent(
+                ctx, writer, ev.input, streaming=ctx.data["streaming"]
+            )
             return StopEvent(result=result)
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
         ctx.data["result"] = result

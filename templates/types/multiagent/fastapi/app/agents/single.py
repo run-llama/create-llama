@@ -96,7 +96,7 @@ class FunctionCallingAgent(Workflow):
             self.memory.put(system_msg)
 
         # set streaming
-        ctx.data["streaming"] = ev.streaming or False
+        ctx.data["streaming"] = getattr(ev, "streaming", False)
 
         # get user input
         user_input = ev.input
