@@ -48,16 +48,6 @@ export function appendEventData(data: StreamData, title?: string) {
   });
 }
 
-export function appendAgentEventData(
-  data: StreamData,
-  agentEventData: { text: string; agent: string; iconName?: string },
-) {
-  data.appendMessageAnnotation({
-    type: "agent_events",
-    data: agentEventData,
-  });
-}
-
 export function appendToolData(
   data: StreamData,
   toolCall: ToolCall,
