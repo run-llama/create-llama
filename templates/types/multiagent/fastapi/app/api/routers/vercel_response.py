@@ -86,7 +86,7 @@ class VercelStreamResponse(StreamingResponse):
                 is_stream_started = True
                 # Stream a blank message to start the stream
                 yield VercelStreamResponse.convert_text("")
-            
+
             async for output in streamer:
                 yield output
                 if await request.is_disconnected():
