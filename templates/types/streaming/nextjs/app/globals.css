@@ -94,4 +94,18 @@
       radial-gradient(at 91% 36%, rgba(194, 213, 255, 0.68) 0, transparent 50%),
       radial-gradient(at 8% 40%, rgba(251, 218, 239, 0.46) 0, transparent 50%);
   }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .fadein-agent {
+    animation-name: fadeIn;
+    animation-duration: 1.5s;
+  }
 }
