@@ -18,8 +18,8 @@ type MergedEvent = {
 export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
   const events = useMemo(() => mergeAdjacentEvents(data), [data]);
   return (
-    <div className="border-l-2 pl-2">
-      <div className="mt-4 text-sm space-y-4">
+    <div className="pl-2">
+      <div className="text-sm space-y-4">
         {events.map((eventItem, index) => (
           <AgentEventContent key={index} event={eventItem} />
         ))}
@@ -38,7 +38,7 @@ function AgentEventContent({ event }: { event: MergedEvent }) {
   const { agent, texts } = event;
   const AgentIcon = event.icon;
   return (
-    <div className="flex gap-4 border-b pb-4 items-center">
+    <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
       <div className="w-[100px] flex flex-col items-center gap-2">
         <AgentIcon />
         <span className="font-bold">{agent}</span>
