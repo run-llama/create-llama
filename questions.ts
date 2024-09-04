@@ -448,7 +448,7 @@ export const askQuestions = async (
 
   if (
     (program.framework === "express" || program.framework === "fastapi") &&
-    program.template === "streaming"
+    (program.template === "streaming" || program.template === "multiagent")
   ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
