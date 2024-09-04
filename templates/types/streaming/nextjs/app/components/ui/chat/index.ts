@@ -12,7 +12,7 @@ export enum MessageAnnotationType {
   EVENTS = "events",
   TOOLS = "tools",
   SUGGESTED_QUESTIONS = "suggested_questions",
-  AGENT_EVENTS = "agent_events",
+  AGENT_EVENTS = "agent",
 }
 
 export type ImageData = {
@@ -57,7 +57,6 @@ export type EventData = {
 export type AgentEventData = {
   agent: string;
   text: string;
-  iconName?: string; // lucide icon name
 };
 
 export type ToolData = {
