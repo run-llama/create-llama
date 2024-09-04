@@ -1,11 +1,18 @@
-import { icons } from "lucide-react";
+import { icons, LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 import { AgentEventData } from "../index";
+
+const AgentIcons: Record<string, LucideIcon> = {
+  bot: icons.Bot,
+  researcher: icons.ScanSearch,
+  writer: icons.PenLine,
+  reviewer: icons.MessageCircle,
+};
 
 type MergedEvent = {
   agent: string;
   texts: string[];
-  iconName?: string; // lucide icon name
+  icon: LucideIcon;
 };
 
 export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
@@ -14,8 +21,7 @@ export function ChatAgentEvents({ data }: { data: AgentEventData[] }) {
     <div className="border-l-2 pl-2">
       <div className="mt-4 text-sm space-y-4">
         {events.map((eventItem, index) => {
-          const iconName = (eventItem.iconName ?? "Bot") as keyof typeof icons;
-          const AgentIcon = icons[iconName] ?? icons.Bot;
+          const AgentIcon = eventItem.icon;
           return (
             <div key={index} className="flex gap-4 border-b pb-4 items-center">
               <div className="w-[100px] flex flex-col items-center gap-2">
@@ -51,7 +57,7 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
       mergedEvents.push({
         agent: event.agent,
         texts: [event.text],
-        iconName: event.iconName,
+        icon: AgentIcons[event.agent] ?? icons.Bot,
       });
     }
   }
