@@ -287,27 +287,25 @@ export const askQuestions = async (
           },
         ];
 
-        if (program.template !== "multiagent") {
-          const modelConfigured =
-            !program.llamapack && program.modelConfig.isConfigured();
-          // If using LlamaParse, require LlamaCloud API key
-          const llamaCloudKeyConfigured = program.useLlamaParse
-            ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-            : true;
-          const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-          // Can run the app if all tools do not require configuration
-          if (
-            !hasVectorDb &&
-            modelConfigured &&
-            llamaCloudKeyConfigured &&
-            !toolsRequireConfig(program.tools)
-          ) {
-            actionChoices.push({
-              title:
-                "Generate code, install dependencies, and run the app (~2 min)",
-              value: "runApp",
-            });
-          }
+        const modelConfigured =
+          !program.llamapack && program.modelConfig.isConfigured();
+        // If using LlamaParse, require LlamaCloud API key
+        const llamaCloudKeyConfigured = program.useLlamaParse
+          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+          : true;
+        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
+        // Can run the app if all tools do not require configuration
+        if (
+          !hasVectorDb &&
+          modelConfigured &&
+          llamaCloudKeyConfigured &&
+          !toolsRequireConfig(program.tools)
+        ) {
+          actionChoices.push({
+            title:
+              "Generate code, install dependencies, and run the app (~2 min)",
+            value: "runApp",
+          });
         }
 
         const { action } = await prompts(
