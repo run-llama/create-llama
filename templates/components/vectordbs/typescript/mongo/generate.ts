@@ -27,7 +27,12 @@ async function loadAndIndex() {
     dbName: databaseName,
     collectionName: vectorCollectionName, // this is where your embeddings will be stored
     indexName: indexName, // this is the name of the index you will need to create
-    populatedMetadataFields: POPULATED_METADATA_FIELDS,
+    indexedMetadataFields: POPULATED_METADATA_FIELDS,
+    embeddingDefinition: {
+      dimensions: process.env.EMBEDDING_DIM
+        ? parseInt(process.env.EMBEDDING_DIM)
+        : 1536,
+    },
   });
 
   // now create an index from all the Documents and store them in Atlas

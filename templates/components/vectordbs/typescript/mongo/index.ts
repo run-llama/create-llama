@@ -12,7 +12,12 @@ export async function getDataSource(params?: any) {
     dbName: process.env.MONGODB_DATABASE!,
     collectionName: process.env.MONGODB_VECTORS!,
     indexName: process.env.MONGODB_VECTOR_INDEX,
-    populatedMetadataFields: POPULATED_METADATA_FIELDS,
+    indexedMetadataFields: POPULATED_METADATA_FIELDS,
+    embeddingDefinition: {
+      dimensions: process.env.EMBEDDING_DIM
+        ? parseInt(process.env.EMBEDDING_DIM)
+        : 1536,
+    },
   });
 
   return await VectorStoreIndex.fromVectorStore(store);
