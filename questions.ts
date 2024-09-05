@@ -287,27 +287,25 @@ export const askQuestions = async (
           },
         ];
 
-        if (program.template !== "multiagent") {
-          const modelConfigured =
-            !program.llamapack && program.modelConfig.isConfigured();
-          // If using LlamaParse, require LlamaCloud API key
-          const llamaCloudKeyConfigured = program.useLlamaParse
-            ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-            : true;
-          const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-          // Can run the app if all tools do not require configuration
-          if (
-            !hasVectorDb &&
-            modelConfigured &&
-            llamaCloudKeyConfigured &&
-            !toolsRequireConfig(program.tools)
-          ) {
-            actionChoices.push({
-              title:
-                "Generate code, install dependencies, and run the app (~2 min)",
-              value: "runApp",
-            });
-          }
+        const modelConfigured =
+          !program.llamapack && program.modelConfig.isConfigured();
+        // If using LlamaParse, require LlamaCloud API key
+        const llamaCloudKeyConfigured = program.useLlamaParse
+          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+          : true;
+        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
+        // Can run the app if all tools do not require configuration
+        if (
+          !hasVectorDb &&
+          modelConfigured &&
+          llamaCloudKeyConfigured &&
+          !toolsRequireConfig(program.tools)
+        ) {
+          actionChoices.push({
+            title:
+              "Generate code, install dependencies, and run the app (~2 min)",
+            value: "runApp",
+          });
         }
 
         const { action } = await prompts(
@@ -341,7 +339,7 @@ export const askQuestions = async (
           choices: [
             { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
             {
-              title: "Multi-agent app (using llama-agents)",
+              title: "Multi-agent app (using workflows)",
               value: "multiagent",
             },
             { title: "Structured Extractor", value: "extractor" },
@@ -448,7 +446,7 @@ export const askQuestions = async (
 
   if (
     (program.framework === "express" || program.framework === "fastapi") &&
-    program.template === "streaming"
+    (program.template === "streaming" || program.template === "multiagent")
   ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {

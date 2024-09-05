@@ -81,7 +81,7 @@ export async function runApp(
   if (template === "extractor") {
     processes.push(runReflexApp(appPath, port, externalPort));
   }
-  if (template === "streaming") {
+  if (template === "streaming" || template === "multiagent") {
     if (framework === "fastapi" || framework === "express") {
       const backendRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
       if (frontend) {

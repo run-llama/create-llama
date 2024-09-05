@@ -1,3 +1,4 @@
+[tool]
 [tool.poetry]
 name = "app"
 version = "0.1.0"
@@ -10,10 +11,16 @@ generate = "app.engine.generate:generate_datasource"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-llama-agents = "^0.0.3"
-llama-index-agent-openai = "^0.2.7"
-llama-index-embeddings-openai = "^0.1.10"
-llama-index-llms-openai = "^0.1.23"
+llama-index-agent-openai = ">=0.3.0,<0.4.0"
+llama-index = "^0.11.4"
+fastapi = "^0.112.2"
+python-dotenv = "^1.0.0"
+uvicorn = { extras = ["standard"], version = "^0.23.2" }
+cachetools = "^5.3.3"
+aiostream = "^0.5.2"
+
+[tool.poetry.dependencies.docx2txt]
+version = "^0.8"
 
 [build-system]
 requires = ["poetry-core"]
