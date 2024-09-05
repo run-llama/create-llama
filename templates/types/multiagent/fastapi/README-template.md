@@ -11,7 +11,7 @@ This example is using three agents to generate a blog post:
 There are three different methods how the agents can interact to reach their goal:
 
 1. [Choreography](./app/examples/choreography.py) - the agents decide themselves to delegate a task to another agent
-1. [Orchestator](./app/examples/orchestrator.py) - a central orchestrator decides which agent should execute a task
+1. [Orchestrator](./app/examples/orchestrator.py) - a central orchestrator decides which agent should execute a task
 1. [Explicit Workflow](./app/examples/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
 
 ## Getting Started
@@ -49,7 +49,7 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
 ```
 
-You can start editing the API endpoint by modifying `app/api/routers/chat.py`. The endpoint auto-updates as you save the file.
+You can start editing the API by modifying `app/api/routers/chat.py` or `app/examples/workflow.py`. The API auto-updates as you save the files.
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 

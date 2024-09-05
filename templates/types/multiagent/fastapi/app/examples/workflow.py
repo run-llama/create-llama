@@ -108,7 +108,8 @@ class BlogPostWorkflow(Workflow):
         )
         if post_is_good:
             return WriteEvent(
-                input=f"You're blog post is ready for publication. Blog post: ```{old_content}```"
+                input=f"You're blog post is ready for publication. Please respond with just the blog post. Blog post: ```{old_content}```",
+                is_good=True,
             )
         else:
             return WriteEvent(
