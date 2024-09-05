@@ -1,5 +1,5 @@
 ---
-"create-llama": patch
+"create-llama": minor
 ---
 
-Add chat agent events UI
+Add multi-agents template based on workflows
