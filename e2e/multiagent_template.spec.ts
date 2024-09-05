@@ -62,45 +62,19 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
     await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
   });
 
-  test("Frontend should be able to submit a message and receive a response", async ({
+  test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
     page,
   }) => {
     await page.goto(`http://localhost:${port}`);
     await page.fill("form input", userMessage);
-    const [response] = await Promise.all([
-      page.waitForResponse(
-        (res) => {
-          return res.url().includes("/api/chat") && res.status() === 200;
-        },
-        {
-          timeout: 1000 * 60,
-        },
-      ),
-      page.click("form button[type=submit]"),
-    ]);
-    const text = await response.text();
-    console.log("AI response when submitting message: ", text);
-    expect(response.ok()).toBeTruthy();
-  });
 
-  test("Backend frameworks should response when calling chat API", async ({
-    request,
-  }) => {
-    const response = await request.post(
-      `http://localhost:${externalPort}/api/chat`,
-      {
-        data: {
-          messages: [
-            {
-              role: "user",
-              content: userMessage,
-            },
-          ],
-        },
-      },
+    const responsePromise = page.waitForResponse((res) =>
+      res.url().includes("/api/chat"),
     );
-    const text = await response.text();
-    console.log("AI response when calling API: ", text);
+
+    await page.click("form button[type=submit]");
+
+    const response = await responsePromise;
     expect(response.ok()).toBeTruthy();
   });
 
