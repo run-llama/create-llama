@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.0
+
+### Minor Changes
+
+- 435109f: Add multi-agents template based on workflows
+
 ## 0.1.44
 
 ### Patch Changes
