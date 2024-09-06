@@ -1,33 +1,13 @@
 import logging
+import os
 from typing import List, Optional
 
+from app.api.routers.models import Message
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from app.api.routers.models import Message
 
 logger = logging.getLogger("uvicorn")
-
-
-class NextQuestionSettings(BaseSettings):
-    enable: bool = True
-    prompt_template: str = (
-        "You're a helpful assistant! Your task is to suggest the next question that user might ask. "
-        "\nHere is the conversation history"
-        "\n---------------------\n{conversation}\n---------------------"
-        "Given the conversation history, please give me 3 questions that you might ask next!"
-    )
-
-    model_config = SettingsConfigDict(env_prefix="NEXT_QUESTION_")
-
-    @property
-    def prompt(self) -> PromptTemplate:
-        return PromptTemplate(self.prompt_template)
-
-
-next_question_settings = NextQuestionSettings()
 
 
 class NextQuestions(BaseModel):
@@ -37,15 +17,22 @@ class NextQuestions(BaseModel):
 
 
 class NextQuestionSuggestion:
-    @staticmethod
+
+    @classmethod
+    def get_configured_prompt(cls) -> Optional[str]:
+        return os.getenv("NEXT_QUESTION_PROMPT", None)
+
+    @classmethod
     async def suggest_next_questions(
+        cls,
         messages: List[Message],
     ) -> Optional[List[str]]:
         """
         Suggest the next questions that user might ask based on the conversation history
         Return None if suggestion is disabled or there is an error
         """
-        if not next_question_settings.enable:
+        prompt_template = cls.get_configured_prompt()
+        if not prompt_template:
             return None
 
         try:
@@ -63,7 +50,7 @@ class NextQuestionSuggestion:
 
             output: NextQuestions = await Settings.llm.astructured_predict(
                 NextQuestions,
-                prompt=next_question_settings.prompt,
+                prompt=PromptTemplate(prompt_template),
                 conversation=conversation,
             )
 

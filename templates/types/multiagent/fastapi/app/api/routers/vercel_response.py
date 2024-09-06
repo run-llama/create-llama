@@ -1,15 +1,14 @@
-from asyncio import Task
 import json
 import logging
+from asyncio import Task
 from typing import AsyncGenerator
 
 from aiostream import stream
+from app.agents.single import AgentRunEvent, AgentRunResult
+from app.api.routers.models import ChatData, Message
+from app.api.services.suggestion import NextQuestionSuggestion
 from fastapi import Request
 from fastapi.responses import StreamingResponse
-
-from app.api.routers.models import ChatData, Message
-from app.agents.single import AgentRunEvent, AgentRunResult
-from app.api.services.suggestion import NextQuestionSuggestion, next_question_settings
 
 logger = logging.getLogger("uvicorn")
 
@@ -69,8 +68,8 @@ class VercelStreamResponse(StreamingResponse):
                     final_response += token.delta
                     yield VercelStreamResponse.convert_text(token.delta)
 
-            # Generate questions that user might be interested in
-            if next_question_settings.enable:
+            # Generate next questions if next question prompt is configured
+            if NextQuestionSuggestion.get_configured_prompt() is not None:
                 conversation = chat_data.messages + [
                     Message(role="assistant", content=final_response)
                 ]
