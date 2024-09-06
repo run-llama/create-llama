@@ -7,8 +7,9 @@ from aiostream import stream
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
-from app.api.routers.models import ChatData
+from app.api.routers.models import ChatData, Message
 from app.agents.single import AgentRunEvent, AgentRunResult
+from app.api.services.suggestion import NextQuestionSuggestion, next_question_settings
 
 logger = logging.getLogger("uvicorn")
 
@@ -57,16 +58,32 @@ class VercelStreamResponse(StreamingResponse):
         # Yield the text response
         async def _chat_response_generator():
             result = await task
-
+            final_response = ""
+            
             if isinstance(result, AgentRunResult):
                 for token in result.response.message.content:
                     yield VercelStreamResponse.convert_text(token)
 
             if isinstance(result, AsyncGenerator):
                 async for token in result:
+                    final_response += token.delta
                     yield VercelStreamResponse.convert_text(token.delta)
 
-            # TODO: stream NextQuestionSuggestion
+            # Generate questions that user might be interested in
+            if next_question_settings.enable:
+                conversation = chat_data.messages + [
+                    Message(role="assistant", content=final_response)
+                ]
+                questions = await NextQuestionSuggestion.suggest_next_questions(
+                    conversation
+                )
+                if questions:
+                    yield VercelStreamResponse.convert_data(
+                        {
+                            "type": "suggested_questions",
+                            "data": questions,
+                        }
+                    )
             # TODO: stream sources
 
         # Yield the events from the event handler

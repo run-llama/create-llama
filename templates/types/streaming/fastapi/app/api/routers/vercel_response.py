@@ -7,7 +7,7 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message, SourceNodes
-from app.api.services.suggestion import NextQuestionSuggestion
+from app.api.services.suggestion import NextQuestionSuggestion, next_question_settings
 
 
 class VercelStreamResponse(StreamingResponse):
@@ -56,20 +56,21 @@ class VercelStreamResponse(StreamingResponse):
                 final_response += token
                 yield VercelStreamResponse.convert_text(token)
 
-            # Generate questions that user might interested to
-            conversation = chat_data.messages + [
-                Message(role="assistant", content=final_response)
-            ]
-            questions = await NextQuestionSuggestion.suggest_next_questions(
-                conversation
-            )
-            if len(questions) > 0:
-                yield VercelStreamResponse.convert_data(
-                    {
-                        "type": "suggested_questions",
-                        "data": questions,
-                    }
+            # Generate questions that user might be interested in
+            if next_question_settings.enable:
+                conversation = chat_data.messages + [
+                    Message(role="assistant", content=final_response)
+                ]
+                questions = await NextQuestionSuggestion.suggest_next_questions(
+                    conversation
                 )
+                if questions:
+                    yield VercelStreamResponse.convert_data(
+                        {
+                            "type": "suggested_questions",
+                            "data": questions,
+                        }
+                    )
 
             # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
