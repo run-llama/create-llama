@@ -59,7 +59,7 @@ class VercelStreamResponse(StreamingResponse):
         async def _chat_response_generator():
             result = await task
             final_response = ""
-            
+
             if isinstance(result, AgentRunResult):
                 for token in result.response.message.content:
                     yield VercelStreamResponse.convert_text(token)
