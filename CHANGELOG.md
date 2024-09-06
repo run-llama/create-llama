@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.1
+
+### Patch Changes
+
+- 6a409cb: Bump web and database reader packages
+
 ## 0.2.0
 
 ### Minor Changes
