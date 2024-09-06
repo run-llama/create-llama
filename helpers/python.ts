@@ -109,13 +109,13 @@ const getAdditionalDependencies = (
         case "web":
           dependencies.push({
             name: "llama-index-readers-web",
-            version: "^0.1.6",
+            version: "^0.2.2",
           });
           break;
         case "db":
           dependencies.push({
             name: "llama-index-readers-database",
-            version: "^0.1.3",
+            version: "^0.2.0",
           });
           dependencies.push({
             name: "pymysql",
