@@ -486,26 +486,28 @@ It\\'s cute animal.
   return systemPromptEnv;
 };
 
-const getTemplateEnvs = (
-  template?: TemplateType,
-  framework?: TemplateFramework,
-): EnvVar[] => {
+const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
   const nextQuestionEnvs: EnvVar[] = [
     {
-      name: "NEXT_QUESTION_PROMPT",
+      name: "NEXT_QUESTION_PROMPT_TEMPLATE",
       description: `Customize prompt to generate the next question suggestions based on the conversation history.
 Disable this prompt to disable the next question suggestions feature.`,
       value: `"You're a helpful assistant! Your task is to suggest the next question that user might ask. 
 Here is the conversation history
----------------------\n{conversation}\n---------------------
-Given the conversation history, please give me 3 questions that you might ask next!"`,
+---------------------
+$conversation
+---------------------
+Given the conversation history, please give me 3 questions that you might ask next!
+Your answer should be wrapped in three sticks which follows the following format:
+\`\`\`
+<question 1>
+<question 2>
+<question 3>
+\`\`\`"`,
     },
   ];
 
-  if (
-    framework === "fastapi" &&
-    (template === "multiagent" || template === "streaming")
-  ) {
+  if (template === "multiagent" || template === "streaming") {
     return nextQuestionEnvs;
   }
   return [];
@@ -555,7 +557,7 @@ export const createBackendEnvFile = async (
     ...getVectorDBEnvs(opts.vectorDb, opts.framework),
     ...getFrameworkEnvs(opts.framework, opts.externalPort),
     ...getToolEnvs(opts.tools),
-    ...getTemplateEnvs(opts.template, opts.framework),
+    ...getTemplateEnvs(opts.template),
     ...getObservabilityEnvs(opts.observability),
     ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.framework),
   ];

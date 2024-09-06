@@ -1,26 +1,27 @@
 import logging
 import os
+import re
 from typing import List, Optional
 
 from app.api.routers.models import Message
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings
-from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
 
-class NextQuestions(BaseModel):
-    """A list of questions that user might ask next"""
-
-    questions: List[str]
-
-
 class NextQuestionSuggestion:
+    """
+    Suggest the next questions that user might ask based on the conversation history
+    Disable this feature by removing the NEXT_QUESTION_PROMPT_TEMPLATE environment variable
+    """
 
     @classmethod
     def get_configured_prompt(cls) -> Optional[str]:
-        return os.getenv("NEXT_QUESTION_PROMPT", None)
+        prompt = os.getenv("NEXT_QUESTION_PROMPT_TEMPLATE", None)
+        if not prompt:
+            return None
+        return PromptTemplate(prompt)
 
     @classmethod
     async def suggest_next_questions(
@@ -48,13 +49,18 @@ class NextQuestionSuggestion:
                     break
             conversation: str = f"{last_user_message}\n{last_assistant_message}"
 
-            output: NextQuestions = await Settings.llm.astructured_predict(
-                NextQuestions,
-                prompt=PromptTemplate(prompt_template),
-                conversation=conversation,
-            )
+            # Call the LLM and parse questions from the output
+            prompt = prompt_template.format(conversation=conversation)
+            output = await Settings.llm.acomplete(prompt)
+            questions = cls._extract_questions(output.text)
 
-            return output.questions
+            return questions
         except Exception as e:
             logger.error(f"Error when generating next question: {e}")
             return None
+
+    @classmethod
+    def _extract_questions(cls, text: str) -> List[str]:
+        content_match = re.search(r"```(.*?)```", text, re.DOTALL)
+        content = content_match.group(1) if content_match else ""
+        return content.strip().split("\n")
