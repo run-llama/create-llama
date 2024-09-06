@@ -489,7 +489,7 @@ It\\'s cute animal.
 const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
   const nextQuestionEnvs: EnvVar[] = [
     {
-      name: "NEXT_QUESTION_PROMPT_TEMPLATE",
+      name: "NEXT_QUESTION_PROMPT",
       description: `Customize prompt to generate the next question suggestions based on the conversation history.
 Disable this prompt to disable the next question suggestions feature.`,
       value: `"You're a helpful assistant! Your task is to suggest the next question that user might ask. 

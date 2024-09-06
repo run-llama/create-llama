@@ -2,9 +2,8 @@ import { ChatMessage, Settings } from "llamaindex";
 
 export async function generateNextQuestions(conversation: ChatMessage[]) {
   const llm = Settings.llm;
-  const NEXT_QUESTION_PROMPT_TEMPLATE =
-    process.env.NEXT_QUESTION_PROMPT_TEMPLATE;
-  if (!NEXT_QUESTION_PROMPT_TEMPLATE) {
+  const NEXT_QUESTION_PROMPT = process.env.NEXT_QUESTION_PROMPT;
+  if (!NEXT_QUESTION_PROMPT) {
     return [];
   }
 
@@ -12,7 +11,7 @@ export async function generateNextQuestions(conversation: ChatMessage[]) {
   const conversationText = conversation
     .map((message) => `${message.role}: ${message.content}`)
     .join("\n");
-  const message = NEXT_QUESTION_PROMPT_TEMPLATE.replace(
+  const message = NEXT_QUESTION_PROMPT.replace(
     "$conversation",
     conversationText,
   );

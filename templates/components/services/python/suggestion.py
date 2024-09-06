@@ -13,12 +13,12 @@ logger = logging.getLogger("uvicorn")
 class NextQuestionSuggestion:
     """
     Suggest the next questions that user might ask based on the conversation history
-    Disable this feature by removing the NEXT_QUESTION_PROMPT_TEMPLATE environment variable
+    Disable this feature by removing the NEXT_QUESTION_PROMPT environment variable
     """
 
     @classmethod
     def get_configured_prompt(cls) -> Optional[str]:
-        prompt = os.getenv("NEXT_QUESTION_PROMPT_TEMPLATE", None)
+        prompt = os.getenv("NEXT_QUESTION_PROMPT", None)
         if not prompt:
             return None
         return PromptTemplate(prompt)
