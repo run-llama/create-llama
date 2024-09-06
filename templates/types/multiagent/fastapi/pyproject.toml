@@ -16,7 +16,6 @@ llama-index = "^0.11.4"
 fastapi = "^0.112.2"
 python-dotenv = "^1.0.0"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
-pydantic-settings = "^2.4.0"
 cachetools = "^5.3.3"
 aiostream = "^0.5.2"
 
