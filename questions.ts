@@ -637,6 +637,7 @@ export const askQuestions = async (
               type: "db",
               config: await prompts(dbPrompts, questionHandlers),
             });
+            break;
           }
           case "llamacloud": {
             program.dataSources.push({

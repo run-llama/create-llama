@@ -174,6 +174,9 @@ export const installTemplate = async (
       await createBackendEnvFile(props.root, props);
     }
 
+    // Always create a data directory
+    await makeDir(path.join(props.root, "data"));
+
     if (props.dataSources.length > 0) {
       console.log("\nGenerating context data...\n");
       await copyContextData(
