@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.2
+
+### Patch Changes
+
+- 8105c5c: Add env config for next questions feature
+
 ## 0.2.1
 
 ### Patch Changes
