@@ -487,33 +487,30 @@ It\\'s cute animal.
 };
 
 const getTemplateEnvs = (template?: TemplateType): EnvVar[] => {
-  if (template === "multiagent") {
-    return [
-      {
-        name: "MESSAGE_QUEUE_PORT",
-      },
-      {
-        name: "CONTROL_PLANE_PORT",
-      },
-      {
-        name: "HUMAN_CONSUMER_PORT",
-      },
-      {
-        name: "AGENT_QUERY_ENGINE_PORT",
-        value: "8003",
-      },
-      {
-        name: "AGENT_QUERY_ENGINE_DESCRIPTION",
-        value: "Query information from the provided data",
-      },
-      {
-        name: "AGENT_DUMMY_PORT",
-        value: "8004",
-      },
-    ];
-  } else {
-    return [];
+  const nextQuestionEnvs: EnvVar[] = [
+    {
+      name: "NEXT_QUESTION_PROMPT",
+      description: `Customize prompt to generate the next question suggestions based on the conversation history.
+Disable this prompt to disable the next question suggestions feature.`,
+      value: `"You're a helpful assistant! Your task is to suggest the next question that user might ask. 
+Here is the conversation history
+---------------------
+{conversation}
+---------------------
+Given the conversation history, please give me 3 questions that you might ask next!
+Your answer should be wrapped in three sticks which follows the following format:
+\`\`\`
+<question 1>
+<question 2>
+<question 3>
+\`\`\`"`,
+    },
+  ];
+
+  if (template === "multiagent" || template === "streaming") {
+    return nextQuestionEnvs;
   }
+  return [];
 };
 
 const getObservabilityEnvs = (
