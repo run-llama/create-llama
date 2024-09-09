@@ -96,10 +96,11 @@ async function generateContextData(
   }
 }
 
-const copyContextData = async (
+const prepareContextData = async (
   root: string,
   dataSources: TemplateDataSource[],
 ) => {
+  await makeDir(path.join(root, "data"));
   for (const dataSource of dataSources) {
     const dataSourceConfig = dataSource?.config as FileSourceConfig;
     // Copy local data
@@ -174,28 +175,25 @@ export const installTemplate = async (
       await createBackendEnvFile(props.root, props);
     }
 
-    // Always create a data directory
-    await makeDir(path.join(props.root, "data"));
+    await prepareContextData(
+      props.root,
+      props.dataSources.filter((ds) => ds.type === "file"),
+    );
 
-    if (props.dataSources.length > 0) {
+    if (
+      props.dataSources.length > 0 &&
+      (props.postInstallAction === "runApp" ||
+        props.postInstallAction === "dependencies")
+    ) {
       console.log("\nGenerating context data...\n");
-      await copyContextData(
-        props.root,
-        props.dataSources.filter((ds) => ds.type === "file"),
+      await generateContextData(
+        props.framework,
+        props.modelConfig,
+        props.packageManager,
+        props.vectorDb,
+        props.llamaCloudKey,
+        props.useLlamaParse,
       );
-      if (
-        props.postInstallAction === "runApp" ||
-        props.postInstallAction === "dependencies"
-      ) {
-        await generateContextData(
-          props.framework,
-          props.modelConfig,
-          props.packageManager,
-          props.vectorDb,
-          props.llamaCloudKey,
-          props.useLlamaParse,
-        );
-      }
     }
 
     // Create outputs directory
