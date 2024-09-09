@@ -5,7 +5,7 @@ import { questionHandlers, toChoice } from "../../questions";
 
 import got from "got";
 import ora from "ora";
-import { red } from "chalk";
+import { red } from "picocolors";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1";
 
@@ -23,26 +23,26 @@ async function getAvailableModelChoicesGroq(apiKey: string) {
       timeout: 5000,
       responseType: "json",
     });
-    const data = response.body;
+    const data: any = await response.body;
     spinner.stop();
 
-    // Filter out the Whisper model
+    // Filter out the Whisper models
     return data.data
-      .filter((model: any) => !model.id.startsWith("Whisper"))
+      .filter((model: any) => !model.id.toLowerCase().includes("whisper"))
       .map((el: any) => {
         return {
           title: el.id,
           value: el.id,
         };
       });
-
-  } catch (error) {
+  } catch (error: unknown) {
     spinner.stop();
-    if (error.response?.statusCode === 401) {
+    console.log(error);
+    if ((error as any).response?.statusCode === 401) {
       console.log(
         red(
-          "Invalid Groq API key provided! Please provide a valid key and try again!"
-        )
+          "Invalid Groq API key provided! Please provide a valid key and try again!",
+        ),
       );
     } else {
       console.log(red("Request failed: " + error));
@@ -51,7 +51,7 @@ async function getAvailableModelChoicesGroq(apiKey: string) {
   }
 }
 
-const DEFAULT_MODEL = "llama3-8b";
+const DEFAULT_MODEL = "llama3-70b-8192";
 
 // Use huggingface embedding models for now as Groq doesn't support embedding models
 enum HuggingFaceEmbeddingModelType {
@@ -113,7 +113,7 @@ export async function askGroqQuestions({
   // use default model values in CI or if user should not be asked
   const useDefaults = ciInfo.isCI || !askModels;
   if (!useDefaults) {
-    const modelChoices = await getAvailableModelChoicesGroq(config.apiKey);
+    const modelChoices = await getAvailableModelChoicesGroq(config.apiKey!);
 
     const { model } = await prompts(
       {
