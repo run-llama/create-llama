@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from aiostream import stream
 from fastapi import Request
@@ -54,23 +55,14 @@ class VercelStreamResponse(StreamingResponse):
             final_response = ""
             async for token in response.async_response_gen():
                 final_response += token
-                yield VercelStreamResponse.convert_text(token)
+                yield cls.convert_text(token)
 
             # Generate next questions if next question prompt is configured
-            if NextQuestionSuggestion.get_configured_prompt() is not None:
-                conversation = chat_data.messages + [
-                    Message(role="assistant", content=final_response)
-                ]
-                questions = await NextQuestionSuggestion.suggest_next_questions(
-                    conversation
-                )
-                if questions:
-                    yield VercelStreamResponse.convert_data(
-                        {
-                            "type": "suggested_questions",
-                            "data": questions,
-                        }
-                    )
+            question_data = await cls._generate_next_questions(
+                chat_data.messages, final_response
+            )
+            if question_data:
+                yield cls.convert_data(question_data)
 
             # the text_generator is the leading stream, once it's finished, also finish the event stream
             event_handler.is_done = True
@@ -93,7 +85,7 @@ class VercelStreamResponse(StreamingResponse):
             async for event in event_handler.async_event_gen():
                 event_response = event.to_response()
                 if event_response is not None:
-                    yield VercelStreamResponse.convert_data(event_response)
+                    yield cls.convert_data(event_response)
 
         combine = stream.merge(_chat_response_generator(), _event_generator())
         is_stream_started = False
@@ -102,9 +94,21 @@ class VercelStreamResponse(StreamingResponse):
                 if not is_stream_started:
                     is_stream_started = True
                     # Stream a blank message to start the stream
-                    yield VercelStreamResponse.convert_text("")
+                    yield cls.convert_text("")
 
                 yield output
 
                 if await request.is_disconnected():
                     break
+
+    @staticmethod
+    async def _generate_next_questions(chat_history: List[Message], response: str):
+        questions = await NextQuestionSuggestion.suggest_next_questions(
+            chat_history, response
+        )
+        if questions:
+            return {
+                "type": "suggested_questions",
+                "data": questions,
+            }
+        return None

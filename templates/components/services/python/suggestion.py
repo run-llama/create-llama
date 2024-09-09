@@ -24,7 +24,7 @@ class NextQuestionSuggestion:
         return PromptTemplate(prompt)
 
     @classmethod
-    async def suggest_next_questions(
+    async def suggest_next_questions_all_messages(
         cls,
         messages: List[Message],
     ) -> Optional[List[str]]:
@@ -64,3 +64,15 @@ class NextQuestionSuggestion:
         content_match = re.search(r"```(.*?)```", text, re.DOTALL)
         content = content_match.group(1) if content_match else ""
         return content.strip().split("\n")
+
+    @classmethod
+    async def suggest_next_questions(
+        cls,
+        chat_history: List[Message],
+        response: str,
+    ) -> List[str]:
+        """
+        Suggest the next questions that user might ask based on the chat history and the last response
+        """
+        messages = chat_history + [Message(role="assistant", content=response)]
+        return await cls.suggest_next_questions_all_messages(messages)
