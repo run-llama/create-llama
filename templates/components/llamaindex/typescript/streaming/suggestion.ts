@@ -12,7 +12,7 @@ export async function generateNextQuestions(conversation: ChatMessage[]) {
     .map((message) => `${message.role}: ${message.content}`)
     .join("\n");
   const message = NEXT_QUESTION_PROMPT.replace(
-    "$conversation",
+    "{conversation}",
     conversationText,
   );
 

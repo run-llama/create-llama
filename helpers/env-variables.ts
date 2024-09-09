@@ -495,7 +495,7 @@ Disable this prompt to disable the next question suggestions feature.`,
       value: `"You're a helpful assistant! Your task is to suggest the next question that user might ask. 
 Here is the conversation history
 ---------------------
-$conversation
+{conversation}
 ---------------------
 Given the conversation history, please give me 3 questions that you might ask next!
 Your answer should be wrapped in three sticks which follows the following format:
