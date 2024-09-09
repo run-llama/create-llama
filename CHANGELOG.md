@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.3
+
+### Patch Changes
+
+- b6da3c2: Ensure the generation script always works
+
 ## 0.2.2
 
 ### Patch Changes
