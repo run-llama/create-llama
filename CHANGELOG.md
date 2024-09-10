@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.4
+
+### Patch Changes
+
+- 917e862: Fix errors in building the frontend
+
 ## 0.2.3
 
 ### Patch Changes
