@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.5
+
+### Patch Changes
+
+- 38a8be8: fix: filter in mongo vector store
+
 ## 0.2.4
 
 ### Patch Changes
