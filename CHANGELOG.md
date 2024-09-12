@@ -1,5 +1,23 @@
 # create-llama
 
+## 0.2.5
+
+### Patch Changes
+
+- 38a8be8: fix: filter in mongo vector store
+
+## 0.2.4
+
+### Patch Changes
+
+- 917e862: Fix errors in building the frontend
+
+## 0.2.3
+
+### Patch Changes
+
+- b6da3c2: Ensure the generation script always works
+
 ## 0.2.2
 
 ### Patch Changes
