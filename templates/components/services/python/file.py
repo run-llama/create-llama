@@ -3,7 +3,7 @@ import mimetypes
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import List, Optional, Tuple
 
 from app.engine.index import IndexConfig, get_index
 from llama_index.core import VectorStoreIndex
@@ -72,7 +72,12 @@ class PrivateFileService:
         return documents
 
     @staticmethod
-    def process_file(file_name: str, base64_content: str, params: Any) -> List[str]:
+    def process_file(
+        file_name: str, base64_content: str, params: Optional[dict] = None
+    ) -> List[str]:
+        if params is None:
+            params = {}
+
         file_data, extension = PrivateFileService.preprocess_base64_file(base64_content)
 
         # Add the nodes to the index and persist it
