@@ -29,6 +29,7 @@ export default function ChatSection() {
       const message = JSON.parse(error.message);
       alert(message.detail);
     },
+    sendExtraMessageFields: true,
   });
 
   return (
