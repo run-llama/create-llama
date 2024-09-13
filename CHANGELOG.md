@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.6
+
+### Patch Changes
+
+- adc40cf: fix: vercel ai update crash sending annotations
+
 ## 0.2.5
 
 ### Patch Changes
