@@ -3,7 +3,18 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions";
 
-const MODELS = ["llama3-8b", "llama3-70b", "mixtral-8x7b"];
+const MODELS = [
+  "llama3-8b",
+  "llama3-70b",
+  "mixtral-8x7b",
+  "llama-3.1-70b",
+  "llama-3.1-8b",
+  "llama3-groq-70b-tool-use",
+  "llama3-groq-8b-tool-use",
+  "gemma2-9b-it",
+  "gemma-7b-it",
+  "llava-v1.5-7b",
+];
 const DEFAULT_MODEL = MODELS[0];
 
 // Use huggingface embedding models for now as Groq doesn't support embedding models
