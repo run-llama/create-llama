@@ -130,6 +130,13 @@ def init_groq():
         "llama3-8b": "llama3-8b-8192",
         "llama3-70b": "llama3-70b-8192",
         "mixtral-8x7b": "mixtral-8x7b-32768",
+        "llama-3.1-70b": "llama-3.1-70b-versatile",
+        "llama-3.1-8b": "llama-3.1-8b-instant",
+        "llama3-groq-70b-tool-use": "llama3-groq-70b-8192-tool-use-preview",
+        "llama3-groq-8b-tool-use": "llama3-groq-8b-8192-tool-use-preview",
+        "gemma2-9b-it": "gemma2-9b-it",
+        "gemma-7b-it": "gemma-7b-it",
+        "llava-v1.5-7b": "llava-v1.5-7b-4096-preview",
     }
 
     Settings.llm = Groq(model=model_map[os.getenv("MODEL")])
