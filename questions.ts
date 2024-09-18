@@ -410,10 +410,7 @@ export const askQuestions = async (
     return; // early return - no further questions needed for llamapack projects
   }
 
-  if (program.template === "multiagent") {
-    // TODO: multi-agents currently only supports FastAPI
-    program.framework = preferences.framework = "fastapi";
-  } else if (program.template === "extractor") {
+  if (program.template === "extractor") {
     // Extractor template only supports FastAPI, empty data sources, and llamacloud
     // So we just use example file for extractor template, this allows user to choose vector database later
     program.dataSources = [EXAMPLE_FILE];
@@ -424,7 +421,9 @@ export const askQuestions = async (
       program.framework = getPrefOrDefault("framework");
     } else {
       const choices = [
-        { title: "NextJS", value: "nextjs" },
+        ...(program.template === "multiagent"
+          ? []
+          : [{ title: "NextJS", value: "nextjs" }]), // Not supported nextjs for multiagent for now
         { title: "Express", value: "express" },
         { title: "FastAPI (Python)", value: "fastapi" },
       ];

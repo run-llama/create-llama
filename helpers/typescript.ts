@@ -33,7 +33,11 @@ export const installTSTemplate = async ({
    * Copy the template files to the target directory.
    */
   console.log("\nInitializing project with template:", template, "\n");
-  const type = template === "multiagent" ? "streaming" : template; // use nextjs streaming template for multiagent
+  let type = "streaming";
+  if (template === "multiagent" && framework === "express") {
+    // use nextjs streaming template as frontend for express and fastapi
+    type = "multiagent";
+  }
   const templatePath = path.join(templatesDir, "types", type, framework);
   const copySource = ["**"];
 
