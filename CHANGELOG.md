@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.2.7
+
+### Patch Changes
+
+- 505b8e9: bump: use latest ai package version
+- cf3ec97: Dynamically select model for Groq
+- 8c1087f: feat: enhance style for markdown
+
 ## 0.2.6
 
 ### Patch Changes
