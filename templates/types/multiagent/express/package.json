@@ -1,0 +1,45 @@
+{
+  "name": "llama-index-express-streaming",
+  "version": "1.0.0",
+  "exports": "./index.js",
+  "types": "./index.d.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "format": "prettier --ignore-unknown --cache --check .",
+    "format:write": "prettier --ignore-unknown --write .",
+    "build": "tsup index.ts --format esm --dts",
+    "start": "node dist/index.js",
+    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\""
+  },
+  "dependencies": {
+    "ai": "3.3.38",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "duck-duck-scrape": "^2.2.5",
+    "express": "^4.18.2",
+    "llamaindex": "0.6.2",
+    "pdf2json": "3.0.5",
+    "ajv": "^8.12.0",
+    "@e2b/code-interpreter": "^0.0.5",
+    "got": "^14.4.1",
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "formdata-node": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.16",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.9.5",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^8.10.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.2.5",
+    "prettier-plugin-organize-imports": "^3.2.4",
+    "tsx": "^4.7.2",
+    "tsup": "8.1.0",
+    "typescript": "^5.3.2"
+  }
+}
