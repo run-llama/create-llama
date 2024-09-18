@@ -2,11 +2,10 @@ import { WorkflowEvent } from "@llamaindex/core/workflow";
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage } from "llamaindex";
+import { MessageEvent } from "../agents/single";
 import { createWorkflow } from "../examples/workflow";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
 import { LlamaIndexStream } from "./llamaindex/streaming/stream";
-
-export class MessageEvent extends WorkflowEvent<{ msg: string }> {}
 
 export const chat = async (req: Request, res: Response) => {
   // Init Vercel AI StreamData and timeout
