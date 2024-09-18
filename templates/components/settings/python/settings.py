@@ -126,13 +126,7 @@ def init_fastembed():
 def init_groq():
     from llama_index.llms.groq import Groq
 
-    model_map: Dict[str, str] = {
-        "llama3-8b": "llama3-8b-8192",
-        "llama3-70b": "llama3-70b-8192",
-        "mixtral-8x7b": "mixtral-8x7b-32768",
-    }
-
-    Settings.llm = Groq(model=model_map[os.getenv("MODEL")])
+    Settings.llm = Groq(model=os.getenv("MODEL"))
     # Groq does not provide embeddings, so we use FastEmbed instead
     init_fastembed()
 

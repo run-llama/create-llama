@@ -3,8 +3,55 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions";
 
-const MODELS = ["llama3-8b", "llama3-70b", "mixtral-8x7b"];
-const DEFAULT_MODEL = MODELS[0];
+import got from "got";
+import ora from "ora";
+import { red } from "picocolors";
+
+const GROQ_API_URL = "https://api.groq.com/openai/v1";
+
+async function getAvailableModelChoicesGroq(apiKey: string) {
+  if (!apiKey) {
+    throw new Error("Need Groq API key to retrieve model choices");
+  }
+
+  const spinner = ora("Fetching available models from Groq").start();
+  try {
+    const response = await got(`${GROQ_API_URL}/models`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      timeout: 5000,
+      responseType: "json",
+    });
+    const data: any = await response.body;
+    spinner.stop();
+
+    // Filter out the Whisper models
+    return data.data
+      .filter((model: any) => !model.id.toLowerCase().includes("whisper"))
+      .map((el: any) => {
+        return {
+          title: el.id,
+          value: el.id,
+        };
+      });
+  } catch (error: unknown) {
+    spinner.stop();
+    console.log(error);
+    if ((error as any).response?.statusCode === 401) {
+      console.log(
+        red(
+          "Invalid Groq API key provided! Please provide a valid key and try again!",
+        ),
+      );
+    } else {
+      console.log(red("Request failed: " + error));
+    }
+    process.exit(1);
+  }
+}
+
+const DEFAULT_MODEL = "llama3-70b-8192";
 
 // Use huggingface embedding models for now as Groq doesn't support embedding models
 enum HuggingFaceEmbeddingModelType {
@@ -66,12 +113,14 @@ export async function askGroqQuestions({
   // use default model values in CI or if user should not be asked
   const useDefaults = ciInfo.isCI || !askModels;
   if (!useDefaults) {
+    const modelChoices = await getAvailableModelChoicesGroq(config.apiKey!);
+
     const { model } = await prompts(
       {
         type: "select",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: MODELS.map(toChoice),
+        choices: modelChoices,
         initial: 0,
       },
       questionHandlers,

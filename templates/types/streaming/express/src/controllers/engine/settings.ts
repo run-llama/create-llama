@@ -138,14 +138,8 @@ function initGroq() {
     "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
   };
 
-  const modelMap: Record<string, string> = {
-    "llama3-8b": "llama3-8b-8192",
-    "llama3-70b": "llama3-70b-8192",
-    "mixtral-8x7b": "mixtral-8x7b-32768",
-  };
-
   Settings.llm = new Groq({
-    model: modelMap[process.env.MODEL!],
+    model: process.env.MODEL!,
   });
 
   Settings.embedModel = new HuggingFaceEmbedding({
