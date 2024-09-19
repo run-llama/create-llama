@@ -6,7 +6,7 @@ import {
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
 import { StreamData } from "ai";
-import { ChatMessage, OpenAIAgent } from "llamaindex";
+import { ChatMessage, EngineResponse, OpenAIAgent } from "llamaindex";
 import { createResearcher, createReviewer, createWriter } from "./agents";
 
 const TIMEOUT = 360 * 1000;
@@ -25,7 +25,7 @@ class AgentRunEvent extends WorkflowEvent<{
 }> {}
 
 class AgentRunResult {
-  constructor(public response: string) {}
+  constructor(public response: ReadableStream<EngineResponse>) {}
 }
 
 const createWorkflow = async (
@@ -87,13 +87,12 @@ const createWorkflow = async (
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      const response = await writer.chat({
+      const responseStream = await writer.chat({
         message: ev.data.input,
-        // stream: true,
+        stream: true,
       });
-      const result = response.message.content.toString();
-      context.writeEventToStream({ data: new AgentRunResult(result) });
-      return new StopEvent({ result }); // stop the workflow
+      context.writeEventToStream({ data: new AgentRunResult(responseStream) });
+      return new StopEvent({ result: responseStream }); // stop the workflow
     }
 
     const writeResult = await runAgent("writer", writer, ev.data.input);

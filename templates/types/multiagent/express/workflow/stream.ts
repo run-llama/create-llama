@@ -29,22 +29,28 @@ function createParser(
 
   return new ReadableStream<string>({
     start(controller) {
-      controller.enqueue("");
+      controller.enqueue(""); // Kickstart the stream
     },
     async pull(controller): Promise<void> {
       const { value, done } = await it.next();
-      if (done) {
-        controller.close();
-        data.close();
-        return;
-      }
-
+      if (done) return;
       if (value.data instanceof AgentRunResult) {
-        const text = trimStartOfStream(value.data.response ?? "");
-        if (text) {
-          llmTextResponse += text;
-          controller.enqueue(text);
-        }
+        const finalResultStream = value.data.response;
+        finalResultStream.pipeTo(
+          new WritableStream({
+            write(chunk) {
+              const text = trimStartOfStream(chunk.delta ?? "");
+              if (text) {
+                llmTextResponse += text;
+                controller.enqueue(text);
+              }
+            },
+            close() {
+              controller.close();
+              data.close();
+            },
+          }),
+        );
       }
     },
   });
