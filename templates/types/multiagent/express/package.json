@@ -1,5 +1,5 @@
 {
-  "name": "llama-index-express-streaming",
+  "name": "llama-index-express-multiagent",
   "version": "1.0.0",
   "exports": "./index.js",
   "types": "./index.d.ts",
