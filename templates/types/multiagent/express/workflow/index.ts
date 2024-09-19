@@ -43,26 +43,19 @@ const createWorkflow = async (
     name: string,
     agent: OpenAIAgent,
     input: string,
-    streaming: boolean = false,
   ): Promise<string> => {
     appendStream(name, `Start to work on: ${input}`);
-
-    if (streaming) {
-    }
-
-    const response = await agent.chat({ message: input, stream: false });
-    const result = response.message.content.toString();
-    appendStream(name, "Finished task");
-    console.log(
-      `\n=== ${name} result ===\n`,
-      result,
-      "\n====================\n",
+    const response = await agent.chat({ message: input });
+    appendStream(name, `Finished task`);
+    console.debug(
+      `\n====== ${name} ======\n`,
+      response.message.content.toString(),
+      `\n======================\n`,
     );
-    return result;
+    return response.message.content.toString();
   };
 
   const start = async (context: Context, ev: StartEvent) => {
-    
     context.set("task", ev.data.input);
     return new ResearchEvent({
       input: `Research for this task: ${ev.data.input}`,
@@ -93,11 +86,17 @@ const createWorkflow = async (
       );
     }
 
-    const writeResult = await runAgent("writer", writer, ev.data.input);
     if (ev.data.isGood || tooManyAttempts) {
-      return new StopEvent({ result: new AgentRunResult(writeResult) }); // stop the workflow
+      const response = await writer.chat({
+        message: ev.data.input,
+        // stream: true,
+      });
+      const result = response.message.content.toString();
+      context.writeEventToStream({ data: new AgentRunResult(result) });
+      return new StopEvent({ result }); // stop the workflow
     }
 
+    const writeResult = await runAgent("writer", writer, ev.data.input);
     context.set("result", writeResult); // store the last result
     return new ReviewEvent({ input: writeResult });
   };
@@ -107,13 +106,11 @@ const createWorkflow = async (
     const reviewResult = await runAgent("reviewer", reviewer, ev.data.input);
     const oldContent = context.get("result");
     const postIsGood = reviewResult.toLowerCase().includes("post is good");
-    context.writeEventToStream(
-      new AgentRunEvent({
-        name: "reviewer",
-        msg: `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
-          postIsGood ? " for publication." : "."
-        }`,
-      }),
+    appendStream(
+      "reviewer",
+      `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
+        postIsGood ? " for publication." : "."
+      }`,
     );
     if (postIsGood) {
       return new WriteEvent({
@@ -148,8 +145,8 @@ const createWorkflow = async (
 export {
   AgentRunEvent,
   AgentRunResult,
-  createWorkflow,
   ResearchEvent,
   ReviewEvent,
   WriteEvent,
+  createWorkflow,
 };

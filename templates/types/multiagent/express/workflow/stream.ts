@@ -1,4 +1,3 @@
-import { AgentRunEvent, AgentRunResult } from "@/src/workflow";
 import { WorkflowEvent } from "@llamaindex/core/workflow";
 import {
   StreamData,
@@ -7,6 +6,7 @@ import {
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
+import { AgentRunResult } from ".";
 
 export function LlamaIndexStream(
   it: AsyncGenerator<WorkflowEvent, void>,
@@ -39,19 +39,12 @@ function createParser(
         return;
       }
 
-      if (value instanceof AgentRunEvent) {
-        console.log({ 54: value });
-        data.appendMessageAnnotation({
-          type: "agent",
-          data: {
-            agent: value.data.name,
-            text: value.data.msg,
-          },
-        });
-      } else if (value instanceof AgentRunResult) {
-        console.log({ 63: value });
-        llmTextResponse += value.response;
-        controller.enqueue(value.response);
+      if (value.data instanceof AgentRunResult) {
+        const text = trimStartOfStream(value.data.response ?? "");
+        if (text) {
+          llmTextResponse += text;
+          controller.enqueue(text);
+        }
       }
     },
   });
