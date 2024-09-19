@@ -1,14 +1,11 @@
-import { WorkflowEvent } from "@llamaindex/core/workflow";
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage } from "llamaindex";
-import { MessageEvent } from "../agents/single";
-import { createWorkflow } from "../examples/workflow";
+import { createWorkflow } from "../workflow";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
 import { LlamaIndexStream } from "./llamaindex/streaming/stream";
 
 export const chat = async (req: Request, res: Response) => {
-  // Init Vercel AI StreamData and timeout
   const vercelStreamData = new StreamData();
   const streamTimeout = createStreamTimeout(vercelStreamData);
   try {
@@ -21,19 +18,18 @@ export const chat = async (req: Request, res: Response) => {
       });
     }
 
-    const specification = ""; // TODO: Add specification
-    const agent = await createWorkflow(messages as ChatMessage[]); // Test with single workflow
-    agent.run(specification);
+    const chatHistory = messages as ChatMessage[];
+    const agent = await createWorkflow(chatHistory);
+    agent.run(userMessage.content);
 
-    const response: AsyncIterable<WorkflowEvent<MessageEvent>> = {
-      [Symbol.asyncIterator]() {
-        return agent.streamEvents();
-      },
-    };
     const stream = LlamaIndexStream(
-      response,
+      {
+        [Symbol.asyncIterator]() {
+          return agent.streamEvents();
+        },
+      },
       vercelStreamData,
-      messages as ChatMessage[],
+      chatHistory,
     );
 
     return streamToResponse(stream, res, {}, vercelStreamData);
