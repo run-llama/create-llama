@@ -2,8 +2,8 @@ import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage } from "llamaindex";
 import { createWorkflow } from "../workflow";
+import { LlamaIndexStream } from "../workflow/stream";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
-import { LlamaIndexStream } from "./llamaindex/streaming/stream";
 
 export const chat = async (req: Request, res: Response) => {
   const vercelStreamData = new StreamData();
@@ -19,19 +19,9 @@ export const chat = async (req: Request, res: Response) => {
     }
 
     const chatHistory = messages as ChatMessage[];
-    const agent = await createWorkflow(chatHistory);
+    const agent = await createWorkflow(chatHistory, vercelStreamData);
     agent.run(userMessage.content);
-
-    const stream = LlamaIndexStream(
-      {
-        [Symbol.asyncIterator]() {
-          return agent.streamEvents();
-        },
-      },
-      vercelStreamData,
-      chatHistory,
-    );
-
+    const stream = LlamaIndexStream(agent.streamEvents(), vercelStreamData);
     return streamToResponse(stream, res, {}, vercelStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
