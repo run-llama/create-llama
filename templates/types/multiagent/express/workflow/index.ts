@@ -11,7 +11,7 @@ import { createResearcher, createReviewer, createWriter } from "./agents";
 import { AgentInput, AgentRunResult } from "./type";
 
 const TIMEOUT = 360 * 1000;
-const MAX_ATTEMPTS = 1;
+const MAX_ATTEMPTS = 2;
 
 class ResearchEvent extends WorkflowEvent<{ input: string }> {}
 class WriteEvent extends WorkflowEvent<{
