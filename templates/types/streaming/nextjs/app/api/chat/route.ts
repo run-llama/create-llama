@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { JSONValue, Message, StreamData, StreamingTextResponse } from "ai";
+import { JSONValue, LlamaIndexAdapter, Message, StreamData } from "ai";
 import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
@@ -12,7 +12,7 @@ import {
   createCallbackManager,
   createStreamTimeout,
 } from "./llamaindex/streaming/events";
-import { LlamaIndexStream } from "./llamaindex/streaming/stream";
+import { generateNextQuestions } from "./llamaindex/streaming/suggestion";
 
 initObservability();
 initSettings();
@@ -69,25 +69,37 @@ export async function POST(request: NextRequest) {
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
+    const chatHistory: ChatMessage[] = messages as ChatMessage[];
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await Settings.withCallbackManager(callbackManager, () => {
       return chatEngine.chat({
         message: userMessageContent,
-        chatHistory: messages as ChatMessage[],
+        chatHistory,
         stream: true,
       });
     });
 
-    // Transform LlamaIndex stream to Vercel/AI format
-    const stream = LlamaIndexStream(
-      response,
-      vercelStreamData,
-      messages as ChatMessage[],
-    );
+    const onFinal = (content: string) => {
+      chatHistory.push({ role: "assistant", content: content });
+      generateNextQuestions(chatHistory)
+        .then((questions: string[]) => {
+          if (questions.length > 0) {
+            vercelStreamData.appendMessageAnnotation({
+              type: "suggested_questions",
+              data: questions,
+            });
+          }
+        })
+        .finally(() => {
+          vercelStreamData.close();
+        });
+    };
 
-    // Return a StreamingTextResponse, which can be consumed by the Vercel/AI client
-    return new StreamingTextResponse(stream, {}, vercelStreamData);
+    return LlamaIndexAdapter.toDataStreamResponse(response, {
+      data: vercelStreamData,
+      callbacks: { onFinal },
+    });
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(

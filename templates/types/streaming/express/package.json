@@ -15,7 +15,7 @@
     "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\""
   },
   "dependencies": {
-    "ai": "3.3.38",
+    "ai": "3.3.42",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "duck-duck-scrape": "^2.2.5",
