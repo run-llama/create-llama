@@ -128,6 +128,13 @@ export const installTSTemplate = async ({
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
   });
 
+  if (template === "multiagent") {
+    await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
+      parents: true,
+      cwd: path.join(compPath, "multiagent", "typescript", "workflow"),
+    });
+  }
+
   // copy loader component (TS only supports llama_parse and file for now)
   const loaderFolder = useLlamaParse ? "llama_parse" : "file";
   await copy("**", enginePath, {

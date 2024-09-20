@@ -1,6 +1,6 @@
 import { StreamData } from "ai";
 import { ChatMessage, QueryEngineTool } from "llamaindex";
-import { getDataSource } from "../controllers/engine";
+import { getDataSource } from "../engine";
 import { FunctionCallingAgent } from "./factory";
 
 const getQueryEngineTool = async () => {

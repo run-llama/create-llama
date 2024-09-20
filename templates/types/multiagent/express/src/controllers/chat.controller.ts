@@ -1,9 +1,9 @@
 import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage } from "llamaindex";
-import { createWorkflow } from "../workflow";
-import { toDataStream } from "../workflow/stream";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
+import { createWorkflow } from "./workflow";
+import { toDataStream } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
   const vercelStreamData = new StreamData();
