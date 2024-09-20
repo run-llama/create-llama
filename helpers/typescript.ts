@@ -129,10 +129,21 @@ export const installTSTemplate = async ({
   });
 
   if (template === "multiagent") {
+    const multiagentPath = path.join(compPath, "multiagent", "typescript");
+
+    // copy workflow code for multiagent template
     await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
       parents: true,
-      cwd: path.join(compPath, "multiagent", "typescript", "workflow"),
+      cwd: path.join(multiagentPath, "workflow"),
     });
+
+    if (framework === "nextjs") {
+      // patch route.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "nextjs"),
+      });
+    }
   }
 
   // copy loader component (TS only supports llama_parse and file for now)
