@@ -1,4 +1,10 @@
-import { JSONValue, LlamaIndexAdapter, Message, StreamData } from "ai";
+import {
+  JSONValue,
+  LlamaIndexAdapter,
+  Message,
+  StreamData,
+  streamToResponse,
+} from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
@@ -83,10 +89,8 @@ export const chat = async (req: Request, res: Response) => {
         });
     };
 
-    return LlamaIndexAdapter.toDataStreamResponse(response, {
-      data: vercelStreamData,
-      callbacks: { onFinal },
-    });
+    const stream = LlamaIndexAdapter.toDataStream(response, { onFinal });
+    return streamToResponse(stream, res, {}, vercelStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({
