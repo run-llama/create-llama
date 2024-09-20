@@ -16,7 +16,7 @@ import {
   OpenAIAgent,
   Settings,
 } from "llamaindex";
-import { AgentInput, AgentRunResult, FunctionCallingStreamResult } from "./type";
+import { AgentInput, FunctionCallingStreamResult } from "./type";
 
 class InputEvent extends WorkflowEvent<{
   input: ChatMessage[];
