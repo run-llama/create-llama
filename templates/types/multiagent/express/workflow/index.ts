@@ -6,11 +6,12 @@ import {
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
 import { StreamData } from "ai";
-import { ChatMessage, EngineResponse, OpenAIAgent } from "llamaindex";
+import { ChatMessage } from "llamaindex";
 import { createResearcher, createReviewer, createWriter } from "./agents";
+import { AgentInput, AgentRunResult } from "./type";
 
 const TIMEOUT = 360 * 1000;
-const MAX_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 1;
 
 class ResearchEvent extends WorkflowEvent<{ input: string }> {}
 class WriteEvent extends WorkflowEvent<{
@@ -19,16 +20,7 @@ class WriteEvent extends WorkflowEvent<{
 }> {}
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 
-class AgentRunEvent extends WorkflowEvent<{
-  name: string;
-  msg: string;
-}> {}
-
-class AgentRunResult {
-  constructor(public response: ReadableStream<EngineResponse>) {}
-}
-
-const createWorkflow = async (
+export const createWorkflow = async (
   chatHistory: ChatMessage[],
   stream: StreamData,
 ) => {
@@ -39,22 +31,6 @@ const createWorkflow = async (
     });
   };
 
-  const runAgent = async (
-    name: string,
-    agent: OpenAIAgent,
-    input: string,
-  ): Promise<string> => {
-    appendStream(name, `Start to work on: ${input}`);
-    const response = await agent.chat({ message: input });
-    appendStream(name, `Finished task`);
-    console.debug(
-      `\n====== ${name} ======\n`,
-      response.message.content.toString(),
-      `\n======================\n`,
-    );
-    return response.message.content.toString();
-  };
-
   const start = async (context: Context, ev: StartEvent) => {
     context.set("task", ev.data.input);
     return new ResearchEvent({
@@ -63,12 +39,11 @@ const createWorkflow = async (
   };
 
   const research = async (context: Context, ev: ResearchEvent) => {
-    const researcher = await createResearcher(chatHistory);
-    const researchResult = await runAgent(
-      "researcher",
-      researcher,
-      ev.data.input,
+    const researcher = await createResearcher(chatHistory, stream);
+    const researchRes = await researcher.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
     );
+    const researchResult = researchRes.data.result;
     return new WriteEvent({
       input: `Write a blog post given this task: ${context.get("task")} using this research content: ${researchResult}`,
       isGood: false,
@@ -76,7 +51,6 @@ const createWorkflow = async (
   };
 
   const write = async (context: Context, ev: WriteEvent) => {
-    const writer = createWriter(chatHistory);
     context.set("attempts", context.get("attempts", 0) + 1);
     const tooManyAttempts = context.get("attempts") > MAX_ATTEMPTS;
     if (tooManyAttempts) {
@@ -87,22 +61,34 @@ const createWorkflow = async (
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      const responseStream = await writer.chat({
-        message: ev.data.input,
-        stream: true,
+      const writer = createWriter(chatHistory, stream);
+      writer.run(
+        new StartEvent<AgentInput>({
+          input: { message: ev.data.input, streaming: true },
+        }),
+      );
+      const finalResultStream = writer.streamEvents();
+      context.writeEventToStream({
+        data: new AgentRunResult(finalResultStream),
       });
-      context.writeEventToStream({ data: new AgentRunResult(responseStream) });
-      return new StopEvent({ result: responseStream }); // stop the workflow
+      return new StopEvent({ result: finalResultStream }); // stop the workflow
     }
 
-    const writeResult = await runAgent("writer", writer, ev.data.input);
+    const writer = createWriter(chatHistory, stream);
+    const writeRes = await writer.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
+    );
+    const writeResult = writeRes.data.result;
     context.set("result", writeResult); // store the last result
     return new ReviewEvent({ input: writeResult });
   };
 
   const review = async (context: Context, ev: ReviewEvent) => {
-    const reviewer = createReviewer(chatHistory);
-    const reviewResult = await runAgent("reviewer", reviewer, ev.data.input);
+    const reviewer = createReviewer(chatHistory, stream);
+    const reviewRes = await reviewer.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
+    );
+    const reviewResult = reviewRes.data.result;
     const oldContent = context.get("result");
     const postIsGood = reviewResult.toLowerCase().includes("post is good");
     appendStream(
@@ -138,14 +124,6 @@ const createWorkflow = async (
   workflow.addStep(ResearchEvent, research, { outputs: WriteEvent });
   workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, StopEvent] });
   workflow.addStep(ReviewEvent, review, { outputs: WriteEvent });
-  return workflow;
-};
 
-export {
-  AgentRunEvent,
-  AgentRunResult,
-  ResearchEvent,
-  ReviewEvent,
-  WriteEvent,
-  createWorkflow,
+  return workflow;
 };
