@@ -149,6 +149,15 @@ export const installTSTemplate = async ({
     cwd: path.join(compPath, "engines", "typescript", engine),
   });
 
+  // copy settings file to engine folder
+  const settingPath = path.join(
+    compPath,
+    "engines",
+    "typescript",
+    "settings.ts",
+  );
+  await copy("settings.ts", enginePath, { cwd: settingPath });
+
   /**
    * Copy the selected UI files to the target directory and reference it.
    */
