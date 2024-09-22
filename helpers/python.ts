@@ -50,7 +50,7 @@ const getAdditionalDependencies = (
     case "pinecone": {
       dependencies.push({
         name: "llama-index-vector-stores-pinecone",
-        version: "^0.1.3",
+        version: "^0.2.1",
       });
       break;
     }
@@ -75,7 +75,7 @@ const getAdditionalDependencies = (
     case "qdrant": {
       dependencies.push({
         name: "llama-index-vector-stores-qdrant",
-        version: "^0.2.8",
+        version: "^0.3.0",
       });
       break;
     }
