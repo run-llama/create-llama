@@ -12,8 +12,7 @@ generate = "app.engine.generate:generate_datasource"
 [tool.poetry.dependencies]
 python = "^3.11"
 llama-index-agent-openai = ">=0.3.0,<0.4.0"
-llama-index = "0.11.9"
-llama-index-core = "0.11.9"
+llama-index = "0.11.11"
 fastapi = "^0.112.2"
 python-dotenv = "^1.0.0"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }

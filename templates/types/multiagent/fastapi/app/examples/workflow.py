@@ -1,7 +1,8 @@
-import asyncio
 from typing import AsyncGenerator, List, Optional
 
-
+from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
+from app.examples.researcher import create_researcher
+from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import (
     Context,
     Event,
@@ -10,9 +11,6 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.core.chat_engine.types import ChatMessage
-from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
-from app.examples.researcher import create_researcher
 
 
 def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
@@ -132,8 +130,8 @@ Review:
         input: str,
         streaming: bool = False,
     ) -> AgentRunResult | AsyncGenerator:
-        task = asyncio.create_task(agent.run(input=input, streaming=streaming))
+        handler = agent.run(input=input, streaming=streaming)
         # bubble all events while running the executor to the planner
-        async for event in agent.stream_events():
+        async for event in handler.stream_events():
             ctx.write_event_to_stream(event)
-        return await task
+        return await handler
