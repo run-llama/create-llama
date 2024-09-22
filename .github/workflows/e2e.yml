@@ -82,7 +82,6 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.11", "3.12"]
         os: [ubuntu-22.04]
     defaults:
       run:
@@ -91,10 +90,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up python ${{ matrix.python-version }}
+      # poetry lock will resolve for all supported python versions, don't need to add matrix
+      - name: Set up python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
