@@ -24,87 +24,100 @@ const toolOptions = [
   "google.GoogleSearchToolSpec",
 ];
 
-// TODO: Add data sources to the test
+const dataSources = [
+  "--example-file",
+  "--web-source https://www.example.com",
+  "--db-source mysql+pymysql://user:pass@localhost:3306/mydb",
+];
 
 test.describe("Test resolve python dependencies", () => {
   for (const vectorDb of vectorDbs) {
     for (const tool of toolOptions) {
-      const optionDescription = `vectorDb: ${vectorDb}, tools: ${tool}`;
+      for (const dataSource of dataSources) {
+        const dataSourceType = dataSource.split(" ")[0];
+        const optionDescription = `vectorDb: ${vectorDb}, tools: ${tool}, dataSource: ${dataSourceType}`;
 
-      test(`options: ${optionDescription}`, async () => {
-        const cwd = await createTestDir();
+        test(`options: ${optionDescription}`, async () => {
+          const cwd = await createTestDir();
 
-        const result = await runCreateLlama(
-          cwd,
-          "streaming",
-          "fastapi",
-          "--example-file",
-          vectorDb,
-          3000, // port
-          8000, // externalPort
-          "none", // postInstallAction
-          undefined, // ui
-          "--no-frontend", // appType
-          undefined, // llamaCloudProjectName
-          undefined, // llamaCloudIndexName
-          tool,
-        );
-        const name = result.projectName;
-
-        // Check if the app folder exists
-        const dirExists = fs.existsSync(path.join(cwd, name));
-        expect(dirExists).toBeTruthy();
-
-        // Check if pyproject.toml exists
-        const pyprojectPath = path.join(cwd, name, "pyproject.toml");
-        const pyprojectExists = fs.existsSync(pyprojectPath);
-        expect(pyprojectExists).toBeTruthy();
-
-        // Run poetry lock
-        try {
-          const { stdout, stderr } = await execAsync(
-            // Config poetry to create virtualenv in project directory.
-            // so that we can easily prune the e2e cache to avoid overloading the storage.
-            "poetry config virtualenvs.in-project true && poetry lock --no-update",
-            {
-              cwd: path.join(cwd, name),
-            },
+          const result = await runCreateLlama(
+            cwd,
+            "streaming",
+            "fastapi",
+            dataSource,
+            vectorDb,
+            3000, // port
+            8000, // externalPort
+            "none", // postInstallAction
+            undefined, // ui
+            "--no-frontend", // appType
+            undefined, // llamaCloudProjectName
+            undefined, // llamaCloudIndexName
+            tool,
           );
-          console.log("poetry lock stdout:", stdout);
-          console.error("poetry lock stderr:", stderr);
-        } catch (error) {
-          console.error("Error running poetry lock:", error);
-          throw error;
-        }
+          const name = result.projectName;
 
-        // Check if poetry.lock file was created
-        const poetryLockExists = fs.existsSync(
-          path.join(cwd, name, "poetry.lock"),
-        );
-        expect(poetryLockExists).toBeTruthy();
+          // Check if the app folder exists
+          const dirExists = fs.existsSync(path.join(cwd, name));
+          expect(dirExists).toBeTruthy();
 
-        // Verify that specific dependencies are in pyproject.toml
-        const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
-        if (vectorDb !== "none") {
-          if (vectorDb === "pg") {
-            expect(pyprojectContent).toContain(
-              "llama-index-vector-stores-postgres",
+          // Check if pyproject.toml exists
+          const pyprojectPath = path.join(cwd, name, "pyproject.toml");
+          const pyprojectExists = fs.existsSync(pyprojectPath);
+          expect(pyprojectExists).toBeTruthy();
+
+          // Run poetry lock
+          try {
+            const { stdout, stderr } = await execAsync(
+              "poetry config virtualenvs.in-project true && poetry lock --no-update",
+              {
+                cwd: path.join(cwd, name),
+              },
             );
-          } else {
-            expect(pyprojectContent).toContain(
-              `llama-index-vector-stores-${vectorDb}`,
-            );
+            console.log("poetry lock stdout:", stdout);
+            console.error("poetry lock stderr:", stderr);
+          } catch (error) {
+            console.error("Error running poetry lock:", error);
+            throw error;
           }
-        }
-        if (tool !== "none") {
-          if (tool === "wikipedia.WikipediaToolSpec") {
-            expect(pyprojectContent).toContain("wikipedia");
+
+          // Check if poetry.lock file was created
+          const poetryLockExists = fs.existsSync(
+            path.join(cwd, name, "poetry.lock"),
+          );
+          expect(poetryLockExists).toBeTruthy();
+
+          // Verify that specific dependencies are in pyproject.toml
+          const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
+          if (vectorDb !== "none") {
+            if (vectorDb === "pg") {
+              expect(pyprojectContent).toContain(
+                "llama-index-vector-stores-postgres",
+              );
+            } else {
+              expect(pyprojectContent).toContain(
+                `llama-index-vector-stores-${vectorDb}`,
+              );
+            }
           }
-          if (tool === "google.GoogleSearchToolSpec") {
-            expect(pyprojectContent).toContain("google");
+          if (tool !== "none") {
+            if (tool === "wikipedia.WikipediaToolSpec") {
+              expect(pyprojectContent).toContain("wikipedia");
+            }
+            if (tool === "google.GoogleSearchToolSpec") {
+              expect(pyprojectContent).toContain("google");
+            }
           }
-        }
-      });
+
+          // Check for data source specific dependencies
+          if (dataSource.includes("--web-source")) {
+            expect(pyprojectContent).toContain("llama-index-readers-web");
+          }
+          if (dataSource.includes("--db-source")) {
+            expect(pyprojectContent).toContain("llama-index-readers-database ");
+          }
+        });
+      }
     }
   }
 });
