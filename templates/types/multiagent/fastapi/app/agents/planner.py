@@ -1,8 +1,8 @@
-import asyncio
 import uuid
 from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
 
+from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 from llama_index.core.agent.runner.planner import (
     DEFAULT_INITIAL_PLAN_PROMPT,
     DEFAULT_PLAN_REFINE_PROMPT,
@@ -23,8 +23,6 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-
-from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 
 
 class ExecutePlanEvent(Event):
@@ -125,16 +123,14 @@ class StructuredPlannerAgent(Workflow):
         is_last_tasks = ctx.data["num_sub_tasks"] == self.get_remaining_subtasks(ctx)
         # TODO: streaming only works without plan refining
         streaming = is_last_tasks and ctx.data["streaming"] and not self.refine_plan
-        task = asyncio.create_task(
-            self.executor.run(
-                input=ev.sub_task.input,
-                streaming=streaming,
-            )
+        handler = self.executor.run(
+            input=ev.sub_task.input,
+            streaming=streaming,
         )
         # bubble all events while running the executor to the planner
-        async for event in self.executor.stream_events():
+        async for event in handler.stream_events():
             ctx.write_event_to_stream(event)
-        result = await task
+        result: AgentRunResult = await handler
         if self._verbose:
             print("=== Done executing sub task ===\n")
         self.planner.state.add_completed_sub_task(ctx.data["act_plan_id"], ev.sub_task)
