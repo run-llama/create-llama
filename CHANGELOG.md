@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.8
+
+### Patch Changes
+
+- 0031e67: Bump llama-index to 0.11.11 for the multi-agent template
+
 ## 0.2.7
 
 ### Patch Changes
