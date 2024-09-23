@@ -15,6 +15,7 @@ import {
   LLM,
   OpenAIAgent,
   Settings,
+  ToolCallLLM,
 } from "llamaindex";
 import { AgentInput, FunctionCallingStreamResult } from "./type";
 
@@ -51,6 +52,7 @@ export class FunctionCallingAgent extends Workflow {
     });
     this.name = options?.name;
     this.llm = options.llm ?? Settings.llm;
+    this.checkToolCallSupport();
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
       chatHistory: options.chatHistory,
@@ -144,5 +146,10 @@ export class FunctionCallingAgent extends Workflow {
       type: "agent",
       data: { agent: this.name, text: msg },
     });
+  }
+
+  private checkToolCallSupport() {
+    const { supportToolCall } = this.llm as ToolCallLLM;
+    if (!supportToolCall) throw new Error("LLM does not support tool calls");
   }
 }
