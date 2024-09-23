@@ -421,7 +421,7 @@ export const askQuestions = async (
       program.framework = getPrefOrDefault("framework");
     } else {
       const choices = [
-        { title: "NextJS", value: "nextjs" }, 
+        { title: "NextJS", value: "nextjs" },
         { title: "Express", value: "express" },
         { title: "FastAPI (Python)", value: "fastapi" },
       ];
