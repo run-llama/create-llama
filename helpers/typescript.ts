@@ -180,6 +180,7 @@ export const installTSTemplate = async ({
     framework,
     ui,
     observability,
+    vectorDb,
   });
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
@@ -200,9 +201,16 @@ async function updatePackageJson({
   framework,
   ui,
   observability,
+  vectorDb,
 }: Pick<
   InstallTemplateArgs,
-  "root" | "appName" | "dataSources" | "framework" | "ui" | "observability"
+  | "root"
+  | "appName"
+  | "dataSources"
+  | "framework"
+  | "ui"
+  | "observability"
+  | "vectorDb"
 > & {
   relativeEngineDestPath: string;
 }): Promise<any> {
@@ -246,6 +254,13 @@ async function updatePackageJson({
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       "@types/react-syntax-highlighter": undefined,
+    };
+  }
+
+  if (vectorDb === "pg") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      pg: "^8.12.0",
     };
   }
 
