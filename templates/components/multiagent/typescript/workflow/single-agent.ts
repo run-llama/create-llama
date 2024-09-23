@@ -99,30 +99,31 @@ export class FunctionCallingAgent extends Workflow {
       chatHistory: this.chatHistory,
     });
 
-    if (!ctx.get("streaming")) {
-      const response = await Settings.withCallbackManager(
-        this.callbackManager,
-        () => {
-          return chatEngine.chat({
-            message: ev.data.input.pop()!.content,
-          });
-        },
-      );
-      this.writeEvent("Finished task");
-      return new StopEvent({ result: response.message.content.toString() });
+    const isStreaming = ctx.get("streaming");
+    const lastMessage = ev.data.input[ev.data.input.length - 1];
+    if (!lastMessage) {
+      throw new Error("No messages in input");
     }
+
+    const chatParams = {
+      message: lastMessage.content,
+      ...(isStreaming && { stream: true }),
+    };
 
     const response = await Settings.withCallbackManager(
       this.callbackManager,
-      () => {
-        return chatEngine.chat({
-          message: ev.data.input.pop()!.content,
-          stream: true,
-        });
-      },
+      () => chatEngine.chat(chatParams),
     );
-    ctx.writeEventToStream({ data: new FunctionCallingStreamResult(response) });
-    return new StopEvent({ result: response });
+
+    if (isStreaming) {
+      ctx.writeEventToStream({
+        data: new FunctionCallingStreamResult(response),
+      });
+      return new StopEvent({ result: response });
+    }
+
+    this.writeEvent("Finished task");
+    return new StopEvent({ result: response.message.content.toString() });
   }
 
   private createCallbackManager() {
