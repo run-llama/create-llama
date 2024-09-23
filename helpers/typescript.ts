@@ -33,12 +33,7 @@ export const installTSTemplate = async ({
    * Copy the template files to the target directory.
    */
   console.log("\nInitializing project with template:", template, "\n");
-  let type = "streaming";
-  if (template === "multiagent" && framework === "express") {
-    // use nextjs streaming template as frontend for express and fastapi
-    type = "multiagent";
-  }
-  const templatePath = path.join(templatesDir, "types", type, framework);
+  const templatePath = path.join(templatesDir, "types", "streaming", framework);
   const copySource = ["**"];
 
   await copy(copySource, root, {
@@ -142,6 +137,12 @@ export const installTSTemplate = async ({
       await copy("**", path.join(root, relativeEngineDestPath), {
         parents: true,
         cwd: path.join(multiagentPath, "nextjs"),
+      });
+    } else if (framework === "express") {
+      // patch chat.controller.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "express"),
       });
     }
   }
