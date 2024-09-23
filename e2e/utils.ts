@@ -32,6 +32,7 @@ export async function runCreateLlama(
   appType?: AppType,
   llamaCloudProjectName?: string,
   llamaCloudIndexName?: string,
+  tools?: string,
 ): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
@@ -41,10 +42,23 @@ export async function runCreateLlama(
   const name = [
     templateType,
     templateFramework,
-    dataSource,
+    dataSource.split(" ")[0],
     templateUI,
     appType,
   ].join("-");
+
+  // Handle different data source types
+  let dataSourceArgs = [];
+  if (dataSource.includes("--web-source" || "--db-source")) {
+    const webSource = dataSource.split(" ")[1];
+    dataSourceArgs.push("--web-source", webSource);
+  } else if (dataSource.includes("--db-source")) {
+    const dbSource = dataSource.split(" ")[1];
+    dataSourceArgs.push("--db-source", dbSource);
+  } else {
+    dataSourceArgs.push(dataSource);
+  }
+
   const commandArgs = [
     "create-llama",
     name,
@@ -52,7 +66,7 @@ export async function runCreateLlama(
     templateType,
     "--framework",
     templateFramework,
-    dataSource,
+    ...dataSourceArgs,
     "--vector-db",
     vectorDb,
     "--open-ai-key",
@@ -65,7 +79,7 @@ export async function runCreateLlama(
     "--post-install-action",
     postInstallAction,
     "--tools",
-    "none",
+    tools ?? "none",
     "--no-llama-parse",
     "--observability",
     "none",

@@ -36,28 +36,28 @@ const getAdditionalDependencies = (
     case "mongo": {
       dependencies.push({
         name: "llama-index-vector-stores-mongodb",
-        version: "^0.1.3",
+        version: "^0.3.1",
       });
       break;
     }
     case "pg": {
       dependencies.push({
         name: "llama-index-vector-stores-postgres",
-        version: "^0.1.1",
+        version: "^0.2.5",
       });
       break;
     }
     case "pinecone": {
       dependencies.push({
         name: "llama-index-vector-stores-pinecone",
-        version: "^0.1.3",
+        version: "^0.2.1",
       });
       break;
     }
     case "milvus": {
       dependencies.push({
         name: "llama-index-vector-stores-milvus",
-        version: "^0.1.20",
+        version: "^0.2.0",
       });
       dependencies.push({
         name: "pymilvus",
@@ -68,28 +68,28 @@ const getAdditionalDependencies = (
     case "astra": {
       dependencies.push({
         name: "llama-index-vector-stores-astra-db",
-        version: "^0.1.5",
+        version: "^0.2.0",
       });
       break;
     }
     case "qdrant": {
       dependencies.push({
         name: "llama-index-vector-stores-qdrant",
-        version: "^0.2.8",
+        version: "^0.3.0",
       });
       break;
     }
     case "chroma": {
       dependencies.push({
         name: "llama-index-vector-stores-chroma",
-        version: "^0.1.8",
+        version: "^0.2.0",
       });
       break;
     }
     case "weaviate": {
       dependencies.push({
         name: "llama-index-vector-stores-weaviate",
-        version: "^1.0.2",
+        version: "^1.1.1",
       });
       break;
     }
@@ -130,7 +130,7 @@ const getAdditionalDependencies = (
         case "llamacloud":
           dependencies.push({
             name: "llama-index-indices-managed-llama-cloud",
-            version: "^0.3.0",
+            version: "^0.3.1",
           });
           break;
       }
