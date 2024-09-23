@@ -6,7 +6,7 @@ import {
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import { AgentRunResult, FunctionCallingStreamResult } from "./type";
+import { AgentRunResult } from "./type";
 
 export function toDataStream(
   generator: AsyncGenerator<WorkflowEvent, void>,
@@ -33,24 +33,11 @@ function toReadableStream(
       if (value.data instanceof AgentRunResult) {
         const finalResultStream = value.data.response;
         for await (const event of finalResultStream) {
-          if (event.data instanceof FunctionCallingStreamResult) {
-            const readableStream = event.data.response;
-            readableStream.pipeTo(
-              new WritableStream({
-                write(chunk) {
-                  const text = trimStartOfStream(chunk.delta ?? "");
-                  if (text) {
-                    controller.enqueue(text);
-                  }
-                },
-                close() {
-                  controller.close();
-                  data.close();
-                },
-              }),
-            );
-          }
+          const text = trimStartOfStream(event.delta ?? "");
+          if (text) controller.enqueue(text);
         }
+        controller.close();
+        data.close();
       }
     },
   });

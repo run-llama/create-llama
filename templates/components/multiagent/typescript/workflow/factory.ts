@@ -6,9 +6,9 @@ import {
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
 import { StreamData } from "ai";
-import { ChatMessage } from "llamaindex";
+import { ChatMessage, ChatResponseChunk } from "llamaindex";
 import { createResearcher, createReviewer, createWriter } from "./agents";
-import { AgentInput, AgentRunResult } from "./type";
+import { AgentInput, AgentRunEvent, AgentRunResult } from "./type";
 
 const TIMEOUT = 360 * 1000;
 const MAX_ATTEMPTS = 2;
@@ -31,6 +31,19 @@ export const createWorkflow = async (
     });
   };
 
+  const runAgent = async (agent: Workflow, input: AgentInput) => {
+    const run = agent.run(new StartEvent({ input }));
+    for await (const event of agent.streamEvents()) {
+      if (event.data instanceof AgentRunEvent) {
+        const { name, msg } = event.data.data;
+        // TODO: better using context.writeEventToStream here instead of directly append to stream
+        // But not sure why it's fail to write to stream from the third event
+        appendStream(name, msg);
+      }
+    }
+    return await run;
+  };
+
   const start = async (context: Context, ev: StartEvent) => {
     context.set("task", ev.data.input);
     return new ResearchEvent({
@@ -39,10 +52,8 @@ export const createWorkflow = async (
   };
 
   const research = async (context: Context, ev: ResearchEvent) => {
-    const researcher = await createResearcher(chatHistory, stream);
-    const researchRes = await researcher.run(
-      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
-    );
+    const researcher = await createResearcher(chatHistory);
+    const researchRes = await runAgent(researcher, { message: ev.data.input });
     const researchResult = researchRes.data.result;
     return new WriteEvent({
       input: `Write a blog post given this task: ${context.get("task")} using this research content: ${researchResult}`,
@@ -61,30 +72,28 @@ export const createWorkflow = async (
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      const writer = createWriter(chatHistory, stream);
-      writer.run(
-        new StartEvent<AgentInput>({
-          input: { message: ev.data.input, streaming: true },
-        }),
-      );
-      const finalResultStream = writer.streamEvents();
+      const writer = createWriter(chatHistory);
+      const writeRes = (await runAgent(writer, {
+        message: ev.data.input,
+        streaming: true,
+      })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
+
+      const result = writeRes.data.result;
       context.writeEventToStream({
-        data: new AgentRunResult(finalResultStream),
+        data: new AgentRunResult(result),
       });
-      return new StopEvent({ result: finalResultStream }); // stop the workflow
+      return new StopEvent({ result }); // stop the workflow
     }
 
-    const writer = createWriter(chatHistory, stream);
-    const writeRes = await writer.run(
-      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
-    );
+    const writer = createWriter(chatHistory);
+    const writeRes = await runAgent(writer, { message: ev.data.input });
     const writeResult = writeRes.data.result;
     context.set("result", writeResult); // store the last result
     return new ReviewEvent({ input: writeResult });
   };
 
   const review = async (context: Context, ev: ReviewEvent) => {
-    const reviewer = createReviewer(chatHistory, stream);
+    const reviewer = createReviewer(chatHistory);
     const reviewRes = await reviewer.run(
       new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
     );

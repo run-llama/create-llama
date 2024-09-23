@@ -1,5 +1,5 @@
 import { WorkflowEvent } from "@llamaindex/core/workflow";
-import { EngineResponse } from "llamaindex";
+import { ChatResponseChunk } from "llamaindex";
 
 export type AgentInput = {
   message: string;
@@ -12,9 +12,7 @@ export class AgentRunEvent extends WorkflowEvent<{
 }> {}
 
 export class AgentRunResult {
-  constructor(public response: AsyncGenerator<WorkflowEvent>) {}
-}
-
-export class FunctionCallingStreamResult {
-  constructor(public response: ReadableStream<EngineResponse>) {}
+  constructor(
+    public response: AsyncGenerator<ChatResponseChunk, any, unknown>,
+  ) {}
 }
