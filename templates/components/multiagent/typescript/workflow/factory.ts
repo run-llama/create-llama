@@ -6,147 +6,124 @@ import {
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
 import { StreamData } from "ai";
-import {
-  BaseToolWithCall,
-  CallbackManager,
-  ChatMemoryBuffer,
-  ChatMessage,
-  EngineResponse,
-  LLM,
-  OpenAIAgent,
-  Settings,
-} from "llamaindex";
-import { AgentInput, FunctionCallingStreamResult } from "./type";
+import { ChatMessage } from "llamaindex";
+import { createResearcher, createReviewer, createWriter } from "./agents";
+import { AgentInput, AgentRunResult } from "./type";
 
-class InputEvent extends WorkflowEvent<{
-  input: ChatMessage[];
+const TIMEOUT = 360 * 1000;
+const MAX_ATTEMPTS = 2;
+
+class ResearchEvent extends WorkflowEvent<{ input: string }> {}
+class WriteEvent extends WorkflowEvent<{
+  input: string;
+  isGood: boolean;
 }> {}
+class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 
-export class FunctionCallingAgent extends Workflow {
-  name: string;
-  llm: LLM;
-  memory: ChatMemoryBuffer;
-  tools: BaseToolWithCall[];
-  systemPrompt?: string;
-  writeEvents: boolean;
-  role?: string;
-  callbackManager: CallbackManager;
-  stream: StreamData;
-
-  constructor(options: {
-    name: string;
-    llm?: LLM;
-    chatHistory?: ChatMessage[];
-    tools?: BaseToolWithCall[];
-    systemPrompt?: string;
-    writeEvents?: boolean;
-    role?: string;
-    verbose?: boolean;
-    timeout?: number;
-    stream: StreamData;
-  }) {
-    super({
-      verbose: options?.verbose ?? false,
-      timeout: options?.timeout ?? 360,
-    });
-    this.name = options?.name;
-    this.llm = options.llm ?? Settings.llm;
-    this.memory = new ChatMemoryBuffer({
-      llm: this.llm,
-      chatHistory: options.chatHistory,
-    });
-    this.tools = options?.tools ?? [];
-    this.systemPrompt = options.systemPrompt;
-    this.writeEvents = options?.writeEvents ?? true;
-    this.role = options?.role;
-    this.callbackManager = this.createCallbackManager();
-    this.stream = options.stream;
-
-    // add steps
-    this.addStep(StartEvent<AgentInput>, this.prepareChatHistory, {
-      outputs: InputEvent,
-    });
-    this.addStep(InputEvent, this.handleLLMInput, {
-      outputs: StopEvent,
-    });
-  }
-
-  private get chatHistory() {
-    return this.memory.getAllMessages();
-  }
-
-  private async prepareChatHistory(
-    ctx: Context,
-    ev: StartEvent<AgentInput>,
-  ): Promise<InputEvent> {
-    const { message, streaming } = ev.data.input;
-    ctx.set("streaming", streaming);
-    this.writeEvent(`Start to work on: ${message}`);
-    if (this.systemPrompt) {
-      this.memory.put({ role: "system", content: this.systemPrompt });
-    }
-    this.memory.put({ role: "user", content: message });
-    return new InputEvent({ input: this.chatHistory });
-  }
-
-  private async handleLLMInput(
-    ctx: Context,
-    ev: InputEvent,
-  ): Promise<StopEvent<string | ReadableStream<EngineResponse>>> {
-    const chatEngine = new OpenAIAgent({
-      tools: this.tools,
-      systemPrompt: this.systemPrompt,
-      chatHistory: this.chatHistory,
-    });
-
-    if (!ctx.get("streaming")) {
-      const response = await Settings.withCallbackManager(
-        this.callbackManager,
-        () => {
-          return chatEngine.chat({
-            message: ev.data.input.pop()!.content,
-          });
-        },
-      );
-      this.writeEvent("Finished task");
-      return new StopEvent({ result: response.message.content.toString() });
-    }
-
-    const response = await Settings.withCallbackManager(
-      this.callbackManager,
-      () => {
-        return chatEngine.chat({
-          message: ev.data.input.pop()!.content,
-          stream: true,
-        });
-      },
-    );
-    ctx.writeEventToStream({ data: new FunctionCallingStreamResult(response) });
-    return new StopEvent({ result: response });
-  }
-
-  private createCallbackManager() {
-    const callbackManager = new CallbackManager();
-    callbackManager.on("llm-tool-call", (event) => {
-      const { toolCall } = event.detail;
-      this.writeEvent(
-        `Calling tool "${toolCall.name}" with input: ${JSON.stringify(toolCall.input)}`,
-      );
-    });
-    callbackManager.on("llm-tool-result", (event) => {
-      const { toolCall, toolResult } = event.detail;
-      this.writeEvent(
-        `Getting result from tool "${toolCall.name}": \n${JSON.stringify(toolResult.output)}`,
-      );
-    });
-    return callbackManager;
-  }
-
-  private writeEvent(msg: string) {
-    if (!this.writeEvents) return;
-    this.stream.appendMessageAnnotation({
+export const createWorkflow = async (
+  chatHistory: ChatMessage[],
+  stream: StreamData,
+) => {
+  const appendStream = (agent: string, text: string) => {
+    stream.appendMessageAnnotation({
       type: "agent",
-      data: { agent: this.name, text: msg },
+      data: { agent, text },
     });
-  }
-}
+  };
+
+  const start = async (context: Context, ev: StartEvent) => {
+    context.set("task", ev.data.input);
+    return new ResearchEvent({
+      input: `Research for this task: ${ev.data.input}`,
+    });
+  };
+
+  const research = async (context: Context, ev: ResearchEvent) => {
+    const researcher = await createResearcher(chatHistory, stream);
+    const researchRes = await researcher.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
+    );
+    const researchResult = researchRes.data.result;
+    return new WriteEvent({
+      input: `Write a blog post given this task: ${context.get("task")} using this research content: ${researchResult}`,
+      isGood: false,
+    });
+  };
+
+  const write = async (context: Context, ev: WriteEvent) => {
+    context.set("attempts", context.get("attempts", 0) + 1);
+    const tooManyAttempts = context.get("attempts") > MAX_ATTEMPTS;
+    if (tooManyAttempts) {
+      appendStream(
+        "writer",
+        `Too many attempts (${MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.`,
+      );
+    }
+
+    if (ev.data.isGood || tooManyAttempts) {
+      const writer = createWriter(chatHistory, stream);
+      writer.run(
+        new StartEvent<AgentInput>({
+          input: { message: ev.data.input, streaming: true },
+        }),
+      );
+      const finalResultStream = writer.streamEvents();
+      context.writeEventToStream({
+        data: new AgentRunResult(finalResultStream),
+      });
+      return new StopEvent({ result: finalResultStream }); // stop the workflow
+    }
+
+    const writer = createWriter(chatHistory, stream);
+    const writeRes = await writer.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
+    );
+    const writeResult = writeRes.data.result;
+    context.set("result", writeResult); // store the last result
+    return new ReviewEvent({ input: writeResult });
+  };
+
+  const review = async (context: Context, ev: ReviewEvent) => {
+    const reviewer = createReviewer(chatHistory, stream);
+    const reviewRes = await reviewer.run(
+      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
+    );
+    const reviewResult = reviewRes.data.result;
+    const oldContent = context.get("result");
+    const postIsGood = reviewResult.toLowerCase().includes("post is good");
+    appendStream(
+      "reviewer",
+      `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
+        postIsGood ? " for publication." : "."
+      }`,
+    );
+    if (postIsGood) {
+      return new WriteEvent({
+        input: `You're blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${oldContent}\`\`\``,
+        isGood: true,
+      });
+    }
+
+    return new WriteEvent({
+      input: `Improve the writing of a given blog post by using a given review.
+            Blog post:
+            \`\`\`
+            ${oldContent}
+            \`\`\`
+
+            Review:
+            \`\`\`
+            ${reviewResult}
+            \`\`\``,
+      isGood: false,
+    });
+  };
+
+  const workflow = new Workflow({ timeout: TIMEOUT, validate: true });
+  workflow.addStep(StartEvent, start, { outputs: ResearchEvent });
+  workflow.addStep(ResearchEvent, research, { outputs: WriteEvent });
+  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, StopEvent] });
+  workflow.addStep(ReviewEvent, review, { outputs: WriteEvent });
+
+  return workflow;
+};

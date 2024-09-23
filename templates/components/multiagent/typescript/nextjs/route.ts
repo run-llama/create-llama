@@ -4,7 +4,7 @@ import { ChatMessage } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
-import { createWorkflow } from "./workflow";
+import { createWorkflow } from "./workflow/factory";
 import { toDataStream } from "./workflow/stream";
 
 initObservability();

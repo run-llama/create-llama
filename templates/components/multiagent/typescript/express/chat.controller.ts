@@ -2,7 +2,7 @@ import { Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage } from "llamaindex";
 import { createStreamTimeout } from "./llamaindex/streaming/events";
-import { createWorkflow } from "./workflow";
+import { createWorkflow } from "./workflow/factory";
 import { toDataStream } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {

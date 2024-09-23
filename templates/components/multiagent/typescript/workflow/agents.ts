@@ -1,7 +1,7 @@
 import { StreamData } from "ai";
 import { ChatMessage, QueryEngineTool } from "llamaindex";
 import { getDataSource } from "../engine";
-import { FunctionCallingAgent } from "./factory";
+import { FunctionCallingAgent } from "./single-agent";
 
 const getQueryEngineTool = async () => {
   const index = await getDataSource();
