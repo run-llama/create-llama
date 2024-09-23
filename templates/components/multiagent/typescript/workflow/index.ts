@@ -99,7 +99,7 @@ export const createWorkflow = async (
     );
     if (postIsGood) {
       return new WriteEvent({
-        input: `You're blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${oldContent}\`\`\``,
+        input: `Your blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${oldContent}\`\`\``,
         isGood: true,
       });
     }
