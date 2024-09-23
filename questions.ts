@@ -421,9 +421,7 @@ export const askQuestions = async (
       program.framework = getPrefOrDefault("framework");
     } else {
       const choices = [
-        ...(program.template === "multiagent"
-          ? []
-          : [{ title: "NextJS", value: "nextjs" }]), // Not supported nextjs for multiagent for now
+        { title: "NextJS", value: "nextjs" },
         { title: "Express", value: "express" },
         { title: "FastAPI (Python)", value: "fastapi" },
       ];

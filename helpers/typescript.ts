@@ -33,12 +33,7 @@ export const installTSTemplate = async ({
    * Copy the template files to the target directory.
    */
   console.log("\nInitializing project with template:", template, "\n");
-  let type = "streaming";
-  if (template === "multiagent" && framework === "express") {
-    // use nextjs streaming template as frontend for express and fastapi
-    type = "multiagent";
-  }
-  const templatePath = path.join(templatesDir, "types", type, framework);
+  const templatePath = path.join(templatesDir, "types", "streaming", framework);
   const copySource = ["**"];
 
   await copy(copySource, root, {
@@ -129,10 +124,27 @@ export const installTSTemplate = async ({
   });
 
   if (template === "multiagent") {
+    const multiagentPath = path.join(compPath, "multiagent", "typescript");
+
+    // copy workflow code for multiagent template
     await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
       parents: true,
-      cwd: path.join(compPath, "multiagent", "typescript", "workflow"),
+      cwd: path.join(multiagentPath, "workflow"),
     });
+
+    if (framework === "nextjs") {
+      // patch route.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "nextjs"),
+      });
+    } else if (framework === "express") {
+      // patch chat.controller.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "express"),
+      });
+    }
   }
 
   // copy loader component (TS only supports llama_parse and file for now)
