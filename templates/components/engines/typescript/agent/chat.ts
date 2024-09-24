@@ -1,4 +1,9 @@
-import { BaseToolWithCall, OpenAIAgent, QueryEngineTool } from "llamaindex";
+import {
+  BaseToolWithCall,
+  ChatEngine,
+  OpenAIAgent,
+  QueryEngineTool,
+} from "llamaindex";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
@@ -37,8 +42,10 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
     tools.push(...(await createTools(toolConfig)));
   }
 
-  return new OpenAIAgent({
+  const agent = new OpenAIAgent({
     tools,
     systemPrompt: process.env.SYSTEM_PROMPT,
-  });
+  }) as unknown as ChatEngine;
+
+  return agent;
 }
