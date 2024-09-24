@@ -21,15 +21,15 @@ if (
 ) {
   // vectorDBs combinations to test
   const vectorDbs: TemplateVectorDB[] = [
-    // "mongo",
-    // "pg",
-    // "pinecone",
-    // "milvus",
-    // "astra",
+    "mongo",
+    "pg",
     "qdrant",
-    // "chroma",
-    // "llamacloud",
-    // "weaviate",
+    "pinecone",
+    "milvus",
+    "astra",
+    "chroma",
+    "llamacloud",
+    "weaviate",
   ];
 
   test.describe("Test resolve TS dependencies", () => {

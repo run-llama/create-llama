@@ -270,6 +270,19 @@ async function updatePackageJson({
       "@qdrant/js-client-rest": "^1.11.0",
     };
   }
+  if (vectorDb === "mongo") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      mongodb: "^6.7.0",
+    };
+  }
+
+  if (vectorDb === "milvus") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@zilliz/milvus2-sdk-node": "^2.4.6",
+    };
+  }
 
   if (observability === "traceloop") {
     packageJson.dependencies = {

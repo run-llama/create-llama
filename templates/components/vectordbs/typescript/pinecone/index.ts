@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { VectorStoreIndex } from "llamaindex";
-import { PineconeVectorStore } from "llamaindex/storage/vectorStore/PineconeVectorStore";
+import { PineconeVectorStore } from "llamaindex/vector-store/PineconeVectorStore";
 import { checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource(params?: any) {
