@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.9
+
+### Patch Changes
+
+- 0213fe0: Update dependencies for vector stores and add e2e test to ensure that they work as expected.
+
 ## 0.2.8
 
 ### Patch Changes
