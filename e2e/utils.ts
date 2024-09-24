@@ -105,11 +105,11 @@ export async function runCreateLlama(
     },
   });
   appProcess.stderr?.on("data", (data) => {
-    console.log(data.toString());
+    console.error(data.toString());
   });
   appProcess.on("exit", (code) => {
     if (code !== 0 && code !== null) {
-      throw new Error(`create-llama command was failed!`);
+      throw new Error(`create-llama command failed with exit code ${code}`);
     }
   });
 
@@ -121,6 +121,8 @@ export async function runCreateLlama(
       port,
       externalPort,
     );
+  } else if (postInstallAction === "dependencies") {
+    await waitForProcess(appProcess, 1000 * 60); // wait 1 min for dependencies to be resolved
   } else {
     // wait 10 seconds for create-llama to exit
     await waitForProcess(appProcess, 1000 * 10);

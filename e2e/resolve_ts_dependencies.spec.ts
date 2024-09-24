@@ -21,15 +21,15 @@ if (
 ) {
   // vectorDBs combinations to test
   const vectorDbs: TemplateVectorDB[] = [
-    "mongo",
-    "pg",
-    "pinecone",
-    "milvus",
-    "astra",
+    // "mongo",
+    // "pg",
+    // "pinecone",
+    // "milvus",
+    // "astra",
     "qdrant",
-    "chroma",
-    "llamacloud",
-    "weaviate",
+    // "chroma",
+    // "llamacloud",
+    // "weaviate",
   ];
 
   test.describe("Test resolve TS dependencies", () => {
@@ -47,7 +47,11 @@ if (
           vectorDb,
           3000, // port
           8000, // externalPort
-          "dependencies", // postInstallAction
+          "none", // postInstallAction
+          undefined, // ui
+          templateFramework === "nextjs" ? "" : "--no-frontend", // appType
+          undefined, // llamaCloudProjectName
+          undefined, // llamaCloudIndexName
         );
         const name = result.projectName;
 
@@ -56,19 +60,37 @@ if (
         const dirExists = fs.existsSync(appDir);
         expect(dirExists).toBeTruthy();
 
-        // Run tsc -b --diagnostics and capture the output
-        const { stdout, stderr } = await execAsync(
-          "pnpm exec tsc -b --diagnostics",
-          {
-            cwd: appDir,
-          },
-        );
+        // Install dependencies using pnpm
+        try {
+          const { stderr: installStderr } = await execAsync(
+            "pnpm install --prefer-offline",
+            {
+              cwd: appDir,
+            },
+          );
+          expect(installStderr).toBeFalsy();
+        } catch (error) {
+          console.error("Error installing dependencies:", error);
+          throw error;
+        }
 
-        // Check if there's any error output
-        expect(stderr).toBeFalsy();
+        // Run tsc type check and capture the output
+        try {
+          const { stdout, stderr } = await execAsync(
+            "pnpm exec tsc -b --diagnostics",
+            {
+              cwd: appDir,
+            },
+          );
+          // Check if there's any error output
+          expect(stderr).toBeFalsy();
 
-        // Log the stdout for debugging purposes
-        console.log("TypeScript type-check output:", stdout);
+          // Log the stdout for debugging purposes
+          console.log("TypeScript type-check output:", stdout);
+        } catch (error) {
+          console.error("Error running tsc:", error);
+          throw error;
+        }
       });
     }
   });

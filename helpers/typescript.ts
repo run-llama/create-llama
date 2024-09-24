@@ -264,6 +264,13 @@ async function updatePackageJson({
     };
   }
 
+  if (vectorDb === "qdrant") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@qdrant/js-client-rest": "^1.11.0",
+    };
+  }
+
   if (observability === "traceloop") {
     packageJson.dependencies = {
       ...packageJson.dependencies,
