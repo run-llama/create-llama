@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { VectorStoreIndex } from "llamaindex";
-import { AstraDBVectorStore } from "llamaindex/storage/vectorStore/AstraDBVectorStore";
+import { AstraDBVectorStore } from "llamaindex/vector-store/AstraDBVectorStore";
 import { checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource(params?: any) {

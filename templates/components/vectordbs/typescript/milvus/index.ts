@@ -1,5 +1,5 @@
 import { VectorStoreIndex } from "llamaindex";
-import { MilvusVectorStore } from "llamaindex/storage/vectorStore/MilvusVectorStore";
+import { MilvusVectorStore } from "llamaindex/vector-store/MilvusVectorStore";
 import { checkRequiredEnvVars, getMilvusClient } from "./shared";
 
 export async function getDataSource(params?: any) {

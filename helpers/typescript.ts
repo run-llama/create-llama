@@ -180,6 +180,7 @@ export const installTSTemplate = async ({
     framework,
     ui,
     observability,
+    vectorDb,
   });
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
@@ -200,9 +201,16 @@ async function updatePackageJson({
   framework,
   ui,
   observability,
+  vectorDb,
 }: Pick<
   InstallTemplateArgs,
-  "root" | "appName" | "dataSources" | "framework" | "ui" | "observability"
+  | "root"
+  | "appName"
+  | "dataSources"
+  | "framework"
+  | "ui"
+  | "observability"
+  | "vectorDb"
 > & {
   relativeEngineDestPath: string;
 }): Promise<any> {
@@ -246,6 +254,33 @@ async function updatePackageJson({
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       "@types/react-syntax-highlighter": undefined,
+    };
+  }
+
+  if (vectorDb === "pg") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      pg: "^8.12.0",
+    };
+  }
+
+  if (vectorDb === "qdrant") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@qdrant/js-client-rest": "^1.11.0",
+    };
+  }
+  if (vectorDb === "mongo") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      mongodb: "^6.7.0",
+    };
+  }
+
+  if (vectorDb === "milvus") {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@zilliz/milvus2-sdk-node": "^2.4.6",
     };
   }
 

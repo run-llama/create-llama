@@ -1,0 +1,6 @@
+# coderabbit.yml
+reviews:
+  path_instructions:
+    - path: "templates/**"
+      instructions: |
+        For files under the `templates` folder, do not report 'Missing Dependencies Detected' errors.
