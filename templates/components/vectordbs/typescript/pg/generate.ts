@@ -22,7 +22,9 @@ async function loadAndIndex() {
 
   // create postgres vector store
   const vectorStore = new PGVectorStore({
-    connectionString: process.env.PG_CONNECTION_STRING,
+    clientConfig: {
+      connectionString: process.env.PG_CONNECTION_STRING,
+    },
     schemaName: PGVECTOR_SCHEMA,
     tableName: PGVECTOR_TABLE,
   });

@@ -21,7 +21,6 @@ async function loadAndIndex() {
       metric: "cosine",
     },
   });
-  await vectorStore.connect(collectionName);
 
   // create index from documents and store them in Astra
   console.log("Start creating embeddings...");
