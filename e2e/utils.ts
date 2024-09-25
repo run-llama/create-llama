@@ -81,7 +81,7 @@ export async function runCreateLlama(
     postInstallAction,
     "--tools",
     tools ?? "none",
-    useLlamaParse ?? "--no-llama-parse",
+    !useLlamaParse ?? "--no-llama-parse",
     "--observability",
     "none",
     "--llama-cloud-key",
