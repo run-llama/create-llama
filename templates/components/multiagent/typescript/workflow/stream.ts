@@ -31,7 +31,7 @@ function toReadableStream(
       const { value, done } = await generator.next();
       if (done) return;
       if (value.data instanceof AgentRunResult) {
-        const finalResultStream = value.data.response;
+        const finalResultStream = value.data.data.response;
         for await (const event of finalResultStream) {
           const text = trimStartOfStream(event.delta ?? "");
           if (text) controller.enqueue(text);

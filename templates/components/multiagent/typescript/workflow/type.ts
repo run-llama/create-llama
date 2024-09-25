@@ -11,8 +11,6 @@ export class AgentRunEvent extends WorkflowEvent<{
   msg: string;
 }> {}
 
-export class AgentRunResult {
-  constructor(
-    public response: AsyncGenerator<ChatResponseChunk, any, unknown>,
-  ) {}
-}
+export class AgentRunResult extends WorkflowEvent<{
+  response: AsyncGenerator<ChatResponseChunk, any, unknown>;
+}> {}

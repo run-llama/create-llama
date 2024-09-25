@@ -19,7 +19,7 @@ export const chat = async (req: Request, res: Response) => {
     }
 
     const chatHistory = messages as ChatMessage[];
-    const agent = await createWorkflow(chatHistory, vercelStreamData);
+    const agent = createWorkflow(chatHistory, vercelStreamData);
     agent.run(userMessage.content);
     const stream = toDataStream(agent.streamEvents(), vercelStreamData);
     return streamToResponse(stream, res, {}, vercelStreamData);

@@ -20,7 +20,7 @@ class WriteEvent extends WorkflowEvent<{
 }> {}
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 
-export const createWorkflow = async (
+export const createWorkflow = (
   chatHistory: ChatMessage[],
   stream: StreamData,
 ) => {
@@ -80,7 +80,7 @@ export const createWorkflow = async (
 
       const result = writeRes.data.result;
       context.writeEventToStream({
-        data: new AgentRunResult(result),
+        data: new AgentRunResult({ response: result }),
       });
       return new StopEvent({ result }); // stop the workflow
     }

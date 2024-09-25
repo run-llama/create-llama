@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const chatHistory = messages as ChatMessage[];
-    const agent = await createWorkflow(chatHistory, vercelStreamData);
+    const agent = createWorkflow(chatHistory, vercelStreamData);
     agent.run(userMessage.content);
     const stream = toDataStream(agent.streamEvents(), vercelStreamData);
     return new StreamingTextResponse(stream, {}, vercelStreamData);
