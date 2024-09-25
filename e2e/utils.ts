@@ -35,7 +35,6 @@ export type RunCreateLlamaOptions = {
   useLlamaParse?: boolean;
 };
 
-// eslint-disable-next-line max-params
 export async function runCreateLlama({
   cwd,
   templateType,
