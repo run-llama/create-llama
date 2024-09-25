@@ -261,6 +261,7 @@ async function updatePackageJson({
     packageJson.dependencies = {
       ...packageJson.dependencies,
       pg: "^8.12.0",
+      pgvector: "^0.2.0",
     };
   }
 

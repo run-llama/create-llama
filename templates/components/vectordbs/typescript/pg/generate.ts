@@ -1,10 +1,6 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
-import {
-  PGVectorStore,
-  VectorStoreIndex,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { PGVectorStore } from "llamaindex/vector-store/PGVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import {
