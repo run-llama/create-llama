@@ -143,8 +143,17 @@ Review:
         ev: PublishEvent,
         publisher: FunctionCallingAgent,
     ) -> StopEvent:
-        result: AgentRunResult = await self.run_agent(ctx, publisher, ev.input)
-        return StopEvent(result=result)
+        try:
+            result: AgentRunResult = await self.run_agent(ctx, publisher, ev.input)
+            return StopEvent(result=result)
+        except Exception as e:
+            ctx.write_event_to_stream(
+                AgentRunEvent(
+                    name=publisher.name,
+                    msg=f"Error publishing: {e}",
+                )
+            )
+            return StopEvent(result=result)
 
     async def run_agent(
         self,
