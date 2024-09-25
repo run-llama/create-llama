@@ -52,6 +52,8 @@ if (
           templateFramework === "nextjs" ? "" : "--no-frontend", // appType
           undefined, // llamaCloudProjectName
           undefined, // llamaCloudIndexName
+          undefined, // tools
+          true, // useLlamaParse
         );
         const name = result.projectName;
 

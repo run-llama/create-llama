@@ -33,6 +33,7 @@ export async function runCreateLlama(
   llamaCloudProjectName?: string,
   llamaCloudIndexName?: string,
   tools?: string,
+  useLlamaParse?: boolean,
 ): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
@@ -80,7 +81,7 @@ export async function runCreateLlama(
     postInstallAction,
     "--tools",
     tools ?? "none",
-    "--no-llama-parse",
+    useLlamaParse ?? "--no-llama-parse",
     "--observability",
     "none",
     "--llama-cloud-key",
