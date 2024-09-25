@@ -66,6 +66,7 @@ class BlogPostWorkflow(Workflow):
         ctx.data["streaming"] = getattr(ev, "streaming", False)
         # start the workflow with researching about a topic
         ctx.data["task"] = ev.input
+        ctx.data["user_input"] = ev.input
         return ResearchEvent(input=f"Research for this task: {ev.input}")
 
     @step()
@@ -117,8 +118,9 @@ class BlogPostWorkflow(Workflow):
             )
         )
         if post_is_good:
+            user_input = ctx.data["user_input"]
             return GenerateArtifactEvent(
-                input=f"You're blog post is ready for publication. Please respond with just the blog post. Blog post: ```{old_content}```",
+                input=f"Please generate an artifact for this content: ```{old_content}```. The user input is: ```{user_input}```",
             )
         else:
             return WriteEvent(
