@@ -1,6 +1,7 @@
 from typing import AsyncGenerator, List, Optional
 
 from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
+from app.examples.artifact_generator import create_artifact_generator
 from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import (
@@ -17,6 +18,9 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     researcher = create_researcher(
         chat_history=chat_history,
     )
+    artifact_generator = create_artifact_generator(
+        chat_history=chat_history,
+    )
     writer = FunctionCallingAgent(
         name="writer",
         role="expert in writing blog posts",
@@ -30,7 +34,12 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
         chat_history=chat_history,
     )
     workflow = BlogPostWorkflow(timeout=360)
-    workflow.add_workflows(researcher=researcher, writer=writer, reviewer=reviewer)
+    workflow.add_workflows(
+        researcher=researcher,
+        writer=writer,
+        reviewer=reviewer,
+        artifact_generator=artifact_generator,
+    )
     return workflow
 
 
@@ -40,10 +49,13 @@ class ResearchEvent(Event):
 
 class WriteEvent(Event):
     input: str
-    is_good: bool = False
 
 
 class ReviewEvent(Event):
+    input: str
+
+
+class GenerateArtifactEvent(Event):
     input: str
 
 
@@ -80,7 +92,7 @@ class BlogPostWorkflow(Workflow):
                     msg=f"Too many attempts ({MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.",
                 )
             )
-        if ev.is_good or too_many_attempts:
+        if too_many_attempts:
             # too many attempts or the blog post is good - stream final response if requested
             result = await self.run_agent(
                 ctx, writer, ev.input, streaming=ctx.data["streaming"]
@@ -93,7 +105,7 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def review(
         self, ctx: Context, ev: ReviewEvent, reviewer: FunctionCallingAgent
-    ) -> WriteEvent:
+    ) -> WriteEvent | GenerateArtifactEvent:
         result: AgentRunResult = await self.run_agent(ctx, reviewer, ev.input)
         review = result.response.message.content
         old_content = ctx.data["result"].response.message.content
@@ -105,9 +117,8 @@ class BlogPostWorkflow(Workflow):
             )
         )
         if post_is_good:
-            return WriteEvent(
+            return GenerateArtifactEvent(
                 input=f"You're blog post is ready for publication. Please respond with just the blog post. Blog post: ```{old_content}```",
-                is_good=True,
             )
         else:
             return WriteEvent(
@@ -122,6 +133,16 @@ Review:
 {review}
 ```"""
             )
+
+    @step()
+    async def generate_artifact(
+        self,
+        ctx: Context,
+        ev: GenerateArtifactEvent,
+        artifact_generator: FunctionCallingAgent,
+    ) -> StopEvent:
+        result: AgentRunResult = await self.run_agent(ctx, artifact_generator, ev.input)
+        return StopEvent(result=result)
 
     async def run_agent(
         self,
