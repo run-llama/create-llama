@@ -133,5 +133,7 @@ Review:
         handler = agent.run(input=input, streaming=streaming)
         # bubble all events while running the executor to the planner
         async for event in handler.stream_events():
-            ctx.write_event_to_stream(event)
+            # Don't write the StopEvent from sub task to the stream
+            if type(event) is not StopEvent:
+                ctx.write_event_to_stream(event)
         return await handler
