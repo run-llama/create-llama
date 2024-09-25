@@ -1,4 +1,4 @@
-import { LlamaParseReader } from "llamaindex/readers/LlamaParseReader";
+import { LlamaParseReader } from "llamaindex";
 import {
   FILE_EXT_TO_READER,
   SimpleDirectoryReader,
