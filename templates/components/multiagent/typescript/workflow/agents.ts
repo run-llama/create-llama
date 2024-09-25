@@ -5,7 +5,9 @@ import { FunctionCallingAgent } from "./single-agent";
 const getQueryEngineTool = async () => {
   const index = await getDataSource();
   if (!index) {
-    throw new Error("Index not found. Please create an index first.");
+    throw new Error(
+      "StorageContext is empty - call 'npm run generate' to generate the storage first.",
+    );
   }
 
   const topK = process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined;

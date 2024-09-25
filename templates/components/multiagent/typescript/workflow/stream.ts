@@ -1,26 +1,23 @@
-import { WorkflowEvent } from "@llamaindex/core/workflow";
+import { StopEvent } from "@llamaindex/core/workflow";
 import {
   createCallbacksTransformer,
   createStreamDataTransformer,
-  StreamData,
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
-import { AgentRunEvent, AgentRunResult } from "./type";
+import { ChatResponseChunk } from "llamaindex";
 
 export function toDataStream(
-  generator: AsyncGenerator<WorkflowEvent, void>,
-  data: StreamData,
+  result: Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>,
   callbacks?: AIStreamCallbacksAndOptions,
 ) {
-  return toReadableStream(generator, data)
+  return toReadableStream(result)
     .pipeThrough(createCallbacksTransformer(callbacks))
     .pipeThrough(createStreamDataTransformer());
 }
 
 function toReadableStream(
-  generator: AsyncGenerator<WorkflowEvent, void>,
-  data: StreamData,
+  result: Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>,
 ) {
   const trimStartOfStream = trimStartOfStreamHelper();
   return new ReadableStream<string>({
@@ -28,28 +25,16 @@ function toReadableStream(
       controller.enqueue(""); // Kickstart the stream
     },
     async pull(controller): Promise<void> {
+      const stopEvent = await result;
+      const generator = stopEvent.data.result;
       const { value, done } = await generator.next();
       if (done) {
         controller.close();
-        data.close();
         return;
       }
 
-      if (value instanceof AgentRunEvent) {
-        const { name, msg } = value.data;
-        data.appendMessageAnnotation({
-          type: "agent",
-          data: { agent: name, text: msg },
-        });
-      }
-
-      if (value instanceof AgentRunResult) {
-        const finalResultStream = value.data.response;
-        for await (const event of finalResultStream) {
-          const text = trimStartOfStream(event.delta ?? "");
-          if (text) controller.enqueue(text);
-        }
-      }
+      const text = trimStartOfStream(value.delta ?? "");
+      if (text) controller.enqueue(text);
     },
   });
 }

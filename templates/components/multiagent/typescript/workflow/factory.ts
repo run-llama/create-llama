@@ -7,7 +7,7 @@ import {
 } from "@llamaindex/core/workflow";
 import { ChatMessage, ChatResponseChunk } from "llamaindex";
 import { createResearcher, createReviewer, createWriter } from "./agents";
-import { AgentInput, AgentRunEvent, AgentRunResult } from "./type";
+import { AgentInput, AgentRunEvent } from "./type";
 
 const TIMEOUT = 360 * 1000;
 const MAX_ATTEMPTS = 2;
@@ -66,15 +66,14 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     }
 
     if (ev.data.isGood || tooManyAttempts) {
+      // TODO: the text is already written, so we don't need to run the writer again
       const writer = createWriter(chatHistory);
       const writeRes = (await runAgent(context, writer, {
         message: ev.data.input,
         streaming: true,
       })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
 
-      const result = writeRes.data.result;
-      context.writeEventToStream(new AgentRunResult({ response: result }));
-      return new StopEvent({ result }); // stop the workflow
+      return writeRes; // stop the workflow
     }
 
     const writer = createWriter(chatHistory);
