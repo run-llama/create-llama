@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.10
+
+### Patch Changes
+
+- cb8d535: Fix only produces one agent event
+
 ## 0.2.9
 
 ### Patch Changes
