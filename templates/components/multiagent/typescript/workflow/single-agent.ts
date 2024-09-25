@@ -206,7 +206,7 @@ export class FunctionCallingAgent extends Workflow {
         console.error(e);
         toolMsgs.push({
           role: "assistant",
-          content: `Encountered error in tool call: ${e}`,
+          content: `Encountered error in tool call: ${toolCall.name}`,
           options,
         });
       }
