@@ -81,7 +81,6 @@ export async function runCreateLlama(
     postInstallAction,
     "--tools",
     tools ?? "none",
-    !useLlamaParse ?? "--no-llama-parse",
     "--observability",
     "none",
     "--llama-cloud-key",
@@ -93,6 +92,9 @@ export async function runCreateLlama(
   }
   if (appType) {
     commandArgs.push(appType);
+  }
+  if (!useLlamaParse) {
+    commandArgs.push("--no-llama-parse");
   }
 
   const command = commandArgs.join(" ");
