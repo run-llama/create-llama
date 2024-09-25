@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.11
+
+### Patch Changes
+
+- 7c2a3f6: fix: postgres import
+
 ## 0.2.10
 
 ### Patch Changes
