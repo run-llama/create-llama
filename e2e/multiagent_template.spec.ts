@@ -36,18 +36,18 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
     port = Math.floor(Math.random() * 10000) + 10000;
     externalPort = port + 1;
     cwd = await createTestDir();
-    const result = await runCreateLlama(
+    const result = await runCreateLlama({
       cwd,
-      "multiagent",
+      templateType: "multiagent",
       templateFramework,
       dataSource,
       vectorDb,
       port,
       externalPort,
-      templatePostInstallAction,
+      postInstallAction: templatePostInstallAction,
       templateUI,
       appType,
-    );
+    });
     name = result.projectName;
     appProcess = result.appProcess;
   });

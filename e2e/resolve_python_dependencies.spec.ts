@@ -53,21 +53,21 @@ if (
           test(`options: ${optionDescription}`, async () => {
             const cwd = await createTestDir();
 
-            const result = await runCreateLlama(
+            const result = await runCreateLlama({
               cwd,
-              "streaming",
-              "fastapi",
+              templateType: "streaming",
+              templateFramework: "fastapi",
               dataSource,
               vectorDb,
-              3000, // port
-              8000, // externalPort
-              "none", // postInstallAction
-              undefined, // ui
-              "--no-frontend", // appType
-              undefined, // llamaCloudProjectName
-              undefined, // llamaCloudIndexName
-              tool,
-            );
+              port: 3000, // port
+              externalPort: 8000, // externalPort
+              postInstallAction: "none", // postInstallAction
+              templateUI: undefined, // ui
+              appType: "--no-frontend", // appType
+              llamaCloudProjectName: undefined, // llamaCloudProjectName
+              llamaCloudIndexName: undefined, // llamaCloudIndexName
+              tools: tool,
+            });
             const name = result.projectName;
 
             // Check if the app folder exists

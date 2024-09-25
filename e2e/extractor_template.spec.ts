@@ -32,16 +32,16 @@ if (
       cwd = await createTestDir();
       frontendPort = Math.floor(Math.random() * 10000) + 10000;
       backendPort = frontendPort + 1;
-      const result = await runCreateLlama(
+      const result = await runCreateLlama({
         cwd,
-        "extractor",
-        "fastapi",
-        "--example-file",
-        "none",
-        frontendPort,
-        backendPort,
-        "runApp",
-      );
+        templateType: "extractor",
+        templateFramework: "fastapi",
+        dataSource: "--example-file",
+        vectorDb: "none",
+        port: frontendPort,
+        externalPort: backendPort,
+        postInstallAction: "runApp",
+      });
       name = result.projectName;
       appProcess = result.appProcess;
     });
