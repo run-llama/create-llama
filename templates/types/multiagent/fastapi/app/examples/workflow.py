@@ -1,7 +1,7 @@
 from typing import AsyncGenerator, List, Optional
 
 from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
-from app.examples.artifact_generator import create_artifact_generator
+from app.examples.publisher import create_publisher
 from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import (
@@ -18,7 +18,7 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     researcher = create_researcher(
         chat_history=chat_history,
     )
-    artifact_generator = create_artifact_generator(
+    publisher = create_publisher(
         chat_history=chat_history,
     )
     writer = FunctionCallingAgent(
@@ -38,7 +38,7 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
         researcher=researcher,
         writer=writer,
         reviewer=reviewer,
-        artifact_generator=artifact_generator,
+        publisher=publisher,
     )
     return workflow
 
@@ -55,7 +55,7 @@ class ReviewEvent(Event):
     input: str
 
 
-class GenerateArtifactEvent(Event):
+class PublishEvent(Event):
     input: str
 
 
@@ -106,7 +106,7 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def review(
         self, ctx: Context, ev: ReviewEvent, reviewer: FunctionCallingAgent
-    ) -> WriteEvent | GenerateArtifactEvent:
+    ) -> WriteEvent | PublishEvent:
         result: AgentRunResult = await self.run_agent(ctx, reviewer, ev.input)
         review = result.response.message.content
         old_content = ctx.data["result"].response.message.content
@@ -119,8 +119,8 @@ class BlogPostWorkflow(Workflow):
         )
         if post_is_good:
             user_input = ctx.data["user_input"]
-            return GenerateArtifactEvent(
-                input=f"Please generate an artifact for this content: ```{old_content}```. The user input is: ```{user_input}```",
+            return PublishEvent(
+                input=f"Please publish this content: ```{old_content}```. The user request was: ```{user_input}```",
             )
         else:
             return WriteEvent(
@@ -137,13 +137,13 @@ Review:
             )
 
     @step()
-    async def generate_artifact(
+    async def publish(
         self,
         ctx: Context,
-        ev: GenerateArtifactEvent,
-        artifact_generator: FunctionCallingAgent,
+        ev: PublishEvent,
+        publisher: FunctionCallingAgent,
     ) -> StopEvent:
-        result: AgentRunResult = await self.run_agent(ctx, artifact_generator, ev.input)
+        result: AgentRunResult = await self.run_agent(ctx, publisher, ev.input)
         return StopEvent(result=result)
 
     async def run_agent(

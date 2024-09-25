@@ -2,14 +2,14 @@ from typing import List, Optional
 
 from app.agents.multi import AgentCallingAgent
 from app.agents.single import FunctionCallingAgent
-from app.examples.artifact_generator import create_artifact_generator
+from app.examples.publisher import create_publisher
 from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 
 
 def create_choreography(chat_history: Optional[List[ChatMessage]] = None):
     researcher = create_researcher(chat_history)
-    artifact_generator = create_artifact_generator(chat_history)
+    publisher = create_publisher(chat_history)
     reviewer = FunctionCallingAgent(
         name="reviewer",
         role="expert in reviewing blog posts",
@@ -19,12 +19,12 @@ def create_choreography(chat_history: Optional[List[ChatMessage]] = None):
     )
     return AgentCallingAgent(
         name="writer",
-        agents=[researcher, reviewer, artifact_generator],
+        agents=[researcher, reviewer, publisher],
         role="expert in writing blog posts",
         system_prompt="""You are an expert in writing blog posts. You are given a task to write a blog post. Before starting to write the post, consult the researcher agent to get the information you need. Don't make up any information yourself.
         After creating a draft for the post, send it to the reviewer agent to receive some feedback and make sure to incorporate the feedback from the reviewer.
         You can consult the reviewer and researcher maximal two times. Your output should just contain the blog post. 
-        Finally, always request the artifact generator to create an artifact (pdf, html) that user can download and use for publishing the blog post.""",
+        Finally, always request the publisher to create an artifact (pdf, html) and publish the blog post.""",
         # TODO: add chat_history support to AgentCallingAgent
         # chat_history=chat_history,
         verbose=True,

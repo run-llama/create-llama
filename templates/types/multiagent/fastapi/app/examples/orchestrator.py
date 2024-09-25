@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from app.agents.multi import AgentOrchestrator
 from app.agents.single import FunctionCallingAgent
-from app.examples.artifact_generator import create_artifact_generator
+from app.examples.publisher import create_publisher
 from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 
@@ -22,8 +22,8 @@ def create_orchestrator(chat_history: Optional[List[ChatMessage]] = None):
         Especially check for logical inconsistencies and proofread the post for grammar and spelling errors.""",
         chat_history=chat_history,
     )
-    artifact_generator = create_artifact_generator(chat_history)
+    publisher = create_publisher(chat_history)
     return AgentOrchestrator(
-        agents=[writer, reviewer, researcher, artifact_generator],
+        agents=[writer, reviewer, researcher, publisher],
         refine_plan=False,
     )

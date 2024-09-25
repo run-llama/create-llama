@@ -17,6 +17,7 @@ const AgentIcons: Record<string, LucideIcon> = {
   researcher: icons.ScanSearch,
   writer: icons.PenLine,
   reviewer: icons.MessageCircle,
+  publisher: icons.BookCheck,
 };
 
 type MergedEvent = {
