@@ -1,5 +1,6 @@
 import { JSONValue } from "ai";
-import { Rocket } from "lucide-react";
+import { Loader2, Rocket } from "lucide-react";
+import { useState } from "react";
 import { Button } from "../../button";
 import {
   Drawer,
@@ -32,6 +33,8 @@ type ArtifactProps = {
 };
 
 export function Artifact({ data }: { data: JSONValue }) {
+  const [loading, setLoading] = useState(true);
+
   const { artifact, url } = data as ArtifactProps;
   if (!artifact || !url) return null;
 
@@ -71,16 +74,32 @@ export function Artifact({ data }: { data: JSONValue }) {
             </div>
           </TabsContent>
           <TabsContent value="preview" className="h-full">
-            <iframe
-              key={url}
-              className="h-full w-full"
-              sandbox="allow-forms allow-scripts allow-same-origin"
-              loading="lazy"
-              src={url}
-            />
+            <ArtifactPreview url={url} />
           </TabsContent>
         </Tabs>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function ArtifactPreview({ url }: { url: string }) {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <>
+      <iframe
+        key={url}
+        className="h-full w-full"
+        sandbox="allow-forms allow-scripts allow-same-origin"
+        loading="lazy"
+        src={url}
+        onLoad={() => setLoading(false)}
+      />
+      {loading && (
+        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2">
+          <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+      )}
+    </>
   );
 }
