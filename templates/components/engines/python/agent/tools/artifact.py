@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from enum import Enum
@@ -13,43 +14,85 @@ class ArtifactType(Enum):
     HTML = "html"
 
 
-HTML_FILE_TEMPLATE = """
+COMMON_STYLES = """
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.3;
+    color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+p {
+    margin-bottom: 0.7em;
+}
+code {
+    background-color: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+"""
+
+HTML_SPECIFIC_STYLES = """
+body {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+"""
+
+PDF_SPECIFIC_STYLES = """
+@page {
+    size: letter;
+    margin: 2cm;
+}
+body {
+    font-size: 11pt;
+}
+h1 { font-size: 18pt; }
+h2 { font-size: 16pt; }
+h3 { font-size: 14pt; }
+h4, h5, h6 { font-size: 12pt; }
+pre, code {
+    font-family: Courier, monospace;
+    font-size: 0.9em;
+}
+"""
+
+HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.3;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }}
-        h1, h2, h3, h4, h5, h6 {{
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-        }}
-        p {{
-            margin-bottom: 1em;
-        }}
-        code {{
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }}
-        pre {{
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }}
+        {common_styles}
+        {specific_styles}
     </style>
 </head>
 <body>
-    {html_content}
+    {content}
 </body>
 </html>
 """
@@ -68,8 +111,10 @@ class ArtifactGenerator:
                 "Failed to import required modules. Please install markdown."
             )
 
-        # Convert markdown to HTML
-        html_content = markdown.markdown(original_content)
+        # Convert markdown to HTML with fenced code and table extensions
+        html_content = markdown.markdown(
+            original_content, extensions=["fenced_code", "tables"]
+        )
         return html_content
 
     @classmethod
@@ -84,25 +129,21 @@ class ArtifactGenerator:
                 "Failed to import required modules. Please install xhtml2pdf."
             )
 
+        pdf_html = HTML_TEMPLATE.format(
+            common_styles=COMMON_STYLES,
+            specific_styles=PDF_SPECIFIC_STYLES,
+            content=html_content,
+        )
+
         buffer = BytesIO()
         pdf = pisa.pisaDocument(
-            BytesIO(html_content.encode("UTF-8")),
-            buffer,
-            encoding="UTF-8",
-            path=".",
-            link_callback=None,
-            debug=0,
-            default_css=None,
-            xhtml=False,
-            xml_output=None,
-            ident=0,
-            show_error_as_pdf=False,
-            quiet=True,
-            capacity=100 * 1024 * 1024,
-            raise_exception=True,
+            BytesIO(pdf_html.encode("UTF-8")), buffer, encoding="UTF-8"
         )
+
         if pdf.err:
+            logging.error(f"PDF generation failed: {pdf.err}")
             raise ValueError("PDF generation failed")
+
         buffer.seek(0)
         return buffer
 
@@ -111,7 +152,11 @@ class ArtifactGenerator:
         """
         Generate a complete HTML document with the given HTML content.
         """
-        return HTML_FILE_TEMPLATE.format(html_content=html_content)
+        return HTML_TEMPLATE.format(
+            common_styles=COMMON_STYLES,
+            specific_styles=HTML_SPECIFIC_STYLES,
+            content=html_content,
+        )
 
     @classmethod
     def generate_artifact(
@@ -137,7 +182,7 @@ class ArtifactGenerator:
 
         # Based on the type of artifact, generate the corresponding file
         if artifact_type == ArtifactType.PDF:
-            content = cls._generate_pdf(cls._generate_html(html_content))
+            content = cls._generate_pdf(html_content)
             file_extension = "pdf"
         elif artifact_type == ArtifactType.HTML:
             content = BytesIO(cls._generate_html(html_content).encode("utf-8"))
