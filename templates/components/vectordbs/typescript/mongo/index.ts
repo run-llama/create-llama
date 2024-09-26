@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { VectorStoreIndex } from "llamaindex";
-import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorStore";
+import { MongoDBAtlasVectorSearch } from "llamaindex/vector-store/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
 import { checkRequiredEnvVars, POPULATED_METADATA_FIELDS } from "./shared";
 

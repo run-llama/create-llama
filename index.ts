@@ -93,6 +93,20 @@ const program = new Commander.Command(packageJson.name)
 `,
   )
   .option(
+    "--web-source <url>",
+    `
+  
+  Specify a website URL to use as a data source.
+`,
+  )
+  .option(
+    "--db-source <connection-string>",
+    `
+  
+  Specify a database connection string to use as a data source.
+`,
+  )
+  .option(
     "--open-ai-key <key>",
     `
 
@@ -214,6 +228,27 @@ if (process.argv.includes("--no-files")) {
       config: {},
     },
     EXAMPLE_FILE,
+  ];
+} else if (process.argv.includes("--web-source")) {
+  program.dataSources = [
+    {
+      type: "web",
+      config: {
+        baseUrl: program.webSource,
+        prefix: program.webSource,
+        depth: 1,
+      },
+    },
+  ];
+} else if (process.argv.includes("--db-source")) {
+  program.dataSources = [
+    {
+      type: "db",
+      config: {
+        uri: program.dbSource,
+        queries: program.dbQuery || "SELECT * FROM mytable",
+      },
+    },
   ];
 }
 

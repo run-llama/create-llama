@@ -1,5 +1,37 @@
 # create-llama
 
+## 0.2.11
+
+### Patch Changes
+
+- 7c2a3f6: fix: postgres import
+
+## 0.2.10
+
+### Patch Changes
+
+- cb8d535: Fix only produces one agent event
+
+## 0.2.9
+
+### Patch Changes
+
+- 0213fe0: Update dependencies for vector stores and add e2e test to ensure that they work as expected.
+
+## 0.2.8
+
+### Patch Changes
+
+- 0031e67: Bump llama-index to 0.11.11 for the multi-agent template
+
+## 0.2.7
+
+### Patch Changes
+
+- 505b8e9: bump: use latest ai package version
+- cf3ec97: Dynamically select model for Groq
+- 8c1087f: feat: enhance style for markdown
+
 ## 0.2.6
 
 ### Patch Changes

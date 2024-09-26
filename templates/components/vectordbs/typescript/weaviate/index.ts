@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import { VectorStoreIndex } from "llamaindex";
-import { WeaviateVectorStore } from "llamaindex/storage/vectorStore/WeaviateVectorStore";
+import { WeaviateVectorStore } from "llamaindex/vector-store/WeaviateVectorStore";
 import { checkRequiredEnvVars, DEFAULT_INDEX_NAME } from "./shared";
 
 dotenv.config();

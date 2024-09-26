@@ -1,14 +1,12 @@
-import asyncio
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
-from llama_index.core.workflow import Workflow
-
-from app.examples.factory import create_agent
 from app.api.routers.models import (
     ChatData,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
+from app.examples.factory import create_agent
+from fastapi import APIRouter, HTTPException, Request, status
+from llama_index.core.workflow import Workflow
 
 chat_router = r = APIRouter()
 
@@ -30,11 +28,9 @@ async def chat(
         # params = data.data or {}
 
         agent: Workflow = create_agent(chat_history=messages)
-        task = asyncio.create_task(
-            agent.run(input=last_message_content, streaming=True)
-        )
+        handler = agent.run(input=last_message_content, streaming=True)
 
-        return VercelStreamResponse(request, task, agent.stream_events, data)
+        return VercelStreamResponse(request, handler, agent.stream_events, data)
     except Exception as e:
         logger.exception("Error in agent", exc_info=True)
         raise HTTPException(

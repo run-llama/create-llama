@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
 import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
-import { MongoDBAtlasVectorSearch } from "llamaindex/storage/vectorStore/MongoDBAtlasVectorStore";
+import { MongoDBAtlasVectorSearch } from "llamaindex/vector-store/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";

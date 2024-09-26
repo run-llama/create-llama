@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { ChromaVectorStore } from "llamaindex/storage/vectorStore/ChromaVectorStore";
+import { ChromaVectorStore } from "llamaindex/vector-store/ChromaVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
@@ -16,7 +16,7 @@ async function loadAndIndex() {
   const chromaUri = `http://${process.env.CHROMA_HOST}:${process.env.CHROMA_PORT}`;
 
   const vectorStore = new ChromaVectorStore({
-    collectionName: process.env.CHROMA_COLLECTION,
+    collectionName: process.env.CHROMA_COLLECTION!,
     chromaClientParams: { path: chromaUri },
   });
 

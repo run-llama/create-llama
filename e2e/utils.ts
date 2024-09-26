@@ -18,21 +18,39 @@ export type CreateLlamaResult = {
   appProcess: ChildProcess;
 };
 
-// eslint-disable-next-line max-params
-export async function runCreateLlama(
-  cwd: string,
-  templateType: TemplateType,
-  templateFramework: TemplateFramework,
-  dataSource: string,
-  vectorDb: TemplateVectorDB,
-  port: number,
-  externalPort: number,
-  postInstallAction: TemplatePostInstallAction,
-  templateUI?: TemplateUI,
-  appType?: AppType,
-  llamaCloudProjectName?: string,
-  llamaCloudIndexName?: string,
-): Promise<CreateLlamaResult> {
+export type RunCreateLlamaOptions = {
+  cwd: string;
+  templateType: TemplateType;
+  templateFramework: TemplateFramework;
+  dataSource: string;
+  vectorDb: TemplateVectorDB;
+  port: number;
+  externalPort: number;
+  postInstallAction: TemplatePostInstallAction;
+  templateUI?: TemplateUI;
+  appType?: AppType;
+  llamaCloudProjectName?: string;
+  llamaCloudIndexName?: string;
+  tools?: string;
+  useLlamaParse?: boolean;
+};
+
+export async function runCreateLlama({
+  cwd,
+  templateType,
+  templateFramework,
+  dataSource,
+  vectorDb,
+  port,
+  externalPort,
+  postInstallAction,
+  templateUI,
+  appType,
+  llamaCloudProjectName,
+  llamaCloudIndexName,
+  tools,
+  useLlamaParse,
+}: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
       "Setting the OPENAI_API_KEY and LLAMA_CLOUD_API_KEY is mandatory to run tests",
@@ -41,10 +59,23 @@ export async function runCreateLlama(
   const name = [
     templateType,
     templateFramework,
-    dataSource,
+    dataSource.split(" ")[0],
     templateUI,
     appType,
   ].join("-");
+
+  // Handle different data source types
+  let dataSourceArgs = [];
+  if (dataSource.includes("--web-source" || "--db-source")) {
+    const webSource = dataSource.split(" ")[1];
+    dataSourceArgs.push("--web-source", webSource);
+  } else if (dataSource.includes("--db-source")) {
+    const dbSource = dataSource.split(" ")[1];
+    dataSourceArgs.push("--db-source", dbSource);
+  } else {
+    dataSourceArgs.push(dataSource);
+  }
+
   const commandArgs = [
     "create-llama",
     name,
@@ -52,7 +83,7 @@ export async function runCreateLlama(
     templateType,
     "--framework",
     templateFramework,
-    dataSource,
+    ...dataSourceArgs,
     "--vector-db",
     vectorDb,
     "--open-ai-key",
@@ -65,8 +96,7 @@ export async function runCreateLlama(
     "--post-install-action",
     postInstallAction,
     "--tools",
-    "none",
-    "--no-llama-parse",
+    tools ?? "none",
     "--observability",
     "none",
     "--llama-cloud-key",
@@ -78,6 +108,9 @@ export async function runCreateLlama(
   }
   if (appType) {
     commandArgs.push(appType);
+  }
+  if (!useLlamaParse) {
+    commandArgs.push("--no-llama-parse");
   }
 
   const command = commandArgs.join(" ");
@@ -91,11 +124,11 @@ export async function runCreateLlama(
     },
   });
   appProcess.stderr?.on("data", (data) => {
-    console.log(data.toString());
+    console.error(data.toString());
   });
   appProcess.on("exit", (code) => {
     if (code !== 0 && code !== null) {
-      throw new Error(`create-llama command was failed!`);
+      throw new Error(`create-llama command failed with exit code ${code}`);
     }
   });
 
@@ -107,6 +140,8 @@ export async function runCreateLlama(
       port,
       externalPort,
     );
+  } else if (postInstallAction === "dependencies") {
+    await waitForProcess(appProcess, 1000 * 60); // wait 1 min for dependencies to be resolved
   } else {
     // wait 10 seconds for create-llama to exit
     await waitForProcess(appProcess, 1000 * 10);

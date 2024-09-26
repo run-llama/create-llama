@@ -35,7 +35,7 @@ export const chatRequest = async (req: Request, res: Response) => {
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     // Note: The non-streaming template does not need the Vercel/AI format, we're still using it for consistency with the streaming template
     const userMessageContent = convertMessageContent(
-      userMessage.content,
+      userMessage.content as string,
       data?.imageUrl,
     );
 

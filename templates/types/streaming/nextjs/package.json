@@ -18,7 +18,7 @@
     "@radix-ui/react-hover-card": "^1.0.7",
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-slot": "^1.0.2",
-    "ai": "3.3.38",
+    "ai": "3.3.42",
     "ajv": "^8.12.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
