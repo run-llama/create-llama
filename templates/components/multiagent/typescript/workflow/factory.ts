@@ -66,14 +66,14 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      // TODO: the text is already written, so we don't need to run the writer again
+      // The text is ready for publication, we just use the writer to stream the output
       const writer = createWriter(chatHistory);
-      const writeRes = (await runAgent(context, writer, {
-        message: ev.data.input,
+      const content = context.get("result");
+
+      return (await runAgent(context, writer, {
+        message: `You're blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${content}\`\`\``,
         streaming: true,
       })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
-
-      return writeRes; // stop the workflow
     }
 
     const writer = createWriter(chatHistory);
@@ -103,7 +103,7 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     );
     if (postIsGood) {
       return new WriteEvent({
-        input: `You're blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${oldContent}\`\`\``,
+        input: "",
         isGood: true,
       });
     }
