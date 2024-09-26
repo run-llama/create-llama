@@ -140,6 +140,27 @@ For better results, you can specify the region parameter to get results from a s
     ],
   },
   {
+    display: "Artifact",
+    name: "artifact",
+    dependencies: [],
+    supportedFrameworks: ["express", "nextjs"],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: "E2B_API_KEY",
+        description:
+          "E2B_API_KEY key is required to run code interpreter tool. Get it here: https://e2b.dev/docs/getting-started/api-key",
+      },
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for code interpreter tool.",
+        value: `You are a code executor that can run code in a secure environment.
+You can run code in a sandbox and return the sandbox url to the user for them to view the result.
+Do not show the code in chat, just describe the detail information of application: step by step to build the application, title, description, dependencies and sandbox url`,
+      },
+    ],
+  },
+  {
     display: "OpenAPI action",
     name: "openapi_action.OpenAPIActionToolSpec",
     dependencies: [
