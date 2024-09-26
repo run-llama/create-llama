@@ -33,8 +33,6 @@ type ArtifactProps = {
 };
 
 export function Artifact({ data }: { data: JSONValue }) {
-  const [loading, setLoading] = useState(true);
-
   const { artifact, url } = data as ArtifactProps;
   if (!artifact || !url) return null;
 
@@ -51,7 +49,7 @@ export function Artifact({ data }: { data: JSONValue }) {
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
-            <DrawerTitle>Artifact Preview</DrawerTitle>
+            <DrawerTitle>Application Preview</DrawerTitle>
             <DrawerDescription>
               Open in your brower:{" "}
               <a href={url} target="_blank" className="text-blue-500">
