@@ -35,7 +35,7 @@ def create_researcher(chat_history: List[ChatMessage]):
     return FunctionCallingAgent(
         name="researcher",
         tools=[get_query_engine_tool(), *duckduckgo_search_tools],
-        role="expert in retrieving any unknown content or searching for images from the internet",
+        description="expert in retrieving any unknown content or searching for images from the internet",
         system_prompt="You are a researcher agent. You are given a researching task. You must use tools to retrieve information from the knowledge base and search for needed images from the internet for the post.",
         chat_history=chat_history,
     )

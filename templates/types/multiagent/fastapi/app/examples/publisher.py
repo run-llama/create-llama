@@ -12,9 +12,9 @@ def create_publisher(chat_history: List[ChatMessage]):
     return FunctionCallingAgent(
         name="publisher",
         tools=[artifact_tool],
-        role="expert in publishing, need to specify the type of artifact (pdf, html, or markdown)",
+        description="expert in publishing, need to specify the type of artifact use a file (pdf, html) or just reply the content directly",
         system_prompt="""You are a publisher that help publish the blog post. 
-        For a normal request, you should choose the type of artifact either pdf or html or just reply to the user the markdown content directly with out generating any artifact file.
+        For a normal request, you should choose the type of artifact either pdf or html or just reply to the user directly without generating any artifact file.
         """,
         chat_history=chat_history,
         verbose=True,

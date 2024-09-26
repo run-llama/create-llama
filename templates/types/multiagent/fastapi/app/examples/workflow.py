@@ -23,13 +23,13 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     )
     writer = FunctionCallingAgent(
         name="writer",
-        role="expert in writing blog posts",
+        description="expert in writing blog posts, need information and images to write a post",
         system_prompt="""You are an expert in writing blog posts. You are given a task to write a blog post. Don't make up any information yourself.""",
         chat_history=chat_history,
     )
     reviewer = FunctionCallingAgent(
         name="reviewer",
-        role="expert in reviewing blog posts",
+        description="expert in reviewing blog posts, need a written blog post to review",
         system_prompt="You are an expert in reviewing blog posts. You are given a task to review a blog post. Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement. Furthermore, proofread the post for grammar and spelling errors. Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.",
         chat_history=chat_history,
     )
