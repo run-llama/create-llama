@@ -179,5 +179,6 @@ class ArtifactGenerator:
         else:
             raise ValueError("File name is not allowed to contain special characters.")
 
+
 def get_tools(**kwargs):
     return [FunctionTool.from_defaults(ArtifactGenerator.generate_artifact)]
