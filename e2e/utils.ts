@@ -18,22 +18,39 @@ export type CreateLlamaResult = {
   appProcess: ChildProcess;
 };
 
-// eslint-disable-next-line max-params
-export async function runCreateLlama(
-  cwd: string,
-  templateType: TemplateType,
-  templateFramework: TemplateFramework,
-  dataSource: string,
-  vectorDb: TemplateVectorDB,
-  port: number,
-  externalPort: number,
-  postInstallAction: TemplatePostInstallAction,
-  templateUI?: TemplateUI,
-  appType?: AppType,
-  llamaCloudProjectName?: string,
-  llamaCloudIndexName?: string,
-  tools?: string,
-): Promise<CreateLlamaResult> {
+export type RunCreateLlamaOptions = {
+  cwd: string;
+  templateType: TemplateType;
+  templateFramework: TemplateFramework;
+  dataSource: string;
+  vectorDb: TemplateVectorDB;
+  port: number;
+  externalPort: number;
+  postInstallAction: TemplatePostInstallAction;
+  templateUI?: TemplateUI;
+  appType?: AppType;
+  llamaCloudProjectName?: string;
+  llamaCloudIndexName?: string;
+  tools?: string;
+  useLlamaParse?: boolean;
+};
+
+export async function runCreateLlama({
+  cwd,
+  templateType,
+  templateFramework,
+  dataSource,
+  vectorDb,
+  port,
+  externalPort,
+  postInstallAction,
+  templateUI,
+  appType,
+  llamaCloudProjectName,
+  llamaCloudIndexName,
+  tools,
+  useLlamaParse,
+}: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
       "Setting the OPENAI_API_KEY and LLAMA_CLOUD_API_KEY is mandatory to run tests",
@@ -80,7 +97,6 @@ export async function runCreateLlama(
     postInstallAction,
     "--tools",
     tools ?? "none",
-    "--no-llama-parse",
     "--observability",
     "none",
     "--llama-cloud-key",
@@ -92,6 +108,9 @@ export async function runCreateLlama(
   }
   if (appType) {
     commandArgs.push(appType);
+  }
+  if (!useLlamaParse) {
+    commandArgs.push("--no-llama-parse");
   }
 
   const command = commandArgs.join(" ");

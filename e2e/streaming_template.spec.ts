@@ -39,20 +39,20 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
     port = Math.floor(Math.random() * 10000) + 10000;
     externalPort = port + 1;
     cwd = await createTestDir();
-    const result = await runCreateLlama(
+    const result = await runCreateLlama({
       cwd,
-      "streaming",
+      templateType: "streaming",
       templateFramework,
       dataSource,
       vectorDb,
       port,
       externalPort,
-      templatePostInstallAction,
+      postInstallAction: templatePostInstallAction,
       templateUI,
       appType,
       llamaCloudProjectName,
       llamaCloudIndexName,
-    );
+    });
     name = result.projectName;
     appProcess = result.appProcess;
   });
