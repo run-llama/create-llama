@@ -10,19 +10,19 @@ import type {
 } from "../helpers";
 import { createTestDir, runCreateLlama, type AppType } from "./utils";
 
-const templateFramework: TemplateFramework = "fastapi";
+const templateFramework: TemplateFramework = process.env.FRAMEWORK
+  ? (process.env.FRAMEWORK as TemplateFramework)
+  : "fastapi";
 const dataSource: string = "--example-file";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = "--frontend";
+const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
 
 test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
   test.skip(
-    process.platform !== "linux" ||
-      process.env.FRAMEWORK !== "fastapi" ||
-      process.env.DATASOURCE === "--no-files",
-    "The multiagent template currently only works with FastAPI and files. We also only run on Linux to speed up tests.",
+    process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
+    "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
   );
   let port: number;
   let externalPort: number;
