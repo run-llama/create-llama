@@ -156,9 +156,12 @@ class ArtifactGenerator:
         """
         Write the content to a file.
         """
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "wb") as file:
-            file.write(content.getvalue())
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "wb") as file:
+                file.write(content.getvalue())
+        except Exception as e:
+            raise e
 
     @staticmethod
     def _validate_file_name(file_name: str) -> str:
