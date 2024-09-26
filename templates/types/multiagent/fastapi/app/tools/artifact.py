@@ -1,7 +1,10 @@
+import logging
 import os
 import re
 from enum import Enum
 from io import BytesIO
+
+from llama_index.core.tools.function_tool import FunctionTool
 
 OUTPUT_DIR = "output/tools"
 
@@ -11,43 +14,92 @@ class ArtifactType(Enum):
     HTML = "html"
 
 
-HTML_FILE_TEMPLATE = """
+COMMON_STYLES = """
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.3;
+    color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+p {
+    margin-bottom: 0.7em;
+}
+code {
+    background-color: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+img {
+    max-width: 90%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+    border-radius: 10px;
+}
+"""
+
+HTML_SPECIFIC_STYLES = """
+body {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+"""
+
+PDF_SPECIFIC_STYLES = """
+@page {
+    size: letter;
+    margin: 2cm;
+}
+body {
+    font-size: 11pt;
+}
+h1 { font-size: 18pt; }
+h2 { font-size: 16pt; }
+h3 { font-size: 14pt; }
+h4, h5, h6 { font-size: 12pt; }
+pre, code {
+    font-family: Courier, monospace;
+    font-size: 0.9em;
+}
+"""
+
+HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.3;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }}
-        h1, h2, h3, h4, h5, h6 {{
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-        }}
-        p {{
-            margin-bottom: 1em;
-        }}
-        code {{
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }}
-        pre {{
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }}
+        {common_styles}
+        {specific_styles}
     </style>
 </head>
 <body>
-    {html_content}
+    {content}
 </body>
 </html>
 """
@@ -66,9 +118,22 @@ class ArtifactGenerator:
                 "Failed to import required modules. Please install markdown."
             )
 
-        # Convert markdown to HTML
-        html_content = markdown.markdown(original_content)
+        # Convert markdown to HTML with fenced code and table extensions
+        html_content = markdown.markdown(
+            original_content, extensions=["fenced_code", "tables"]
+        )
         return html_content
+
+    @classmethod
+    def _generate_html_document(cls, html_content: str) -> str:
+        """
+        Generate a complete HTML document with the given HTML content.
+        """
+        return HTML_TEMPLATE.format(
+            common_styles=COMMON_STYLES,
+            specific_styles=HTML_SPECIFIC_STYLES,
+            content=html_content,
+        )
 
     @classmethod
     def _generate_pdf(cls, html_content: str) -> BytesIO:
@@ -82,34 +147,23 @@ class ArtifactGenerator:
                 "Failed to import required modules. Please install xhtml2pdf."
             )
 
+        pdf_html = HTML_TEMPLATE.format(
+            common_styles=COMMON_STYLES,
+            specific_styles=PDF_SPECIFIC_STYLES,
+            content=html_content,
+        )
+
         buffer = BytesIO()
         pdf = pisa.pisaDocument(
-            BytesIO(html_content.encode("UTF-8")),
-            buffer,
-            encoding="UTF-8",
-            path=".",
-            link_callback=None,
-            debug=0,
-            default_css=None,
-            xhtml=False,
-            xml_output=None,
-            ident=0,
-            show_error_as_pdf=False,
-            quiet=True,
-            capacity=100 * 1024 * 1024,
-            raise_exception=True,
+            BytesIO(pdf_html.encode("UTF-8")), buffer, encoding="UTF-8"
         )
+
         if pdf.err:
+            logging.error(f"PDF generation failed: {pdf.err}")
             raise ValueError("PDF generation failed")
+
         buffer.seek(0)
         return buffer
-
-    @classmethod
-    def _generate_html(cls, html_content: str) -> str:
-        """
-        Generate a complete HTML document with the given HTML content.
-        """
-        return HTML_FILE_TEMPLATE.format(html_content=html_content)
 
     @classmethod
     def generate_artifact(
@@ -119,10 +173,11 @@ class ArtifactGenerator:
         To generate artifact as PDF or HTML file.
         Parameters:
             original_content: str (markdown style)
-            artifact_type: str (pdf or html) specify the type of the file format based on the use case
+            artifact_type: str (pdf or html or image) specify the type of the file format based on the use case
             file_name: str (name of the artifact file) must be a valid file name, no extensions needed
         Returns:
-            str (URL to the artifact file): A file URL ready to serve.
+            str (URL to the artifact file): A file URL ready to serve (pdf or html).
+            list[str] (URLs to the artifact files): A list of image URLs ready to serve (png).
         """
         try:
             artifact_type = ArtifactType(artifact_type.lower())
@@ -133,15 +188,12 @@ class ArtifactGenerator:
         # Always generate html content first
         html_content = cls._generate_html_content(original_content)
 
-        # Based on the type of artifact, generate the corresponding file
         if artifact_type == ArtifactType.PDF:
-            content = cls._generate_pdf(cls._generate_html(html_content))
+            content = cls._generate_pdf(html_content)
             file_extension = "pdf"
         elif artifact_type == ArtifactType.HTML:
-            content = BytesIO(cls._generate_html(html_content).encode("utf-8"))
+            content = BytesIO(cls._generate_html_document(html_content).encode("utf-8"))
             file_extension = "html"
-        else:
-            raise ValueError(f"Unexpected artifact type: {artifact_type}")
 
         file_name = cls._validate_file_name(file_name)
         file_path = os.path.join(OUTPUT_DIR, f"{file_name}.{file_extension}")
@@ -176,3 +228,7 @@ class ArtifactGenerator:
             return file_name
         else:
             raise ValueError("File name is not allowed to contain special characters.")
+
+
+def get_tools(**kwargs):
+    return [FunctionTool.from_defaults(ArtifactGenerator.generate_artifact)]

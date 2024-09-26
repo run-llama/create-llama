@@ -1,10 +1,11 @@
 import os
 from typing import List
-from llama_index.core.tools import QueryEngineTool, ToolMetadata
+
 from app.agents.single import FunctionCallingAgent
 from app.engine.index import get_index
-
+from app.tools.duckduckgo import get_tools as get_duckduckgo_tools
 from llama_index.core.chat_engine.types import ChatMessage
+from llama_index.core.tools import QueryEngineTool, ToolMetadata
 
 
 def get_query_engine_tool() -> QueryEngineTool:
@@ -30,10 +31,11 @@ def get_query_engine_tool() -> QueryEngineTool:
 
 
 def create_researcher(chat_history: List[ChatMessage]):
+    duckduckgo_search_tools = get_duckduckgo_tools()
     return FunctionCallingAgent(
         name="researcher",
-        tools=[get_query_engine_tool()],
-        role="expert in retrieving any unknown content",
-        system_prompt="You are a researcher agent. You are given a researching task. You must use your tools to complete the research.",
+        tools=[get_query_engine_tool(), *duckduckgo_search_tools],
+        role="expert in retrieving any unknown content or searching for images from the internet",
+        system_prompt="You are a researcher agent. You are given a researching task. You must use tools to retrieve information from the knowledge base and search for needed images from the internet for the post.",
         chat_history=chat_history,
     )
