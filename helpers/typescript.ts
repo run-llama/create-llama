@@ -33,8 +33,7 @@ export const installTSTemplate = async ({
    * Copy the template files to the target directory.
    */
   console.log("\nInitializing project with template:", template, "\n");
-  const type = template === "multiagent" ? "streaming" : template; // use nextjs streaming template for multiagent
-  const templatePath = path.join(templatesDir, "types", type, framework);
+  const templatePath = path.join(templatesDir, "types", "streaming", framework);
   const copySource = ["**"];
 
   await copy(copySource, root, {
@@ -124,6 +123,30 @@ export const installTSTemplate = async ({
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
   });
 
+  if (template === "multiagent") {
+    const multiagentPath = path.join(compPath, "multiagent", "typescript");
+
+    // copy workflow code for multiagent template
+    await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
+      parents: true,
+      cwd: path.join(multiagentPath, "workflow"),
+    });
+
+    if (framework === "nextjs") {
+      // patch route.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "nextjs"),
+      });
+    } else if (framework === "express") {
+      // patch chat.controller.ts file
+      await copy("**", path.join(root, relativeEngineDestPath), {
+        parents: true,
+        cwd: path.join(multiagentPath, "express"),
+      });
+    }
+  }
+
   // copy loader component (TS only supports llama_parse and file for now)
   const loaderFolder = useLlamaParse ? "llama_parse" : "file";
   await copy("**", enginePath, {
@@ -143,6 +166,11 @@ export const installTSTemplate = async ({
   await copy("**", enginePath, {
     parents: true,
     cwd: path.join(compPath, "engines", "typescript", engine),
+  });
+
+  // copy settings to engine folder
+  await copy("**", enginePath, {
+    cwd: path.join(compPath, "settings", "typescript"),
   });
 
   /**
