@@ -111,6 +111,30 @@ For better results, you can specify the region parameter to get results from a s
     ],
   },
   {
+    display: "Artifact generator",
+    name: "artifact",
+    // TODO: add support for Typescript templates
+    supportedFrameworks: ["fastapi"],
+    dependencies: [
+      {
+        name: "xhtml2pdf",
+        version: "^0.2.16",
+      },
+      {
+        name: "markdown",
+        version: "^3.7",
+      },
+    ],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for artifact tool.",
+        value: `If user request for a report or a post, use artifact tool to create a file and reply with the link to the file.`,
+      },
+    ],
+  },
+  {
     display: "Code Interpreter",
     name: "interpreter",
     dependencies: [
