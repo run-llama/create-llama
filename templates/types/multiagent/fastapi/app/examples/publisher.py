@@ -12,7 +12,10 @@ def create_publisher(chat_history: List[ChatMessage]):
     return FunctionCallingAgent(
         name="publisher",
         tools=[artifact_tool],
-        role="expert in generating artifacts (pdf, html)",
-        system_prompt="You are generator that help generate artifacts (pdf, html) from a given content. Please always respond the content again along with the generated artifact.",
+        role="expert in publishing, need to specify the type of artifact (pdf, html, or markdown)",
+        system_prompt="""You are a publisher that help publish the blog post. 
+        For a normal request, you should choose the type of artifact either pdf or html or just reply to the user.
+        """,
         chat_history=chat_history,
+        verbose=True,
     )

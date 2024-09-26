@@ -19,7 +19,7 @@ uvicorn = { extras = ["standard"], version = "^0.23.2" }
 cachetools = "^5.3.3"
 aiostream = "^0.5.2"
 markdown = "^3.7"
-reportlab = "^4.2.2"
+xhtml2pdf = "^0.2.16"
 
 [tool.poetry.dependencies.docx2txt]
 version = "^0.8"
