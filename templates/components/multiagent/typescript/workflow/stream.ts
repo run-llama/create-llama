@@ -2,10 +2,12 @@ import { StopEvent } from "@llamaindex/core/workflow";
 import {
   createCallbacksTransformer,
   createStreamDataTransformer,
+  StreamData,
   trimStartOfStreamHelper,
   type AIStreamCallbacksAndOptions,
 } from "ai";
 import { ChatResponseChunk } from "llamaindex";
+import { AgentRunEvent } from "./type";
 
 export function toDataStream(
   result: Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>,
@@ -37,4 +39,27 @@ function toReadableStream(
       if (text) controller.enqueue(text);
     },
   });
+}
+
+export async function workflowEventsToStreamData(
+  events: AsyncIterable<AgentRunEvent>,
+): Promise<StreamData> {
+  const streamData = new StreamData();
+
+  (async () => {
+    for await (const event of events) {
+      if (event instanceof AgentRunEvent) {
+        const { name, msg } = event.data;
+        if ((streamData as any).isClosed) {
+          break;
+        }
+        streamData.appendMessageAnnotation({
+          type: "agent",
+          data: { agent: name, text: msg },
+        });
+      }
+    }
+  })();
+
+  return streamData;
 }

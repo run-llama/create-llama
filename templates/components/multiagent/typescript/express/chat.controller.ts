@@ -1,13 +1,11 @@
-import { Message, StreamData, streamToResponse } from "ai";
+import { StopEvent } from "@llamaindex/core/workflow";
+import { Message, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage } from "llamaindex";
-import { createStreamTimeout } from "./llamaindex/streaming/events";
+import { ChatMessage, ChatResponseChunk } from "llamaindex";
 import { createWorkflow } from "./workflow/factory";
-import { toDataStream } from "./workflow/stream";
+import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
-  const vercelStreamData = new StreamData();
-  const streamTimeout = createStreamTimeout(vercelStreamData);
   try {
     const { messages }: { messages: Message[] } = req.body;
     const userMessage = messages.pop();
@@ -20,15 +18,24 @@ export const chat = async (req: Request, res: Response) => {
 
     const chatHistory = messages as ChatMessage[];
     const agent = createWorkflow(chatHistory);
-    agent.run(userMessage.content);
-    const stream = toDataStream(agent.streamEvents(), vercelStreamData);
-    return streamToResponse(stream, res, {}, vercelStreamData);
+    const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
+      userMessage.content,
+    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
+
+    // convert the workflow events to a vercel AI stream data object
+    const agentStreamData = await workflowEventsToStreamData(
+      agent.streamEvents(),
+    );
+    // convert the workflow result to a vercel AI content stream
+    const stream = toDataStream(result, {
+      onFinal: () => agentStreamData.close(),
+    });
+
+    return streamToResponse(stream, res, {}, agentStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({
       detail: (error as Error).message,
     });
-  } finally {
-    clearTimeout(streamTimeout);
   }
 };

@@ -1,13 +1,11 @@
 import { initObservability } from "@/app/observability";
 import { StopEvent } from "@llamaindex/core/workflow";
-import { Message, StreamData, StreamingTextResponse } from "ai";
+import { Message, StreamingTextResponse } from "ai";
 import { ChatMessage, ChatResponseChunk } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
-import { createStreamTimeout } from "./llamaindex/streaming/events";
 import { createWorkflow } from "./workflow/factory";
-import { toDataStream } from "./workflow/stream";
-import { AgentRunEvent } from "./workflow/type";
+import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
 
 initObservability();
 initSettings();
@@ -16,13 +14,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  // Init Vercel AI StreamData and timeout
-  const vercelStreamData = new StreamData();
-  const streamTimeout = createStreamTimeout(vercelStreamData);
-
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data?: any } = body;
+    const { messages }: { messages: Message[] } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -36,29 +30,19 @@ export async function POST(request: NextRequest) {
 
     const chatHistory = messages as ChatMessage[];
     const agent = createWorkflow(chatHistory);
+    // TODO: fix type in agent.run in LITS
     const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
       userMessage.content,
+    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
+    // convert the workflow events to a vercel AI stream data object
+    const agentStreamData = await workflowEventsToStreamData(
+      agent.streamEvents(),
     );
-    // start consuming the agent events in the background -> move to stream.ts
-    void (async () => {
-      for await (const event of agent.streamEvents()) {
-        // Add the event to vercelStreamData
-        if (event instanceof AgentRunEvent) {
-          const { name, msg } = event.data;
-          vercelStreamData.appendMessageAnnotation({
-            type: "agent",
-            data: { agent: name, text: msg },
-          });
-        }
-      }
-    })();
-    // TODO: fix type in agent.run in LITS
-    const stream = toDataStream(
-      result as unknown as Promise<
-        StopEvent<AsyncGenerator<ChatResponseChunk>>
-      >,
-    );
-    return new StreamingTextResponse(stream, {}, vercelStreamData);
+    // convert the workflow result to a vercel AI content stream
+    const stream = toDataStream(result, {
+      onFinal: () => agentStreamData.close(),
+    });
+    return new StreamingTextResponse(stream, {}, agentStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(
@@ -69,7 +53,5 @@ export async function POST(request: NextRequest) {
         status: 500,
       },
     );
-  } finally {
-    clearTimeout(streamTimeout);
   }
 }
