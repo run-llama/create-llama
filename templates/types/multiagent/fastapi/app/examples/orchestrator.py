@@ -31,4 +31,5 @@ def create_orchestrator(chat_history: Optional[List[ChatMessage]] = None):
     return AgentOrchestrator(
         agents=[writer, reviewer, researcher, publisher],
         refine_plan=False,
+        chat_history=chat_history,
     )

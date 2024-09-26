@@ -11,6 +11,7 @@ from llama_index.core.agent.runner.planner import (
     SubTask,
 )
 from llama_index.core.bridge.pydantic import ValidationError
+from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings
@@ -23,6 +24,18 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
+
+INITIAL_PLANNER_PROMPT = """\
+Think step-by-step. Given a conversation, set of tools and a user request. Your responsibility is to create a plan to complete the task.
+The plan must adapt with the user request and the conversation. It's fine to just start with needed tasks first and asking user for the next step approval.
+
+The tools available are:
+{tools_str}
+
+Conversation: {chat_history}
+
+Overall Task: {task}
+"""
 
 
 class ExecutePlanEvent(Event):
@@ -62,14 +75,21 @@ class StructuredPlannerAgent(Workflow):
         tools: List[BaseTool] | None = None,
         timeout: float = 360.0,
         refine_plan: bool = False,
+        chat_history: Optional[List[ChatMessage]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, timeout=timeout, **kwargs)
         self.name = name
         self.refine_plan = refine_plan
+        self.chat_history = chat_history
 
         self.tools = tools or []
-        self.planner = Planner(llm=llm, tools=self.tools, verbose=self._verbose)
+        self.planner = Planner(
+            llm=llm,
+            tools=self.tools,
+            initial_plan_prompt=INITIAL_PLANNER_PROMPT,
+            verbose=self._verbose,
+        )
         # The executor is keeping the memory of all tool calls and decides to call the right tool for the task
         self.executor = FunctionCallingAgent(
             name="executor",
@@ -89,7 +109,9 @@ class StructuredPlannerAgent(Workflow):
         ctx.data["streaming"] = getattr(ev, "streaming", False)
         ctx.data["task"] = ev.input
 
-        plan_id, plan = await self.planner.create_plan(input=ev.input)
+        plan_id, plan = await self.planner.create_plan(
+            input=ev.input, chat_history=self.chat_history
+        )
         ctx.data["act_plan_id"] = plan_id
 
         # inform about the new plan
@@ -213,7 +235,9 @@ class Planner:
             plan_refine_prompt = PromptTemplate(plan_refine_prompt)
         self.plan_refine_prompt = plan_refine_prompt
 
-    async def create_plan(self, input: str) -> Tuple[str, Plan]:
+    async def create_plan(
+        self, input: str, chat_history: Optional[List[ChatMessage]] = None
+    ) -> Tuple[str, Plan]:
         tools = self.tools
         tools_str = ""
         for tool in tools:
@@ -225,6 +249,7 @@ class Planner:
                 self.initial_plan_prompt,
                 tools_str=tools_str,
                 task=input,
+                chat_history=chat_history,
             )
         except (ValueError, ValidationError):
             if self.verbose:

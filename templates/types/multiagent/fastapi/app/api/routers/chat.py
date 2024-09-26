@@ -20,7 +20,7 @@ async def chat(
 ):
     try:
         last_message_content = data.get_last_message_content()
-        messages = data.get_history_messages()
+        messages = data.get_history_messages(include_agent_messages=True)
         # TODO: generate filters based on doc_ids
         # for now just use all documents
         # doc_ids = data.get_chat_document_ids()
