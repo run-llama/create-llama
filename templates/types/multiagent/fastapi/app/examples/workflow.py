@@ -49,6 +49,7 @@ class ResearchEvent(Event):
 
 class WriteEvent(Event):
     input: str
+    is_good: bool = False
 
 
 class ReviewEvent(Event):
@@ -82,7 +83,7 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def write(
         self, ctx: Context, ev: WriteEvent, writer: FunctionCallingAgent
-    ) -> ReviewEvent | StopEvent:
+    ) -> ReviewEvent | PublishEvent:
         MAX_ATTEMPTS = 2
         ctx.data["attempts"] = ctx.data.get("attempts", 0) + 1
         too_many_attempts = ctx.data["attempts"] > MAX_ATTEMPTS
@@ -93,12 +94,11 @@ class BlogPostWorkflow(Workflow):
                     msg=f"Too many attempts ({MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.",
                 )
             )
-        if too_many_attempts:
+        if ev.is_good or too_many_attempts:
             # too many attempts or the blog post is good - stream final response if requested
-            result = await self.run_agent(
-                ctx, writer, ev.input, streaming=ctx.data["streaming"]
+            return PublishEvent(
+                input=f"Please publish this content: ```{ev.input}```. The user request was: ```{ctx.data['user_input']}```",
             )
-            return StopEvent(result=result)
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
         ctx.data["result"] = result
         return ReviewEvent(input=result.response.message.content)
@@ -106,7 +106,7 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def review(
         self, ctx: Context, ev: ReviewEvent, reviewer: FunctionCallingAgent
-    ) -> WriteEvent | PublishEvent:
+    ) -> WriteEvent:
         result: AgentRunResult = await self.run_agent(ctx, reviewer, ev.input)
         review = result.response.message.content
         old_content = ctx.data["result"].response.message.content
@@ -118,9 +118,9 @@ class BlogPostWorkflow(Workflow):
             )
         )
         if post_is_good:
-            user_input = ctx.data["user_input"]
-            return PublishEvent(
-                input=f"Please publish this content: ```{old_content}```. The user request was: ```{user_input}```",
+            return WriteEvent(
+                input=f"You're blog post is ready for publication. Please respond with just the blog post. Blog post: ```{old_content}```",
+                is_good=True,
             )
         else:
             return WriteEvent(
