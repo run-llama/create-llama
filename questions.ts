@@ -18,6 +18,7 @@ import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
 import { askModelConfig } from "./helpers/providers";
 import { getProjectOptions } from "./helpers/repo";
 import {
+  ToolType,
   supportedTools,
   toolRequiresConfig,
   toolsRequireConfig,
@@ -363,6 +364,22 @@ export const askQuestions = async (
       program.template = template;
       preferences.template = template;
     }
+  }
+
+  // TODO: Remove this once we support selecting tools for multiagent template
+  if (program.template === "multiagent") {
+    program.tools = [
+      {
+        name: "document_generator",
+        display: "Document Generator",
+        type: ToolType.LOCAL,
+      },
+      {
+        name: "duckduckgo",
+        display: "DuckDuckGo",
+        type: ToolType.LOCAL,
+      },
+    ];
   }
 
   if (program.template === "community") {
