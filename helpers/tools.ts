@@ -111,10 +111,10 @@ For better results, you can specify the region parameter to get results from a s
     ],
   },
   {
-    display: "Artifact generator",
-    name: "artifact",
+    display: "Document generator",
+    name: "document_generator",
     // TODO: add support for Typescript templates
-    supportedFrameworks: ["fastapi"],
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
     dependencies: [
       {
         name: "xhtml2pdf",
@@ -129,8 +129,8 @@ For better results, you can specify the region parameter to get results from a s
     envVars: [
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for artifact tool.",
-        value: `If user request for a report or a post, use artifact tool to create a file and reply with the link to the file.`,
+        description: "System prompt for document generator tool.",
+        value: `If user request for a report or a post, use document generator tool to create a file and reply with the link to the file.`,
       },
     ],
   },

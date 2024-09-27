@@ -209,6 +209,7 @@ export const installTSTemplate = async ({
     ui,
     observability,
     vectorDb,
+    tools,
   });
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
@@ -230,6 +231,7 @@ async function updatePackageJson({
   ui,
   observability,
   vectorDb,
+  tools,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -239,6 +241,7 @@ async function updatePackageJson({
   | "ui"
   | "observability"
   | "vectorDb"
+  | "tools"
 > & {
   relativeEngineDestPath: string;
 }): Promise<any> {
@@ -323,6 +326,18 @@ async function updatePackageJson({
       ...packageJson.devDependencies,
       "node-loader": "^2.0.0",
     };
+  }
+
+  if (tools && tools.length > 0) {
+    tools.forEach((tool) => {
+      if (tool.name === "document_generator") {
+        packageJson.dependencies = {
+          ...packageJson.dependencies,
+          puppeteer: "^23.4.1",
+          marked: "^14.1.2",
+        };
+      }
+    });
   }
 
   await fs.writeFile(
