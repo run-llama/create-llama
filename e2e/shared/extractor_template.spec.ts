@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
-import { TemplateFramework } from "../helpers";
-import { createTestDir, runCreateLlama } from "./utils";
+import { TemplateFramework } from "../../helpers";
+import { createTestDir, runCreateLlama } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
@@ -16,9 +16,8 @@ const dataSource: string = process.env.DATASOURCE
 // The extractor template currently only works with FastAPI and files (and not on Windows)
 if (
   process.platform !== "win32" &&
-  templateFramework !== "nextjs" &&
-  templateFramework !== "express" &&
-  dataSource !== "--no-files"
+  templateFramework === "fastapi" &&
+  dataSource === "--example-file"
 ) {
   test.describe("Test extractor template", async () => {
     let frontendPort: number;

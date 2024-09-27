@@ -7,23 +7,26 @@ import type {
   TemplateFramework,
   TemplatePostInstallAction,
   TemplateUI,
-} from "../helpers";
-import { createTestDir, runCreateLlama, type AppType } from "./utils";
+} from "../../helpers";
+import { createTestDir, runCreateLlama, type AppType } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
-const dataSource: string = "--example-file";
+const dataSource: string = process.env.DATASOURCE
+  ? process.env.DATASOURCE
+  : "--example-file";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
-const userMessage = "Write a blog post about physical standards for letters";
 
-test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
-  test.skip(
-    process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
-    "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
-  );
+const llamaCloudProjectName = "create-llama";
+const llamaCloudIndexName = "e2e-test";
+
+const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
+const userMessage =
+  dataSource !== "--no-files" ? "Physical standard for letters" : "Hello";
+
+test.describe(`Test streaming template ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
   let port: number;
   let externalPort: number;
   let cwd: string;
@@ -38,7 +41,7 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
     cwd = await createTestDir();
     const result = await runCreateLlama({
       cwd,
-      templateType: "multiagent",
+      templateType: "streaming",
       templateFramework,
       dataSource,
       vectorDb,
@@ -47,6 +50,8 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
       postInstallAction: templatePostInstallAction,
       templateUI,
       appType,
+      llamaCloudProjectName,
+      llamaCloudIndexName,
     });
     name = result.projectName;
     appProcess = result.appProcess;
@@ -56,25 +61,54 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
     const dirExists = fs.existsSync(path.join(cwd, name));
     expect(dirExists).toBeTruthy();
   });
-
   test("Frontend should have a title", async ({ page }) => {
+    test.skip(templatePostInstallAction !== "runApp");
     await page.goto(`http://localhost:${port}`);
     await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
   });
 
-  test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
+  test("Frontend should be able to submit a message and receive a response", async ({
     page,
   }) => {
+    test.skip(templatePostInstallAction !== "runApp");
     await page.goto(`http://localhost:${port}`);
     await page.fill("form input", userMessage);
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) => {
+          return res.url().includes("/api/chat") && res.status() === 200;
+        },
+        {
+          timeout: 1000 * 60,
+        },
+      ),
+      page.click("form button[type=submit]"),
+    ]);
+    const text = await response.text();
+    console.log("AI response when submitting message: ", text);
+    expect(response.ok()).toBeTruthy();
+  });
 
-    const responsePromise = page.waitForResponse((res) =>
-      res.url().includes("/api/chat"),
+  test("Backend frameworks should response when calling non-streaming chat API", async ({
+    request,
+  }) => {
+    test.skip(templatePostInstallAction !== "runApp");
+    test.skip(templateFramework === "nextjs");
+    const response = await request.post(
+      `http://localhost:${externalPort}/api/chat/request`,
+      {
+        data: {
+          messages: [
+            {
+              role: "user",
+              content: userMessage,
+            },
+          ],
+        },
+      },
     );
-
-    await page.click("form button[type=submit]");
-
-    const response = await responsePromise;
+    const text = await response.text();
+    console.log("AI response when calling API: ", text);
     expect(response.ok()).toBeTruthy();
   });
 

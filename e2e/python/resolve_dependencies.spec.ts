@@ -3,21 +3,16 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import { TemplateFramework, TemplateVectorDB } from "../helpers/types";
-import { createTestDir, runCreateLlama } from "./utils";
+import { TemplateVectorDB } from "../../helpers/types";
+import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
 
-const templateFramework: TemplateFramework = process.env.FRAMEWORK
-  ? (process.env.FRAMEWORK as TemplateFramework)
-  : "fastapi";
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
   : "--example-file";
 
 if (
-  templateFramework == "fastapi" && // test is only relevant for fastapi
-  process.version.startsWith("v20.") && // XXX: Only run for Node.js version 20 (CI matrix will trigger other versions)
   dataSource === "--example-file" // XXX: this test provides its own data source - only trigger it on one data source (usually the CI matrix will trigger multiple data sources)
 ) {
   // vectorDBs, tools, and data source combinations to test
