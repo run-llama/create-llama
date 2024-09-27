@@ -402,6 +402,15 @@ export const installPythonTemplate = async ({
     });
   }
 
+  // Copy tools for multiagent template
+  // TODO: Remove this once we support selecting tools for multiagent template
+  if (template === "multiagent") {
+    // templates / components / engines / python / agent / tools;
+    await copy("**", path.join(root, "app", "tools"), {
+      cwd: path.join(compPath, "engines", "python", "agent", "tools"),
+    });
+  }
+
   if (template === "streaming") {
     // For the streaming template only:
     // Select and copy engine code based on data sources and tools

@@ -1,20 +1,22 @@
 from typing import List
 
 from app.agents.single import FunctionCallingAgent
-from app.tools.artifact import ArtifactGenerator
+from app.tools.document_generator import DocumentGenerator
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import FunctionTool
 
 
 def create_publisher(chat_history: List[ChatMessage]):
-    artifact_tool = FunctionTool.from_defaults(ArtifactGenerator.generate_artifact)
+    document_generator_tool = FunctionTool.from_defaults(
+        DocumentGenerator.generate_document
+    )
 
     return FunctionCallingAgent(
         name="publisher",
-        tools=[artifact_tool],
-        description="expert in publishing, need to specify the type of artifact use a file (pdf, html) or just reply the content directly",
+        tools=[document_generator_tool],
+        description="expert in publishing, need to specify the type of document use a file (pdf, html) or just reply the content directly",
         system_prompt="""You are a publisher that help publish the blog post. 
-        For a normal request, you should choose the type of artifact either pdf or html or just reply to the user directly without generating any artifact file.
+        For a normal request, you should choose the type of document either pdf or html or just reply to the user directly without generating any document file.
         """,
         chat_history=chat_history,
         verbose=True,
