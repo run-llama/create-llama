@@ -163,13 +163,13 @@ class DocumentGenerator:
         cls, original_content: str, document_type: str, file_name: str
     ) -> str:
         """
-        To generate artifact as PDF or HTML file.
+        To generate document as PDF or HTML file.
         Parameters:
             original_content: str (markdown style)
             document_type: str (pdf or html) specify the type of the file format based on the use case
-            file_name: str (name of the artifact file) must be a valid file name, no extensions needed
+            file_name: str (name of the document file) must be a valid file name, no extensions needed
         Returns:
-            str (URL to the artifact file): A file URL ready to serve.
+            str (URL to the document file): A file URL ready to serve.
         """
         try:
             document_type = DocumentType(document_type.lower())
@@ -180,7 +180,7 @@ class DocumentGenerator:
         # Always generate html content first
         html_content = cls._generate_html_content(original_content)
 
-        # Based on the type of artifact, generate the corresponding file
+        # Based on the type of document, generate the corresponding file
         if document_type == DocumentType.PDF:
             content = cls._generate_pdf(html_content)
             file_extension = "pdf"
