@@ -364,7 +364,12 @@ export const installPythonTemplate = async ({
   | "modelConfig"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
-  const templatePath = path.join(templatesDir, "types", template, framework);
+  let templatePath;
+  if (template === "extractor") {
+    templatePath = path.join(templatesDir, "types", "extractor", framework);
+  } else {
+    templatePath = path.join(templatesDir, "types", "streaming", framework);
+  }
   await copy("**", root, {
     parents: true,
     cwd: templatePath,
@@ -402,17 +407,7 @@ export const installPythonTemplate = async ({
     });
   }
 
-  // Copy tools for multiagent template
-  // TODO: Remove this once we support selecting tools for multiagent template
-  if (template === "multiagent") {
-    // templates / components / engines / python / agent / tools;
-    await copy("**", path.join(root, "app", "engine", "tools"), {
-      cwd: path.join(compPath, "engines", "python", "agent", "tools"),
-    });
-  }
-
-  if (template === "streaming") {
-    // For the streaming template only:
+  if (template === "streaming" || template === "multiagent") {
     // Select and copy engine code based on data sources and tools
     let engine;
     if (dataSources.length > 0 && (!tools || tools.length === 0)) {
@@ -424,6 +419,14 @@ export const installPythonTemplate = async ({
     await copy("**", enginePath, {
       parents: true,
       cwd: path.join(compPath, "engines", "python", engine),
+    });
+  }
+
+  if (template === "multiagent") {
+    // Copy multi-agent code
+    await copy("**", path.join(root), {
+      parents: true,
+      cwd: path.join(compPath, "multiagent", "python"),
     });
   }
 
