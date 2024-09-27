@@ -129,10 +129,10 @@ function ArtifactOutput({ data }: { data: ArtifactData }) {
         </div>
         <Button onClick={handleClosePanel}>Close</Button>
       </div>
-      <Tabs defaultValue="output" className="h-full p-4 overflow-auto">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
+      <Tabs defaultValue="preview" className="h-full p-4 overflow-auto">
+        <TabsList className="grid w-full grid-cols-3 max-w-[600px] mx-auto">
           <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="output">Output</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         <TabsContent value="code" className="h-[90%]">
@@ -140,7 +140,7 @@ function ArtifactOutput({ data }: { data: ArtifactData }) {
             <Markdown content={markdownCode} />
           </div>
         </TabsContent>
-        <TabsContent value="output" className="h-[90%]">
+        <TabsContent value="preview" className="h-[90%]">
           {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
           {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
         </TabsContent>
@@ -180,12 +180,11 @@ function InterpreterOutput({
   outputUrls: Array<{ url: string; filename: string }>;
 }) {
   return (
-    <div>
-      <h3>Click to output files below to open in the browser</h3>
-      <ul className="flex flex-col gap-2 list-disc list-inside">
-        {outputUrls.map((url, index) => (
-          <li key={url.url}>
-            <span>File Output {index + 1}: </span>
+    <ul className="flex flex-col gap-2 list-disc list-inside">
+      {outputUrls.map((url, index) => (
+        <li key={url.url}>
+          <span>
+            File Output {index + 1}:{" "}
             <a
               href={url.url}
               target="_blank"
@@ -193,10 +192,16 @@ function InterpreterOutput({
             >
               {url.filename}
             </a>
-          </li>
-        ))}
-      </ul>
-    </div>
+          </span>
+          {url.filename.endsWith(".png") ||
+          url.filename.endsWith(".jpg") ||
+          url.filename.endsWith(".jpeg") ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url.url} alt={url.filename} className="my-4 w-2/3" />
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }
 
