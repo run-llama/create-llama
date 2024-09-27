@@ -406,7 +406,7 @@ export const installPythonTemplate = async ({
   // TODO: Remove this once we support selecting tools for multiagent template
   if (template === "multiagent") {
     // templates / components / engines / python / agent / tools;
-    await copy("**", path.join(root, "app", "tools"), {
+    await copy("**", path.join(root, "app", "engine", "tools"), {
       cwd: path.join(compPath, "engines", "python", "agent", "tools"),
     });
   }

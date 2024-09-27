@@ -3,12 +3,12 @@ from typing import List
 
 from app.agents.single import FunctionCallingAgent
 from app.engine.index import get_index
-from app.tools.duckduckgo import get_tools as get_duckduckgo_tools
+from app.engine.tools import ToolFactory
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 
 
-def get_query_engine_tool() -> QueryEngineTool:
+def _create_query_engine_tool() -> QueryEngineTool:
     """
     Provide an agent worker that can be used to query the index.
     """
@@ -30,12 +30,40 @@ def get_query_engine_tool() -> QueryEngineTool:
     )
 
 
+def _get_research_tools() -> QueryEngineTool:
+    """
+    Researcher take responsibility for retrieving information.
+    Try init wikipedia or duckduckgo tool if available.
+    """
+    researcher_tool_names = ["duckduckgo", "wikipedia.WikipediaToolSpec"]
+    # Always include the query engine tool
+    tools = [_create_query_engine_tool()]
+    configured_tools = ToolFactory.from_env(map_result=True)
+    print(configured_tools)
+    for tool_name, tool in configured_tools.items():
+        if tool_name in researcher_tool_names:
+            tools.extend(tool)
+    return tools
+
+
 def create_researcher(chat_history: List[ChatMessage]):
-    duckduckgo_search_tools = get_duckduckgo_tools()
+    """
+    Researcher is an agent that take responsibility for using tools to complete a given task.
+    """
+    tools = _get_research_tools()
     return FunctionCallingAgent(
         name="researcher",
-        tools=[get_query_engine_tool(), *duckduckgo_search_tools],
+        tools=tools,
         description="expert in retrieving any unknown content or searching for images from the internet",
-        system_prompt="You are a researcher agent. You are given a researching task. You must use tools to retrieve information from the knowledge base and search for needed images from the internet for the post.",
+        system_prompt="""You are a researcher agent. 
+You are given a researching task. You must use tools to retrieve information needed for the task.
+It's normal that the task include some ambiguity which you must identify what is the real request that need to retrieve information.
+If you don't found any related information, please return "I didn't find any information."
+Example:
+Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
+->
+Your real task: Looking for information in english about the history of the internet
+This is not your task: Create blog post, create PDF, write in English
+""",
         chat_history=chat_history,
     )

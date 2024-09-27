@@ -62,12 +62,14 @@ class FunctionCallingAgent(Workflow):
         timeout: float = 360.0,
         name: str,
         write_events: bool = True,
+        description: str | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, verbose=verbose, timeout=timeout, **kwargs)
         self.tools = tools or []
         self.name = name
         self.write_events = write_events
+        self.description = description
 
         if llm is None:
             llm = Settings.llm
