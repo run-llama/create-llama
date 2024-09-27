@@ -113,7 +113,6 @@ For better results, you can specify the region parameter to get results from a s
   {
     display: "Document generator",
     name: "document_generator",
-    // TODO: add support for Typescript templates
     supportedFrameworks: ["fastapi", "nextjs", "express"],
     dependencies: [
       {
