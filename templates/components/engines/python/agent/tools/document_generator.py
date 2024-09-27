@@ -9,7 +9,7 @@ from llama_index.core.tools.function_tool import FunctionTool
 OUTPUT_DIR = "output/tools"
 
 
-class ArtifactType(Enum):
+class DocumentType(Enum):
     PDF = "pdf"
     HTML = "html"
 
@@ -98,7 +98,7 @@ HTML_TEMPLATE = """
 """
 
 
-class ArtifactGenerator:
+class DocumentGenerator:
     @classmethod
     def _generate_html_content(cls, original_content: str) -> str:
         """
@@ -159,36 +159,36 @@ class ArtifactGenerator:
         )
 
     @classmethod
-    def generate_artifact(
-        cls, original_content: str, artifact_type: str, file_name: str
+    def generate_document(
+        cls, original_content: str, document_type: str, file_name: str
     ) -> str:
         """
         To generate artifact as PDF or HTML file.
         Parameters:
             original_content: str (markdown style)
-            artifact_type: str (pdf or html) specify the type of the file format based on the use case
+            document_type: str (pdf or html) specify the type of the file format based on the use case
             file_name: str (name of the artifact file) must be a valid file name, no extensions needed
         Returns:
             str (URL to the artifact file): A file URL ready to serve.
         """
         try:
-            artifact_type = ArtifactType(artifact_type.lower())
+            document_type = DocumentType(document_type.lower())
         except ValueError:
             raise ValueError(
-                f"Invalid artifact type: {artifact_type}. Must be 'pdf' or 'html'."
+                f"Invalid document type: {document_type}. Must be 'pdf' or 'html'."
             )
         # Always generate html content first
         html_content = cls._generate_html_content(original_content)
 
         # Based on the type of artifact, generate the corresponding file
-        if artifact_type == ArtifactType.PDF:
+        if document_type == DocumentType.PDF:
             content = cls._generate_pdf(html_content)
             file_extension = "pdf"
-        elif artifact_type == ArtifactType.HTML:
+        elif document_type == DocumentType.HTML:
             content = BytesIO(cls._generate_html(html_content).encode("utf-8"))
             file_extension = "html"
         else:
-            raise ValueError(f"Unexpected artifact type: {artifact_type}")
+            raise ValueError(f"Unexpected document type: {document_type}")
 
         file_name = cls._validate_file_name(file_name)
         file_path = os.path.join(OUTPUT_DIR, f"{file_name}.{file_extension}")
@@ -226,4 +226,4 @@ class ArtifactGenerator:
 
 
 def get_tools(**kwargs):
-    return [FunctionTool.from_defaults(ArtifactGenerator.generate_artifact)]
+    return [FunctionTool.from_defaults(DocumentGenerator.generate_document)]
