@@ -125,7 +125,7 @@ class ChatData(BaseModel):
 
     def _get_agent_messages(self, max_messages: int = 5) -> List[str]:
         """
-        Construct agent messages from the annotations in the chat messages
+        Construct agent messages from the agent events in the annotations of the chat messages
         """
         agent_messages = []
         for message in self.messages:
@@ -138,6 +138,7 @@ class ChatData(BaseModel):
                         annotation.data, AgentAnnotation
                     ):
                         text = annotation.data.text
+                        # TODO: we should not filter the message by its text, but by its type - we need to send the event type in the AgentAnnotation
                         if not text.startswith("Finished task"):
                             agent_messages.append(
                                 f"\nAgent: {annotation.data.agent}\nsaid: {text}\n"

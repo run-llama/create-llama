@@ -19,5 +19,4 @@ def create_publisher(chat_history: List[ChatMessage]):
         For a normal request, you should choose the type of document either pdf or html or just reply to the user directly without generating any document file.
         """,
         chat_history=chat_history,
-        verbose=True,
     )

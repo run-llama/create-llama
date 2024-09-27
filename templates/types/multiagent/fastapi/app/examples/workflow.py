@@ -29,7 +29,7 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     )
     reviewer = FunctionCallingAgent(
         name="reviewer",
-        description="expert in reviewing blog posts, need a written blog post to review",
+        description="expert in reviewing blog posts, needs a written blog post to review",
         system_prompt="You are an expert in reviewing blog posts. You are given a task to review a blog post. Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement. Furthermore, proofread the post for grammar and spelling errors. Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.",
         chat_history=chat_history,
     )
