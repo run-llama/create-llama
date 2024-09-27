@@ -25,7 +25,11 @@ class AgentCallTool(ContextAwareTool):
             name=name,
             description=(
                 f"Use this tool to delegate a sub task to the {agent.name} agent."
-                + (f" The agent is an {agent.description}." if agent.description else "")
+                + (
+                    f" The agent is an {agent.description}."
+                    if agent.description
+                    else ""
+                )
             ),
             fn_schema=fn_schema,
         )
