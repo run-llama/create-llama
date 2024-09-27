@@ -129,7 +129,7 @@ function ArtifactOutput({ data }: { data: ArtifactData }) {
         </div>
         <Button onClick={handleClosePanel}>Close</Button>
       </div>
-      <Tabs defaultValue="preview" className="h-full p-4 overflow-auto">
+      <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
         <TabsList className="grid w-full grid-cols-3 max-w-[600px] mx-auto">
           <TabsTrigger value="code">Code</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
