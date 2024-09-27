@@ -3,11 +3,14 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import { TemplateVectorDB } from "../../helpers/types";
+import { TemplateFramework, TemplateVectorDB } from "../../helpers/types";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
 
+const templateFramework: TemplateFramework = process.env.FRAMEWORK
+  ? (process.env.FRAMEWORK as TemplateFramework)
+  : "fastapi";
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
   : "--example-file";
@@ -51,7 +54,7 @@ if (
             const result = await runCreateLlama({
               cwd,
               templateType: "streaming",
-              templateFramework: "fastapi",
+              templateFramework,
               dataSource,
               vectorDb,
               port: 3000, // port
