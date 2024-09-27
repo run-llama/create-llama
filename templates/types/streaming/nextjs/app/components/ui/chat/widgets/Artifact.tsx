@@ -205,6 +205,7 @@ function InterpreterOutput({
                 <a
                   href={url.url}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-400 underline"
                 >
                   {url.url}
