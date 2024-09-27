@@ -236,7 +236,7 @@ function ArtifactLogs({
 
 function ArtifactLogItems({ logs }: { logs: string[] }) {
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2 border border-gray-200 rounded-md p-4">
       {logs.map((log) => (
         <li key={log}>
           <code>{log}</code>
