@@ -2,6 +2,8 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from llama_index.core.agent import AgentRunner
+from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
 from llama_index.core.llms import MessageRole
 
@@ -12,7 +14,10 @@ from app.api.routers.models import (
     Result,
     SourceNodes,
 )
-from app.api.routers.vercel_response import VercelStreamResponse
+from app.api.routers.vercel_response import (
+    ChatEngineVercelStreamResponse,
+    WorkflowVercelStreamResponse,
+)
 from app.engine import get_chat_engine
 from app.engine.query_filter import generate_filters
 
@@ -40,12 +45,35 @@ async def chat(
         )
         event_handler = EventCallbackHandler()
         chat_engine = get_chat_engine(
-            filters=filters, params=params, event_handlers=[event_handler]
+            filters=filters,
+            params=params,
+            event_handlers=[event_handler],
+            chat_history=messages,
         )
-        response = await chat_engine.astream_chat(last_message_content, messages)
-        process_response_nodes(response.source_nodes, background_tasks)
 
-        return VercelStreamResponse(request, event_handler, response, data)
+        if isinstance(chat_engine, CondensePlusContextChatEngine) or isinstance(
+            chat_engine, AgentRunner
+        ):
+            event_handler = EventCallbackHandler()
+            chat_engine.callback_manager.handlers.append(event_handler)  # type: ignore
+
+            response = await chat_engine.astream_chat(last_message_content, messages)
+            process_response_nodes(response.source_nodes, background_tasks)
+
+            return ChatEngineVercelStreamResponse(
+                request=request,
+                chat_data=data,
+                event_handler=event_handler,
+                response=response,
+            )
+        else:
+            event_handler = chat_engine.run(input=last_message_content, streaming=True)
+            return WorkflowVercelStreamResponse(
+                request=request,
+                chat_data=data,
+                event_handler=event_handler,
+                events=chat_engine.stream_events(),
+            )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
