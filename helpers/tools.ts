@@ -156,7 +156,7 @@ For better results, you can specify the region parameter to get results from a s
         description: "System prompt for code interpreter tool.",
         value: `You are a code executor that can run code in a secure environment.
 You can run code in a sandbox and return the sandbox url to the user for them to view the result.
-Do not show the code or sandbox url in chat, just describe the steps to build the application. If having image url, you should show the image in chat.`,
+Do not show the code or sandbox url in chat, just describe the steps to build the application.`,
       },
     ],
   },

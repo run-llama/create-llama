@@ -1,7 +1,12 @@
 import { JSONValue } from "ai";
-import { Code, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
@@ -73,19 +78,29 @@ export function Artifact({ data }: { data: JSONValue }) {
 
   return (
     <div>
-      <div
-        className={cn(
-          buttonVariants({ variant: "default" }),
-          "h-auto flex gap-4 w-max cursor-pointer px-6 py-3",
-        )}
-        onClick={handleOpenOutput}
-      >
-        <Code className="h-6 w-6" />
-        <div className="flex flex-col gap-1">
-          <h4 className="font-semibold m-0">{artifact.artifact.title}</h4>
-          <span className="text-xs">Version ID: {artifact.versionId}</span>
-        </div>
-      </div>
+      <Collapsible defaultOpen={true}>
+        <CollapsibleTrigger asChild>
+          <div
+            onClick={handleOpenOutput}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start",
+            )}
+          >
+            <ChevronDown className="h-6 w-6" />
+            <div className="flex flex-col gap-1">
+              <h4 className="font-semibold m-0">{artifact.artifact.title}</h4>
+              <span className="text-xs">Version ID: {artifact.versionId}</span>
+            </div>
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent asChild>
+          <div className="border border-gray-200 py-2 px-4 mt-2 rounded-md">
+            <ArtifactOutput data={data as ArtifactData} detail={false} />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
       {openOutputPanel && (
         <div
           className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel"
@@ -98,7 +113,13 @@ export function Artifact({ data }: { data: JSONValue }) {
   );
 }
 
-function ArtifactOutput({ data }: { data: ArtifactData }) {
+function ArtifactOutput({
+  data,
+  detail = true,
+}: {
+  data: ArtifactData;
+  detail?: boolean;
+}) {
   const { artifact, result } = (data as ArtifactData) ?? {};
   if (!artifact || !result) return null;
 
@@ -117,6 +138,15 @@ function ArtifactOutput({ data }: { data: ArtifactData }) {
       panel.classList.add("hidden");
     });
   };
+
+  if (!detail) {
+    return (
+      <div className="h-[240px] overflow-auto">
+        {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
+        {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -166,7 +196,7 @@ function CodeSandboxPreview({ url }: { url: string }) {
         onLoad={() => setLoading(false)}
       />
       {loading && (
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2">
           <Loader2 className="h-10 w-10 animate-spin" />
         </div>
       )}
@@ -184,20 +214,21 @@ function InterpreterOutput({
       {outputUrls.map((url) => (
         <li key={url.url}>
           <div className="mt-4">
-            <a
-              href={url.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 underline"
-            >
-              {url.filename}
-            </a>
             {url.filename.endsWith(".png") ||
             url.filename.endsWith(".jpg") ||
             url.filename.endsWith(".jpeg") ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={url.url} alt={url.filename} className="my-4 w-2/3" />
-            ) : null}
+              <img src={url.url} alt={url.filename} className="my-4 w-1/2" />
+            ) : (
+              <a
+                href={url.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 underline"
+              >
+                {url.filename}
+              </a>
+            )}
           </div>
         </li>
       ))}
