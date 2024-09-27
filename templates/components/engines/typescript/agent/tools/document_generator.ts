@@ -204,9 +204,7 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
 
     try {
       if (documentType.toLowerCase() === DocumentType.HTML) {
-        const htmlDocument =
-          DocumentGenerator.generateHtmlDocument(htmlContent);
-        fileContent = DocumentGenerator.generateHtmlDocument(htmlDocument);
+        fileContent = DocumentGenerator.generateHtmlDocument(htmlContent);
         fileExtension = "html";
       } else if (documentType.toLowerCase() === DocumentType.PDF) {
         const pdfDocument = DocumentGenerator.generatePdfDocument(htmlContent);
