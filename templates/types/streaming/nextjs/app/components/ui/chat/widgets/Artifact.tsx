@@ -1,6 +1,6 @@
 import { JSONValue } from "ai";
 import { Code, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
@@ -64,6 +64,11 @@ export function Artifact({ data }: { data: JSONValue }) {
     handleDOMLayout();
   };
 
+  useEffect(() => {
+    // auto open output panel
+    handleOpenOutput();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!artifact.artifact) return null;
 
   return (
@@ -124,7 +129,7 @@ function ArtifactOutput({ data }: { data: ArtifactData }) {
         </div>
         <Button onClick={handleClosePanel}>Close</Button>
       </div>
-      <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
+      <Tabs defaultValue="output" className="h-full p-4 overflow-auto">
         <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
           <TabsTrigger value="code">Code</TabsTrigger>
           <TabsTrigger value="output">Output</TabsTrigger>
