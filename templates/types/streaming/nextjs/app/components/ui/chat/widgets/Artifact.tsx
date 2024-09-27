@@ -1,12 +1,7 @@
 import { JSONValue } from "ai";
-import { ChevronDown, Code, Loader2 } from "lucide-react";
+import { Code, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
@@ -185,44 +180,25 @@ function InterpreterOutput({
   outputUrls: Array<{ url: string; filename: string }>;
 }) {
   return (
-    <ul className="flex flex-col gap-2 mt-6">
-      {outputUrls.map((url, index) => (
-        <li key={url.url} className="border border-gray-200 rounded-md p-4">
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between cursor-pointer">
-                <p className="space-x-2">
-                  <span className="font-semibold">
-                    File Output {index + 1}:
-                  </span>
-                  <span>{url.filename}</span>
-                </p>
-                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-4">
-                <a
-                  href={url.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 underline"
-                >
-                  {url.url}
-                </a>
-                {url.filename.endsWith(".png") ||
-                url.filename.endsWith(".jpg") ||
-                url.filename.endsWith(".jpeg") ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={url.url}
-                    alt={url.filename}
-                    className="my-4 w-2/3"
-                  />
-                ) : null}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+    <ul className="flex flex-col gap-2 mt-4">
+      {outputUrls.map((url) => (
+        <li key={url.url}>
+          <div className="mt-4">
+            <a
+              href={url.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 underline"
+            >
+              {url.filename}
+            </a>
+            {url.filename.endsWith(".png") ||
+            url.filename.endsWith(".jpg") ||
+            url.filename.endsWith(".jpeg") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url.url} alt={url.filename} className="my-4 w-2/3" />
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>
