@@ -165,15 +165,11 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
   }
 
   private static writeToFile(content: string | Buffer, filePath: string): void {
-    try {
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-      if (typeof content === "string") {
-        fs.writeFileSync(filePath, content, "utf8");
-      } else {
-        fs.writeFileSync(filePath, content);
-      }
-    } catch (error) {
-      throw error;
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (typeof content === "string") {
+      fs.writeFileSync(filePath, content, "utf8");
+    } else {
+      fs.writeFileSync(filePath, content);
     }
   }
 
@@ -187,10 +183,16 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
   private static async generatePdf(htmlContent: string): Promise<Buffer> {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-    const pdf = await page.pdf({ format: "A4" });
-    await browser.close();
-    return pdf;
+    try {
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+      const pdf = await page.pdf({ format: "A4" });
+      return pdf;
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      throw new Error("Failed to generate PDF");
+    } finally {
+      await browser.close();
+    }
   }
 
   async call(input: DocumentParameter): Promise<string> {
