@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 FoundryLabs, Inc.
+ * Copyright 2023 FoundryLabs, Inc., LlamaIndex Inc.
  * Portions of this file are copied from the e2b project (https://github.com/e2b-dev/ai-artifacts)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,9 +149,12 @@ export class ArtifactTool implements BaseTool<ArtifactParameter> {
     ];
     try {
       const response = await Settings.llm.chat({ messages });
-      const artifact = JSON.parse(
-        response.message.content.toString(),
-      ) as Artifact;
+      const content = response.message.content.toString();
+      const jsonContent = content
+        .replace(/^```json\s*|\s*```$/g, "")
+        .replace(/^`+|`+$/g, "")
+        .trim();
+      const artifact = JSON.parse(jsonContent) as Artifact;
       return artifact;
     } catch (error) {
       console.log("Failed to generate artifact", error);
