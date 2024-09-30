@@ -14,7 +14,7 @@ def _create_query_engine_tool() -> QueryEngineTool:
     """
     index = get_index()
     if index is None:
-        raise ValueError("Index not found. Please create an index first.")
+        return None
     top_k = int(os.getenv("TOP_K", 0))
     query_engine = index.as_query_engine(
         **({"similarity_top_k": top_k} if top_k != 0 else {})
@@ -35,11 +35,12 @@ def _get_research_tools() -> QueryEngineTool:
     Researcher take responsibility for retrieving information.
     Try init wikipedia or duckduckgo tool if available.
     """
+    tools = []
+    query_engine_tool = _create_query_engine_tool()
+    if query_engine_tool is not None:
+        tools.append(query_engine_tool)
     researcher_tool_names = ["duckduckgo", "wikipedia.WikipediaToolSpec"]
-    # Always include the query engine tool
-    tools = [_create_query_engine_tool()]
     configured_tools = ToolFactory.from_env(map_result=True)
-    print(configured_tools)
     for tool_name, tool in configured_tools.items():
         if tool_name in researcher_tool_names:
             tools.extend(tool)
