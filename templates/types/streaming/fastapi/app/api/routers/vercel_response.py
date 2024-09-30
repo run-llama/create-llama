@@ -143,8 +143,8 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
         self,
         request: Request,
         chat_data: ChatData,
-        event_handler: "AgentRunResult" | AsyncGenerator,
-        events: AsyncGenerator["AgentRunEvent", None],
+        event_handler: "AgentRunResult" | AsyncGenerator,  # noqa: F821
+        events: AsyncGenerator["AgentRunEvent", None],  # noqa: F821
         verbose: bool = True,
     ):
         # Yield the text response
@@ -184,7 +184,7 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
         return combine
 
     @staticmethod
-    def _event_to_response(event: "AgentRunEvent") -> dict:
+    def _event_to_response(event: "AgentRunEvent") -> dict:  # noqa: F821
         return {
             "type": "agent",
             "data": {"agent": event.name, "text": event.msg},
