@@ -3,25 +3,18 @@ import fs from "fs";
 import { BaseTool, ToolMetadata } from "llamaindex";
 import { marked } from "marked";
 import path from "path";
-import puppeteer from "puppeteer";
 
 const OUTPUT_DIR = "output/tools";
 
-enum DocumentType {
-  HTML = "html",
-  PDF = "pdf",
-}
-
 type DocumentParameter = {
   originalContent: string;
-  documentType: string;
   fileName: string;
 };
 
 const DEFAULT_METADATA: ToolMetadata<JSONSchemaType<DocumentParameter>> = {
   name: "document_generator",
   description:
-    "Generate document as PDF or HTML file from markdown content. Return a file url to the document",
+    "Generate HTML document from markdown content. Return a file url to the document",
   parameters: {
     type: "object",
     properties: {
@@ -29,16 +22,12 @@ const DEFAULT_METADATA: ToolMetadata<JSONSchemaType<DocumentParameter>> = {
         type: "string",
         description: "The original markdown content to convert.",
       },
-      documentType: {
-        type: "string",
-        description: "The type of document to generate (pdf or html).",
-      },
       fileName: {
         type: "string",
         description: "The name of the document file (without extension).",
       },
     },
-    required: ["originalContent", "documentType", "fileName"],
+    required: ["originalContent", "fileName"],
   },
 };
 
@@ -114,24 +103,6 @@ const HTML_TEMPLATE = `
 </html>
 `;
 
-const PDF_SPECIFIC_STYLES = `
-  @page {
-    size: letter;
-    margin: 2cm;
-  }
-  body {
-    font-size: 11pt;
-  }
-  h1 { font-size: 18pt; }
-  h2 { font-size: 16pt; }
-  h3 { font-size: 14pt; }
-  h4, h5, h6 { font-size: 12pt; }
-  pre, code {
-    font-family: Courier, monospace;
-    font-size: 0.9em;
-  }
-`;
-
 export interface DocumentGeneratorParams {
   metadata?: ToolMetadata<JSONSchemaType<DocumentParameter>>;
 }
@@ -143,10 +114,8 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     this.metadata = params.metadata ?? DEFAULT_METADATA;
   }
 
-  private static async generateHtmlContent(
-    originalContent: string,
-  ): Promise<string> {
-    return await marked(originalContent);
+  private static generateHtmlContent(originalContent: string): string {
+    return marked(originalContent);
   }
 
   private static generateHtmlDocument(htmlContent: string): string {
@@ -175,61 +144,14 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     }
   }
 
-  private static generatePdfDocument(htmlContent: string): string {
-    return HTML_TEMPLATE.replace("{{content}}", htmlContent).replace(
-      HTML_SPECIFIC_STYLES,
-      PDF_SPECIFIC_STYLES,
-    );
-  }
-
-  private static async generatePdf(htmlContent: string): Promise<Buffer> {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    try {
-      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-      const pdfArray = await page.pdf({ format: "A4" });
-      return Buffer.from(pdfArray);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw new Error("Failed to generate PDF");
-    } finally {
-      await browser.close();
-    }
-  }
-
   async call(input: DocumentParameter): Promise<string> {
-    const { originalContent, documentType, fileName } = input;
+    const { originalContent, fileName } = input;
 
-    let fileContent: string | Buffer;
-    let fileExtension: string;
-
-    // Generate the HTML from the original content (markdown)
-    const htmlContent =
-      await DocumentGenerator.generateHtmlContent(originalContent);
-
-    try {
-      if (documentType.toLowerCase() === DocumentType.HTML) {
-        fileContent = DocumentGenerator.generateHtmlDocument(htmlContent);
-        fileExtension = "html";
-      } else if (documentType.toLowerCase() === DocumentType.PDF) {
-        const pdfDocument = DocumentGenerator.generatePdfDocument(htmlContent);
-        fileContent = await DocumentGenerator.generatePdf(pdfDocument);
-        fileExtension = "pdf";
-      } else {
-        throw new Error(
-          `Invalid document type: ${documentType}. Must be 'pdf' or 'html'.`,
-        );
-      }
-    } catch (error) {
-      console.error("Error generating document:", error);
-      throw new Error("Failed to generate document");
-    }
+    const htmlContent = DocumentGenerator.generateHtmlContent(originalContent);
+    const fileContent = DocumentGenerator.generateHtmlDocument(htmlContent);
 
     const validatedFileName = DocumentGenerator.validateFileName(fileName);
-    const filePath = path.join(
-      OUTPUT_DIR,
-      `${validatedFileName}.${fileExtension}`,
-    );
+    const filePath = path.join(OUTPUT_DIR, `${validatedFileName}.html`);
 
     DocumentGenerator.writeToFile(fileContent, filePath);
 
