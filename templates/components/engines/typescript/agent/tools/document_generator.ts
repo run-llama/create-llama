@@ -114,8 +114,10 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     this.metadata = params.metadata ?? DEFAULT_METADATA;
   }
 
-  private static generateHtmlContent(originalContent: string): string {
-    return marked(originalContent);
+  private static async generateHtmlContent(
+    originalContent: string,
+  ): Promise<string> {
+    return await marked(originalContent);
   }
 
   private static generateHtmlDocument(htmlContent: string): string {
@@ -147,7 +149,8 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
   async call(input: DocumentParameter): Promise<string> {
     const { originalContent, fileName } = input;
 
-    const htmlContent = DocumentGenerator.generateHtmlContent(originalContent);
+    const htmlContent =
+      await DocumentGenerator.generateHtmlContent(originalContent);
     const fileContent = DocumentGenerator.generateHtmlDocument(htmlContent);
 
     const validatedFileName = DocumentGenerator.validateFileName(fileName);
