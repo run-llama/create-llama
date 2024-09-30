@@ -134,9 +134,9 @@ export class ArtifactTool implements BaseTool<ArtifactParameter> {
       const artifact = await this.generateArtifact(input.requirement);
       const result = await this.executeArtifact(artifact);
       console.log({ artifact, result });
-      return { artifact, result } as unknown as JSONValue;
+      return { artifact, result, isError: false } as unknown as JSONValue;
     } catch (error) {
-      return {};
+      return { isError: true };
     }
   }
 
