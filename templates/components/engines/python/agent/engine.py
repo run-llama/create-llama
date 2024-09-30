@@ -8,7 +8,7 @@ from llama_index.core.settings import Settings
 from llama_index.core.tools.query_engine import QueryEngineTool
 
 
-def get_chat_engine(filters=None, params=None, event_handlers=None):
+def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = int(os.getenv("TOP_K", 0))
     tools = []

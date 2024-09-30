@@ -8,7 +8,6 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
-from app.agents.single import AgentRunEvent, AgentRunResult
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message, SourceNodes
 from app.api.services.suggestion import NextQuestionSuggestion
@@ -144,8 +143,8 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
         self,
         request: Request,
         chat_data: ChatData,
-        event_handler: AgentRunResult | AsyncGenerator,
-        events: AsyncGenerator[AgentRunEvent, None],
+        event_handler: "AgentRunResult" | AsyncGenerator,
+        events: AsyncGenerator["AgentRunEvent", None],
         verbose: bool = True,
     ):
         # Yield the text response
@@ -153,7 +152,7 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
             result = await event_handler
             final_response = ""
 
-            if isinstance(result, AgentRunResult):
+            if isinstance(result, "AgentRunResult"):
                 for token in result.response.message.content:
                     final_response += token
                     yield self.convert_text(token)
@@ -185,7 +184,7 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
         return combine
 
     @staticmethod
-    def _event_to_response(event: AgentRunEvent) -> dict:
+    def _event_to_response(event: "AgentRunEvent") -> dict:
         return {
             "type": "agent",
             "data": {"agent": event.name, "text": event.msg},
