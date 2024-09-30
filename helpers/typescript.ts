@@ -209,7 +209,6 @@ export const installTSTemplate = async ({
     ui,
     observability,
     vectorDb,
-    tools,
   });
 
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
@@ -231,7 +230,6 @@ async function updatePackageJson({
   ui,
   observability,
   vectorDb,
-  tools,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -241,7 +239,6 @@ async function updatePackageJson({
   | "ui"
   | "observability"
   | "vectorDb"
-  | "tools"
 > & {
   relativeEngineDestPath: string;
 }): Promise<any> {

@@ -109,7 +109,9 @@ export async function runCreateLlama({
   if (appType) {
     commandArgs.push(appType);
   }
-  if (!useLlamaParse) {
+  if (useLlamaParse) {
+    commandArgs.push("--use-llama-parse");
+  } else {
     commandArgs.push("--no-llama-parse");
   }
 
@@ -141,10 +143,10 @@ export async function runCreateLlama({
       externalPort,
     );
   } else if (postInstallAction === "dependencies") {
-    await waitForProcess(appProcess, 1000 * 60); // wait 1 min for dependencies to be resolved
+    await waitForProcess(appProcess, 2000 * 60); // wait 2 min for dependencies to be resolved
   } else {
     // wait 10 seconds for create-llama to exit
-    await waitForProcess(appProcess, 1000 * 10);
+    await waitForProcess(appProcess, 1000 * 20);
   }
 
   return {
