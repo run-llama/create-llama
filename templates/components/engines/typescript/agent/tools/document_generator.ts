@@ -143,8 +143,10 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     this.metadata = params.metadata ?? DEFAULT_METADATA;
   }
 
-  private static generateHtmlContent(originalContent: string): string {
-    return marked(originalContent);
+  private static async generateHtmlContent(
+    originalContent: string,
+  ): Promise<string> {
+    return await marked(originalContent);
   }
 
   private static generateHtmlDocument(htmlContent: string): string {
@@ -185,8 +187,8 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     const page = await browser.newPage();
     try {
       await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-      const pdf = await page.pdf({ format: "A4" });
-      return pdf;
+      const pdfArray = await page.pdf({ format: "A4" });
+      return Buffer.from(pdfArray);
     } catch (error) {
       console.error("Error generating PDF:", error);
       throw new Error("Failed to generate PDF");
@@ -202,7 +204,8 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     let fileExtension: string;
 
     // Generate the HTML from the original content (markdown)
-    const htmlContent = DocumentGenerator.generateHtmlContent(originalContent);
+    const htmlContent =
+      await DocumentGenerator.generateHtmlContent(originalContent);
 
     try {
       if (documentType.toLowerCase() === DocumentType.HTML) {
