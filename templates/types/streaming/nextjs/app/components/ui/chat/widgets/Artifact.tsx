@@ -1,5 +1,5 @@
 import { JSONValue } from "ai";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
 import {
@@ -36,15 +36,22 @@ type ArtifactResult = {
   stderr?: string[];
 };
 
-type ArtifactData = {
-  versionId?: string;
+export type ArtifactData = {
+  // versionId?: string;
   artifact?: Artifact;
   result?: ArtifactResult;
 };
 
-export function Artifact({ data }: { data: JSONValue }) {
+export function Artifact({
+  data,
+  version,
+}: {
+  data: JSONValue;
+  version?: number;
+}) {
   const artifact = (data as ArtifactData) ?? {};
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // this is just a hack to handle the layout when opening the output panel
@@ -58,6 +65,7 @@ export function Artifact({ data }: { data: JSONValue }) {
 
     // make the main div width smaller to have space for the output panel
     const mainDiv = document.querySelector("main");
+    mainDiv?.classList.remove("w-screen");
     mainDiv?.classList.add("w-[55vw]");
 
     // show the current artifact panel
@@ -74,29 +82,41 @@ export function Artifact({ data }: { data: JSONValue }) {
     handleOpenOutput();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!artifact.artifact) return null;
+  if (!artifact.artifact || version === undefined) return null;
 
   return (
     <div>
-      <Collapsible defaultOpen={true}>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="border border-gray-200 rounded-md"
+      >
         <CollapsibleTrigger asChild>
           <div
             onClick={handleOpenOutput}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start",
+              "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start border-0",
             )}
           >
-            <ChevronDown className="h-6 w-6" />
+            {isOpen ? (
+              <ChevronDown className="h-6 w-6" />
+            ) : (
+              <ChevronUp className="h-6 w-6" />
+            )}
             <div className="flex flex-col gap-1">
               <h4 className="font-semibold m-0">{artifact.artifact.title}</h4>
-              <span className="text-xs">Version ID: {artifact.versionId}</span>
+              <span className="text-xs">Version: v{version}</span>
             </div>
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent asChild>
-          <div className="border border-gray-200 py-2 px-4 mt-2 rounded-md">
-            <ArtifactOutput data={data as ArtifactData} detail={false} />
+          <div className="py-2 px-4 mt-2">
+            <ArtifactOutput
+              data={data as ArtifactData}
+              detail={false}
+              version={version}
+            />
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -106,7 +126,7 @@ export function Artifact({ data }: { data: JSONValue }) {
           className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel"
           ref={panelRef}
         >
-          <ArtifactOutput data={data as ArtifactData} />
+          <ArtifactOutput data={data as ArtifactData} version={version} />
         </div>
       )}
     </div>
@@ -116,12 +136,14 @@ export function Artifact({ data }: { data: JSONValue }) {
 function ArtifactOutput({
   data,
   detail = true,
+  version,
 }: {
   data: ArtifactData;
   detail?: boolean;
+  version?: number;
 }) {
   const { artifact, result } = (data as ArtifactData) ?? {};
-  if (!artifact || !result) return null;
+  if (!artifact || !result || version === undefined) return null;
 
   const fileExtension = artifact.file_path.split(".").pop();
   const markdownCode = `\`\`\`${fileExtension}\n${artifact.code}\n\`\`\``;
@@ -131,6 +153,7 @@ function ArtifactOutput({
     // reset the main div width
     const mainDiv = document.querySelector("main");
     mainDiv?.classList.remove("w-[55vw]");
+    mainDiv?.classList.add("w-screen");
 
     // hide all current artifact panel
     const artifactPanels = document.querySelectorAll(".artifact-panel");
@@ -141,7 +164,7 @@ function ArtifactOutput({
 
   if (!detail) {
     return (
-      <div className="h-[240px] overflow-auto">
+      <div className="h-[240px] overflow-auto select-none">
         {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
         {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
       </div>
@@ -153,9 +176,7 @@ function ArtifactOutput({
       <div className="flex justify-between items-center pl-5 pr-10 py-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold m-0">{artifact.title}</h2>
-          <span className="text-sm text-gray-500">
-            Version ID: {data.versionId}
-          </span>
+          <span className="text-sm text-gray-500">Version: v{version}</span>
         </div>
         <Button onClick={handleClosePanel}>Close</Button>
       </div>
