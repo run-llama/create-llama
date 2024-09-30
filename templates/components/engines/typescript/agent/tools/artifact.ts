@@ -131,11 +131,10 @@ export class ArtifactTool implements BaseTool<ArtifactParameter> {
 
   async call(input: ArtifactParameter) {
     try {
-      const versionId = crypto.randomUUID();
       const artifact = await this.generateArtifact(input.requirement);
       const result = await this.executeArtifact(artifact);
-      console.log({ versionId, artifact, result });
-      return { versionId, artifact, result } as unknown as JSONValue;
+      console.log({ artifact, result });
+      return { artifact, result } as unknown as JSONValue;
     } catch (error) {
       return {};
     }

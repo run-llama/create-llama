@@ -37,7 +37,6 @@ type ArtifactResult = {
 };
 
 export type ArtifactData = {
-  // versionId?: string;
   artifact?: Artifact;
   result?: ArtifactResult;
 };
