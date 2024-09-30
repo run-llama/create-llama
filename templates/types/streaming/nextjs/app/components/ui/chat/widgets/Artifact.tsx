@@ -66,6 +66,7 @@ export function Artifact({
     const mainDiv = document.querySelector("main");
     mainDiv?.classList.remove("w-screen");
     mainDiv?.classList.add("w-[55vw]");
+    mainDiv?.classList.add("px-8");
 
     // show the current artifact panel
     panelRef.current?.classList.remove("hidden");
@@ -106,6 +107,7 @@ export function Artifact({
             <div className="flex flex-col gap-1">
               <h4 className="font-semibold m-0">{artifact.artifact.title}</h4>
               <span className="text-xs">Version: v{version}</span>
+              <span className="text-xs text-gray-500">Click to open code</span>
             </div>
           </div>
         </CollapsibleTrigger>
@@ -152,6 +154,7 @@ function ArtifactOutput({
     // reset the main div width
     const mainDiv = document.querySelector("main");
     mainDiv?.classList.remove("w-[55vw]");
+    mainDiv?.classList.remove("px-8");
     mainDiv?.classList.add("w-screen");
 
     // hide all current artifact panel
