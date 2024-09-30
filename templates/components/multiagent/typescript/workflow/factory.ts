@@ -6,7 +6,12 @@ import {
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
 import { ChatMessage, ChatResponseChunk } from "llamaindex";
-import { createResearcher, createReviewer, createWriter } from "./agents";
+import {
+  createPublisher,
+  createResearcher,
+  createReviewer,
+  createWriter,
+} from "./agents";
 import { AgentInput, AgentRunEvent } from "./type";
 
 const TIMEOUT = 360 * 1000;
@@ -18,6 +23,7 @@ class WriteEvent extends WorkflowEvent<{
   isGood: boolean;
 }> {}
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
+class PublishEvent extends WorkflowEvent<{ input: string }> {}
 
 export const createWorkflow = (chatHistory: ChatMessage[]) => {
   const runAgent = async (
@@ -66,14 +72,9 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      // The text is ready for publication, we just use the writer to stream the output
-      const writer = createWriter(chatHistory);
-      const content = context.get("result");
-
-      return (await runAgent(context, writer, {
-        message: `You're blog post is ready for publication. Please respond with just the blog post. Blog post: \`\`\`${content}\`\`\``,
-        streaming: true,
-      })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
+      return new PublishEvent({
+        input: "Please help me to publish the blog post.",
+      });
     }
 
     const writer = createWriter(chatHistory);
@@ -123,11 +124,22 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     });
   };
 
+  const publish = async (context: Context, ev: PublishEvent) => {
+    const publisher = await createPublisher(chatHistory);
+    const result = context.get("result");
+
+    return (await runAgent(context, publisher, {
+      message: `Please publish this blog post: ${result}`,
+      streaming: true,
+    })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
+  };
+
   const workflow = new Workflow({ timeout: TIMEOUT, validate: true });
   workflow.addStep(StartEvent, start, { outputs: ResearchEvent });
   workflow.addStep(ResearchEvent, research, { outputs: WriteEvent });
-  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, StopEvent] });
+  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, PublishEvent] });
   workflow.addStep(ReviewEvent, review, { outputs: WriteEvent });
+  workflow.addStep(PublishEvent, publish, { outputs: StopEvent });
 
   return workflow;
 };

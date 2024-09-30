@@ -46,7 +46,8 @@ const DEFAULT_IMAGE_SEARCH_METADATA: ToolMetadata<
   JSONSchemaType<DuckDuckGoParameter>
 > = {
   name: "duckduckgo_image_search",
-  description: "Use this function to search for images in DuckDuckGo.",
+  description:
+    "Use this function to search for images in internet using DuckDuckGo.",
   parameters: {
     type: "object",
     properties: {
@@ -96,6 +97,7 @@ export class DuckDuckGoSearchTool implements BaseTool<DuckDuckGoParameter> {
     const options = region ? { region } : {};
     // Temporarily sleep to reduce overloading the DuckDuckGo
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const searchResults = await search(query, options);
 
     return searchResults.results.slice(0, maxResults).map((result) => {
