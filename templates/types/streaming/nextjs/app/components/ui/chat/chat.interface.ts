@@ -10,7 +10,7 @@ export interface ChatHandler {
       data?: any;
     },
   ) => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   reload?: () => void;
   stop?: () => void;
   onFileUpload?: (file: File) => Promise<void>;

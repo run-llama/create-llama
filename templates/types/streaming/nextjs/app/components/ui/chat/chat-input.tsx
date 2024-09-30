@@ -1,8 +1,9 @@
 import { JSONValue } from "ai";
+import React from "react";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
-import { Input } from "../input";
+import { Textarea } from "../textarea";
 import UploadImagePreview from "../upload-image-preview";
 import { ChatHandler } from "./chat.interface";
 import { useFile } from "./hooks/use-file";
@@ -54,6 +55,7 @@ export default function ChatInput(
   };
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const annotations = getAnnotations();
     if (annotations.length) {
       handleSubmitWithAnnotations(e, annotations);
@@ -73,6 +75,13 @@ export default function ChatInput(
     } catch (error: any) {
       const onFileUploadError = props.onFileError || window.alert;
       onFileUploadError(error.message);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
 
@@ -96,13 +105,14 @@ export default function ChatInput(
         </div>
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
-        <Input
+        <Textarea
           autoFocus
           name="message"
           placeholder="Type a message"
-          className="flex-1"
+          className="flex-1 min-h-0 h-[40px]"
           value={props.input}
           onChange={props.handleInputChange}
+          onKeyDown={handleKeyDown}
         />
         <FileUploader
           onFileUpload={handleUploadFile}
