@@ -66,7 +66,7 @@ test.describe(`Test multiagent template ${templateFramework} ${dataSource} ${tem
     page,
   }) => {
     await page.goto(`http://localhost:${port}`);
-    await page.fill("form input", userMessage);
+    await page.fill("form textarea", userMessage);
 
     const responsePromise = page.waitForResponse((res) =>
       res.url().includes("/api/chat"),
