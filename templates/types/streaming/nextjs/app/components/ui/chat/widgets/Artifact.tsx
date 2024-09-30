@@ -122,7 +122,7 @@ export function Artifact({
 
       {openOutputPanel && (
         <div
-          className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel"
+          className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel animate-slideIn"
           ref={panelRef}
         >
           <ArtifactOutput data={data as ArtifactData} version={version} />
@@ -185,16 +185,16 @@ function ArtifactOutput({
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
-        <TabsContent value="code" className="h-[90%]">
+        <TabsContent value="code" className="h-[80%] mb-4 overflow-auto">
           <div className="m-4 overflow-auto">
             <Markdown content={markdownCode} />
           </div>
         </TabsContent>
-        <TabsContent value="preview" className="h-[90%]">
+        <TabsContent value="preview" className="h-[80%] mb-4 overflow-auto">
           {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
           {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
         </TabsContent>
-        <TabsContent value="logs" className="h-[90%]">
+        <TabsContent value="logs" className="h-[80%] mb-4 overflow-auto">
           <ArtifactLogs stderr={stderr} stdout={stdout} />
         </TabsContent>
       </Tabs>
