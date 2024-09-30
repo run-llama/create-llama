@@ -328,18 +328,6 @@ async function updatePackageJson({
     };
   }
 
-  if (tools && tools.length > 0) {
-    tools.forEach((tool) => {
-      if (tool.name === "document_generator") {
-        packageJson.dependencies = {
-          ...packageJson.dependencies,
-          puppeteer: "^23.4.1",
-          marked: "^14.1.2",
-        };
-      }
-    });
-  }
-
   await fs.writeFile(
     packageJsonFile,
     JSON.stringify(packageJson, null, 2) + os.EOL,

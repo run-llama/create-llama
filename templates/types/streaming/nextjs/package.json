@@ -42,7 +42,9 @@
     "tailwind-merge": "^2.1.0",
     "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
-    "vaul": "^0.9.1"
+    "vaul": "^0.9.1",
+    "puppeteer": "^23.4.1",
+    "marked": "^14.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
