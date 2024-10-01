@@ -15,7 +15,6 @@ chat_router = r = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 
-# streaming endpoint - delete if not needed
 @r.post("")
 async def chat(
     request: Request,
