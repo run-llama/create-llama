@@ -4,9 +4,7 @@ from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import (
     ChatData,
 )
-from app.api.routers.vercel_response import (
-    WorkflowVercelStreamResponse,
-)
+from app.api.routers.vercel_response import VercelStreamResponse
 from app.engine import get_chat_engine
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
@@ -34,7 +32,7 @@ async def chat(
         engine = get_chat_engine(chat_history=messages)
 
         event_handler = engine.run(input=last_message_content, streaming=True)
-        return WorkflowVercelStreamResponse(
+        return VercelStreamResponse(
             request=request,
             chat_data=data,
             event_handler=event_handler,
