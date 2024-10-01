@@ -5,7 +5,7 @@ import { lookupTools } from "./tools";
 export const createResearcher = async (chatHistory: ChatMessage[]) => {
   const tools = await lookupTools([
     "query_index",
-    "wikipedia.WikipediaToolSpec",
+    "wikipedia_tool",
     "duckduckgo_search",
     "duckduckgo_image_search",
   ]);
