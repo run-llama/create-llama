@@ -128,10 +128,11 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     const publisher = await createPublisher(chatHistory);
     const result = context.get("result");
 
-    return (await runAgent(context, publisher, {
+    const publishResult = await runAgent(context, publisher, {
       message: `Please publish this blog post: ${result}`,
       streaming: true,
-    })) as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
+    });
+    return publishResult as StopEvent<AsyncGenerator<ChatResponseChunk>>;
   };
 
   const workflow = new Workflow({ timeout: TIMEOUT, validate: true });

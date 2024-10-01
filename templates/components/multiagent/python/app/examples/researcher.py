@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 from typing import List
 
 from app.agents.single import FunctionCallingAgent
@@ -56,15 +57,16 @@ def create_researcher(chat_history: List[ChatMessage]):
         name="researcher",
         tools=tools,
         description="expert in retrieving any unknown content or searching for images from the internet",
-        system_prompt="""You are a researcher agent. 
-You are given a researching task. You must use tools to retrieve information needed for the task.
-It's normal that the task include some ambiguity which you must identify what is the real request that need to retrieve information.
-If you don't found any related information, please return "I didn't find any information."
-Example:
-Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
-->
-Your real task: Looking for information in english about the history of the internet
-This is not your task: Create blog post, create PDF, write in English
-""",
+        system_prompt=dedent("""
+            You are a researcher agent. 
+            You are given a researching task. You must use tools to retrieve information needed for the task.
+            It's normal that the task include some ambiguity which you must identify what is the real request that need to retrieve information.
+            If you don't found any related information, please return "I didn't find any information."
+            Example:
+            Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
+            ->
+            Your real task: Looking for information in english about the history of the internet
+            This is not your task: Create blog post, create PDF, write in English
+        """),
         chat_history=chat_history,
     )

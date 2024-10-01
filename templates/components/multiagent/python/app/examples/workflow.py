@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import AsyncGenerator, List, Optional
 
 from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
@@ -24,31 +25,33 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     writer = FunctionCallingAgent(
         name="writer",
         description="expert in writing blog posts, need information and images to write a post.",
-        system_prompt="""You are an expert in writing blog posts. 
-You are given a task to write a blog post. Don't make up any information yourself. 
-It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
-Example:
-Task: "Here is the information i found about the history of internet: 
-Create a blog post about the history of the internet, write in English and publish in PDF format."
--> Your task: Use the research content {...}  to write a blog post in English.
--> This is not your task: Create PDF
-""",
+        system_prompt=dedent("""
+            You are an expert in writing blog posts. 
+            You are given a task to write a blog post. Don't make up any information yourself. 
+            It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
+            Example:
+            Task: "Here is the information i found about the history of internet: 
+            Create a blog post about the history of the internet, write in English and publish in PDF format."
+            -> Your task: Use the research content {...}  to write a blog post in English.
+            -> This is not your task: Create PDF
+        """),
         chat_history=chat_history,
     )
     reviewer = FunctionCallingAgent(
         name="reviewer",
         description="expert in reviewing blog posts, needs a written blog post to review.",
-        system_prompt="""You are an expert in reviewing blog posts. 
-You are given a task to review a blog post. 
-Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement. 
-Furthermore, proofread the post for grammar and spelling errors. 
-Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.
-It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to review the post correctly.
-Example:
-Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
--> Your task: Review is the main content of the post is about the history of the internet, is it written in English.
--> This is not your task: Create blog post, create PDF, write in English.
-""",
+        system_prompt=dedent("""
+            You are an expert in reviewing blog posts. 
+            You are given a task to review a blog post. 
+            Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement. 
+            Furthermore, proofread the post for grammar and spelling errors. 
+            Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.
+            It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to review the post correctly.
+            Example:
+            Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
+            -> Your task: Review is the main content of the post is about the history of the internet, is it written in English.
+            -> This is not your task: Create blog post, create PDF, write in English.
+        """),
         chat_history=chat_history,
     )
     workflow = BlogPostWorkflow(timeout=360)
@@ -142,16 +145,20 @@ class BlogPostWorkflow(Workflow):
             )
         else:
             return WriteEvent(
-                input=f"""Improve the writing of a given blog post by using a given review.
-Blog post:
-```
-{old_content}
-``` 
+                input=dedent(
+                    f"""
+                    Improve the writing of a given blog post by using a given review.
+                    Blog post:
+                    ```
+                    {old_content}
+                    ``` 
 
-Review: 
-```
-{review}
-```"""
+                    Review: 
+                    ```
+                    {review}
+                    ```
+                    """
+                ),
             )
 
     @step()

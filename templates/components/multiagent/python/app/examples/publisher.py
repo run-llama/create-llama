@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import List, Tuple
 
 from app.agents.single import FunctionCallingAgent
@@ -12,7 +13,10 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
     configured_tools = ToolFactory.from_env(map_result=True)
     if "document_generator" in configured_tools.keys():
         tools.extend(configured_tools["document_generator"])
-        prompt_instructions = "You have access to a document generator tool that can create PDF or HTML document for the content. Based on the user request, please specify the type of document to generate or just reply to the user directly without generating any document file."
+        prompt_instructions = dedent("""
+            You have access to a document generator tool that can create PDF or HTML document for the content. 
+            Based on the user request, please specify the type of document to generate or just reply to the user directly without generating any document file.
+        """)
         description = "Expert in publishing the blog post, able to publish the blog post in PDF or HTML format."
     else:
         prompt_instructions = "You don't have a tool to generate document. Please reply the content directly."
@@ -22,8 +26,10 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
 
 def create_publisher(chat_history: List[ChatMessage]):
     tools, instructions, description = get_publisher_tools()
-    system_prompt = f"""You are a publisher that help publish the blog post. 
-        {instructions}"""
+    system_prompt = dedent(f"""
+        You are a publisher that help publish the blog post. 
+        {instructions}
+    """)
     return FunctionCallingAgent(
         name="publisher",
         tools=tools,
