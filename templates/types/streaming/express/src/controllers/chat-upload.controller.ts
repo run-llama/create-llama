@@ -14,5 +14,10 @@ export const chatUpload = async (req: Request, res: Response) => {
     });
   }
   const index = await getDataSource(params);
+  if (!index) {
+    return res.status(500).json({
+      error: "Failed to get data source",
+    });
+  }
   return res.status(200).json(await uploadDocument(index, filename, base64));
 };
