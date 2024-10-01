@@ -10,7 +10,7 @@ env:
 
 jobs:
   e2e-python:
-    name: create-llama-python
+    name: python
     timeout-minutes: 60
     strategy:
       fail-fast: true
@@ -77,7 +77,7 @@ jobs:
           retention-days: 30
 
   e2e-typescript:
-    name: create-llama-typescript
+    name: typescript
     timeout-minutes: 60
     strategy:
       fail-fast: true

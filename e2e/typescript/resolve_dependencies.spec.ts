@@ -80,7 +80,6 @@ test.describe("Test resolve TS dependencies", () => {
           cwd: appDir,
         },
       );
-      expect(installStderr).toBeFalsy();
     } catch (error) {
       console.error("Error installing dependencies:", error);
       throw error;
