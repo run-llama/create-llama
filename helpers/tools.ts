@@ -117,7 +117,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "xhtml2pdf",
-        version: "^0.2.16",
+        version: "^0.2.14",
       },
       {
         name: "markdown",
