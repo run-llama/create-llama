@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.2.12
+
+### Patch Changes
+
+- 70f7dca: feat: add test deps for llamaparse
+- ef070c0: Add multi agents template for Typescript
+
 ## 0.2.11
 
 ### Patch Changes

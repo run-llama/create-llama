@@ -14,5 +14,11 @@ export const chatUpload = async (req: Request, res: Response) => {
     });
   }
   const index = await getDataSource(params);
+  if (!index) {
+    return res.status(500).json({
+      error:
+        "StorageContext is empty - call 'npm run generate' to generate the storage first",
+    });
+  }
   return res.status(200).json(await uploadDocument(index, filename, base64));
 };
