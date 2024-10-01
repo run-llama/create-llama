@@ -3,7 +3,7 @@ import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import {
   DocumentGenerator,
   DocumentGeneratorParams,
-} from "./document_generator";
+} from "./document-generator";
 import {
   DuckDuckGoImageSearchTool,
   DuckDuckGoSearchTool,
