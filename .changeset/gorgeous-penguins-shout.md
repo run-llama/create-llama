@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add artifact generator tool
+Allow tool selection for multi-agents (Python and TS)
