@@ -1,4 +1,5 @@
-import fs from "fs";
+import fs from "node:fs";
+import path from "node:path";
 import { getExtractors } from "../../engine/loader";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
@@ -19,7 +20,8 @@ export async function storeAndParseFile(
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
   const documents = await loadDocuments(fileBuffer, mimeType);
-  await saveDocument(filename, fileBuffer);
+  const filepath = path.join(UPLOADED_FOLDER, filename);
+  await saveDocument(filepath, fileBuffer);
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
@@ -41,19 +43,31 @@ async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   return await reader.loadDataAsContent(fileBuffer);
 }
 
-export async function saveDocument(filename: string, fileBuffer: Buffer) {
-  const filepath = `${UPLOADED_FOLDER}/${filename}`;
-  const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
-
-  if (!fs.existsSync(UPLOADED_FOLDER)) {
-    fs.mkdirSync(UPLOADED_FOLDER, { recursive: true });
+// Save document to file server and return the file url
+export async function saveDocument(filepath: string, content: string | Buffer) {
+  if (path.isAbsolute(filepath)) {
+    throw new Error("Absolute file paths are not allowed.");
   }
-  await fs.promises.writeFile(filepath, fileBuffer);
+  const fileName = path.basename(filepath);
+  if (!/^[a-zA-Z0-9_.-]+$/.test(fileName)) {
+    throw new Error(
+      "File name is not allowed to contain any special characters.",
+    );
+  }
+  if (!process.env.FILESERVER_URL_PREFIX) {
+    throw new Error("FILESERVER_URL_PREFIX environment variable is not set.");
+  }
 
-  console.log(`Saved document file to ${filepath}.\nURL: ${fileurl}`);
-  return {
-    filename,
-    filepath,
-    fileurl,
-  };
+  const dirPath = path.dirname(filepath);
+  await fs.promises.mkdir(dirPath, { recursive: true });
+
+  if (typeof content === "string") {
+    await fs.promises.writeFile(filepath, content, "utf-8");
+  } else {
+    await fs.promises.writeFile(filepath, content);
+  }
+
+  const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
+  console.log(`Saved document to ${filepath}. Reachable at URL: ${fileurl}`);
+  return fileurl;
 }
