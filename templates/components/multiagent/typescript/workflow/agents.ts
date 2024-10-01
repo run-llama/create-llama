@@ -1,60 +1,14 @@
-import fs from "fs/promises";
-import { BaseToolWithCall, ChatMessage, QueryEngineTool } from "llamaindex";
-import path from "path";
-import { getDataSource } from "../engine";
-import { createTools } from "../engine/tools/index";
+import { ChatMessage } from "llamaindex";
 import { FunctionCallingAgent } from "./single-agent";
-
-const getQueryEngineTool = async (): Promise<QueryEngineTool | null> => {
-  const index = await getDataSource();
-  if (!index) {
-    return null;
-  }
-
-  const topK = process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined;
-  return new QueryEngineTool({
-    queryEngine: index.asQueryEngine({
-      similarityTopK: topK,
-    }),
-    metadata: {
-      name: "query_index",
-      description: `Use this tool to retrieve information about the text corpus from the index.`,
-    },
-  });
-};
-
-const getAvailableTools = async () => {
-  const configFile = path.join("config", "tools.json");
-  let toolConfig: any;
-  const tools: BaseToolWithCall[] = [];
-  try {
-    toolConfig = JSON.parse(await fs.readFile(configFile, "utf8"));
-  } catch (e) {
-    console.info(`Could not read ${configFile} file. Using no tools.`);
-  }
-  if (toolConfig) {
-    tools.push(...(await createTools(toolConfig)));
-  }
-
-  return tools;
-};
+import { lookupTools } from "./tools";
 
 export const createResearcher = async (chatHistory: ChatMessage[]) => {
-  const tools: BaseToolWithCall[] = [];
-  const queryEngineTool = await getQueryEngineTool();
-  if (queryEngineTool) {
-    tools.push(queryEngineTool);
-  }
-  const availableTools = await getAvailableTools();
-  // Add wikipedia, duckduckgo if they are available
-  for (const tool of availableTools) {
-    if (
-      tool.metadata.name === "wikipedia.WikipediaToolSpec" ||
-      tool.metadata.name === "duckduckgo_search"
-    ) {
-      tools.push(tool);
-    }
-  }
+  const tools = await lookupTools([
+    "query_index",
+    "wikipedia.WikipediaToolSpec",
+    "duckduckgo_search",
+  ]);
+
   return new FunctionCallingAgent({
     name: "researcher",
     tools: tools,
@@ -104,19 +58,15 @@ Task: "Create a blog post about the history of the internet, write in English an
 };
 
 export const createPublisher = async (chatHistory: ChatMessage[]) => {
-  const tools = await getAvailableTools();
-  const publisherTools: BaseToolWithCall[] = [];
+  const tools = await lookupTools(["document_generator"]);
   let systemPrompt =
     "You are an expert in publishing blog posts. You are given a task to publish a blog post.";
-  for (const tool of tools) {
-    if (tool.metadata.name === "document_generator") {
-      publisherTools.push(tool);
-      systemPrompt = `${systemPrompt}.If user request for a file, use the document_generator tool to generate the file and reply the link to the file.`;
-    }
+  if (tools.length > 0) {
+    systemPrompt = `${systemPrompt}. If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.`;
   }
   return new FunctionCallingAgent({
     name: "publisher",
-    tools: publisherTools,
+    tools: tools,
     systemPrompt: systemPrompt,
     chatHistory,
   });

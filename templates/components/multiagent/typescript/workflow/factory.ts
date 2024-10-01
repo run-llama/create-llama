@@ -132,7 +132,9 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
       message: `Please publish this blog post: ${result}`,
       streaming: true,
     });
-    return publishResult as StopEvent<AsyncGenerator<ChatResponseChunk>>;
+    return publishResult as unknown as StopEvent<
+      AsyncGenerator<ChatResponseChunk>
+    >;
   };
 
   const workflow = new Workflow({ timeout: TIMEOUT, validate: true });

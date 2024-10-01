@@ -1,10 +1,10 @@
 import { JSONSchemaType } from "ajv";
-import fs from "fs";
 import { BaseTool, ToolMetadata } from "llamaindex";
 import { marked } from "marked";
-import path from "path";
+import path from "node:path";
+import { saveDocument } from "../../llamaindex/documents/helper";
 
-const OUTPUT_DIR = "output/tools";
+const OUTPUT_DIR = "output/tool";
 
 type DocumentParameter = {
   originalContent: string;
@@ -124,28 +124,6 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
     return HTML_TEMPLATE.replace("{{content}}", htmlContent);
   }
 
-  private static validateFileName(fileName: string): string {
-    if (path.isAbsolute(fileName)) {
-      throw new Error("File name is not allowed.");
-    }
-    if (/^[a-zA-Z0-9_.-]+$/.test(fileName)) {
-      return fileName;
-    } else {
-      throw new Error(
-        "File name is not allowed to contain special characters.",
-      );
-    }
-  }
-
-  private static writeToFile(content: string | Buffer, filePath: string): void {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    if (typeof content === "string") {
-      fs.writeFileSync(filePath, content, "utf8");
-    } else {
-      fs.writeFileSync(filePath, content);
-    }
-  }
-
   async call(input: DocumentParameter): Promise<string> {
     const { originalContent, fileName } = input;
 
@@ -153,13 +131,9 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
       await DocumentGenerator.generateHtmlContent(originalContent);
     const fileContent = DocumentGenerator.generateHtmlDocument(htmlContent);
 
-    const validatedFileName = DocumentGenerator.validateFileName(fileName);
-    const filePath = path.join(OUTPUT_DIR, `${validatedFileName}.html`);
+    const filePath = path.join(OUTPUT_DIR, `${fileName}.html`);
 
-    DocumentGenerator.writeToFile(fileContent, filePath);
-
-    const fileUrl = `${process.env.FILESERVER_URL_PREFIX}/${filePath}`;
-    return fileUrl;
+    return await saveDocument(filePath, fileContent);
   }
 }
 
