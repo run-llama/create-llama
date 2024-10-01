@@ -7,6 +7,7 @@ export const createResearcher = async (chatHistory: ChatMessage[]) => {
     "query_index",
     "wikipedia.WikipediaToolSpec",
     "duckduckgo_search",
+    "duckduckgo_image_search",
   ]);
 
   return new FunctionCallingAgent({
@@ -15,7 +16,7 @@ export const createResearcher = async (chatHistory: ChatMessage[]) => {
     systemPrompt: `You are a researcher agent. 
 You are given a researching task. You must use tools to retrieve information needed for the task.
 It's normal that the task include some ambiguity which you must identify what is the real request that need to retrieve information.
-If you don't found any related information, please return "I didn't find any information."
+If you don't found any related information, please return "I didn't find any information.". Don't try to make up information yourself.
 Example:
 Request: "Create a blog post about the history of the internet, write in English and publish in PDF format."
 ->
@@ -29,7 +30,9 @@ export const createWriter = (chatHistory: ChatMessage[]) => {
   return new FunctionCallingAgent({
     name: "writer",
     systemPrompt: `You are an expert in writing blog posts. 
-You are given a task to write a blog post. Don't make up any information yourself. 
+You are given a task to write a blog post from the research content provided by the researcher agent. Don't make up any information yourself. 
+If there is no research content provided, you must return "I don't have any research content to write about."
+If the content is not valid (ex: broken link, broken image, etc.) don't use it.
 It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
 Example:
 Task: "Here is the information i found about the history of internet: 
@@ -60,7 +63,7 @@ Task: "Create a blog post about the history of the internet, write in English an
 export const createPublisher = async (chatHistory: ChatMessage[]) => {
   const tools = await lookupTools(["document_generator"]);
   let systemPrompt =
-    "You are an expert in publishing blog posts. You are given a task to publish a blog post.";
+    "You are an expert in publishing blog posts. You are given a task to publish a blog post. If the writer say that there was an error you should reply with the error and not publish the post.";
   if (tools.length > 0) {
     systemPrompt = `${systemPrompt}. If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.`;
   }
