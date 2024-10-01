@@ -1,5 +1,5 @@
 import { ToolData } from "../index";
-import { Artifact } from "../widgets/Artifact";
+import { Artifact, CodeArtifact } from "../widgets/Artifact";
 import { WeatherCard, WeatherData } from "../widgets/WeatherCard";
 
 // TODO: If needed, add displaying more tool outputs here
@@ -28,7 +28,12 @@ export default function ChatTools({
       const weatherData = toolOutput.output as unknown as WeatherData;
       return <WeatherCard data={weatherData} />;
     case "artifact":
-      return <Artifact data={toolOutput.output} version={artifactVersion} />;
+      return (
+        <Artifact
+          artifact={toolOutput.output as CodeArtifact}
+          version={artifactVersion}
+        />
+      );
     default:
       return null;
   }

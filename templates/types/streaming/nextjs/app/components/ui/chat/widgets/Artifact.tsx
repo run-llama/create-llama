@@ -1,18 +1,12 @@
-import { JSONValue } from "ai";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Code, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
 
 // detail information to execute code
-type Artifact = {
+export type CodeArtifact = {
   commentary: string;
   template: string;
   title: string;
@@ -27,31 +21,31 @@ type Artifact = {
 
 type ArtifactResult = {
   template: string;
-  sandboxUrl?: string; // the url to the sandbox (output when running web app)
-  outputUrls?: Array<{
-    url: string;
-    filename: string;
-  }>; // the urls to the output files (output when running in python environment)
-  stdout?: string[];
-  stderr?: string[];
-};
-
-export type ArtifactData = {
-  artifact?: Artifact;
-  result?: ArtifactResult;
+  stdout: string[];
+  stderr: string[];
+  runtimeError?: { name: string; value: string; tracebackRaw: string[] };
+  outputUrls: Array<{ url: string; filename: string }>;
+  url: string;
 };
 
 export function Artifact({
-  data,
+  artifact,
   version,
 }: {
-  data: JSONValue;
+  artifact: CodeArtifact | null;
   version?: number;
 }) {
-  const artifact = (data as ArtifactData) ?? {};
+  const [result, setResult] = useState<ArtifactResult | null>(null);
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
-  const [isOpen, setIsOpen] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!result) {
+      fetchArtifactResult();
+    }
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!artifact || version === undefined) return null;
 
   // this is just a hack to handle the layout when opening the output panel
   // for real world application, you should use a global state management to control layout
@@ -77,57 +71,64 @@ export function Artifact({
     handleDOMLayout();
   };
 
-  useEffect(() => {
-    // auto open output panel
-    handleOpenOutput();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fetchArtifactResult = async () => {
+    try {
+      const response = await fetch("/api/sandbox", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ artifact }),
+      });
 
-  if (!artifact.artifact || version === undefined) return null;
+      if (!response.ok) {
+        throw new Error("Failure running code artifact");
+      }
+
+      const fetchedResult = await response.json();
+      console.log("result", fetchedResult);
+
+      setResult(fetchedResult);
+    } catch (error) {
+      console.error("Error fetching artifact result:", error);
+      // Handle error (e.g., show error message to user)
+    }
+  };
 
   return (
     <div>
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="border border-gray-200 rounded-md"
+      <div
+        onClick={handleOpenOutput}
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start border border-gray-200 rounded-md",
+        )}
       >
-        <CollapsibleTrigger asChild>
-          <div
-            onClick={handleOpenOutput}
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start border-0",
-            )}
-          >
-            {isOpen ? (
-              <ChevronDown className="h-6 w-6" />
-            ) : (
-              <ChevronUp className="h-6 w-6" />
-            )}
-            <div className="flex flex-col gap-1">
-              <h4 className="font-semibold m-0">{artifact.artifact.title}</h4>
-              <span className="text-xs">Version: v{version}</span>
-              <span className="text-xs text-gray-500">Click to open code</span>
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent asChild>
-          <div className="py-2 px-4 mt-2">
-            <ArtifactOutput
-              data={data as ArtifactData}
-              detail={false}
-              version={version}
-            />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+        <Code className="h-6 w-6" />
+        <div className="flex flex-col gap-1">
+          <h4 className="font-semibold m-0">
+            {artifact.title} v{version}
+          </h4>
+          <span className="text-xs text-gray-500">Click to open code</span>
+        </div>
+      </div>
 
       {openOutputPanel && (
         <div
           className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel animate-slideIn"
           ref={panelRef}
         >
-          <ArtifactOutput data={data as ArtifactData} version={version} />
+          {result ? (
+            <ArtifactOutput
+              artifact={artifact}
+              result={result}
+              version={version}
+            />
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -135,20 +136,19 @@ export function Artifact({
 }
 
 function ArtifactOutput({
-  data,
-  detail = true,
+  artifact,
+  result,
   version,
+  detail = true,
 }: {
-  data: ArtifactData;
+  artifact: CodeArtifact;
+  result: ArtifactResult;
+  version: number;
   detail?: boolean;
-  version?: number;
 }) {
-  const { artifact, result } = (data as ArtifactData) ?? {};
-  if (!artifact || !result || version === undefined) return null;
-
   const fileExtension = artifact.file_path.split(".").pop();
   const markdownCode = `\`\`\`${fileExtension}\n${artifact.code}\n\`\`\``;
-  const { sandboxUrl, outputUrls, stderr, stdout } = result;
+  const { url: sandboxUrl, outputUrls, stderr, stdout, runtimeError } = result;
 
   const handleClosePanel = () => {
     // reset the main div width
@@ -167,8 +167,23 @@ function ArtifactOutput({
   if (!detail) {
     return (
       <div className="h-[240px] overflow-auto select-none">
-        {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
-        {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
+        {runtimeError ? (
+          <div className="p-4 bg-red-100 text-red-800 rounded-md">
+            <h3 className="font-bold mb-2">Runtime Error:</h3>
+            <p className="font-semibold">{runtimeError.name}</p>
+            <p className="mb-2">{runtimeError.value}</p>
+            {runtimeError.tracebackRaw.map((trace, index) => (
+              <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
+                {trace}
+              </pre>
+            ))}
+          </div>
+        ) : (
+          <>
+            {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
+            {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
+          </>
+        )}
       </div>
     );
   }
@@ -194,6 +209,17 @@ function ArtifactOutput({
           </div>
         </TabsContent>
         <TabsContent value="preview" className="h-[80%] mb-4 overflow-auto">
+          {runtimeError && (
+            <div className="p-4 bg-red-100 text-red-800 rounded-md">
+              <p className="font-bold mb-2">{runtimeError.name}</p>
+              <p className="mb-2">{runtimeError.value}</p>
+              {runtimeError.tracebackRaw.map((trace, index) => (
+                <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
+                  {trace}
+                </pre>
+              ))}
+            </div>
+          )}
           {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
           {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
         </TabsContent>

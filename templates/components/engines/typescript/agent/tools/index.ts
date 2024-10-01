@@ -1,6 +1,6 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
-import { ArtifactTool, ArtifactToolParams } from "./artifact";
+import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
 import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
 import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
@@ -45,7 +45,7 @@ const toolFactory: Record<string, ToolCreator> = {
     return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
   },
   artifact: async (config: unknown) => {
-    return [new ArtifactTool(config as ArtifactToolParams)];
+    return [new CodeGeneratorTool(config as CodeGeneratorToolParams)];
   },
 };
 
