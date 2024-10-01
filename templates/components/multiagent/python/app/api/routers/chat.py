@@ -21,7 +21,7 @@ async def chat(
 ):
     try:
         last_message_content = data.get_last_message_content()
-        messages = data.get_history_messages()
+        messages = data.get_history_messages(include_agent_messages=True)
 
         event_handler = EventCallbackHandler()
         # The chat API supports passing private document filters and chat params

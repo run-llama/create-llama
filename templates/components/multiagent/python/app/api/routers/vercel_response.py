@@ -1,13 +1,15 @@
 import json
 import logging
-from abc import abstractmethod
 from typing import AsyncGenerator, List
 
 from aiostream import stream
+from app.agents.single import AgentRunEvent, AgentRunResult
+from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
 from fastapi import Request
 from fastapi.responses import StreamingResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 logger = logging.getLogger("uvicorn")
 
@@ -20,36 +22,6 @@ class VercelStreamResponse(StreamingResponse):
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
 
-    def __init__(self, request: Request, chat_data: ChatData, *args, **kwargs):
-        self.request = request
-
-        stream = self._create_stream(request, chat_data, *args, **kwargs)
-        content = self.content_generator(stream)
-
-        super().__init__(content=content)
-
-    @abstractmethod
-    def _create_stream(self, request: Request, chat_data: ChatData, *args, **kwargs):
-        """
-        Create the stream that will be used to generate the response.
-        """
-        raise NotImplementedError("Subclasses must implement _create_stream")
-
-    async def content_generator(self, stream):
-        is_stream_started = False
-
-        async with stream.stream() as streamer:
-            async for output in streamer:
-                if not is_stream_started:
-                    is_stream_started = True
-                    # Stream a blank message to start the stream
-                    yield self.convert_text("")
-
-                yield output
-
-                if await self.request.is_disconnected():
-                    break
-
     @classmethod
     def convert_text(cls, token: str):
         # Escape newlines and double quotes to avoid breaking the stream
@@ -60,6 +32,18 @@ class VercelStreamResponse(StreamingResponse):
     def convert_data(cls, data: dict):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
+
+    def __init__(
+        self,
+        request: Request,
+        event_handler: EventCallbackHandler,
+        response: StreamingAgentChatResponse,
+        chat_data: ChatData,
+    ):
+        content = VercelStreamResponse.content_generator(
+            request, event_handler, response, chat_data
+        )
+        super().__init__(content=content)
 
     @staticmethod
     async def _generate_next_questions(chat_history: List[Message], response: str):
@@ -73,12 +57,13 @@ class VercelStreamResponse(StreamingResponse):
             }
         return None
 
-    def _create_stream(
+    @classmethod
+    def content_generator(
         self,
         request: Request,
         chat_data: ChatData,
-        event_handler: "AgentRunResult" | AsyncGenerator,  # noqa: F821
-        events: AsyncGenerator["AgentRunEvent", None],  # noqa: F821
+        event_handler: AgentRunResult | AsyncGenerator,
+        events: AsyncGenerator[AgentRunEvent, None],
         verbose: bool = True,
     ):
         # Yield the text response
@@ -86,18 +71,15 @@ class VercelStreamResponse(StreamingResponse):
             result = await event_handler
             final_response = ""
 
+            if isinstance(result, AgentRunResult):
+                for token in result.response.message.content:
+                    final_response += token
+                    yield self.convert_text(token)
+
             if isinstance(result, AsyncGenerator):
                 async for token in result:
                     final_response += token.delta
                     yield self.convert_text(token.delta)
-            else:
-                try:
-                    for token in result.response.message.content:
-                        final_response += token
-                        yield self.convert_text(token)
-                except Exception as e:
-                    logger.error(f"Error in chat response generator: {e}")
-                    raise e
 
             # Generate next questions if next question prompt is configured
             question_data = await self._generate_next_questions(
@@ -121,7 +103,7 @@ class VercelStreamResponse(StreamingResponse):
         return combine
 
     @staticmethod
-    def _event_to_response(event: "AgentRunEvent") -> dict:  # noqa: F821
+    def _event_to_response(event: AgentRunEvent) -> dict:
         return {
             "type": "agent",
             "data": {"agent": event.name, "text": event.msg},
