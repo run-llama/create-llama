@@ -133,7 +133,7 @@ export class DocumentGenerator implements BaseTool<DocumentParameter> {
 
     const filePath = path.join(OUTPUT_DIR, `${fileName}.html`);
 
-    return await saveDocument(filePath, fileContent);
+    return `URL: ${await saveDocument(filePath, fileContent)}`;
   }
 }
 
