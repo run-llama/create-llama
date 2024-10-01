@@ -13,10 +13,11 @@ export const createResearcher = async (chatHistory: ChatMessage[]) => {
   return new FunctionCallingAgent({
     name: "researcher",
     tools: tools,
-    systemPrompt: `You are a researcher agent. 
-You are given a researching task. You must use tools to retrieve information needed for the task.
+    systemPrompt: `You are a researcher agent. You are given a researching task. 
+If the conversation already included the information and there is no new request from the user, you should return the appropriate content to the writer.
+Otherwise, you must use tools to retrieve information needed for the task.
 It's normal that the task include some ambiguity which you must identify what is the real request that need to retrieve information.
-If you don't found any related information, please return "I didn't find any information.". Don't try to make up information yourself.
+If you don't found any related information, please return "I didn't find any new information for {the topic}.". Don't try to make up information yourself.
 Example:
 Request: "Create a blog post about the history of the internet, write in English and publish in PDF format."
 ->
@@ -31,7 +32,9 @@ export const createWriter = (chatHistory: ChatMessage[]) => {
     name: "writer",
     systemPrompt: `You are an expert in writing blog posts. 
 You are given a task to write a blog post from the research content provided by the researcher agent. Don't make up any information yourself. 
-If there is no research content provided, you must return "I don't have any research content to write about."
+It's important to read the whole conversation history to write the blog post correctly.
+If you received a review from the reviewer, update the post with the review and return the new post content.
+If user request for an update with an new thing but there is no research content provided, you must return "I don't have any research content to write about."
 If the content is not valid (ex: broken link, broken image, etc.) don't use it.
 It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
 Example:
@@ -47,7 +50,7 @@ export const createReviewer = (chatHistory: ChatMessage[]) => {
   return new FunctionCallingAgent({
     name: "reviewer",
     systemPrompt: `You are an expert in reviewing blog posts. 
-You are given a task to review a blog post. 
+You are given a task to review a blog post. As a reviewer, it's important that your review is matching with the user request. Please focus on the user request to review the post.
 Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement. 
 Furthermore, proofread the post for grammar and spelling errors. 
 Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.
@@ -62,8 +65,8 @@ Task: "Create a blog post about the history of the internet, write in English an
 
 export const createPublisher = async (chatHistory: ChatMessage[]) => {
   const tools = await lookupTools(["document_generator"]);
-  let systemPrompt =
-    "You are an expert in publishing blog posts. You are given a task to publish a blog post. If the writer say that there was an error you should reply with the error and not publish the post.";
+  let systemPrompt = `You are an expert in publishing blog posts. You are given a task to publish a blog post. 
+If the writer say that there was an error you should reply with the error and not publish the post.`;
   if (tools.length > 0) {
     systemPrompt = `${systemPrompt}. If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.`;
   }

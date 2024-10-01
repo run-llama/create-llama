@@ -25,7 +25,50 @@ class WriteEvent extends WorkflowEvent<{
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 class PublishEvent extends WorkflowEvent<{ input: string }> {}
 
+const prepareChatHistory = (chatHistory: ChatMessage[]) => {
+  // By default, the chat history only contains the assistant and user messages
+  // all the agents messages are stored in annotation data which is not visible to the LLM
+
+  const MAX_AGENT_MESSAGES = 10;
+
+  // Construct a new agent message from agent messages
+  // Get annotations from assistant messages
+  const agentAnnotations = chatHistory
+    .filter((msg) => msg.role === "assistant")
+    .flatMap((msg) => msg.annotations || [])
+    .filter(
+      (annotation) =>
+        annotation.type === "agent" && annotation.data.text !== "Finished task",
+    )
+    .slice(-MAX_AGENT_MESSAGES);
+
+  const agentMessages = agentAnnotations
+    .map(
+      (annotation) =>
+        `\n<${annotation.data.agent}>\n${annotation.data.text}\n</${annotation.data.agent}>`,
+    )
+    .join("\n");
+
+  const agentContent = agentMessages
+    ? "Here is the previous conversation of agents:\n" + agentMessages
+    : "";
+
+  if (agentContent) {
+    const agentMessage: ChatMessage = {
+      role: "assistant",
+      content: agentContent,
+    };
+    return [
+      ...chatHistory.slice(0, -1),
+      agentMessage,
+      chatHistory.slice(-1)[0],
+    ];
+  }
+  return chatHistory;
+};
+
 export const createWorkflow = (chatHistory: ChatMessage[]) => {
+  const chatHistoryWithAgentMessages = prepareChatHistory(chatHistory);
   const runAgent = async (
     context: Context,
     agent: Workflow,
@@ -48,7 +91,7 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
   };
 
   const research = async (context: Context, ev: ResearchEvent) => {
-    const researcher = await createResearcher(chatHistory);
+    const researcher = await createResearcher(chatHistoryWithAgentMessages);
     const researchRes = await runAgent(context, researcher, {
       message: ev.data.input,
     });
@@ -77,7 +120,7 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
       });
     }
 
-    const writer = createWriter(chatHistory);
+    const writer = createWriter(chatHistoryWithAgentMessages);
     const writeRes = await runAgent(context, writer, {
       message: ev.data.input,
     });
@@ -87,7 +130,7 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
   };
 
   const review = async (context: Context, ev: ReviewEvent) => {
-    const reviewer = createReviewer(chatHistory);
+    const reviewer = createReviewer(chatHistoryWithAgentMessages);
     const reviewRes = await reviewer.run(
       new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
     );
@@ -125,11 +168,10 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
   };
 
   const publish = async (context: Context, ev: PublishEvent) => {
-    const publisher = await createPublisher(chatHistory);
-    const result = context.get("result");
+    const publisher = await createPublisher(chatHistoryWithAgentMessages);
 
     const publishResult = await runAgent(context, publisher, {
-      message: `Please publish this blog post: ${result}`,
+      message: `${ev.data.input}`,
       streaming: true,
     });
     return publishResult as unknown as StopEvent<
