@@ -152,15 +152,18 @@ class WorkflowVercelStreamResponse(BaseVercelStreamResponse):
             result = await event_handler
             final_response = ""
 
-            if isinstance(result, "AgentRunResult"):
-                for token in result.response.message.content:
-                    final_response += token
-                    yield self.convert_text(token)
-
             if isinstance(result, AsyncGenerator):
                 async for token in result:
                     final_response += token.delta
                     yield self.convert_text(token.delta)
+            else:
+                try:
+                    for token in result.response.message.content:
+                        final_response += token
+                        yield self.convert_text(token)
+                except Exception as e:
+                    logger.error(f"Error in chat response generator: {e}")
+                    raise e
 
             # Generate next questions if next question prompt is configured
             question_data = await self._generate_next_questions(
