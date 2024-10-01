@@ -15,8 +15,11 @@ export async function storeAndParseFile(
   fileBuffer: Buffer,
   mimeType: string,
 ) {
+  const fileExt = MIME_TYPE_TO_EXT[mimeType];
+  if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
+
   const documents = await loadDocuments(fileBuffer, mimeType);
-  await saveDocument(filename, fileBuffer, mimeType);
+  await saveDocument(filename, fileBuffer);
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
@@ -38,14 +41,7 @@ async function loadDocuments(fileBuffer: Buffer, mimeType: string) {
   return await reader.loadDataAsContent(fileBuffer);
 }
 
-async function saveDocument(
-  filename: string,
-  fileBuffer: Buffer,
-  mimeType: string,
-) {
-  const fileExt = MIME_TYPE_TO_EXT[mimeType];
-  if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
-
+export async function saveDocument(filename: string, fileBuffer: Buffer) {
   const filepath = `${UPLOADED_FOLDER}/${filename}`;
   const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
 
