@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.2.13
+
+### Patch Changes
+
+- 04ddebc: Add publisher agent to multi-agents for generating documents (PDF and HTML)
+- 04ddebc: Allow tool selection for multi-agents (Python and TS)
+
 ## 0.2.12
 
 ### Patch Changes
