@@ -1,6 +1,13 @@
-import { Code, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+"use client";
+
+import { ChevronDown, Code, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
@@ -41,61 +48,16 @@ export function Artifact({
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const handleClosePanel = () => {
-    // reset the main div width
-    const mainDiv = document.querySelector("main");
-    mainDiv?.classList.remove("w-[55vw]");
-    mainDiv?.classList.remove("px-8");
-    mainDiv?.classList.add("w-screen");
-
-    // hide all current artifact panel
-    const artifactPanels = document.querySelectorAll(".artifact-panel");
-    artifactPanels.forEach((panel) => {
-      panel.classList.add("hidden");
-    });
-  };
-
-  useEffect(() => {
-    if (!result) {
-      fetchArtifactResult();
-    }
-
-    const chatInput = document.getElementById("chat-input");
-    console.log({ chatInput });
-    chatInput?.addEventListener("click", () => {
-      handleClosePanel();
-    });
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!artifact || version === undefined) return null;
-
-  // this is just a hack to handle the layout when opening the output panel
-  // for real world application, you should use a global state management to control layout
-  const handleDOMLayout = () => {
-    // hide all current artifact panel
-    const artifactPanels = document.querySelectorAll(".artifact-panel");
-    artifactPanels.forEach((panel) => {
-      panel.classList.add("hidden");
-    });
-
-    // make the main div width smaller to have space for the output panel
-    const mainDiv = document.querySelector("main");
-    mainDiv?.classList.remove("w-screen");
-    mainDiv?.classList.add("w-[55vw]");
-    mainDiv?.classList.add("px-8");
-
-    // show the current artifact panel
-    panelRef.current?.classList.remove("hidden");
-  };
-
-  const handleOpenOutput = () => {
+  const handleOpenOutput = async () => {
     setOpenOutputPanel(true);
-    handleDOMLayout();
+    openPanel();
+    panelRef.current?.classList.remove("hidden");
+    if (!result) await fetchArtifactResult();
   };
 
   const fetchArtifactResult = async () => {
-    setSandboxCreating(true);
     try {
+      setSandboxCreating(true);
       const response = await fetch("/api/sandbox", {
         method: "POST",
         headers: {
@@ -119,9 +81,12 @@ export function Artifact({
           ? error.message
           : "An unknown error occurred when executing code",
       );
+    } finally {
+      setSandboxCreating(false);
     }
-    setSandboxCreating(false);
   };
+
+  if (!artifact || version === undefined) return null;
 
   return (
     <div>
@@ -164,7 +129,6 @@ export function Artifact({
               artifact={artifact}
               result={result}
               version={version}
-              handleClosePanel={handleClosePanel}
             />
           )}
         </div>
@@ -177,42 +141,14 @@ function ArtifactOutput({
   artifact,
   result,
   version,
-  handleClosePanel,
-  detail = true,
 }: {
   artifact: CodeArtifact;
   result: ArtifactResult;
   version: number;
-  handleClosePanel: () => void;
-  detail?: boolean;
 }) {
-  const fileExtension = artifact.file_path.split(".").pop();
+  const fileExtension = artifact.file_path.split(".").pop() || "";
   const markdownCode = `\`\`\`${fileExtension}\n${artifact.code}\n\`\`\``;
   const { url: sandboxUrl, outputUrls, runtimeError, stderr, stdout } = result;
-
-  if (!detail) {
-    return (
-      <div className="h-[240px] overflow-auto select-none">
-        {runtimeError ? (
-          <div className="p-4 bg-red-100 text-red-800 rounded-md">
-            <h3 className="font-bold mb-2">Runtime Error:</h3>
-            <p className="font-semibold">{runtimeError.name}</p>
-            <p className="mb-2">{runtimeError.value}</p>
-            {runtimeError.tracebackRaw.map((trace, index) => (
-              <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
-                {trace}
-              </pre>
-            ))}
-          </div>
-        ) : (
-          <>
-            {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
-            {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
-          </>
-        )}
-      </div>
-    );
-  }
 
   return (
     <>
@@ -221,7 +157,7 @@ function ArtifactOutput({
           <h2 className="text-2xl font-bold m-0">{artifact.title}</h2>
           <span className="text-sm text-gray-500">Version: v{version}</span>
         </div>
-        <Button onClick={handleClosePanel}>Close</Button>
+        <Button onClick={closePanel}>Close</Button>
       </div>
       <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
         <TabsList className="grid grid-cols-2 max-w-[400px] mx-auto">
@@ -233,28 +169,41 @@ function ArtifactOutput({
             <Markdown content={markdownCode} />
           </div>
         </TabsContent>
-        <TabsContent value="preview" className="h-[80%] mb-4 overflow-auto">
-          {runtimeError && (
-            <div className="p-4 bg-red-100 text-red-800 rounded-md mt-2">
-              <p className="font-bold mb-2">{runtimeError.name}</p>
-              <p className="mb-2">{runtimeError.value}</p>
-              {runtimeError.tracebackRaw.map((trace, index) => (
-                <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
-                  {trace}
-                </pre>
-              ))}
-            </div>
-          )}
-          {(stdout || stderr) && (
-            <div className="mt-4">
-              <ArtifactLogs stderr={stderr} stdout={stdout} />
-            </div>
-          )}
+        <TabsContent
+          value="preview"
+          className="h-[80%] mb-4 overflow-auto mt-4 space-y-4"
+        >
+          {runtimeError && <RunTimeError runtimeError={runtimeError} />}
+          <ArtifactLogs stderr={stderr} stdout={stdout} />
           {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
           {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
         </TabsContent>
       </Tabs>
     </>
+  );
+}
+
+function RunTimeError({
+  runtimeError,
+}: {
+  runtimeError: { name: string; value: string; tracebackRaw: string[] };
+}) {
+  return (
+    <Collapsible className="bg-red-100 text-red-800 rounded-md py-2 px-4 space-y-4">
+      <CollapsibleTrigger className="font-bold w-full text-start flex items-center justify-between">
+        <span>Runtime Error:</span>
+        <ChevronDown className="w-4 h-4" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="text-sm space-y-2">
+        <p className="font-semibold">{runtimeError.name}</p>
+        <p>{runtimeError.value}</p>
+        {runtimeError.tracebackRaw.map((trace, index) => (
+          <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
+            {trace}
+          </pre>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -290,9 +239,7 @@ function InterpreterOutput({
       {outputUrls.map((url) => (
         <li key={url.url}>
           <div className="mt-4">
-            {url.filename.endsWith(".png") ||
-            url.filename.endsWith(".jpg") ||
-            url.filename.endsWith(".jpeg") ? (
+            {isImageFile(url.filename) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={url.url} alt={url.filename} className="my-4 w-1/2" />
             ) : (
@@ -324,16 +271,26 @@ function ArtifactLogs({
   return (
     <div className="flex flex-col gap-4">
       {stdout && stdout.length > 0 && (
-        <div className="p-4 bg-green-100 text-green-800 rounded-md">
-          <h3 className="font-bold mb-2 mt-0">Output log:</h3>
-          <ArtifactLogItems logs={stdout} />
-        </div>
+        <Collapsible className="bg-green-100 text-green-800 rounded-md py-2 px-4 space-y-4">
+          <CollapsibleTrigger className="font-bold w-full text-start flex items-center justify-between">
+            <span>Output log:</span>
+            <ChevronDown className="w-4 h-4" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="text-sm">
+            <ArtifactLogItems logs={stdout} />
+          </CollapsibleContent>
+        </Collapsible>
       )}
       {stderr && stderr.length > 0 && (
-        <div className="p-4 bg-red-100 text-red-800 rounded-md">
-          <h3 className="font-bold mb-2 mt-0">Error log:</h3>
-          <ArtifactLogItems logs={stderr} />
-        </div>
+        <Collapsible className="bg-yellow-100 text-yellow-800 rounded-md py-2 px-4 space-y-4">
+          <CollapsibleTrigger className="font-bold w-full text-start flex items-center justify-between">
+            <span>Error log:</span>
+            <ChevronDown className="w-4 h-4" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="text-sm">
+            <ArtifactLogItems logs={stderr} />
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </div>
   );
@@ -350,3 +307,42 @@ function ArtifactLogItems({ logs }: { logs: string[] }) {
     </ul>
   );
 }
+
+function isImageFile(filename: string): boolean {
+  const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+  return imageExtensions.some((ext) => filename.toLowerCase().endsWith(ext));
+}
+
+// this is just a hack to handle the layout when opening or closing the output panel
+// for real world application, you should use a global state management to control layout
+function openPanel() {
+  // hide all current artifact panel
+  const artifactPanels = document.querySelectorAll(".artifact-panel");
+  artifactPanels.forEach((panel) => {
+    panel.classList.add("hidden");
+  });
+
+  // make the main div width smaller to have space for the output panel
+  const mainDiv = document.querySelector("main");
+  mainDiv?.classList.remove("w-screen");
+  mainDiv?.classList.add("w-[55vw]");
+  mainDiv?.classList.add("px-8");
+}
+
+function closePanel() {
+  // reset the main div width
+  const mainDiv = document.querySelector("main");
+  mainDiv?.classList.remove("w-[55vw]");
+  mainDiv?.classList.remove("px-8");
+  mainDiv?.classList.add("w-screen");
+
+  // hide all current artifact panel
+  const artifactPanels = document.querySelectorAll(".artifact-panel");
+  artifactPanels.forEach((panel) => {
+    panel.classList.add("hidden");
+  });
+}
+
+document.getElementById("chat-input")?.addEventListener("click", () => {
+  closePanel();
+});
