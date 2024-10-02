@@ -15,7 +15,8 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
         tools.extend(configured_tools["document_generator"])
         prompt_instructions = dedent("""
             You have access to a document generator tool that can create PDF or HTML document for the content. 
-            Based on the user request, please specify the type of document to generate or just reply to the user directly without generating any document file.
+            If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.
+            Otherwise, just return the content of the post. 
         """)
         description = "Expert in publishing the blog post, able to publish the blog post in PDF or HTML format."
     else:

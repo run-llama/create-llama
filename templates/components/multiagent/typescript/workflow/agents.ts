@@ -68,7 +68,9 @@ export const createPublisher = async (chatHistory: ChatMessage[]) => {
   let systemPrompt = `You are an expert in publishing blog posts. You are given a task to publish a blog post. 
 If the writer say that there was an error you should reply with the error and not publish the post.`;
   if (tools.length > 0) {
-    systemPrompt = `${systemPrompt}. If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.`;
+    systemPrompt = `${systemPrompt}. 
+If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.
+Otherwise, just return the content of the post.`;
   }
   return new FunctionCallingAgent({
     name: "publisher",
