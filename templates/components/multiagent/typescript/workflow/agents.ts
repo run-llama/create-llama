@@ -44,11 +44,13 @@ If you received a review from the reviewer, update the post with the review and 
 If user request for an update with an new thing but there is no research content provided, you must return "I don't have any research content to write about."
 If the content is not valid (ex: broken link, broken image, etc.) don't use it.
 It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
+If you updated the post for the reviewer, please firstly reply what did you change in the post and then return the new post content.
 Example:
 Task: "Here is the information i found about the history of internet: 
 Create a blog post about the history of the internet, write in English and publish in PDF format."
 -> Your task: Use the research content {...}  to write a blog post in English.
--> This is not your task: Create PDF`,
+-> This is not your task: Create PDF
+Please note that a localhost link is fine, but a dummy one like "example.com" or "your-website.com" is not valid.`,
     chatHistory,
   });
 };
@@ -62,6 +64,7 @@ Review the post for logical inconsistencies, ask critical questions, and provide
 Furthermore, proofread the post for grammar and spelling errors. 
 Only if the post is good enough for publishing, then you MUST return 'The post is good.'. In all other cases return your review.
 It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to review the post correctly.
+Please note that a localhost link is fine, but a dummy one like "example.com" or "your-website.com" is not valid.
 Example:
 Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
 -> Your task: Review is the main content of the post is about the history of the internet, is it written in English.
