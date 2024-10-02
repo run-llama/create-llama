@@ -33,7 +33,7 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
             If user request for an update with an new thing but there is no research content provided, you must return "I don't have any research content to write about."
             If the content is not valid (ex: broken link, broken image, etc.) don't use it.
             It's normal that the task include some ambiguity, so you must be define what is the starter request of the user to write the post correctly.
-            If you updated the post for the reviewer, please firstly reply what did you change in the post and then return the new post content.
+            If you updated the post for the reviewer, please firstly reply what did you change in the post and then return the new post content, don't include the review from reviewer.
             Example:
             Task: "Here is the information i found about the history of internet: 
             Create a blog post about the history of the internet, write in English and publish in PDF format."
@@ -125,7 +125,7 @@ class BlogPostWorkflow(Workflow):
         if ev.is_good or too_many_attempts:
             # too many attempts or the blog post is good - stream final response if requested
             return PublishEvent(
-                input=f"Please publish this content: ```{ev.input}```. The user request was: ```{ctx.data['user_input']}```",
+                input=f"Please publish this content: ```{ctx.data['result'].response.message.content}```. The user request was: ```{ctx.data['user_input']}```",
             )
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
         ctx.data["result"] = result

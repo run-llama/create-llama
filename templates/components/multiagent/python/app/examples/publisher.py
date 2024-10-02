@@ -14,9 +14,8 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
     if "document_generator" in configured_tools.keys():
         tools.extend(configured_tools["document_generator"])
         prompt_instructions = dedent("""
-            You have access to a document generator tool that can create PDF or HTML document for the content. 
-            If user requests to generate a file, use the document_generator tool to generate the file and reply the link to the file.
-            Otherwise, just return the content of the post. 
+            Normally, reply the blog post content to the user directly. 
+            But if user requested to generate a file, use the document_generator tool to generate the file and reply the link to the file.
         """)
         description = "Expert in publishing the blog post, able to publish the blog post in PDF or HTML format."
     else:
@@ -26,15 +25,11 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
 
 
 def create_publisher(chat_history: List[ChatMessage]):
-    tools, instructions, description = get_publisher_tools()
-    system_prompt = dedent(f"""
-        You are a publisher that help publish the blog post. 
-        {instructions}
-    """)
+    tools, prompt_instructions, description = get_publisher_tools()
     return FunctionCallingAgent(
         name="publisher",
         tools=tools,
         description=description,
-        system_prompt=system_prompt,
+        system_prompt=prompt_instructions,
         chat_history=chat_history,
     )
