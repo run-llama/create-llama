@@ -48,7 +48,7 @@ export function Artifact({
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const handleToggleOutputPanel = async () => {
+  const handleOpenOutput = async () => {
     setOpenOutputPanel(true);
     openPanel();
     panelRef.current?.classList.remove("hidden");
@@ -96,7 +96,7 @@ export function Artifact({
   return (
     <div>
       <div
-        onClick={handleToggleOutputPanel}
+        onClick={handleOpenOutput}
         className={cn(
           buttonVariants({ variant: "outline" }),
           "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start border border-gray-200 rounded-md",
