@@ -75,7 +75,7 @@ def create_researcher(chat_history: List[ChatMessage]):
                 Your task: Return the previous content of the post to the writer. No need to do any research.
                 This is not your task: Look for how to create an HTML file.
 
-            If you use the tools but don't find any related information, please return "I didn't find any new information for {the topic}." Don't try to make up information yourself.
+            If you use the tools but don't find any related information, please return "I didn't find any new information for {the topic}." along with the content you found. Don't try to make up information yourself.
             If the request doesn't need any new information because it was in the conversation history, please return "The task doesn't need any new information. Please reuse the existing content in the conversation history."
         """),
         chat_history=chat_history,
