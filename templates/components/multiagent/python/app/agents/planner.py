@@ -128,11 +128,12 @@ class StructuredPlannerAgent(Workflow):
             ctx.data["act_plan_id"]
         )
 
-        ctx.data["num_sub_tasks"] = len(upcoming_sub_tasks)
-        # send an event per sub task
-        events = [SubTaskEvent(sub_task=sub_task) for sub_task in upcoming_sub_tasks]
-        for event in events:
-            ctx.send_event(event)
+        if upcoming_sub_tasks:
+            # Execute only the first sub-task
+            # otherwise the executor will get over-lapping messages
+            # alternatively, we could use one executor for all sub tasks
+            next_sub_task = upcoming_sub_tasks[0]
+            return SubTaskEvent(sub_task=next_sub_task)
 
         return None
 
@@ -142,7 +143,7 @@ class StructuredPlannerAgent(Workflow):
     ) -> SubTaskResultEvent:
         if self._verbose:
             print(f"=== Executing sub task: {ev.sub_task.name} ===")
-        is_last_tasks = ctx.data["num_sub_tasks"] == self.get_remaining_subtasks(ctx)
+        is_last_tasks = self.get_remaining_subtasks(ctx) == 1
         # TODO: streaming only works without plan refining
         streaming = is_last_tasks and ctx.data["streaming"] and not self.refine_plan
         handler = self.executor.run(
@@ -164,22 +165,17 @@ class StructuredPlannerAgent(Workflow):
     async def gather_results(
         self, ctx: Context, ev: SubTaskResultEvent
     ) -> ExecutePlanEvent | StopEvent:
-        # wait for all sub tasks to finish
-        num_sub_tasks = ctx.data["num_sub_tasks"]
-        results = ctx.collect_events(ev, [SubTaskResultEvent] * num_sub_tasks)
-        if results is None:
-            return None
+        result = ev
 
         upcoming_sub_tasks = self.get_upcoming_sub_tasks(ctx)
         # if no more tasks to do, stop workflow and send result of last step
         if upcoming_sub_tasks == 0:
-            return StopEvent(result=results[-1].result)
+            return StopEvent(result=result.result)
 
         if self.refine_plan:
-            # store all results for refining the plan
+            # store the result for refining the plan
             ctx.data["results"] = ctx.data.get("results", {})
-            for result in results:
-                ctx.data["results"][result.sub_task.name] = result.result
+            ctx.data["results"][result.sub_task.name] = result.result
 
             new_plan = await self.planner.refine_plan(
                 ctx.data["task"], ctx.data["act_plan_id"], ctx.data["results"]
