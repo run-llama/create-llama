@@ -52,6 +52,7 @@ export type CodeArtifact = {
 
 export type CodeGeneratorParameter = {
   requirement: string;
+  oldCode?: string;
 };
 
 export type CodeGeneratorToolParams = {
@@ -69,6 +70,11 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<CodeGeneratorParameter>> =
           type: "string",
           description: "The description of the application you want to build.",
         },
+        oldCode: {
+          type: "string",
+          description: "The existing code to be modified",
+          nullable: true,
+        },
       },
       required: ["requirement"],
     },
@@ -83,7 +89,10 @@ export class CodeGeneratorTool implements BaseTool<CodeGeneratorParameter> {
 
   async call(input: CodeGeneratorParameter) {
     try {
-      const artifact = await this.generateArtifact(input.requirement);
+      const artifact = await this.generateArtifact(
+        input.requirement,
+        input.oldCode,
+      );
       return artifact as JSONValue;
     } catch (error) {
       return { isError: true };
@@ -91,10 +100,17 @@ export class CodeGeneratorTool implements BaseTool<CodeGeneratorParameter> {
   }
 
   // Generate artifact (code, environment, dependencies, etc.)
-  async generateArtifact(query: string): Promise<CodeArtifact> {
+  async generateArtifact(
+    query: string,
+    oldCode?: string,
+  ): Promise<CodeArtifact> {
+    const userMessage = `
+    ${query}
+    ${oldCode ? `The existing code is: \n\`\`\`${oldCode}\`\`\`` : ""}
+    `;
     const messages: ChatMessage[] = [
       { role: "system", content: CODE_GENERATION_PROMPT },
-      { role: "user", content: query },
+      { role: "user", content: userMessage },
     ];
     try {
       const response = await Settings.llm.chat({ messages });

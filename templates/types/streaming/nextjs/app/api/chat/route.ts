@@ -7,6 +7,7 @@ import { initSettings } from "./engine/settings";
 import {
   convertMessageContent,
   retrieveDocumentIds,
+  retrieveLatestArtifact,
 } from "./llamaindex/streaming/annotations";
 import {
   createCallbackManager,
@@ -59,12 +60,14 @@ export async function POST(request: NextRequest) {
       },
     );
     const ids = retrieveDocumentIds(allAnnotations);
+    const latestArtifact = retrieveLatestArtifact(allAnnotations);
     const chatEngine = await createChatEngine(ids, data);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
     const userMessageContent = convertMessageContent(
       userMessage.content,
       annotations,
+      latestArtifact,
     );
 
     // Setup callbacks

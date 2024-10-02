@@ -48,21 +48,54 @@ export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
   return ids;
 }
 
+// get latest artifact from annotations to append to the user message
+export function retrieveLatestArtifact(
+  allAnnotations?: JSONValue[],
+): string | undefined {
+  if (!allAnnotations) return undefined;
+
+  for (let index = allAnnotations.length - 1; index >= 0; index--) {
+    const annotation = allAnnotations[index];
+    const { type, data } = getValidAnnotation(annotation);
+    if (
+      type === "tools" &&
+      "toolCall" in data &&
+      "toolOutput" in data &&
+      typeof data.toolCall === "object" &&
+      typeof data.toolOutput === "object" &&
+      data.toolCall !== null &&
+      data.toolOutput !== null &&
+      "name" in data.toolCall &&
+      data.toolCall.name === "artifact"
+    ) {
+      const toolOutput = data.toolOutput as { output?: { code?: string } };
+      if (toolOutput.output?.code) {
+        return `The existing code is: \n\`\`\`${toolOutput.output.code}\`\`\``;
+      }
+    }
+  }
+  return undefined;
+}
+
 export function convertMessageContent(
   content: string,
   annotations?: JSONValue[],
+  latestArtifact?: string,
 ): MessageContent {
-  if (!annotations) return content;
   return [
     {
       type: "text",
       text: content,
     },
+    ...(latestArtifact
+      ? [{ type: "text" as const, text: latestArtifact }]
+      : []),
     ...convertAnnotations(annotations),
   ];
 }
 
-function convertAnnotations(annotations: JSONValue[]): MessageContentDetail[] {
+function convertAnnotations(annotations?: JSONValue[]): MessageContentDetail[] {
+  if (!annotations) return [];
   const content: MessageContentDetail[] = [];
   annotations.forEach((annotation: JSONValue) => {
     const { type, data } = getValidAnnotation(annotation);
