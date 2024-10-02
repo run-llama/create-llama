@@ -106,6 +106,7 @@ export default function ChatInput(
       )}
       <div className="flex w-full items-start justify-between gap-4 ">
         <Textarea
+          id="chat-input"
           autoFocus
           name="message"
           placeholder="Type a message"

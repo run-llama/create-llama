@@ -36,13 +36,35 @@ export function Artifact({
   version?: number;
 }) {
   const [result, setResult] = useState<ArtifactResult | null>(null);
+  const [sandboxCreationError, setSandboxCreationError] = useState<string>();
+  const [sandboxCreating, setSandboxCreating] = useState(false);
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleClosePanel = () => {
+    // reset the main div width
+    const mainDiv = document.querySelector("main");
+    mainDiv?.classList.remove("w-[55vw]");
+    mainDiv?.classList.remove("px-8");
+    mainDiv?.classList.add("w-screen");
+
+    // hide all current artifact panel
+    const artifactPanels = document.querySelectorAll(".artifact-panel");
+    artifactPanels.forEach((panel) => {
+      panel.classList.add("hidden");
+    });
+  };
 
   useEffect(() => {
     if (!result) {
       fetchArtifactResult();
     }
+
+    const chatInput = document.getElementById("chat-input");
+    console.log({ chatInput });
+    chatInput?.addEventListener("click", () => {
+      handleClosePanel();
+    });
   }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!artifact || version === undefined) return null;
@@ -72,6 +94,7 @@ export function Artifact({
   };
 
   const fetchArtifactResult = async () => {
+    setSandboxCreating(true);
     try {
       const response = await fetch("/api/sandbox", {
         method: "POST",
@@ -91,8 +114,13 @@ export function Artifact({
       setResult(fetchedResult);
     } catch (error) {
       console.error("Error fetching artifact result:", error);
-      // Handle error (e.g., show error message to user)
+      setSandboxCreationError(
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred when executing code",
+      );
     }
+    setSandboxCreating(false);
   };
 
   return (
@@ -118,16 +146,26 @@ export function Artifact({
           className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel animate-slideIn"
           ref={panelRef}
         >
-          {result ? (
+          {sandboxCreating && (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          )}
+          {sandboxCreationError && (
+            <div className="p-4 bg-red-100 text-red-800 rounded-md m-4">
+              <h3 className="font-bold mb-2 mt-0">
+                Error when creating Sandbox:
+              </h3>
+              <p className="font-semibold">{sandboxCreationError}</p>
+            </div>
+          )}
+          {result && (
             <ArtifactOutput
               artifact={artifact}
               result={result}
               version={version}
+              handleClosePanel={handleClosePanel}
             />
-          ) : (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
           )}
         </div>
       )}
@@ -139,30 +177,18 @@ function ArtifactOutput({
   artifact,
   result,
   version,
+  handleClosePanel,
   detail = true,
 }: {
   artifact: CodeArtifact;
   result: ArtifactResult;
   version: number;
+  handleClosePanel: () => void;
   detail?: boolean;
 }) {
   const fileExtension = artifact.file_path.split(".").pop();
   const markdownCode = `\`\`\`${fileExtension}\n${artifact.code}\n\`\`\``;
-  const { url: sandboxUrl, outputUrls, stderr, stdout, runtimeError } = result;
-
-  const handleClosePanel = () => {
-    // reset the main div width
-    const mainDiv = document.querySelector("main");
-    mainDiv?.classList.remove("w-[55vw]");
-    mainDiv?.classList.remove("px-8");
-    mainDiv?.classList.add("w-screen");
-
-    // hide all current artifact panel
-    const artifactPanels = document.querySelectorAll(".artifact-panel");
-    artifactPanels.forEach((panel) => {
-      panel.classList.add("hidden");
-    });
-  };
+  const { url: sandboxUrl, outputUrls, runtimeError, stderr, stdout } = result;
 
   if (!detail) {
     return (
@@ -198,10 +224,9 @@ function ArtifactOutput({
         <Button onClick={handleClosePanel}>Close</Button>
       </div>
       <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px] mx-auto">
+        <TabsList className="grid grid-cols-2 max-w-[400px] mx-auto">
           <TabsTrigger value="code">Code</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         <TabsContent value="code" className="h-[80%] mb-4 overflow-auto">
           <div className="m-4 overflow-auto">
@@ -210,7 +235,7 @@ function ArtifactOutput({
         </TabsContent>
         <TabsContent value="preview" className="h-[80%] mb-4 overflow-auto">
           {runtimeError && (
-            <div className="p-4 bg-red-100 text-red-800 rounded-md">
+            <div className="p-4 bg-red-100 text-red-800 rounded-md mt-2">
               <p className="font-bold mb-2">{runtimeError.name}</p>
               <p className="mb-2">{runtimeError.value}</p>
               {runtimeError.tracebackRaw.map((trace, index) => (
@@ -220,11 +245,13 @@ function ArtifactOutput({
               ))}
             </div>
           )}
+          {(stdout || stderr) && (
+            <div className="mt-4">
+              <ArtifactLogs stderr={stderr} stdout={stdout} />
+            </div>
+          )}
           {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
           {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
-        </TabsContent>
-        <TabsContent value="logs" className="h-[80%] mb-4 overflow-auto">
-          <ArtifactLogs stderr={stderr} stdout={stdout} />
         </TabsContent>
       </Tabs>
     </>
@@ -292,22 +319,20 @@ function ArtifactLogs({
   stderr?: string[];
   stdout?: string[];
 }) {
-  if (!stderr?.length && !stdout?.length) {
-    return <div className="text-center mt-10">No logs returned</div>;
-  }
+  if (!stderr?.length && !stdout?.length) return null;
 
   return (
-    <div className="flex flex-col gap-4 text-sm">
-      {stderr && stderr.length > 0 && (
-        <div>
-          <h3>Stderr</h3>
-          <ArtifactLogItems logs={stderr} />
+    <div className="flex flex-col gap-4">
+      {stdout && stdout.length > 0 && (
+        <div className="p-4 bg-green-100 text-green-800 rounded-md">
+          <h3 className="font-bold mb-2 mt-0">Output log:</h3>
+          <ArtifactLogItems logs={stdout} />
         </div>
       )}
-      {stdout && stdout.length > 0 && (
-        <div>
-          <h3>Stdout</h3>
-          <ArtifactLogItems logs={stdout} />
+      {stderr && stderr.length > 0 && (
+        <div className="p-4 bg-red-100 text-red-800 rounded-md">
+          <h3 className="font-bold mb-2 mt-0">Error log:</h3>
+          <ArtifactLogItems logs={stderr} />
         </div>
       )}
     </div>
@@ -316,10 +341,10 @@ function ArtifactLogs({
 
 function ArtifactLogItems({ logs }: { logs: string[] }) {
   return (
-    <ul className="flex flex-col gap-2 border border-gray-200 rounded-md p-4">
-      {logs.map((log) => (
-        <li key={log}>
-          <code>{log}</code>
+    <ul className="flex flex-col gap-2">
+      {logs.map((log, index) => (
+        <li key={index}>
+          <pre className="whitespace-pre-wrap text-sm">{log}</pre>
         </li>
       ))}
     </ul>
