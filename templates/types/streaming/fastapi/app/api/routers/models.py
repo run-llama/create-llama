@@ -124,7 +124,7 @@ class ChatData(BaseModel):
                 break
         return message_content
 
-    def _get_agent_messages(self, max_messages: int = 5) -> List[str]:
+    def _get_agent_messages(self, max_messages: int = 10) -> List[str]:
         """
         Construct agent messages from the annotations in the chat messages
         """
@@ -139,12 +139,11 @@ class ChatData(BaseModel):
                         annotation.data, AgentAnnotation
                     ):
                         text = annotation.data.text
-                        if not text.startswith("Finished task"):
-                            agent_messages.append(
-                                f"\nAgent: {annotation.data.agent}\nsaid: {text}\n"
-                            )
-                            if len(agent_messages) >= max_messages:
-                                break
+                        agent_messages.append(
+                            f"\nAgent: {annotation.data.agent}\nsaid: {text}\n"
+                        )
+                        if len(agent_messages) >= max_messages:
+                            break
         return agent_messages
 
     def get_history_messages(

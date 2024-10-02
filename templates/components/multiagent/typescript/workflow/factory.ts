@@ -36,10 +36,7 @@ const prepareChatHistory = (chatHistory: ChatMessage[]) => {
   const agentAnnotations = chatHistory
     .filter((msg) => msg.role === "assistant")
     .flatMap((msg) => msg.annotations || [])
-    .filter(
-      (annotation) =>
-        annotation.type === "agent" && annotation.data.text !== "Finished task",
-    )
+    .filter((annotation) => annotation.type === "agent")
     .slice(-MAX_AGENT_MESSAGES);
 
   const agentMessages = agentAnnotations
