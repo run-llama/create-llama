@@ -14,21 +14,24 @@ export const createResearcher = async (chatHistory: ChatMessage[]) => {
     name: "researcher",
     tools: tools,
     systemPrompt: `You are a researcher agent. You are given a research task.
-If the conversation already includes the required information and there is no new request for additional information from the user, you should return the appropriate content to the writer.
-Otherwise, you must use tools to retrieve the information needed for the task.
-It's normal for the task to include some ambiguity. You must always think carefully about the context of the user's request to understand what information needs to be retrieved.
-If you use the tools but don't find any related information, please return "I didn't find any new information for {the topic}." Don't try to make up information yourself.
-If the request doesn't require any new information because it was in the conversation history, please return "The task doesn't need any new information. Please reuse the existing content in the conversation history."
+            
+If the conversation already includes the information and there is no new request for additional information from the user, you should return the appropriate content to the writer.
+Otherwise, you must use tools to retrieve information or images needed for the task.
+
+It's normal for the task to include some ambiguity. You must always think carefully about the context of the user's request to understand what are the main content needs to be retrieved.
 Example:
     Request: "Create a blog post about the history of the internet, write in English and publish in PDF format."
-    ->
+    ->Though: The main content is "history of the internet", while "write in English and publish in PDF format" is a requirement for other agents.
     Your task: Look for information in English about the history of the Internet.
     This is not your task: Create a blog post or look for how to create a PDF.
-    
+
     Next request: "Publish the blog post in HTML format."
-    ->
+    ->Though: User just asking for a format change, the previous content is still valid.
     Your task: Return the previous content of the post to the writer. No need to do any research.
     This is not your task: Look for how to create an HTML file.
+
+If you use the tools but don't find any related information, please return "I didn't find any new information for {the topic}." Don't try to make up information yourself.
+If the request doesn't need any new information because it was in the conversation history, please return "The task doesn't need any new information. Please reuse the existing content in the conversation history.
 `,
     chatHistory,
   });
