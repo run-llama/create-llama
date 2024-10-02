@@ -4,11 +4,7 @@ import {
   DocumentGenerator,
   DocumentGeneratorParams,
 } from "./document-generator";
-import {
-  DuckDuckGoImageSearchTool,
-  DuckDuckGoSearchTool,
-  DuckDuckGoToolParams,
-} from "./duckduckgo";
+import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
 import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
@@ -46,10 +42,7 @@ const toolFactory: Record<string, ToolCreator> = {
     return await openAPIActionTool.toToolFunctions();
   },
   duckduckgo: async (config: unknown) => {
-    return [
-      new DuckDuckGoSearchTool(config as DuckDuckGoToolParams),
-      new DuckDuckGoImageSearchTool(config as DuckDuckGoToolParams),
-    ];
+    return [new DuckDuckGoSearchTool(config as DuckDuckGoToolParams)];
   },
   img_gen: async (config: unknown) => {
     return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
