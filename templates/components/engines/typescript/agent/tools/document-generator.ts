@@ -4,7 +4,7 @@ import { marked } from "marked";
 import path from "node:path";
 import { saveDocument } from "../../llamaindex/documents/helper";
 
-const OUTPUT_DIR = "output/tool";
+const OUTPUT_DIR = "output/tools";
 
 type DocumentParameter = {
   originalContent: string;
