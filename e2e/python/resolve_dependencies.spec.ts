@@ -33,6 +33,7 @@ if (
   const toolOptions = [
     "wikipedia.WikipediaToolSpec",
     "google.GoogleSearchToolSpec",
+    "document_generator",
   ];
 
   const dataSources = [

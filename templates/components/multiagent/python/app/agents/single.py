@@ -5,10 +5,8 @@ from llama_index.core.llms import ChatMessage, ChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.settings import Settings
-from llama_index.core.tools import ToolOutput, ToolSelection
+from llama_index.core.tools import FunctionTool, ToolOutput, ToolSelection
 from llama_index.core.tools.types import BaseTool
-from llama_index.core.tools import FunctionTool
-
 from llama_index.core.workflow import (
     Context,
     Event,
@@ -64,14 +62,14 @@ class FunctionCallingAgent(Workflow):
         timeout: float = 360.0,
         name: str,
         write_events: bool = True,
-        role: Optional[str] = None,
+        description: str | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, verbose=verbose, timeout=timeout, **kwargs)
         self.tools = tools or []
         self.name = name
-        self.role = role
         self.write_events = write_events
+        self.description = description
 
         if llm is None:
             llm = Settings.llm

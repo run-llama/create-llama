@@ -1,5 +1,9 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
+import {
+  DocumentGenerator,
+  DocumentGeneratorParams,
+} from "./document-generator";
 import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
 import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
@@ -42,6 +46,9 @@ const toolFactory: Record<string, ToolCreator> = {
   },
   img_gen: async (config: unknown) => {
     return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
+  },
+  document_generator: async (config: unknown) => {
+    return [new DocumentGenerator(config as DocumentGeneratorParams)];
   },
 };
 

@@ -37,7 +37,7 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<ImgGeneratorParameter>> = {
 
 export class ImgGeneratorTool implements BaseTool<ImgGeneratorParameter> {
   readonly IMG_OUTPUT_FORMAT = "webp";
-  readonly IMG_OUTPUT_DIR = "output/tool";
+  readonly IMG_OUTPUT_DIR = "output/tools";
   readonly IMG_GEN_API =
     "https://api.stability.ai/v2beta/stable-image/generate/core";
 

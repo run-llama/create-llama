@@ -109,7 +109,9 @@ export async function runCreateLlama({
   if (appType) {
     commandArgs.push(appType);
   }
-  if (!useLlamaParse) {
+  if (useLlamaParse) {
+    commandArgs.push("--use-llama-parse");
+  } else {
     commandArgs.push("--no-llama-parse");
   }
 

@@ -111,6 +111,29 @@ For better results, you can specify the region parameter to get results from a s
     ],
   },
   {
+    display: "Document generator",
+    name: "document_generator",
+    supportedFrameworks: ["fastapi", "nextjs", "express"],
+    dependencies: [
+      {
+        name: "xhtml2pdf",
+        version: "^0.2.14",
+      },
+      {
+        name: "markdown",
+        version: "^3.7",
+      },
+    ],
+    type: ToolType.LOCAL,
+    envVars: [
+      {
+        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
+        description: "System prompt for document generator tool.",
+        value: `If user request for a report or a post, use document generator tool to create a file and reply with the link to the file.`,
+      },
+    ],
+  },
+  {
     display: "Code Interpreter",
     name: "interpreter",
     dependencies: [

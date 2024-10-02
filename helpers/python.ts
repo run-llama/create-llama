@@ -364,7 +364,12 @@ export const installPythonTemplate = async ({
   | "modelConfig"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
-  const templatePath = path.join(templatesDir, "types", template, framework);
+  let templatePath;
+  if (template === "extractor") {
+    templatePath = path.join(templatesDir, "types", "extractor", framework);
+  } else {
+    templatePath = path.join(templatesDir, "types", "streaming", framework);
+  }
   await copy("**", root, {
     parents: true,
     cwd: templatePath,
@@ -401,20 +406,39 @@ export const installPythonTemplate = async ({
       cwd: path.join(compPath, "services", "python"),
     });
   }
-
-  if (template === "streaming") {
-    // For the streaming template only:
+  // Copy engine code
+  if (template === "streaming" || template === "multiagent") {
     // Select and copy engine code based on data sources and tools
     let engine;
-    if (dataSources.length > 0 && (!tools || tools.length === 0)) {
-      console.log("\nNo tools selected - use optimized context chat engine\n");
-      engine = "chat";
-    } else {
+    // Multiagent always uses agent engine
+    if (template === "multiagent") {
       engine = "agent";
+    } else {
+      // For streaming, use chat engine by default
+      // Unless tools are selected, in which case use agent engine
+      if (dataSources.length > 0 && (!tools || tools.length === 0)) {
+        console.log(
+          "\nNo tools selected - use optimized context chat engine\n",
+        );
+        engine = "chat";
+      } else {
+        engine = "agent";
+      }
     }
+
+    // Copy engine code
     await copy("**", enginePath, {
       parents: true,
       cwd: path.join(compPath, "engines", "python", engine),
+    });
+  }
+
+  if (template === "multiagent") {
+    // Copy multi-agent code
+    await copy("**", path.join(root), {
+      parents: true,
+      cwd: path.join(compPath, "multiagent", "python"),
+      rename: assetRelocator,
     });
   }
 

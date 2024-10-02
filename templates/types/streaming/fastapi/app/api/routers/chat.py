@@ -1,8 +1,8 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from llama_index.core.chat_engine.types import BaseChatEngine, NodeWithScore
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from llama_index.core.chat_engine.types import NodeWithScore
 from llama_index.core.llms import MessageRole
 
 from app.api.routers.events import EventCallbackHandler
@@ -58,10 +58,18 @@ async def chat(
 @r.post("/request")
 async def chat_request(
     data: ChatData,
-    chat_engine: BaseChatEngine = Depends(get_chat_engine),
 ) -> Result:
     last_message_content = data.get_last_message_content()
     messages = data.get_history_messages()
+
+    doc_ids = data.get_chat_document_ids()
+    filters = generate_filters(doc_ids)
+    params = data.data or {}
+    logger.info(
+        f"Creating chat engine with filters: {str(filters)}",
+    )
+
+    chat_engine = get_chat_engine(filters=filters, params=params)
 
     response = await chat_engine.achat(last_message_content, messages)
     return Result(

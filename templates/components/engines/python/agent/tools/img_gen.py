@@ -1,10 +1,11 @@
+import logging
 import os
 import uuid
-import logging
-import requests
 from typing import Optional
-from pydantic import BaseModel, Field
+
+import requests
 from llama_index.core.tools import FunctionTool
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class ImageGeneratorToolOutput(BaseModel):
 
 class ImageGeneratorTool:
     _IMG_OUTPUT_FORMAT = "webp"
-    _IMG_OUTPUT_DIR = "output/tool"
+    _IMG_OUTPUT_DIR = "output/tools"
     _IMG_GEN_API = "https://api.stability.ai/v2beta/stable-image/generate/core"
 
     def __init__(self, api_key: str = None):
