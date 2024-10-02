@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Code, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
 import {
   Collapsible,
@@ -48,11 +48,10 @@ export function Artifact({
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const handleOpenOutput = async () => {
+  const handleToggleOutputPanel = async () => {
     setOpenOutputPanel(true);
     openPanel();
     panelRef.current?.classList.remove("hidden");
-    if (!result) await fetchArtifactResult();
   };
 
   const fetchArtifactResult = async () => {
@@ -86,12 +85,18 @@ export function Artifact({
     }
   };
 
+  useEffect(() => {
+    // auto trigger code execution
+    !result && fetchArtifactResult();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!artifact || version === undefined) return null;
 
   return (
     <div>
       <div
-        onClick={handleOpenOutput}
+        onClick={handleToggleOutputPanel}
         className={cn(
           buttonVariants({ variant: "outline" }),
           "h-auto cursor-pointer px-6 py-3 w-full flex gap-4 items-center justify-start border border-gray-200 rounded-md",
@@ -343,6 +348,8 @@ function closePanel() {
   });
 }
 
-document.getElementById("chat-input")?.addEventListener("click", () => {
-  closePanel();
-});
+if (typeof window !== "undefined") {
+  document?.getElementById("chat-input")?.addEventListener("click", () => {
+    closePanel();
+  });
+}
