@@ -438,6 +438,7 @@ export const installPythonTemplate = async ({
     await copy("**", path.join(root), {
       parents: true,
       cwd: path.join(compPath, "multiagent", "python"),
+      rename: assetRelocator,
     });
   }
 
