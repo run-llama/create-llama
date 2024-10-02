@@ -19,8 +19,20 @@ import {
   Result,
   Sandbox,
 } from "@e2b/code-interpreter";
-import { CodeArtifact } from "../chat/engine/tools/code-generator";
 import { saveDocument } from "../chat/llamaindex/documents/helper";
+
+type CodeArtifact = {
+  commentary: string;
+  template: string;
+  title: string;
+  description: string;
+  additional_dependencies: string[];
+  has_additional_dependencies: boolean;
+  install_dependencies_command: string;
+  port: number | null;
+  file_path: string;
+  code: string;
+};
 
 const sandboxTimeout = 10 * 60 * 1000; // 10 minute in ms
 
