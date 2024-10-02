@@ -1,5 +1,7 @@
 from textwrap import dedent
 from typing import AsyncGenerator, List, Optional
+from llama_index.core.settings import Settings
+from llama_index.core.prompts import PromptTemplate
 
 from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 from app.examples.publisher import create_publisher
@@ -25,7 +27,8 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
     writer = FunctionCallingAgent(
         name="writer",
         description="expert in writing blog posts, need information and images to write a post.",
-        system_prompt=dedent("""
+        system_prompt=dedent(
+            """
             You are an expert in writing blog posts.
             You are given the task of writing a blog post based on research content provided by the researcher agent. Do not invent any information yourself. 
             It's important to read the entire conversation history to write the blog post accurately.
@@ -40,13 +43,15 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
                 -> Your task: Use the research content {...} to write a blog post in English.
                 -> This is not your task: Create a PDF
                 Please note that a localhost link is acceptable, but dummy links like "example.com" or "your-website.com" are not valid.
-        """),
+        """
+        ),
         chat_history=chat_history,
     )
     reviewer = FunctionCallingAgent(
         name="reviewer",
         description="expert in reviewing blog posts, needs a written blog post to review.",
-        system_prompt=dedent("""
+        system_prompt=dedent(
+            """
             You are an expert in reviewing blog posts.
             You are given a task to review a blog post. As a reviewer, it's important that your review aligns with the user's request. Please focus on the user's request when reviewing the post.
             Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement.
@@ -58,10 +63,13 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
                 Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
                 -> Your task: Review whether the main content of the post is about the history of the internet and if it is written in English.
                 -> This is not your task: Create blog post, create PDF, write in English.
-        """),
+        """
+        ),
         chat_history=chat_history,
     )
-    workflow = BlogPostWorkflow(timeout=360)
+    workflow = BlogPostWorkflow(
+        timeout=360, chat_history=chat_history
+    )  # Pass chat_history here
     workflow.add_workflows(
         researcher=researcher,
         writer=writer,
@@ -89,14 +97,52 @@ class PublishEvent(Event):
 
 
 class BlogPostWorkflow(Workflow):
+    def __init__(
+        self, timeout: int = 360, chat_history: Optional[List[ChatMessage]] = None
+    ):
+        super().__init__(timeout=timeout)
+        self.chat_history = chat_history or []
+
     @step()
-    async def start(self, ctx: Context, ev: StartEvent) -> ResearchEvent:
+    async def start(self, ctx: Context, ev: StartEvent) -> ResearchEvent | PublishEvent:
         # set streaming
         ctx.data["streaming"] = getattr(ev, "streaming", False)
         # start the workflow with researching about a topic
         ctx.data["task"] = ev.input
         ctx.data["user_input"] = ev.input
-        return ResearchEvent(input=f"Research for this task: {ev.input}")
+
+        # Decision-making process
+        decision = await self._decide_workflow(ev.input, self.chat_history)
+
+        if decision != "publish":
+            return ResearchEvent(input=f"Research for this task: {ev.input}")
+        else:
+            chat_history_str = "\n".join(
+                [f"{msg.role}: {msg.content}" for msg in self.chat_history]
+            )
+            return PublishEvent(
+                input=f"Please publish content based on the chat history\n{chat_history_str}\n\n and task: {ev.input}"
+            )
+
+    async def _decide_workflow(
+        self, input: str, chat_history: List[ChatMessage]
+    ) -> str:
+        prompt_template = PromptTemplate(
+            "Given the following chat history and new task, decide whether to publish based on existing information.\n"
+            "Chat history:\n{chat_history}\n"
+            "New task: {input}\n"
+            "Decision (respond with either 'not_publish' or 'publish'):"
+        )
+
+        chat_history_str = "\n".join(
+            [f"{msg.role}: {msg.content}" for msg in chat_history]
+        )
+        prompt = prompt_template.format(chat_history=chat_history_str, input=input)
+
+        output = await Settings.llm.acomplete(prompt)
+        decision = output.text.strip().lower()
+
+        return "publish" if decision == "publish" else "research"
 
     @step()
     async def research(
@@ -111,7 +157,7 @@ class BlogPostWorkflow(Workflow):
     @step()
     async def write(
         self, ctx: Context, ev: WriteEvent, writer: FunctionCallingAgent
-    ) -> ReviewEvent | PublishEvent:
+    ) -> ReviewEvent | StopEvent:
         MAX_ATTEMPTS = 2
         ctx.data["attempts"] = ctx.data.get("attempts", 0) + 1
         too_many_attempts = ctx.data["attempts"] > MAX_ATTEMPTS
@@ -124,9 +170,10 @@ class BlogPostWorkflow(Workflow):
             )
         if ev.is_good or too_many_attempts:
             # too many attempts or the blog post is good - stream final response if requested
-            return PublishEvent(
-                input=f"Please publish this content: ```{ctx.data['result'].response.message.content}```. The user request was: ```{ctx.data['user_input']}```",
+            result = await self.run_agent(
+                ctx, writer, ev.input, streaming=ctx.data["streaming"]
             )
+            return StopEvent(result=result)
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
         ctx.data["result"] = result
         return ReviewEvent(input=result.response.message.content)
