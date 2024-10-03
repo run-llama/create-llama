@@ -8,7 +8,7 @@ from app.agents.single import (
 )
 from llama_index.core.tools.types import ToolMetadata, ToolOutput
 from llama_index.core.tools.utils import create_schema_from_function
-from llama_index.core.workflow import Context, Workflow
+from llama_index.core.workflow import Context, StopEvent, Workflow
 
 
 class AgentCallTool(ContextAwareTool):
@@ -25,7 +25,11 @@ class AgentCallTool(ContextAwareTool):
             name=name,
             description=(
                 f"Use this tool to delegate a sub task to the {agent.name} agent."
-                + (f" The agent is an {agent.role}." if agent.role else "")
+                + (
+                    f" The agent is an {agent.description}."
+                    if agent.description
+                    else ""
+                )
             ),
             fn_schema=fn_schema,
         )
@@ -35,7 +39,8 @@ class AgentCallTool(ContextAwareTool):
         handler = self.agent.run(input=input)
         # bubble all events while running the agent to the calling agent
         async for ev in handler.stream_events():
-            ctx.write_event_to_stream(ev)
+            if type(ev) is not StopEvent:
+                ctx.write_event_to_stream(ev)
         ret: AgentRunResult = await handler
         response = ret.response.message.content
         return ToolOutput(

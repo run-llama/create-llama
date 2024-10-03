@@ -141,12 +141,10 @@ export const getDataSourceChoices = (
     });
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
-    if (template !== "multiagent") {
-      choices.push({
-        title: "No datasource",
-        value: "none",
-      });
-    }
+    choices.push({
+      title: "No datasource",
+      value: "none",
+    });
     choices.push({
       title:
         process.platform !== "linux"
@@ -734,8 +732,10 @@ export const askQuestions = async (
     }
   }
 
-  if (!program.tools && program.template === "streaming") {
-    // TODO: allow to select tools also for multi-agent framework
+  if (
+    !program.tools &&
+    (program.template === "streaming" || program.template === "multiagent")
+  ) {
     if (ciInfo.isCI) {
       program.tools = getPrefOrDefault("tools");
     } else {

@@ -9,7 +9,7 @@ from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.settings import Settings
 
 
-def get_chat_engine(filters=None, params=None, event_handlers=None):
+def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     citation_prompt = os.getenv("SYSTEM_CITATION_PROMPT", None)
     top_k = int(os.getenv("TOP_K", 0))

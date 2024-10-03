@@ -157,7 +157,10 @@ export const installTSTemplate = async ({
   // Select and copy engine code based on data sources and tools
   let engine;
   tools = tools ?? [];
-  if (dataSources.length > 0 && tools.length === 0) {
+  // multiagent template always uses agent engine
+  if (template === "multiagent") {
+    engine = "agent";
+  } else if (dataSources.length > 0 && tools.length === 0) {
     console.log("\nNo tools selected - use optimized context chat engine\n");
     engine = "chat";
   } else {

@@ -1,8 +1,9 @@
-import os
-import yaml
 import importlib
-from llama_index.core.tools.tool_spec.base import BaseToolSpec
+import os
+
+import yaml
 from llama_index.core.tools.function_tool import FunctionTool
+from llama_index.core.tools.tool_spec.base import BaseToolSpec
 
 
 class ToolType:
@@ -40,14 +41,26 @@ class ToolFactory:
             raise ValueError(f"Failed to load tool {tool_name}: {e}")
 
     @staticmethod
-    def from_env() -> list[FunctionTool]:
-        tools = []
+    def from_env(
+        map_result: bool = False,
+    ) -> list[FunctionTool] | dict[str, FunctionTool]:
+        """
+        Load tools from the configured file.
+        Params:
+            - use_map: if True, return map of tool name and the tool itself
+        """
+        if map_result:
+            tools = {}
+        else:
+            tools = []
         if os.path.exists("config/tools.yaml"):
             with open("config/tools.yaml", "r") as f:
                 tool_configs = yaml.safe_load(f)
                 for tool_type, config_entries in tool_configs.items():
                     for tool_name, config in config_entries.items():
-                        tools.extend(
-                            ToolFactory.load_tools(tool_type, tool_name, config)
-                        )
+                        tool = ToolFactory.load_tools(tool_type, tool_name, config)
+                        if map_result:
+                            tools[tool_name] = tool
+                        else:
+                            tools.extend(tool)
         return tools

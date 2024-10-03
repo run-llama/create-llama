@@ -50,9 +50,14 @@ class AnnotationFileData(BaseModel):
         alias_generator = to_camel
 
 
+class AgentAnnotation(BaseModel):
+    agent: str
+    text: str
+
+
 class Annotation(BaseModel):
     type: str
-    data: AnnotationFileData | List[str]
+    data: AnnotationFileData | List[str] | AgentAnnotation
 
     def to_content(self) -> str | None:
         if self.type == "document_file":
@@ -119,14 +124,48 @@ class ChatData(BaseModel):
                 break
         return message_content
 
-    def get_history_messages(self) -> List[ChatMessage]:
+    def _get_agent_messages(self, max_messages: int = 10) -> List[str]:
+        """
+        Construct agent messages from the annotations in the chat messages
+        """
+        agent_messages = []
+        for message in self.messages:
+            if (
+                message.role == MessageRole.ASSISTANT
+                and message.annotations is not None
+            ):
+                for annotation in message.annotations:
+                    if annotation.type == "agent" and isinstance(
+                        annotation.data, AgentAnnotation
+                    ):
+                        text = annotation.data.text
+                        agent_messages.append(
+                            f"\nAgent: {annotation.data.agent}\nsaid: {text}\n"
+                        )
+                        if len(agent_messages) >= max_messages:
+                            break
+        return agent_messages
+
+    def get_history_messages(
+        self, include_agent_messages: bool = False
+    ) -> List[ChatMessage]:
         """
         Get the history messages
         """
-        return [
+        chat_messages = [
             ChatMessage(role=message.role, content=message.content)
             for message in self.messages[:-1]
         ]
+        if include_agent_messages:
+            agent_messages = self._get_agent_messages(max_messages=5)
+            if len(agent_messages) > 0:
+                message = ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="Previous agent events: \n" + "\n".join(agent_messages),
+                )
+                chat_messages.append(message)
+
+        return chat_messages
 
     def is_last_message_from_user(self) -> bool:
         return self.messages[-1].role == MessageRole.USER

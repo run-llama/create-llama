@@ -1,13 +1,13 @@
-import os
-import logging
 import base64
+import logging
+import os
 import uuid
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-from llama_index.core.tools import FunctionTool
+from typing import Dict, List, Optional
+
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
-
+from llama_index.core.tools import FunctionTool
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class E2BToolOutput(BaseModel):
 
 
 class E2BCodeInterpreter:
-    output_dir = "output/tool"
+    output_dir = "output/tools"
 
     def __init__(self, api_key: str = None):
         if api_key is None:

@@ -426,34 +426,35 @@ const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
 const getSystemPromptEnv = (
   tools?: Tool[],
   dataSources?: TemplateDataSource[],
-  framework?: TemplateFramework,
+  template?: TemplateType,
 ): EnvVar[] => {
   const defaultSystemPrompt =
     "You are a helpful assistant who helps users with their questions.";
 
+  const systemPromptEnv: EnvVar[] = [];
   // build tool system prompt by merging all tool system prompts
-  let toolSystemPrompt = "";
-  tools?.forEach((tool) => {
-    const toolSystemPromptEnv = tool.envVars?.find(
-      (env) => env.name === TOOL_SYSTEM_PROMPT_ENV_VAR,
-    );
-    if (toolSystemPromptEnv) {
-      toolSystemPrompt += toolSystemPromptEnv.value + "\n";
-    }
-  });
+  // multiagent template doesn't need system prompt
+  if (template !== "multiagent") {
+    let toolSystemPrompt = "";
+    tools?.forEach((tool) => {
+      const toolSystemPromptEnv = tool.envVars?.find(
+        (env) => env.name === TOOL_SYSTEM_PROMPT_ENV_VAR,
+      );
+      if (toolSystemPromptEnv) {
+        toolSystemPrompt += toolSystemPromptEnv.value + "\n";
+      }
+    });
 
-  const systemPrompt = toolSystemPrompt
-    ? `\"${toolSystemPrompt}\"`
-    : defaultSystemPrompt;
+    const systemPrompt = toolSystemPrompt
+      ? `\"${toolSystemPrompt}\"`
+      : defaultSystemPrompt;
 
-  const systemPromptEnv = [
-    {
+    systemPromptEnv.push({
       name: "SYSTEM_PROMPT",
       description: "The system prompt for the AI model.",
       value: systemPrompt,
-    },
-  ];
-
+    });
+  }
   if (tools?.length == 0 && (dataSources?.length ?? 0 > 0)) {
     const citationPrompt = `'You have provided information from a knowledge base that has been passed to you in nodes of information.
 Each node has useful metadata such as node ID, file name, page, etc.
@@ -559,7 +560,7 @@ export const createBackendEnvFile = async (
     ...getToolEnvs(opts.tools),
     ...getTemplateEnvs(opts.template),
     ...getObservabilityEnvs(opts.observability),
-    ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.framework),
+    ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.template),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);
