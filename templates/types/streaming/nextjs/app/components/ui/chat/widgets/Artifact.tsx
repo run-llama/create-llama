@@ -234,11 +234,19 @@ function RunTimeError({
 
 function CodeSandboxPreview({ url }: { url: string }) {
   const [loading, setLoading] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (!loading && iframeRef.current) {
+      iframeRef.current.focus();
+    }
+  }, [loading]);
 
   return (
     <>
       <iframe
         key={url}
+        ref={iframeRef}
         className="h-full w-full"
         sandbox="allow-forms allow-scripts allow-same-origin"
         loading="lazy"
@@ -365,11 +373,5 @@ function closePanel() {
   const artifactPanels = document.querySelectorAll(".artifact-panel");
   artifactPanels.forEach((panel) => {
     panel.classList.add("hidden");
-  });
-}
-
-if (typeof window !== "undefined") {
-  document?.getElementById("chat-input")?.addEventListener("click", () => {
-    closePanel();
   });
 }

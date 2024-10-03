@@ -92,7 +92,6 @@ function retrieveLatestArtifact(messages: Message[]): MessageContentDetail[] {
     ) {
       const toolOutput = data.toolOutput as { output?: { code?: string } };
       if (toolOutput.output?.code) {
-        console.log("latestArtifact", toolOutput.output?.code);
         return [
           {
             type: "text",
