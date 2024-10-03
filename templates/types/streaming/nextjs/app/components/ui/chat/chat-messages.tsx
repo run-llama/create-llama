@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ToolData } from ".";
 import { Button } from "../button";
 import ChatActions from "./chat-actions";
 import ChatMessage from "./chat-message";
@@ -55,6 +56,29 @@ export default function ChatMessages(
     }
   }, [starterQuestions, backend]);
 
+  // build a map of message id to artifact version
+  const artifactVersionMap = useMemo(() => {
+    const map = new Map<string, number | undefined>();
+    let versionIndex = 1;
+    props.messages.forEach((m) => {
+      m.annotations?.forEach((annotation) => {
+        if (
+          typeof annotation === "object" &&
+          annotation != null &&
+          "type" in annotation &&
+          annotation.type === "tools"
+        ) {
+          const data = annotation.data as ToolData;
+          if (data?.toolCall?.name === "artifact") {
+            map.set(m.id, versionIndex);
+            versionIndex++;
+          }
+        }
+      });
+    });
+    return map;
+  }, [props.messages]);
+
   return (
     <div
       className="flex-1 w-full rounded-xl bg-white p-4 shadow-xl relative overflow-y-auto"
@@ -70,6 +94,7 @@ export default function ChatMessages(
               isLoading={isLoadingMessage}
               append={props.append!}
               isLastMessage={i === messageLength - 1}
+              artifactVersion={artifactVersionMap.get(m.id)}
             />
           );
         })}

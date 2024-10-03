@@ -1,17 +1,15 @@
 import { initObservability } from "@/app/observability";
-import { JSONValue, LlamaIndexAdapter, Message, StreamData } from "ai";
+import { LlamaIndexAdapter, Message, StreamData } from "ai";
 import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
 import {
-  convertMessageContent,
+  isValidMessages,
   retrieveDocumentIds,
+  retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
-import {
-  createCallbackManager,
-  createStreamTimeout,
-} from "./llamaindex/streaming/events";
+import { createCallbackManager } from "./llamaindex/streaming/events";
 import { generateNextQuestions } from "./llamaindex/streaming/suggestion";
 
 initObservability();
@@ -23,13 +21,11 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   // Init Vercel AI StreamData and timeout
   const vercelStreamData = new StreamData();
-  const streamTimeout = createStreamTimeout(vercelStreamData);
 
   try {
     const body = await request.json();
     const { messages, data }: { messages: Message[]; data?: any } = body;
-    const userMessage = messages.pop();
-    if (!messages || !userMessage || userMessage.role !== "user") {
+    if (!isValidMessages(messages)) {
       return NextResponse.json(
         {
           error:
@@ -39,33 +35,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let annotations = userMessage.annotations;
-    if (!annotations) {
-      // the user didn't send any new annotations with the last message
-      // so use the annotations from the last user message that has annotations
-      // REASON: GPT4 doesn't consider MessageContentDetail from previous messages, only strings
-      annotations = messages
-        .slice()
-        .reverse()
-        .find(
-          (message) => message.role === "user" && message.annotations,
-        )?.annotations;
-    }
-
-    // retrieve document Ids from the annotations of all messages (if any) and create chat engine with index
-    const allAnnotations: JSONValue[] = [...messages, userMessage].flatMap(
-      (message) => {
-        return message.annotations ?? [];
-      },
-    );
-    const ids = retrieveDocumentIds(allAnnotations);
+    // retrieve document ids from the annotations of all messages (if any)
+    const ids = retrieveDocumentIds(messages);
+    // create chat engine with index using the document ids
     const chatEngine = await createChatEngine(ids, data);
 
-    // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
-    const userMessageContent = convertMessageContent(
-      userMessage.content,
-      annotations,
-    );
+    // retrieve user message content from Vercel/AI format
+    const userMessageContent = retrieveMessageContent(messages);
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
@@ -110,7 +86,5 @@ export async function POST(request: NextRequest) {
         status: 500,
       },
     );
-  } finally {
-    clearTimeout(streamTimeout);
   }
 }

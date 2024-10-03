@@ -1,5 +1,6 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
+import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
 import {
   DocumentGenerator,
   DocumentGeneratorParams,
@@ -46,6 +47,9 @@ const toolFactory: Record<string, ToolCreator> = {
   },
   img_gen: async (config: unknown) => {
     return [new ImgGeneratorTool(config as ImgGeneratorToolParams)];
+  },
+  artifact: async (config: unknown) => {
+    return [new CodeGeneratorTool(config as CodeGeneratorToolParams)];
   },
   document_generator: async (config: unknown) => {
     return [new DocumentGenerator(config as DocumentGeneratorParams)];

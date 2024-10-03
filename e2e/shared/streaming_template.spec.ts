@@ -72,7 +72,7 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
   }) => {
     test.skip(templatePostInstallAction !== "runApp");
     await page.goto(`http://localhost:${port}`);
-    await page.fill("form input", userMessage);
+    await page.fill("form textarea", userMessage);
     const [response] = await Promise.all([
       page.waitForResponse(
         (res) => {

@@ -37,11 +37,13 @@ function ChatMessageContent({
   isLoading,
   append,
   isLastMessage,
+  artifactVersion,
 }: {
   message: Message;
   isLoading: boolean;
   append: Pick<ChatHandler, "append">["append"];
   isLastMessage: boolean;
+  artifactVersion: number | undefined;
 }) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
@@ -104,7 +106,9 @@ function ChatMessageContent({
     },
     {
       order: -1,
-      component: toolData[0] ? <ChatTools data={toolData[0]} /> : null,
+      component: toolData[0] ? (
+        <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />
+      ) : null,
     },
     {
       order: 0,
@@ -142,11 +146,13 @@ export default function ChatMessage({
   isLoading,
   append,
   isLastMessage,
+  artifactVersion,
 }: {
   chatMessage: Message;
   isLoading: boolean;
   append: Pick<ChatHandler, "append">["append"];
   isLastMessage: boolean;
+  artifactVersion: number | undefined;
 }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   return (
@@ -158,6 +164,7 @@ export default function ChatMessage({
           isLoading={isLoading}
           append={append}
           isLastMessage={isLastMessage}
+          artifactVersion={artifactVersion}
         />
         <Button
           onClick={() => copyToClipboard(chatMessage.content)}

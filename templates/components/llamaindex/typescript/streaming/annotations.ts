@@ -1,4 +1,4 @@
-import { JSONValue } from "ai";
+import { JSONValue, Message } from "ai";
 import { MessageContent, MessageContentDetail } from "llamaindex";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
@@ -21,13 +21,20 @@ type Annotation = {
   data: object;
 };
 
-export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
-  if (!annotations) return [];
+export function isValidMessages(messages: Message[]): boolean {
+  const lastMessage =
+    messages && messages.length > 0 ? messages[messages.length - 1] : null;
+  return lastMessage !== null && lastMessage.role === "user";
+}
+
+export function retrieveDocumentIds(messages: Message[]): string[] {
+  // retrieve document Ids from the annotations of all messages (if any)
+  const annotations = getAllAnnotations(messages);
+  if (annotations.length === 0) return [];
 
   const ids: string[] = [];
 
-  for (const annotation of annotations) {
-    const { type, data } = getValidAnnotation(annotation);
+  for (const { type, data } of annotations) {
     if (
       type === "document_file" &&
       "files" in data &&
@@ -37,9 +44,7 @@ export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
       for (const file of files) {
         if (Array.isArray(file.content.value)) {
           // it's an array, so it's an array of doc IDs
-          for (const id of file.content.value) {
-            ids.push(id);
-          }
+          ids.push(...file.content.value);
         }
       }
     }
@@ -48,24 +53,69 @@ export function retrieveDocumentIds(annotations?: JSONValue[]): string[] {
   return ids;
 }
 
-export function convertMessageContent(
-  content: string,
-  annotations?: JSONValue[],
-): MessageContent {
-  if (!annotations) return content;
+export function retrieveMessageContent(messages: Message[]): MessageContent {
+  const userMessage = messages[messages.length - 1];
   return [
     {
       type: "text",
-      text: content,
+      text: userMessage.content,
     },
-    ...convertAnnotations(annotations),
+    ...retrieveLatestArtifact(messages),
+    ...convertAnnotations(messages),
   ];
 }
 
-function convertAnnotations(annotations: JSONValue[]): MessageContentDetail[] {
+function getAllAnnotations(messages: Message[]): Annotation[] {
+  return messages.flatMap((message) =>
+    (message.annotations ?? []).map((annotation) =>
+      getValidAnnotation(annotation),
+    ),
+  );
+}
+
+// get latest artifact from annotations to append to the user message
+function retrieveLatestArtifact(messages: Message[]): MessageContentDetail[] {
+  const annotations = getAllAnnotations(messages);
+  if (annotations.length === 0) return [];
+
+  for (const { type, data } of annotations.reverse()) {
+    if (
+      type === "tools" &&
+      "toolCall" in data &&
+      "toolOutput" in data &&
+      typeof data.toolCall === "object" &&
+      typeof data.toolOutput === "object" &&
+      data.toolCall !== null &&
+      data.toolOutput !== null &&
+      "name" in data.toolCall &&
+      data.toolCall.name === "artifact"
+    ) {
+      const toolOutput = data.toolOutput as { output?: { code?: string } };
+      if (toolOutput.output?.code) {
+        return [
+          {
+            type: "text",
+            text: `The existing code is:\n\`\`\`\n${toolOutput.output.code}\n\`\`\``,
+          },
+        ];
+      }
+    }
+  }
+  return [];
+}
+
+function convertAnnotations(messages: Message[]): MessageContentDetail[] {
+  // annotations from the last user message that has annotations
+  const annotations: Annotation[] =
+    messages
+      .slice()
+      .reverse()
+      .find((message) => message.role === "user" && message.annotations)
+      ?.annotations?.map(getValidAnnotation) || [];
+  if (annotations.length === 0) return [];
+
   const content: MessageContentDetail[] = [];
-  annotations.forEach((annotation: JSONValue) => {
-    const { type, data } = getValidAnnotation(annotation);
+  annotations.forEach(({ type, data }) => {
     // convert image
     if (type === "image" && "url" in data && typeof data.url === "string") {
       content.push({

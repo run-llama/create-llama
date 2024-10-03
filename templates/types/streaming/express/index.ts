@@ -2,6 +2,7 @@
 import cors from "cors";
 import "dotenv/config";
 import express, { Express, Request, Response } from "express";
+import { sandbox } from "./src/controllers/sandbox.controller";
 import { initObservability } from "./src/observability";
 import chatRouter from "./src/routes/chat.route";
 
@@ -40,6 +41,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/chat", chatRouter);
+app.use("/api/sandbox", sandbox);
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
