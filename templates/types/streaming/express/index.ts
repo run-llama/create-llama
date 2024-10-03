@@ -4,6 +4,7 @@ import "dotenv/config";
 import express, { Express, Request, Response } from "express";
 import { initObservability } from "./src/observability";
 import chatRouter from "./src/routes/chat.route";
+import { sandbox } from "./src/controllers/sandbox.controller";
 
 const app: Express = express();
 const port = parseInt(process.env.PORT || "8000");
@@ -40,6 +41,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/chat", chatRouter);
+app.use("/api/sandbox", sandbox);
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
