@@ -49,7 +49,6 @@ export type ExecutionResult = {
 
 export async function POST(req: Request) {
   const { artifact }: { artifact: CodeArtifact } = await req.json();
-  console.log("artifact", artifact);
 
   let sbx: Sandbox | CodeInterpreter | undefined = undefined;
 

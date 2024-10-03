@@ -2,9 +2,9 @@
 import cors from "cors";
 import "dotenv/config";
 import express, { Express, Request, Response } from "express";
+import { sandbox } from "./src/controllers/sandbox.controller";
 import { initObservability } from "./src/observability";
 import chatRouter from "./src/routes/chat.route";
-import { sandbox } from "./src/controllers/sandbox.controller";
 
 const app: Express = express();
 const port = parseInt(process.env.PORT || "8000");
