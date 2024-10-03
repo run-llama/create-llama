@@ -133,10 +133,10 @@ class BlogPostWorkflow(Workflow):
                 If the user requests to write or update a blog post, respond with 'not_publish'.
 
                 Here is the chat history:
-                ${chat_history}
+                {chat_history}
 
                 The current user request is:
-                ${input}
+                {input}
 
                 Given the chat history and the new user request, decide whether to publish based on existing information.
                 Decision (respond with either 'not_publish' or 'publish'):
