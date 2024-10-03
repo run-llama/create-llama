@@ -5,7 +5,7 @@ import {
   Workflow,
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
-import { ChatMessage, ChatResponseChunk } from "llamaindex";
+import { ChatMessage, ChatResponseChunk, Settings } from "llamaindex";
 import {
   createPublisher,
   createResearcher,
@@ -82,9 +82,44 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
 
   const start = async (context: Context, ev: StartEvent) => {
     context.set("task", ev.data.input);
-    return new ResearchEvent({
-      input: `Research for this task: ${ev.data.input}`,
-    });
+
+    const chatHistoryStr = chatHistoryWithAgentMessages
+      .map((msg) => `${msg.role}: ${msg.content}`)
+      .join("\n");
+
+    // Decision-making process
+    const decision = await decideWorkflow(ev.data.input, chatHistoryStr);
+
+    if (decision !== "publish") {
+      return new ResearchEvent({
+        input: `Research for this task: ${ev.data.input}`,
+      });
+    } else {
+      return new PublishEvent({
+        input: `Publish content based on the chat history\n${chatHistoryStr}\n\n and task: ${ev.data.input}`,
+      });
+    }
+  };
+
+  const decideWorkflow = async (task: string, chatHistoryStr: string) => {
+    const llm = Settings.llm;
+
+    const prompt = `You are an expert in decision-making, helping people write and publish blog posts.
+If the user is asking for a file or to publish content, respond with 'publish'.
+If the user requests to write or update a blog post, respond with 'not_publish'.
+
+Here is the chat history:
+${chatHistoryStr}
+
+The current user request is:
+${task}
+
+Given the chat history and the new user request, decide whether to publish based on existing information.
+Decision (respond with either 'not_publish' or 'publish'):`;
+
+    const output = await llm.complete({ prompt: prompt });
+    const decision = output.text.trim().toLowerCase();
+    return decision === "publish" ? "publish" : "research";
   };
 
   const research = async (context: Context, ev: ResearchEvent) => {
@@ -100,6 +135,8 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
   };
 
   const write = async (context: Context, ev: WriteEvent) => {
+    const writer = createWriter(chatHistoryWithAgentMessages);
+
     context.set("attempts", context.get("attempts", 0) + 1);
     const tooManyAttempts = context.get("attempts") > MAX_ATTEMPTS;
     if (tooManyAttempts) {
@@ -112,12 +149,15 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
     }
 
     if (ev.data.isGood || tooManyAttempts) {
-      return new PublishEvent({
-        input: "Please help me to publish the blog post.",
+      // the blog post is good or too many attempts
+      // stream the final content
+      const result = await runAgent(context, writer, {
+        message: `Trim the review from the reviewer and return only the blog post content. Here is the content: ${ev.data.input}`,
+        streaming: true,
       });
+      return result as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
     }
 
-    const writer = createWriter(chatHistoryWithAgentMessages);
     const writeRes = await runAgent(context, writer, {
       message: ev.data.input,
     });
@@ -177,9 +217,11 @@ export const createWorkflow = (chatHistory: ChatMessage[]) => {
   };
 
   const workflow = new Workflow({ timeout: TIMEOUT, validate: true });
-  workflow.addStep(StartEvent, start, { outputs: ResearchEvent });
+  workflow.addStep(StartEvent, start, {
+    outputs: [ResearchEvent, PublishEvent],
+  });
   workflow.addStep(ResearchEvent, research, { outputs: WriteEvent });
-  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, PublishEvent] });
+  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, StopEvent] });
   workflow.addStep(ReviewEvent, review, { outputs: WriteEvent });
   workflow.addStep(PublishEvent, publish, { outputs: StopEvent });
 
