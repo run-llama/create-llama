@@ -11,6 +11,7 @@ import {
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
+import { useClientConfig } from "../hooks/use-config";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 
 // detail information to execute code
@@ -48,6 +49,7 @@ export function Artifact({
   const [sandboxCreating, setSandboxCreating] = useState(false);
   const [openOutputPanel, setOpenOutputPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const { backend } = useClientConfig();
 
   const handleOpenOutput = async () => {
     setOpenOutputPanel(true);
@@ -58,7 +60,8 @@ export function Artifact({
   const fetchArtifactResult = async () => {
     try {
       setSandboxCreating(true);
-      const response = await fetch("/api/sandbox", {
+
+      const response = await fetch(`${backend}/api/sandbox`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +74,6 @@ export function Artifact({
       }
 
       const fetchedResult = await response.json();
-      console.log("result", fetchedResult);
 
       setResult(fetchedResult);
     } catch (error) {

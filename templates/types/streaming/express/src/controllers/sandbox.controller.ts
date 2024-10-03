@@ -50,7 +50,6 @@ export type ExecutionResult = {
 
 export const sandbox = async (req: Request, res: Response) => {
   const { artifact }: { artifact: CodeArtifact } = req.body;
-  console.log("artifact", artifact);
 
   let sbx: Sandbox | CodeInterpreter | undefined = undefined;
 
