@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Code, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Code, Copy, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "../../button";
 import {
@@ -11,6 +11,7 @@ import {
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
 import Markdown from "../chat-message/markdown";
+import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 
 // detail information to execute code
 export type CodeArtifact = {
@@ -193,20 +194,39 @@ function RunTimeError({
 }: {
   runtimeError: { name: string; value: string; tracebackRaw: string[] };
 }) {
+  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 1000 });
+  const contentToCopy = `Fix this error:\n${runtimeError.name}\n${runtimeError.value}\n${runtimeError.tracebackRaw.join("\n")}`;
   return (
     <Collapsible className="bg-red-100 text-red-800 rounded-md py-2 px-4 space-y-4">
       <CollapsibleTrigger className="font-bold w-full text-start flex items-center justify-between">
         <span>Runtime Error:</span>
         <ChevronDown className="w-4 h-4" />
       </CollapsibleTrigger>
-      <CollapsibleContent className="text-sm space-y-2">
-        <p className="font-semibold">{runtimeError.name}</p>
-        <p>{runtimeError.value}</p>
-        {runtimeError.tracebackRaw.map((trace, index) => (
-          <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
-            {trace}
-          </pre>
-        ))}
+      <CollapsibleContent className="text-sm flex gap-2">
+        <div className="flex flex-col gap-2">
+          <p className="font-semibold">{runtimeError.name}</p>
+          <p>{runtimeError.value}</p>
+          {runtimeError.tracebackRaw.map((trace, index) => (
+            <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
+              {trace}
+            </pre>
+          ))}
+        </div>
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            copyToClipboard(contentToCopy);
+          }}
+          size="icon"
+          variant="ghost"
+          className="h-12 w-12 shrink-0"
+        >
+          {isCopied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
       </CollapsibleContent>
     </Collapsible>
   );
