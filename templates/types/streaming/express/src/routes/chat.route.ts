@@ -7,6 +7,7 @@ import { chatRequest } from "../controllers/chat-request.controller";
 import { chatUpload } from "../controllers/chat-upload.controller";
 import { chat } from "../controllers/chat.controller";
 import { initSettings } from "../controllers/engine/settings";
+import { sandbox } from "../controllers/sandbox.controller";
 
 const llmRouter: Router = express.Router();
 
@@ -16,5 +17,6 @@ llmRouter.route("/request").post(chatRequest);
 llmRouter.route("/config").get(chatConfig);
 llmRouter.route("/config/llamacloud").get(chatLlamaCloudConfig);
 llmRouter.route("/upload").post(chatUpload);
+llmRouter.route("/sandbox").post(sandbox);
 
 export default llmRouter;
