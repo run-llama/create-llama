@@ -33,6 +33,7 @@ export type RunCreateLlamaOptions = {
   llamaCloudIndexName?: string;
   tools?: string;
   useLlamaParse?: boolean;
+  observability?: string;
 };
 
 export async function runCreateLlama({
@@ -50,6 +51,7 @@ export async function runCreateLlama({
   llamaCloudIndexName,
   tools,
   useLlamaParse,
+  observability,
 }: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
@@ -113,6 +115,9 @@ export async function runCreateLlama({
     commandArgs.push("--use-llama-parse");
   } else {
     commandArgs.push("--no-llama-parse");
+  }
+  if (observability) {
+    commandArgs.push("--observability", observability);
   }
 
   const command = commandArgs.join(" ");

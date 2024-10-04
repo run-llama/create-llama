@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import { TemplateFramework, TemplateVectorDB } from "../../helpers/types";
-import { createTestDir, runCreateLlama } from "../utils";
+import { RunCreateLlamaOptions, createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
 
@@ -42,62 +42,69 @@ if (
     "--db-source mysql+pymysql://user:pass@localhost:3306/mydb",
   ];
 
+  const observabilityOptions = ["llamatrace", "traceloop"];
+
+  // Run separate tests for each observability option to reduce CI runtime
+  test.describe("Test resolve python dependencies with observability", () => {
+    // Testing with streaming template, vectorDb: none, tools: none, and dataSource: --example-file
+    for (const observability of observabilityOptions) {
+      test(`observability: ${observability}`, async () => {
+        const cwd = await createTestDir();
+
+        await createAndCheckLlamaProject({
+          options: {
+            cwd,
+            templateType: "streaming",
+            templateFramework,
+            dataSource,
+            vectorDb: "none",
+            tools: "none",
+            port: 3000, // port, not used
+            externalPort: 8000, // externalPort, not used
+            postInstallAction: "none", // postInstallAction
+            templateUI: undefined, // ui
+            appType: "--no-frontend", // appType
+            llamaCloudProjectName: undefined, // llamaCloudProjectName
+            llamaCloudIndexName: undefined, // llamaCloudIndexName
+            observability,
+          },
+        });
+      });
+    }
+  });
+
   test.describe("Test resolve python dependencies", () => {
     for (const vectorDb of vectorDbs) {
       for (const tool of toolOptions) {
         for (const dataSource of dataSources) {
           const dataSourceType = dataSource.split(" ")[0];
-          const optionDescription = `vectorDb: ${vectorDb}, tools: ${tool}, dataSource: ${dataSourceType}`;
+          const toolDescription = tool === "none" ? "no tools" : tool;
+          const optionDescription = `vectorDb: ${vectorDb}, ${toolDescription}, dataSource: ${dataSourceType}`;
 
           test(`options: ${optionDescription}`, async () => {
             const cwd = await createTestDir();
 
-            const result = await runCreateLlama({
-              cwd,
-              templateType: "streaming",
-              templateFramework,
-              dataSource,
-              vectorDb,
-              port: 3000, // port
-              externalPort: 8000, // externalPort
-              postInstallAction: "none", // postInstallAction
-              templateUI: undefined, // ui
-              appType: "--no-frontend", // appType
-              llamaCloudProjectName: undefined, // llamaCloudProjectName
-              llamaCloudIndexName: undefined, // llamaCloudIndexName
-              tools: tool,
-            });
-            const name = result.projectName;
-
-            // Check if the app folder exists
-            const dirExists = fs.existsSync(path.join(cwd, name));
-            expect(dirExists).toBeTruthy();
-
-            // Check if pyproject.toml exists
-            const pyprojectPath = path.join(cwd, name, "pyproject.toml");
-            const pyprojectExists = fs.existsSync(pyprojectPath);
-            expect(pyprojectExists).toBeTruthy();
-
-            // Run poetry lock
-            try {
-              const { stdout, stderr } = await execAsync(
-                "poetry config virtualenvs.in-project true && poetry lock --no-update",
-                {
-                  cwd: path.join(cwd, name),
+            const { pyprojectPath, projectPath } =
+              await createAndCheckLlamaProject({
+                options: {
+                  cwd,
+                  templateType: "streaming",
+                  templateFramework,
+                  dataSource,
+                  vectorDb,
+                  tools: tool,
+                  port: 3000, // port, not used
+                  externalPort: 8000, // externalPort, not used
+                  postInstallAction: "none", // postInstallAction
+                  templateUI: undefined, // ui
+                  appType: "--no-frontend", // appType
+                  llamaCloudProjectName: undefined, // llamaCloudProjectName
+                  llamaCloudIndexName: undefined, // llamaCloudIndexName
+                  observability: undefined, // observability
                 },
-              );
-              console.log("poetry lock stdout:", stdout);
-              console.error("poetry lock stderr:", stderr);
-            } catch (error) {
-              console.error("Error running poetry lock:", error);
-              throw error;
-            }
+              });
 
-            // Check if poetry.lock file was created
-            const poetryLockExists = fs.existsSync(
-              path.join(cwd, name, "poetry.lock"),
-            );
-            expect(poetryLockExists).toBeTruthy();
+            // Additional checks for specific dependencies
 
             // Verify that specific dependencies are in pyproject.toml
             const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
@@ -135,4 +142,39 @@ if (
       }
     }
   });
+}
+
+async function createAndCheckLlamaProject({
+  options,
+}: {
+  options: RunCreateLlamaOptions;
+}): Promise<{ pyprojectPath: string; projectPath: string }> {
+  const result = await runCreateLlama(options);
+  const name = result.projectName;
+  const projectPath = path.join(options.cwd, name);
+
+  // Check if the app folder exists
+  expect(fs.existsSync(projectPath)).toBeTruthy();
+
+  // Check if pyproject.toml exists
+  const pyprojectPath = path.join(projectPath, "pyproject.toml");
+  expect(fs.existsSync(pyprojectPath)).toBeTruthy();
+
+  // Run poetry lock
+  try {
+    const { stdout, stderr } = await execAsync(
+      "poetry config virtualenvs.in-project true && poetry lock --no-update",
+      { cwd: projectPath },
+    );
+    console.log("poetry lock stdout:", stdout);
+    console.error("poetry lock stderr:", stderr);
+  } catch (error) {
+    console.error("Error running poetry lock:", error);
+    throw error;
+  }
+
+  // Check if poetry.lock file was created
+  expect(fs.existsSync(path.join(projectPath, "poetry.lock"))).toBeTruthy();
+
+  return { pyprojectPath, projectPath };
 }

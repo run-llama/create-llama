@@ -463,7 +463,7 @@ export const installPythonTemplate = async ({
     if (observability === "llamatrace") {
       addOnDependencies.push({
         name: "llama-index-callbacks-arize-phoenix",
-        version: "^0.1.6",
+        version: "^0.2.1",
       });
     }
 
