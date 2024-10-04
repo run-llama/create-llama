@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Union
 from app.engine.tools.artifact import CodeArtifact
 from app.engine.utils.file_helper import save_file
 from e2b_code_interpreter import CodeInterpreter, Sandbox
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
@@ -44,7 +44,13 @@ class ExecutionResult(BaseModel):
 async def create_sandbox(request: Request):
     request_data = await request.json()
 
-    artifact = CodeArtifact(**request_data["artifact"])
+    try:
+        artifact = CodeArtifact(**request_data["artifact"])
+    except Exception:
+        logger.error(f"Could not create artifact from request data: {request_data}")
+        return HTTPException(
+            status_code=400, detail="Could not create artifact from the request data"
+        )
 
     sbx = None
 

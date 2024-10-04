@@ -45,9 +45,15 @@ def save_file(
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "wb") as file:
             file.write(content)
+    except PermissionError as e:
+        logger.error(f"Permission denied when writing to file {file_path}: {str(e)}")
+        raise
+    except IOError as e:
+        logger.error(f"IO error occurred when writing to file {file_path}: {str(e)}")
+        raise
     except Exception as e:
-        logger.error(f"Failed to write to file {file_path}: {str(e)}")
-        raise e
+        logger.error(f"Unexpected error when writing to file {file_path}: {str(e)}")
+        raise
 
     logger.info(f"Saved file to {file_path}")
 
