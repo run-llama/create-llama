@@ -280,6 +280,17 @@ const mergePoetryDependencies = (
   }
 };
 
+const copyRouterCode = async (root: string, tools: Tool[]) => {
+  // Copy sandbox router if the artifact tool is selected
+  if (tools?.some((t) => t.name === "artifact")) {
+    await copy("sandbox.py", path.join(root, "app", "api", "routers"), {
+      parents: true,
+      cwd: path.join(templatesDir, "components", "routers", "python"),
+      rename: assetRelocator,
+    });
+  }
+};
+
 export const addDependencies = async (
   projectDir: string,
   dependencies: Dependency[],
@@ -431,6 +442,9 @@ export const installPythonTemplate = async ({
       parents: true,
       cwd: path.join(compPath, "engines", "python", engine),
     });
+
+    // Copy router code
+    await copyRouterCode(root, tools ?? []);
   }
 
   if (template === "multiagent") {
