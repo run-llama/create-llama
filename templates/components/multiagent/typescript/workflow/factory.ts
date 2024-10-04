@@ -152,7 +152,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
       // the blog post is good or too many attempts
       // stream the final content
       const result = await runAgent(context, writer, {
-        message: `Trim the review from the reviewer and return only the blog post content. Here is the content: ${ev.data.input}`,
+        message: `Based on the reviewer's feedback, refine the post and return only the final version of the post. Here's the current version: ${ev.data.input}`,
         streaming: true,
       });
       return result as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;

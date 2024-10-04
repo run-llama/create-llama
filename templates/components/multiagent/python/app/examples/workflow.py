@@ -182,7 +182,7 @@ class BlogPostWorkflow(Workflow):
             result = await self.run_agent(
                 ctx,
                 writer,
-                f"Trim the review from the reviewer and return only the blog post content. Here is the content: {ev.input}",
+                f"Based on the reviewer's feedback, refine the post and return only the final version of the post. Here's the current version: {ev.input}",
                 streaming=ctx.data["streaming"],
             )
             return StopEvent(result=result)
