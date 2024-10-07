@@ -27,7 +27,7 @@ from llama_index.core.workflow import (
 
 INITIAL_PLANNER_PROMPT = """\
 Think step-by-step. Given a conversation, set of tools and a user request. Your responsibility is to create a plan to complete the task.
-The plan must adapt with the user request and the conversation. It's fine to just start with needed tasks first and asking user for the next step approval.
+The plan must adapt with the user request and the conversation.
 
 The tools available are:
 {tools_str}

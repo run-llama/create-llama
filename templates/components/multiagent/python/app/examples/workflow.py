@@ -1,12 +1,12 @@
 from textwrap import dedent
 from typing import AsyncGenerator, List, Optional
-from llama_index.core.settings import Settings
-from llama_index.core.prompts import PromptTemplate
 
 from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 from app.examples.publisher import create_publisher
 from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
+from llama_index.core.prompts import PromptTemplate
+from llama_index.core.settings import Settings
 from llama_index.core.workflow import (
     Context,
     Event,
@@ -33,7 +33,6 @@ def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
             You are given the task of writing a blog post based on research content provided by the researcher agent. Do not invent any information yourself. 
             It's important to read the entire conversation history to write the blog post accurately.
             If you receive a review from the reviewer, update the post according to the feedback and return the new post content.
-            If the user requests an update with new information but no research content is provided, you must respond with: "I don't have any research content to write about."
             If the content is not valid (e.g., broken link, broken image, etc.), do not use it.
             It's normal for the task to include some ambiguity, so you must define the user's initial request to write the post correctly.
             If you update the post based on the reviewer's feedback, first explain what changes you made to the post, then provide the new post content. Do not include the reviewer's comments.
@@ -128,10 +127,20 @@ class BlogPostWorkflow(Workflow):
         self, input: str, chat_history: List[ChatMessage]
     ) -> str:
         prompt_template = PromptTemplate(
-            "Given the following chat history and new task, decide whether to publish based on existing information.\n"
-            "Chat history:\n{chat_history}\n"
-            "New task: {input}\n"
-            "Decision (respond with either 'not_publish' or 'publish'):"
+            dedent("""
+                You are an expert in decision-making, helping people write and publish blog posts.
+                If the user is asking for a file or to publish content, respond with 'publish'.
+                If the user requests to write or update a blog post, respond with 'not_publish'.
+
+                Here is the chat history:
+                {chat_history}
+
+                The current user request is:
+                {input}
+
+                Given the chat history and the new user request, decide whether to publish based on existing information.
+                Decision (respond with either 'not_publish' or 'publish'):
+            """)
         )
 
         chat_history_str = "\n".join(
@@ -171,7 +180,10 @@ class BlogPostWorkflow(Workflow):
         if ev.is_good or too_many_attempts:
             # too many attempts or the blog post is good - stream final response if requested
             result = await self.run_agent(
-                ctx, writer, ev.input, streaming=ctx.data["streaming"]
+                ctx,
+                writer,
+                f"Based on the reviewer's feedback, refine the post and return only the final version of the post. Here's the current version: {ev.input}",
+                streaming=ctx.data["streaming"],
             )
             return StopEvent(result=result)
         result: AgentRunResult = await self.run_agent(ctx, writer, ev.input)
