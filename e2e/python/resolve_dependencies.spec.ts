@@ -34,6 +34,7 @@ if (
     "wikipedia.WikipediaToolSpec",
     "google.GoogleSearchToolSpec",
     "document_generator",
+    "artifact",
   ];
 
   const dataSources = [
