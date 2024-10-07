@@ -20,7 +20,7 @@ def save_file(
     file_path: Optional[str] = None,
 ) -> FileMetadata:
     """
-    Save the content to a file.
+    Save the content to a file in the local file server (accessible via URL)
     Args:
         content (bytes | str): The content to save, either bytes or string.
         file_name (Optional[str]): The name of the file. If not provided, a random name will be generated with .txt extension.
