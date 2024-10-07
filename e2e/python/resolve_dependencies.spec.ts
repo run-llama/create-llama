@@ -47,6 +47,8 @@ if (
   const observabilityOptions = ["llamatrace", "traceloop"];
 
   test.describe("Mypy check", () => {
+    test.describe.configure({ retries: 0 });
+
     // Test vector databases
     for (const vectorDb of vectorDbs) {
       test(`Mypy check for vectorDB: ${vectorDb}`, async () => {
