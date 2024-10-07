@@ -1,7 +1,8 @@
-import { MetadataFilter, MetadataFilters } from "llamaindex";
+import type { MetadataFilter, MetadataFilters } from "@llamaindex/cloud/api";
 
 export function generateFilters(documentIds: string[]): MetadataFilters {
   // public documents don't have the "private" field or it's set to "false"
+  // @ts-ignore TODO: fix typing in @llamaindex/cloud/api
   const publicDocumentsFilter: MetadataFilter = {
     key: "private",
     operator: "is_empty",
