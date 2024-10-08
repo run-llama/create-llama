@@ -55,19 +55,17 @@ def init_openai():
     from llama_index.llms.openai import OpenAI
 
     max_tokens = os.getenv("LLM_MAX_TOKENS")
-    config = {
-        "model": os.getenv("MODEL"),
-        "temperature": float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)),
-        "max_tokens": int(max_tokens) if max_tokens is not None else None,
-    }
-    Settings.llm = OpenAI(**config)
+    Settings.llm = OpenAI(
+        model=os.getenv("MODEL", "gpt-4o-mini"),
+        temperature=float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)),
+        max_tokens=int(max_tokens) if max_tokens is not None else None,
+    )
 
     dimensions = os.getenv("EMBEDDING_DIM")
-    config = {
-        "model": os.getenv("EMBEDDING_MODEL"),
-        "dimensions": int(dimensions) if dimensions is not None else None,
-    }
-    Settings.embed_model = OpenAIEmbedding(**config)
+    Settings.embed_model = OpenAIEmbedding(
+        model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
+        dimensions=int(dimensions) if dimensions is not None else None,
+    )
 
 
 def init_azure_openai():

@@ -1,17 +1,19 @@
 import os
+from typing import List
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from llama_index.core.agent import AgentRunner
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.settings import Settings
+from llama_index.core.tools import BaseTool
 from llama_index.core.tools.query_engine import QueryEngineTool
 
 
 def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     top_k = int(os.getenv("TOP_K", 0))
-    tools = []
+    tools: List[BaseTool] = []
     callback_manager = CallbackManager(handlers=event_handlers or [])
 
     # Add query tool if index exists
@@ -25,7 +27,8 @@ def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
         tools.append(query_engine_tool)
 
     # Add additional tools
-    tools += ToolFactory.from_env()
+    configured_tools: List[BaseTool] = ToolFactory.from_env()
+    tools.extend(configured_tools)
 
     return AgentRunner.from_llm(
         llm=Settings.llm,

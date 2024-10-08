@@ -21,14 +21,15 @@ def duckduckgo_search(
             "Please install it by running: `poetry add duckduckgo_search` or `pip install duckduckgo_search`"
         )
 
-    params = {
-        "keywords": query,
-        "region": region,
-        "max_results": max_results,
-    }
     results = []
     with DDGS() as ddg:
-        results = list(ddg.text(**params))
+        results = list(
+            ddg.text(
+                keywords=query,
+                region=region,
+                max_results=max_results,
+            )
+        )
     return results
 
 
@@ -51,13 +52,14 @@ def duckduckgo_image_search(
             "duckduckgo_search package is required to use this function."
             "Please install it by running: `poetry add duckduckgo_search` or `pip install duckduckgo_search`"
         )
-    params = {
-        "keywords": query,
-        "region": region,
-        "max_results": max_results,
-    }
     with DDGS() as ddg:
-        results = list(ddg.images(**params))
+        results = list(
+            ddg.images(
+                keywords=query,
+                region=region,
+                max_results=max_results,
+            )
+        )
     return results
 
 

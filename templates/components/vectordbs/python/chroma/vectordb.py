@@ -1,4 +1,5 @@
 import os
+
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
 
@@ -18,7 +19,7 @@ def get_vector_store():
             )
         store = ChromaVectorStore.from_params(
             host=os.getenv("CHROMA_HOST"),
-            port=int(os.getenv("CHROMA_PORT")),
+            port=os.getenv("CHROMA_PORT", "8001"),
             collection_name=collection_name,
         )
     return store
