@@ -1,7 +1,11 @@
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.core.settings import Settings
-from typing import Dict
+import logging
 import os
+from typing import Dict
+
+from llama_index.core.settings import Settings
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "gpt-3.5-turbo"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
@@ -50,7 +54,11 @@ def embedding_config_from_env() -> Dict:
 
 
 def init_llmhub():
-    from llama_index.llms.openai_like import OpenAILike
+    try:
+        from llama_index.llms.openai_like import OpenAILike
+    except ImportError:
+        logger.error("Failed to import OpenAILike. Make sure llama_index is installed.")
+        raise
 
     llm_configs = llm_config_from_env()
     embedding_configs = embedding_config_from_env()

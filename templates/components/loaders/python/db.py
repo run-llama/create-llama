@@ -1,5 +1,6 @@
 import logging
 from typing import List
+
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -11,7 +12,13 @@ class DBLoaderConfig(BaseModel):
 
 
 def get_db_documents(configs: list[DBLoaderConfig]):
-    from llama_index.readers.database import DatabaseReader
+    try:
+        from llama_index.readers.database import DatabaseReader
+    except ImportError:
+        logger.error(
+            "Failed to import DatabaseReader. Make sure llama_index is installed."
+        )
+        raise
 
     docs = []
     for entry in configs:

@@ -1,20 +1,22 @@
 import logging
+from typing import Any, Dict, List
 
-import yaml
+import yaml  # type: ignore
 from app.engine.loaders.db import DBLoaderConfig, get_db_documents
 from app.engine.loaders.file import FileLoaderConfig, get_file_documents
 from app.engine.loaders.web import WebLoaderConfig, get_web_documents
+from llama_index.core import Document
 
 logger = logging.getLogger(__name__)
 
 
-def load_configs():
+def load_configs() -> Dict[str, Any]:
     with open("config/loaders.yaml") as f:
         configs = yaml.safe_load(f)
     return configs
 
 
-def get_documents():
+def get_documents() -> List[Document]:
     documents = []
     config = load_configs()
     for loader_type, loader_config in config.items():

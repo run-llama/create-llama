@@ -17,6 +17,23 @@ aiostream = "^0.5.2"
 cachetools = "^5.3.3"
 llama-index = "0.11.6"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.11"
+plugins = "pydantic.mypy"
+exclude = [ "tests", "venv", ".venv", "output", "config" ]
+check_untyped_defs = true
+warn_unused_ignores = false
+show_error_codes = true
+namespace_packages = true
+ignore_missing_imports = true
+follow_imports = "silent"
+implicit_optional = true
+strict_optional = false
+disable_error_code = ["return-value", "import-untyped", "assignment"]

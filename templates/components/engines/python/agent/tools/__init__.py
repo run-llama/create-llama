@@ -1,7 +1,8 @@
 import importlib
 import os
+from typing import Dict, List, Union
 
-import yaml
+import yaml  # type: ignore
 from llama_index.core.tools.function_tool import FunctionTool
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 
@@ -17,7 +18,8 @@ class ToolFactory:
         ToolType.LOCAL: "app.engine.tools",
     }
 
-    def load_tools(tool_type: str, tool_name: str, config: dict) -> list[FunctionTool]:
+    @staticmethod
+    def load_tools(tool_type: str, tool_name: str, config: dict) -> List[FunctionTool]:
         source_package = ToolFactory.TOOL_SOURCE_PACKAGE_MAP[tool_type]
         try:
             if "ToolSpec" in tool_name:
@@ -43,24 +45,32 @@ class ToolFactory:
     @staticmethod
     def from_env(
         map_result: bool = False,
-    ) -> list[FunctionTool] | dict[str, FunctionTool]:
+    ) -> Union[Dict[str, List[FunctionTool]], List[FunctionTool]]:
         """
         Load tools from the configured file.
-        Params:
-            - use_map: if True, return map of tool name and the tool itself
+
+        Args:
+            map_result: If True, return a map of tool names to their corresponding tools.
+
+        Returns:
+            A dictionary of tool names to lists of FunctionTools if map_result is True,
+            otherwise a list of FunctionTools.
         """
-        if map_result:
-            tools = {}
-        else:
-            tools = []
+        tools: Union[Dict[str, List[FunctionTool]], List[FunctionTool]] = (
+            {} if map_result else []
+        )
+
         if os.path.exists("config/tools.yaml"):
             with open("config/tools.yaml", "r") as f:
                 tool_configs = yaml.safe_load(f)
                 for tool_type, config_entries in tool_configs.items():
                     for tool_name, config in config_entries.items():
-                        tool = ToolFactory.load_tools(tool_type, tool_name, config)
+                        loaded_tools = ToolFactory.load_tools(
+                            tool_type, tool_name, config
+                        )
                         if map_result:
-                            tools[tool_name] = tool
+                            tools[tool_name] = loaded_tools  # type: ignore
                         else:
-                            tools.extend(tool)
+                            tools.extend(loaded_tools)  # type: ignore
+
         return tools

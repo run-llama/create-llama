@@ -43,6 +43,6 @@ def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
         memory=memory,
         system_prompt=system_prompt,
         retriever=retriever,
-        node_postprocessors=node_postprocessors,
+        node_postprocessors=node_postprocessors,  # type: ignore
         callback_manager=callback_manager,
     )

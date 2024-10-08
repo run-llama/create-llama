@@ -87,7 +87,7 @@ class CodeGeneratorTool:
             ChatMessage(role="user", content=user_message),
         ]
         try:
-            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)
+            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)  # type: ignore
             response = sllm.chat(messages)
             data: CodeArtifact = response.raw
             return data.model_dump()

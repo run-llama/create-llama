@@ -1,12 +1,12 @@
-import json
 import asyncio
+import json
 import logging
-from typing import AsyncGenerator, Dict, Any, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
 from llama_index.core.callbacks.base import BaseCallbackHandler
 from llama_index.core.callbacks.schema import CBEventType
 from llama_index.core.tools.types import ToolOutput
 from pydantic import BaseModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +31,20 @@ class CallbackEvent(BaseModel):
             return None
 
     def get_tool_message(self) -> dict | None:
+        if self.payload is None:
+            return None
         func_call_args = self.payload.get("function_call")
         if func_call_args is not None and "tool" in self.payload:
             tool = self.payload.get("tool")
+            if tool is None:
+                return None
             return {
                 "type": "events",
                 "data": {
                     "title": f"Calling tool: {tool.name} with inputs: {func_call_args}",
                 },
             }
+        return None
 
     def _is_output_serializable(self, output: Any) -> bool:
         try:
@@ -49,6 +54,8 @@ class CallbackEvent(BaseModel):
             return False
 
     def get_agent_tool_response(self) -> dict | None:
+        if self.payload is None:
+            return None
         response = self.payload.get("response")
         if response is not None:
             sources = response.sources
@@ -74,6 +81,7 @@ class CallbackEvent(BaseModel):
                             },
                         },
                     }
+        return None
 
     def to_response(self):
         try:
@@ -114,11 +122,13 @@ class EventCallbackHandler(BaseCallbackHandler):
         event_type: CBEventType,
         payload: Optional[Dict[str, Any]] = None,
         event_id: str = "",
+        parent_id: str = "",
         **kwargs: Any,
     ) -> str:
         event = CallbackEvent(event_id=event_id, event_type=event_type, payload=payload)
         if event.to_response() is not None:
             self._aqueue.put_nowait(event)
+        return event_id
 
     def on_event_end(
         self,
