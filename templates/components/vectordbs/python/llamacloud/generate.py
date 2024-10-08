@@ -1,9 +1,9 @@
 # flake8: noqa: E402
 from dotenv import load_dotenv
 
-from app.engine.index import get_index
-
 load_dotenv()
+
+from app.engine.index import get_index
 
 import logging
 from llama_index.core.readers import SimpleDirectoryReader
