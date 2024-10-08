@@ -55,9 +55,14 @@ class AgentAnnotation(BaseModel):
     text: str
 
 
+class ArtifactAnnotation(BaseModel):
+    toolCall: Dict[str, Any]
+    toolOutput: Dict[str, Any]
+
+
 class Annotation(BaseModel):
     type: str
-    data: Union[AnnotationFileData, List[str], AgentAnnotation]
+    data: Union[AnnotationFileData, List[str], AgentAnnotation, ArtifactAnnotation]
 
     def to_content(self) -> Optional[str]:
         if self.type == "document_file":
@@ -149,8 +154,29 @@ class ChatData(BaseModel):
                             break
         return agent_messages
 
+    def _get_latest_code_artifact(self) -> Optional[str]:
+        """
+        Get latest code artifact from annotations to append to the user message
+        """
+        for message in reversed(self.messages):
+            if (
+                message.role == MessageRole.ASSISTANT
+                and message.annotations is not None
+            ):
+                for annotation in message.annotations:
+                    # type is tools and has `toolOutput` attribute
+                    if annotation.type == "tools" and isinstance(
+                        annotation.data, ArtifactAnnotation
+                    ):
+                        tool_output = annotation.data.toolOutput
+                        if tool_output and not tool_output.get("isError", False):
+                            return tool_output.get("output", {}).get("code", None)
+        return None
+
     def get_history_messages(
-        self, include_agent_messages: bool = False
+        self,
+        include_agent_messages: bool = False,
+        include_code_artifact: bool = True,
     ) -> List[ChatMessage]:
         """
         Get the history messages
@@ -167,7 +193,14 @@ class ChatData(BaseModel):
                     content="Previous agent events: \n" + "\n".join(agent_messages),
                 )
                 chat_messages.append(message)
-
+        if include_code_artifact:
+            latest_code_artifact = self._get_latest_code_artifact()
+            if latest_code_artifact:
+                message = ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content=f"The existing code is:\n```\n{latest_code_artifact}\n```",
+                )
+                chat_messages.append(message)
         return chat_messages
 
     def is_last_message_from_user(self) -> bool:

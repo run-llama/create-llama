@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.2.15
+
+### Patch Changes
+
+- 16e6124: Bump package for llamatrace observability
+- 3790ca0: Add multi-agent task selector for TS template
+- d18f039: Add e2b code artifact tool for the FastAPI template
+
 ## 0.2.14
 
 ### Patch Changes

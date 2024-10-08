@@ -1,7 +1,6 @@
 # flake8: noqa: E402
-from dotenv import load_dotenv
-
 from app.config import DATA_DIR
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -9,9 +8,7 @@ import logging
 import os
 
 import uvicorn
-from app.api.routers.chat import chat_router
-from app.api.routers.chat_config import config_router
-from app.api.routers.upload import file_upload_router
+from app.api.routers import api_router
 from app.observability import init_observability
 from app.settings import init_settings
 from fastapi import FastAPI
@@ -58,9 +55,7 @@ mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
 
-app.include_router(chat_router, prefix="/api/chat")
-app.include_router(config_router, prefix="/api/chat/config")
-app.include_router(file_upload_router, prefix="/api/chat/upload")
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     app_host = os.getenv("APP_HOST", "0.0.0.0")
