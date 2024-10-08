@@ -15,7 +15,9 @@ def get_db_documents(configs: list[DBLoaderConfig]):
     try:
         from llama_index.readers.database import DatabaseReader
     except ImportError:
-        logger.error("Failed to import DatabaseReader. Make sure llama_index is installed.")
+        logger.error(
+            "Failed to import DatabaseReader. Make sure llama_index is installed."
+        )
         raise
 
     docs = []

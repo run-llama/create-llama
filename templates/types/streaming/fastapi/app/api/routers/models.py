@@ -71,10 +71,15 @@ class Annotation(BaseModel):
                 csv_files = [file for file in self.data.files if file.filetype == "csv"]
                 if len(csv_files) > 0:
                     return "Use data from following CSV raw content\n" + "\n".join(
-                        [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
+                        [
+                            f"```csv\n{csv_file.content.value}\n```"
+                            for csv_file in csv_files
+                        ]
                     )
             else:
-                logger.warning(f"Unexpected data type for document_file annotation: {type(self.data)}")
+                logger.warning(
+                    f"Unexpected data type for document_file annotation: {type(self.data)}"
+                )
         else:
             logger.warning(
                 f"The annotation {self.type} is not supported for generating context content"

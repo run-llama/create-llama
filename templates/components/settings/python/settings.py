@@ -37,8 +37,10 @@ def init_ollama():
         from llama_index.embeddings.ollama import OllamaEmbedding
         from llama_index.llms.ollama.base import DEFAULT_REQUEST_TIMEOUT, Ollama
     except ImportError:
-        raise ImportError("Ollama support is not installed. Please install it with `pip install llama-index[ollama]`")
-    
+        raise ImportError(
+            "Ollama support is not installed. Please install it with `pip install llama-index[ollama]`"
+        )
+
     base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
     request_timeout = float(
         os.getenv("OLLAMA_REQUEST_TIMEOUT", DEFAULT_REQUEST_TIMEOUT)
@@ -73,12 +75,15 @@ def init_openai():
 
 def init_azure_openai():
     from llama_index.core.constants import DEFAULT_TEMPERATURE
+
     try:
         from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
         from llama_index.llms.azure_openai import AzureOpenAI
     except ImportError:
-        raise ImportError("Azure OpenAI support is not installed. Please install it with `pip install llama-index[azure]`")
-    
+        raise ImportError(
+            "Azure OpenAI support is not installed. Please install it with `pip install llama-index[azure]`"
+        )
+
     llm_deployment = os.environ["AZURE_OPENAI_LLM_DEPLOYMENT"]
     embedding_deployment = os.environ["AZURE_OPENAI_EMBEDDING_DEPLOYMENT"]
     max_tokens = os.getenv("LLM_MAX_TOKENS")
@@ -112,8 +117,10 @@ def init_fastembed():
     try:
         from llama_index.embeddings.fastembed import FastEmbedEmbedding
     except ImportError:
-        raise ImportError("FastEmbed support is not installed. Please install it with `pip install llama-index[fastembed]`")
-    
+        raise ImportError(
+            "FastEmbed support is not installed. Please install it with `pip install llama-index[fastembed]`"
+        )
+
     embed_model_map: Dict[str, str] = {
         # Small and multilingual
         "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
@@ -124,7 +131,7 @@ def init_fastembed():
     embedding_model = os.getenv("EMBEDDING_MODEL")
     if embedding_model is None:
         raise ValueError("EMBEDDING_MODEL environment variable is not set")
-    
+
     # This will download the model automatically if it is not already downloaded
     Settings.embed_model = FastEmbedEmbedding(
         model_name=embed_model_map[embedding_model]
@@ -135,8 +142,10 @@ def init_groq():
     try:
         from llama_index.llms.groq import Groq
     except ImportError:
-        raise ImportError("Groq support is not installed. Please install it with `pip install llama-index[groq]`")
-    
+        raise ImportError(
+            "Groq support is not installed. Please install it with `pip install llama-index[groq]`"
+        )
+
     Settings.llm = Groq(model=os.getenv("MODEL"))
     # Groq does not provide embeddings, so we use FastEmbed instead
     init_fastembed()
@@ -146,8 +155,10 @@ def init_anthropic():
     try:
         from llama_index.llms.anthropic import Anthropic
     except ImportError:
-        raise ImportError("Anthropic support is not installed. Please install it with `pip install llama-index[anthropic]`")
-    
+        raise ImportError(
+            "Anthropic support is not installed. Please install it with `pip install llama-index[anthropic]`"
+        )
+
     model_map: Dict[str, str] = {
         "claude-3-opus": "claude-3-opus-20240229",
         "claude-3-sonnet": "claude-3-sonnet-20240229",
