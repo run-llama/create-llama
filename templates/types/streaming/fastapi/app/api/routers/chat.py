@@ -13,7 +13,7 @@ from app.api.routers.models import (
     SourceNodes,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
-from app.engine import get_chat_engine  # type: ignore
+from app.engine.engine import get_chat_engine
 from app.engine.query_filter import generate_filters
 
 chat_router = r = APIRouter()
