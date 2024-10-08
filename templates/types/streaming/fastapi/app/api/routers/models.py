@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -57,16 +57,19 @@ class AgentAnnotation(BaseModel):
 
 class Annotation(BaseModel):
     type: str
-    data: AnnotationFileData | List[str] | AgentAnnotation
+    data: Union[AnnotationFileData, List[str], AgentAnnotation]
 
-    def to_content(self) -> str | None:
+    def to_content(self) -> Optional[str]:
         if self.type == "document_file":
-            # We only support generating context content for CSV files for now
-            csv_files = [file for file in self.data.files if file.filetype == "csv"]
-            if len(csv_files) > 0:
-                return "Use data from following CSV raw content\n" + "\n".join(
-                    [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
-                )
+            if isinstance(self.data, AnnotationFileData):
+                # We only support generating context content for CSV files for now
+                csv_files = [file for file in self.data.files if file.filetype == "csv"]
+                if len(csv_files) > 0:
+                    return "Use data from following CSV raw content\n" + "\n".join(
+                        [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
+                    )
+            else:
+                logger.warning(f"Unexpected data type for document_file annotation: {type(self.data)}")
         else:
             logger.warning(
                 f"The annotation {self.type} is not supported for generating context content"
@@ -180,6 +183,7 @@ class ChatData(BaseModel):
                 for annotation in message.annotations:
                     if (
                         annotation.type == "document_file"
+                        and isinstance(annotation.data, AnnotationFileData)
                         and annotation.data.files is not None
                     ):
                         for fi in annotation.data.files:
@@ -209,7 +213,7 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
-    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> Optional[str]:
         url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if not url_prefix:
             logger.warning(

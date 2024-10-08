@@ -16,7 +16,7 @@ class IndexConfig(BaseModel):
     )
 
 
-def get_index(config: IndexConfig = None):
+def get_index(config: Optional[IndexConfig] = None) -> VectorStoreIndex:
     if config is None:
         config = IndexConfig()
     logger.info("Connecting vector store...")
