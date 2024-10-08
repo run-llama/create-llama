@@ -1,9 +1,15 @@
 # flake8: noqa: E402
+import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
-from app.engine.index import get_index
+from llama_cloud import PipelineType
+
+from app.settings import init_settings
+from llama_index.core.settings import Settings
+
+
+from app.engine.index import get_client, get_index
 
 import logging
 from llama_index.core.readers import SimpleDirectoryReader
@@ -13,10 +19,49 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
+def ensure_index(index):
+    project_id = index._get_project_id()
+    client = get_client()
+    pipelines = client.pipelines.search_pipelines(
+        project_id=project_id,
+        pipeline_name=index.name,
+        pipeline_type=PipelineType.MANAGED.value,
+    )
+    if len(pipelines) == 0:
+        from llama_index.embeddings.openai import OpenAIEmbedding
+
+        if not isinstance(Settings.embed_model, OpenAIEmbedding):
+            raise ValueError(
+                "Creating a new pipeline with a non-OpenAI embedding model is not supported."
+            )
+        client.pipelines.upsert_pipeline(
+            project_id=project_id,
+            request={
+                "name": index.name,
+                "embedding_config": {
+                    "type": "OPENAI_EMBEDDING",
+                    "component": {
+                        "api_key": os.getenv("OPENAI_API_KEY"),  # editable
+                        "model_name": os.getenv("EMBEDDING_MODEL"),
+                    },
+                },
+                "transform_config": {
+                    "mode": "auto",
+                    "config": {
+                        "chunk_size": Settings.chunk_size,  # editable
+                        "chunk_overlap": Settings.chunk_overlap,  # editable
+                    },
+                },
+            },
+        )
+
+
 def generate_datasource():
+    init_settings()
     logger.info("Generate index for the provided data")
 
     index = get_index()
+    ensure_index(index)
     project_id = index._get_project_id()
     pipeline_id = index._get_pipeline_id()
 
