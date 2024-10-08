@@ -17,9 +17,10 @@ from llama_index.core.workflow import (
 )
 
 
-def create_workflow(chat_history: Optional[List[ChatMessage]] = None):
+def create_workflow(chat_history: Optional[List[ChatMessage]] = None, **kwargs):
     researcher = create_researcher(
         chat_history=chat_history,
+        **kwargs,
     )
     publisher = create_publisher(
         chat_history=chat_history,
@@ -127,7 +128,8 @@ class BlogPostWorkflow(Workflow):
         self, input: str, chat_history: List[ChatMessage]
     ) -> str:
         prompt_template = PromptTemplate(
-            dedent("""
+            dedent(
+                """
                 You are an expert in decision-making, helping people write and publish blog posts.
                 If the user is asking for a file or to publish content, respond with 'publish'.
                 If the user requests to write or update a blog post, respond with 'not_publish'.
@@ -140,7 +142,8 @@ class BlogPostWorkflow(Workflow):
 
                 Given the chat history and the new user request, decide whether to publish based on existing information.
                 Decision (respond with either 'not_publish' or 'publish'):
-            """)
+            """
+            )
         )
 
         chat_history_str = "\n".join(
