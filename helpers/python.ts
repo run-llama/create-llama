@@ -123,7 +123,7 @@ const getAdditionalDependencies = (
             extras: ["rsa"],
           });
           dependencies.push({
-            name: "psycopg2",
+            name: "psycopg2-binary",
             version: "^2.9.9",
           });
           break;
