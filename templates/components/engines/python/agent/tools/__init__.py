@@ -43,24 +43,32 @@ class ToolFactory:
     @staticmethod
     def from_env(
         map_result: bool = False,
-    ) -> list[FunctionTool] | dict[str, FunctionTool]:
+    ) -> dict[str, list[FunctionTool]] | list[FunctionTool]:
         """
         Load tools from the configured file.
-        Params:
-            - use_map: if True, return map of tool name and the tool itself
+
+        Args:
+            map_result: If True, return a map of tool names to their corresponding tools.
+
+        Returns:
+            A dictionary of tool names to lists of FunctionTools if map_result is True,
+            otherwise a list of FunctionTools.
         """
-        if map_result:
-            tools = {}
-        else:
-            tools = []
+        tools: dict[str, list[FunctionTool]] | list[FunctionTool] = (
+            {} if map_result else []
+        )
+
         if os.path.exists("config/tools.yaml"):
             with open("config/tools.yaml", "r") as f:
                 tool_configs = yaml.safe_load(f)
                 for tool_type, config_entries in tool_configs.items():
                     for tool_name, config in config_entries.items():
-                        tool = ToolFactory.load_tools(tool_type, tool_name, config)
+                        loaded_tools = ToolFactory.load_tools(
+                            tool_type, tool_name, config
+                        )
                         if map_result:
-                            tools[tool_name] = tool
+                            tools[tool_name] = loaded_tools
                         else:
-                            tools.extend(tool)
+                            tools.extend(loaded_tools)
+
         return tools
