@@ -28,8 +28,8 @@ async def chat(
         # but agent workflow does not support them yet
         # ignore chat params and use all documents for now
         # TODO: generate filters based on doc_ids
-        # TODO: use chat params
-        engine = get_chat_engine(chat_history=messages)
+        params = data.data or {}
+        engine = get_chat_engine(chat_history=messages, params=params)
 
         event_handler = engine.run(input=last_message_content, streaming=True)
         return VercelStreamResponse(

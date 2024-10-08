@@ -23,7 +23,7 @@ async def chat_config() -> ChatConfig:
 try:
     from app.engine.service import LLamaCloudFileService
 
-    logger.info("LlamaCloud is configured. Adding /config/llamacloud route.")
+    print("LlamaCloud is configured. Adding /config/llamacloud route.")
 
     @r.get("/llamacloud")
     async def chat_llama_cloud_config():
@@ -42,7 +42,5 @@ try:
         }
 
 except ImportError:
-    logger.debug(
-        "LlamaCloud is not configured. Skipping adding /config/llamacloud route."
-    )
+    print("LlamaCloud is not configured. Skipping adding /config/llamacloud route.")
     pass

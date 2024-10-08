@@ -8,8 +8,8 @@ from app.examples.researcher import create_researcher
 from llama_index.core.chat_engine.types import ChatMessage
 
 
-def create_choreography(chat_history: Optional[List[ChatMessage]] = None):
-    researcher = create_researcher(chat_history)
+def create_choreography(chat_history: Optional[List[ChatMessage]] = None, **kwargs):
+    researcher = create_researcher(chat_history, **kwargs)
     publisher = create_publisher(chat_history)
     reviewer = FunctionCallingAgent(
         name="reviewer",
@@ -21,12 +21,14 @@ def create_choreography(chat_history: Optional[List[ChatMessage]] = None):
         name="writer",
         agents=[researcher, reviewer, publisher],
         description="expert in writing blog posts, needs researched information and images to write a blog post",
-        system_prompt=dedent("""
+        system_prompt=dedent(
+            """
             You are an expert in writing blog posts. You are given a task to write a blog post. Before starting to write the post, consult the researcher agent to get the information you need. Don't make up any information yourself.
             After creating a draft for the post, send it to the reviewer agent to receive feedback and make sure to incorporate the feedback from the reviewer.
             You can consult the reviewer and researcher a maximum of two times. Your output should contain only the blog post.
             Finally, always request the publisher to create a document (PDF, HTML) and publish the blog post.
-        """),
+        """
+        ),
         # TODO: add chat_history support to AgentCallingAgent
         # chat_history=chat_history,
     )
