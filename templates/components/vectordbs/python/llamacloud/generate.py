@@ -1,6 +1,7 @@
 # flake8: noqa: E402
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from llama_cloud import PipelineType
