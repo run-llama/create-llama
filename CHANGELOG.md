@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.2.16
+
+### Patch Changes
+
+- 0e78ba4: Fix: programmatically ensure index for LlamaCloud
+- 0e78ba4: Fix .env not loaded on poetry run generate
+- 7f4ac22: Don't need to run generate script for LlamaCloud
+- 5263bde: Use selected LlamaCloud index in multi-agent template
+
 ## 0.2.15
 
 ### Patch Changes
