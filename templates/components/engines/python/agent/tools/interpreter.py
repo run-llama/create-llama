@@ -26,7 +26,6 @@ class E2BToolOutput(BaseModel):
 
 
 class E2BCodeInterpreter:
-
     output_dir = "tool-output"
 
     def __init__(self, api_key: str, filesever_url_prefix: str):

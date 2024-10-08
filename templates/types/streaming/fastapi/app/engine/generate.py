@@ -21,7 +21,6 @@ STORAGE_DIR = os.getenv("STORAGE_DIR", "storage")
 
 
 def get_doc_store():
-
     # If the storage directory is there, load the document store from it.
     # If not, set up an in-memory document store since we can't load from a directory that doesn't exist.
     if os.path.exists(STORAGE_DIR):
