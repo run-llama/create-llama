@@ -38,7 +38,7 @@ def init_ollama():
         from llama_index.llms.ollama.base import DEFAULT_REQUEST_TIMEOUT, Ollama
     except ImportError:
         raise ImportError(
-            "Ollama support is not installed. Please install it with `pip install llama-index[ollama]`"
+            "Ollama support is not installed. Please install it with `poetry add llama-index-llms-ollama` and `poetry add llama-index-embeddings-ollama`"
         )
 
     base_url = os.getenv("OLLAMA_BASE_URL") or "http://127.0.0.1:11434"
@@ -81,7 +81,7 @@ def init_azure_openai():
         from llama_index.llms.azure_openai import AzureOpenAI
     except ImportError:
         raise ImportError(
-            "Azure OpenAI support is not installed. Please install it with `pip install llama-index[azure]`"
+            "Azure OpenAI support is not installed. Please install it with `poetry add llama-index-llms-azure-openai` and `poetry add llama-index-embeddings-azure-openai`"
         )
 
     llm_deployment = os.environ["AZURE_OPENAI_LLM_DEPLOYMENT"]
@@ -118,7 +118,7 @@ def init_fastembed():
         from llama_index.embeddings.fastembed import FastEmbedEmbedding
     except ImportError:
         raise ImportError(
-            "FastEmbed support is not installed. Please install it with `pip install llama-index[fastembed]`"
+            "FastEmbed support is not installed. Please install it with `poetry add llama-index-embeddings-fastembed`"
         )
 
     embed_model_map: Dict[str, str] = {
@@ -143,7 +143,7 @@ def init_groq():
         from llama_index.llms.groq import Groq
     except ImportError:
         raise ImportError(
-            "Groq support is not installed. Please install it with `pip install llama-index[groq]`"
+            "Groq support is not installed. Please install it with `poetry add llama-index-llms-groq`"
         )
 
     Settings.llm = Groq(model=os.getenv("MODEL"))
@@ -156,7 +156,7 @@ def init_anthropic():
         from llama_index.llms.anthropic import Anthropic
     except ImportError:
         raise ImportError(
-            "Anthropic support is not installed. Please install it with `pip install llama-index[anthropic]`"
+            "Anthropic support is not installed. Please install it with `poetry add llama-index-llms-anthropic`"
         )
 
     model_map: Dict[str, str] = {
@@ -173,8 +173,13 @@ def init_anthropic():
 
 
 def init_gemini():
-    from llama_index.embeddings.gemini import GeminiEmbedding
-    from llama_index.llms.gemini import Gemini
+    try:
+        from llama_index.embeddings.gemini import GeminiEmbedding
+        from llama_index.llms.gemini import Gemini
+    except ImportError:
+        raise ImportError(
+            "Gemini support is not installed. Please install it with `poetry add llama-index-llms-gemini` and `poetry add llama-index-embeddings-gemini`"
+        )
 
     model_name = f"models/{os.getenv('MODEL')}"
     embed_model_name = f"models/{os.getenv('EMBEDDING_MODEL')}"
