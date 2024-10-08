@@ -1,7 +1,8 @@
 import importlib
 import os
+from typing import Dict, List, Union
 
-import yaml
+import yaml  # type: ignore
 from llama_index.core.tools.function_tool import FunctionTool
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 
@@ -17,7 +18,8 @@ class ToolFactory:
         ToolType.LOCAL: "app.engine.tools",
     }
 
-    def load_tools(tool_type: str, tool_name: str, config: dict) -> list[FunctionTool]:
+    @staticmethod
+    def load_tools(tool_type: str, tool_name: str, config: dict) -> List[FunctionTool]:
         source_package = ToolFactory.TOOL_SOURCE_PACKAGE_MAP[tool_type]
         try:
             if "ToolSpec" in tool_name:
@@ -43,7 +45,7 @@ class ToolFactory:
     @staticmethod
     def from_env(
         map_result: bool = False,
-    ) -> dict[str, list[FunctionTool]] | list[FunctionTool]:
+    ) -> Union[Dict[str, List[FunctionTool]], List[FunctionTool]]:
         """
         Load tools from the configured file.
 
@@ -54,7 +56,7 @@ class ToolFactory:
             A dictionary of tool names to lists of FunctionTools if map_result is True,
             otherwise a list of FunctionTools.
         """
-        tools: dict[str, list[FunctionTool]] | list[FunctionTool] = (
+        tools: Union[Dict[str, List[FunctionTool]], List[FunctionTool]] = (
             {} if map_result else []
         )
 
@@ -67,8 +69,8 @@ class ToolFactory:
                             tool_type, tool_name, config
                         )
                         if map_result:
-                            tools[tool_name] = loaded_tools
+                            tools[tool_name] = loaded_tools  # type: ignore
                         else:
-                            tools.extend(loaded_tools)
+                            tools.extend(loaded_tools)  # type: ignore
 
         return tools
