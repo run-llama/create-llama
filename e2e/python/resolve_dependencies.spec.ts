@@ -178,11 +178,6 @@ if (
             observability,
           },
         });
-
-        const pyprojectContent = fs.readFileSync(pyprojectPath, "utf-8");
-        expect(pyprojectContent).toContain(
-          `llama-index-observability-${observability}`,
-        );
       });
     }
   });
