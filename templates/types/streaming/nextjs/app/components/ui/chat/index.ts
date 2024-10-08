@@ -26,12 +26,20 @@ export type DocumentFileContent = {
   value: string[] | string;
 };
 
-export type DocumentFile = {
+export type UploadedFileMeta = {
   id: string;
+  name: string;
+  url?: string;
+  refs?: string[];
+};
+
+export type DocumentFile = {
+  id?: string;
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
   content: DocumentFileContent;
+  metadata?: UploadedFileMeta;
 };
 
 export type DocumentFileData = {

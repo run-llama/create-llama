@@ -66,11 +66,17 @@ class CodeGeneratorTool:
     def __init__(self):
         pass
 
-    def artifact(self, query: str, old_code: Optional[str] = None) -> Dict:
+    def artifact(
+        self,
+        query: str,
+        sandbox_files: Optional[List[str]] = None,
+        old_code: Optional[str] = None,
+    ) -> Dict:
         """Generate a code artifact based on the input.
 
         Args:
             query (str): The description of the application you want to build.
+            sandbox_files (Optional[List[str]], optional): The list of sandbox file paths. Defaults to None.
             old_code (Optional[str], optional): The existing code to be modified. Defaults to None.
 
         Returns:
@@ -81,16 +87,20 @@ class CodeGeneratorTool:
             user_message = f"{query}\n\nThe existing code is: \n```\n{old_code}\n```"
         else:
             user_message = query
+        if sandbox_files:
+            user_message += f"\n\nThe provided files are: \n{str(sandbox_files)}"
 
         messages: List[ChatMessage] = [
             ChatMessage(role="system", content=CODE_GENERATION_PROMPT),
             ChatMessage(role="user", content=user_message),
         ]
         try:
-            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)  # type: ignore
+            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)
             response = sllm.chat(messages)
-            data: CodeArtifact = response.raw
-            return data.model_dump()
+            data: CodeArtifact = response.raw.model_dump()
+            if sandbox_files:
+                data["files"] = sandbox_files
+            return data
         except Exception as e:
             logger.error(f"Failed to generate artifact: {str(e)}")
             raise e

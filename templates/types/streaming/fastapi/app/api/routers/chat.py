@@ -15,6 +15,7 @@ from app.api.routers.models import (
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.engine.engine import get_chat_engine
 from app.engine.query_filter import generate_filters
+from app.engine.tools import ToolFactory
 
 chat_router = r = APIRouter()
 
@@ -28,8 +29,13 @@ async def chat(
     data: ChatData,
     background_tasks: BackgroundTasks,
 ):
+    # Check is code interpreter is enabled
+    tools = ToolFactory.from_env(map_result=True)
+    only_file_metadata = False
+    if "interpreter" in tools or "artifact" in tools:
+        only_file_metadata = True
     try:
-        last_message_content = data.get_last_message_content()
+        last_message_content = data.get_last_message_content(only_file_metadata)
         messages = data.get_history_messages()
 
         doc_ids = data.get_chat_document_ids()

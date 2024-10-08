@@ -26,6 +26,7 @@ export type CodeArtifact = {
   port: number | null;
   file_path: string;
   code: string;
+  files?: string[];
 };
 
 type ArtifactResult = {
