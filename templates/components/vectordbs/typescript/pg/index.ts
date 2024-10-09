@@ -9,7 +9,9 @@ import {
 export async function getDataSource(params?: any) {
   checkRequiredEnvVars();
   const pgvs = new PGVectorStore({
-    connectionString: process.env.PG_CONNECTION_STRING,
+    clientConfig: {
+      connectionString: process.env.PG_CONNECTION_STRING,
+    },
     schemaName: PGVECTOR_SCHEMA,
     tableName: PGVECTOR_TABLE,
   });

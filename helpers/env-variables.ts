@@ -65,7 +65,7 @@ const getVectorDBEnvs = (
         {
           name: "PG_CONNECTION_STRING",
           description:
-            "For generating a connection URI, see https://docs.timescale.com/use-timescale/latest/services/create-a-service\nThe PostgreSQL connection string.",
+            "For generating a connection URI, see https://supabase.com/vector\nThe PostgreSQL connection string.",
         },
       ];
 
