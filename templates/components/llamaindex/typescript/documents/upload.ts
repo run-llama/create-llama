@@ -16,14 +16,26 @@ export async function uploadDocument(
     // trigger LlamaCloudIndex API to upload the file and run the pipeline
     const projectId = await index.getProjectId();
     const pipelineId = await index.getPipelineId();
-    return [
-      await LLamaCloudFileService.addFileToPipeline(
-        projectId,
-        pipelineId,
-        new File([fileBuffer], filename, { type: mimeType }),
-        { private: "true" },
-      ),
-    ];
+    try {
+      return [
+        await LLamaCloudFileService.addFileToPipeline(
+          projectId,
+          pipelineId,
+          new File([fileBuffer], filename, { type: mimeType }),
+          { private: "true" },
+        ),
+      ];
+    } catch (error) {
+      if (
+        error instanceof ReferenceError &&
+        error.message.includes("File is not defined")
+      ) {
+        throw new Error(
+          "File class is not supported in the current Node.js version. Please use Node.js 20 or higher.",
+        );
+      }
+      throw error;
+    }
   }
 
   // run the pipeline for other vector store indexes
