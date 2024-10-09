@@ -35,7 +35,16 @@ const prepareChatHistory = (chatHistory: ChatMessage[]) => {
   // Get annotations from assistant messages
   const agentAnnotations = chatHistory
     .filter((msg) => msg.role === "assistant")
-    .flatMap((msg) => msg.annotations || [])
+    .flatMap((msg) => {
+      if ("annotations" in msg) {
+        return msg.annotations || [];
+      }
+      return [];
+    })
+    .filter(
+      (annotation): annotation is { type: string; data: any } =>
+        annotation && typeof annotation === "object" && "type" in annotation,
+    )
     .filter((annotation) => annotation.type === "agent")
     .slice(-MAX_AGENT_MESSAGES);
 
@@ -64,7 +73,7 @@ const prepareChatHistory = (chatHistory: ChatMessage[]) => {
   return chatHistory;
 };
 
-export const createWorkflow = (chatHistory: ChatMessage[]) => {
+export const createWorkflow = (chatHistory: ChatMessage[], params?: any) => {
   const chatHistoryWithAgentMessages = prepareChatHistory(chatHistory);
   const runAgent = async (
     context: Context,
@@ -123,7 +132,10 @@ Decision (respond with either 'not_publish' or 'publish'):`;
   };
 
   const research = async (context: Context, ev: ResearchEvent) => {
-    const researcher = await createResearcher(chatHistoryWithAgentMessages);
+    const researcher = await createResearcher(
+      chatHistoryWithAgentMessages,
+      params,
+    );
     const researchRes = await runAgent(context, researcher, {
       message: ev.data.input,
     });

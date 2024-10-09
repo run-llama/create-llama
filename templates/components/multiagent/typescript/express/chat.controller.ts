@@ -7,7 +7,7 @@ import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { messages }: { messages: Message[] } = req.body;
+    const { messages, data }: { messages: Message[]; data?: any } = req.body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return res.status(400).json({
@@ -17,7 +17,7 @@ export const chat = async (req: Request, res: Response) => {
     }
 
     const chatHistory = messages as ChatMessage[];
-    const agent = createWorkflow(chatHistory);
+    const agent = createWorkflow(chatHistory, data);
     const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
       userMessage.content,
     ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
