@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-bump: use latest LITS
+bump: use LlamaIndexTS 0.6.18

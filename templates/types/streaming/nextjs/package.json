@@ -27,7 +27,7 @@
     "duck-duck-scrape": "^2.2.5",
     "formdata-node": "^6.0.3",
     "got": "^14.4.1",
-    "llamaindex": "0.6.17",
+    "llamaindex": "0.6.18",
     "lucide-react": "^0.294.0",
     "next": "^14.2.4",
     "react": "^18.2.0",
