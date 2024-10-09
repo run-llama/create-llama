@@ -32,10 +32,9 @@ async function loadAndIndex() {
   for await (const filePath of walk(DATA_DIR)) {
     const buffer = await fs.readFile(filePath);
     const filename = path.basename(filePath);
-    const blob = new Blob([buffer], { type: "application/octet-stream" });
-    await LLamaCloudFileService.addFileToPipeline(projectId, pipelineId, blob, {
-      private: false,
-      filename: filename,
+    const file = new File([buffer], filename);
+    await LLamaCloudFileService.addFileToPipeline(projectId, pipelineId, file, {
+      private: "false",
     });
   }
 
