@@ -1,6 +1,6 @@
-import { MetadataFilter, MetadataFilters } from "llamaindex";
+import { CloudRetrieveParams, MetadataFilter } from "llamaindex";
 
-export function generateFilters(documentIds: string[]): MetadataFilters {
+export function generateFilters(documentIds: string[]) {
   // public documents don't have the "private" field or it's set to "false"
   const publicDocumentsFilter: MetadataFilter = {
     key: "private",
@@ -8,7 +8,10 @@ export function generateFilters(documentIds: string[]): MetadataFilters {
   };
 
   // if no documentIds are provided, only retrieve information from public documents
-  if (!documentIds.length) return { filters: [publicDocumentsFilter] };
+  if (!documentIds.length)
+    return {
+      filters: [publicDocumentsFilter],
+    } as CloudRetrieveParams["filters"];
 
   const privateDocumentsFilter: MetadataFilter = {
     key: "file_id", // Note: LLamaCloud uses "file_id" to reference private document ids as "doc_id" is a restricted field in LlamaCloud
@@ -20,5 +23,5 @@ export function generateFilters(documentIds: string[]): MetadataFilters {
   return {
     filters: [publicDocumentsFilter, privateDocumentsFilter],
     condition: "or",
-  };
+  } as CloudRetrieveParams["filters"];
 }
