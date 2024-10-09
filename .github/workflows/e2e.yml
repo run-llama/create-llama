@@ -19,7 +19,7 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
-        datasources: ["--no-files", "--example-file"]
+        datasources: ["--no-files", "--example-file", "--llamacloud"]
     defaults:
       run:
         shell: bash
@@ -86,7 +86,7 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs", "express"]
-        datasources: ["--no-files", "--example-file"]
+        datasources: ["--no-files", "--example-file", "--llamacloud"]
     defaults:
       run:
         shell: bash
