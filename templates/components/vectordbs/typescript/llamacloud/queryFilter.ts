@@ -1,7 +1,7 @@
 import { CloudRetrieveParams, MetadataFilter } from "llamaindex";
 
 export function generateFilters(documentIds: string[]) {
-  // public documents don't have the "private" field or it's set to "false"
+  // public documents (ingested by "npm run generate" or in the LlamaCloud UI) don't have the "private" field
   const publicDocumentsFilter: MetadataFilter = {
     key: "private",
     operator: "is_empty",

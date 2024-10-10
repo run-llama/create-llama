@@ -5,7 +5,7 @@ def generate_filters(doc_ids):
     """
     Generate public/private document filters based on the doc_ids and the vector store.
     """
-    # Using "is_empty" filter to include the documents don't have the "private" key because they're uploaded in LlamaCloud UI
+    # public documents (ingested by "poetry run generate" or in the LlamaCloud UI) don't have the "private" field
     public_doc_filter = MetadataFilter(
         key="private",
         value=None,
