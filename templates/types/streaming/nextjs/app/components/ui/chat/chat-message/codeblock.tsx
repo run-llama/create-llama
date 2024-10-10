@@ -1,15 +1,12 @@
 "use client";
 
 import { Check, Copy, Download } from "lucide-react";
-import { FC, memo } from "react";
-import { Prism, SyntaxHighlighterProps } from "react-syntax-highlighter";
+import { FC, memo, useMemo } from "react";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coldarkDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
-
-// TODO: Remove this when @type/react-syntax-highlighter is updated
-const SyntaxHighlighter = Prism as unknown as FC<SyntaxHighlighterProps>;
 
 interface Props {
   language: string;
@@ -58,6 +55,33 @@ export const generateRandomString = (length: number, lowercase = false) => {
 
 const CodeBlock: FC<Props> = memo(({ language, value }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
+
+  const MemoizedSyntaxHighlighter = useMemo(() => {
+    const Component = ({ value }: { value: string }) => (
+      <SyntaxHighlighter
+        language="jsx"
+        style={coldarkDark}
+        PreTag="div"
+        showLineNumbers
+        customStyle={{
+          width: "100%",
+          background: "transparent",
+          padding: "1.5rem 1rem",
+          borderRadius: "0.5rem",
+        }}
+        codeTagProps={{
+          style: {
+            fontSize: "0.9rem",
+            fontFamily: "var(--font-mono)",
+          },
+        }}
+      >
+        {value}
+      </SyntaxHighlighter>
+    );
+    Component.displayName = `Component_${language}`;
+    return Component;
+  }, [language]);
 
   const downloadAsFile = () => {
     if (typeof window === "undefined") {
@@ -111,26 +135,7 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
           </Button>
         </div>
       </div>
-      <SyntaxHighlighter
-        language={language}
-        style={coldarkDark}
-        PreTag="div"
-        showLineNumbers
-        customStyle={{
-          width: "100%",
-          background: "transparent",
-          padding: "1.5rem 1rem",
-          borderRadius: "0.5rem",
-        }}
-        codeTagProps={{
-          style: {
-            fontSize: "0.9rem",
-            fontFamily: "var(--font-mono)",
-          },
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
+      <MemoizedSyntaxHighlighter value={value} />
     </div>
   );
 });
