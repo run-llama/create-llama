@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.2.18
+
+### Patch Changes
+
+- 75e1f61: Fix cannot query public document from llamacloud
+- 88220f1: fix workflow doesn't stop when user presses stop generation button
+- 75e1f61: Fix typescript templates cannot upload file to llamacloud
+- 88220f1: Bump llama_index@0.11.17
+
 ## 0.2.17
 
 ### Patch Changes
