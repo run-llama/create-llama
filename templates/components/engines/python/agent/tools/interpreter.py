@@ -45,7 +45,7 @@ class E2BCodeInterpreter:
         self.interpreter = CodeInterpreter(api_key=api_key)
 
     def __del__(self):
-        self.interpreter.close()
+        self.interpreter.kill()
 
     def get_output_path(self, filename: str) -> str:
         # if output directory doesn't exist, create it

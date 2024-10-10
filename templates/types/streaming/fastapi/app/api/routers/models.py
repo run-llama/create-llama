@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional, Union
+from textwrap import dedent
+from typing import Any, Dict, List, Literal, Optional
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -19,12 +20,71 @@ class FileContent(BaseModel):
     value: str | List[str]
 
 
+class FileMetadata(BaseModel):
+    id: str
+    name: str
+    url: Optional[str] = None
+    refs: Optional[List[str]] = None
+
+    def to_llm_content(self) -> str:
+        """
+        Construct content for LLM from the file metadata
+        """
+        default_content = dedent(
+            f"""
+            ====={self.name}=====\n
+            """
+        )
+        if self.url is not None:
+            default_content += f"File URL: {self.url}\n"
+        else:
+            # Construct url from file name
+            url = f"https://{os.getenv('FILESERVER_URL_PREFIX')}/output/uploaded/{self.name}"
+            default_content += (
+                f"File URL (instruction: do not update this file URL yourself): {url}\n"
+            )
+        if self.refs is not None:
+            default_content += f"Document IDs: {self.refs}\n"
+        # construct additional metadata for code interpreter
+        sandbox_file_path = f"/tmp/{self.name}"
+        default_content += f"Sandbox file path: {sandbox_file_path}\n"
+        return default_content
+
+
 class File(BaseModel):
     id: str
-    content: FileContent
-    filename: str
-    filesize: int
     filetype: str
+    metadata: FileMetadata
+
+    def _load_file_content(self) -> str:
+        file_path = f"output/uploaded/{self.metadata.name}"
+        with open(file_path, "r") as file:
+            return file.read()
+
+    def to_llm_content(
+        self,
+        only_file_metadata: bool = False,
+        ignore_unsupported_filetype: bool = True,
+    ) -> str:
+        """
+        Construct content for LLM from the file
+        Args:
+            ignore_unsupported_filetype: If True, ignore the file type that is not supported
+        Returns:
+            The content for LLM
+        """
+        llm_content = ""
+        llm_content += self.metadata.to_llm_content()
+        if not only_file_metadata:
+            if self.filetype == "csv" or self.filetype == "txt":
+                file_content = self._load_file_content()
+                llm_content += f"Content:\n{file_content}\n"
+            else:
+                if ignore_unsupported_filetype:
+                    return f"Content:\nCould not load content for this file because the file type {self.filetype} is not supported"
+                else:
+                    raise ValueError(f"Unsupported file type: {self.filetype}")
+        return llm_content
 
 
 class AnnotationFileData(BaseModel):
@@ -62,24 +122,24 @@ class ArtifactAnnotation(BaseModel):
 
 class Annotation(BaseModel):
     type: str
-    data: Union[AnnotationFileData, List[str], AgentAnnotation, ArtifactAnnotation]
+    data: AnnotationFileData | List[str] | AgentAnnotation | ArtifactAnnotation
 
-    def to_content(self) -> Optional[str]:
+    def to_content(self, only_file_metadata: bool = False) -> str | None:
+        # Note: This code only handles files that were not indexed in the vector database
+        # (i.e., files not uploaded through the upload file API)
         if self.type == "document_file":
-            if isinstance(self.data, AnnotationFileData):
-                # We only support generating context content for CSV files for now
-                csv_files = [file for file in self.data.files if file.filetype == "csv"]
-                if len(csv_files) > 0:
-                    return "Use data from following CSV raw content\n" + "\n".join(
-                        [
-                            f"```csv\n{csv_file.content.value}\n```"
-                            for csv_file in csv_files
-                        ]
-                    )
-            else:
-                logger.warning(
-                    f"Unexpected data type for document_file annotation: {type(self.data)}"
+            assert isinstance(self.data, AnnotationFileData)
+            # We only support generating context content for CSV files for now
+            # iterate through all files and construct content for LLM
+            file_contents = [
+                file.to_llm_content(only_file_metadata) for file in self.data.files
+            ]
+            if len(file_contents) > 0:
+                return "Use data from following files content\n" + "\n".join(
+                    file_contents
                 )
+        elif self.type == "image":
+            raise NotImplementedError("Use image file is not supported yet!")
         else:
             logger.warning(
                 f"The annotation {self.type} is not supported for generating context content"
@@ -115,10 +175,15 @@ class ChatData(BaseModel):
             raise ValueError("Messages must not be empty")
         return v
 
-    def get_last_message_content(self) -> str:
+    def get_last_message_content(
+        self,
+        only_file_metadata: bool = False,
+    ) -> str:
         """
         Get the content of the last message along with the data content if available.
         Fallback to use data content from previous messages
+        Args:
+            only_file_metadata: Either include the uploaded file content or not. If false, only file metadata will be included which is useful for code interpreter tool
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
@@ -128,7 +193,10 @@ class ChatData(BaseModel):
             if message.role == MessageRole.USER and message.annotations is not None:
                 annotation_contents = filter(
                     None,
-                    [annotation.to_content() for annotation in message.annotations],
+                    [
+                        annotation.to_content(only_file_metadata)
+                        for annotation in message.annotations
+                    ],
                 )
                 if not annotation_contents:
                     continue
@@ -175,7 +243,12 @@ class ChatData(BaseModel):
                     ):
                         tool_output = annotation.data.toolOutput
                         if tool_output and not tool_output.get("isError", False):
-                            return tool_output.get("output", {}).get("code", None)
+                            print("tool_output", tool_output)
+                            output = tool_output.get("output", {})
+                            if isinstance(output, dict) and output.get("code"):
+                                return output.get("code")
+                            else:
+                                return None
         return None
 
     def get_history_messages(
@@ -221,13 +294,23 @@ class ChatData(BaseModel):
                 for annotation in message.annotations:
                     if (
                         annotation.type == "document_file"
-                        and isinstance(annotation.data, AnnotationFileData)
                         and annotation.data.files is not None
                     ):
                         for fi in annotation.data.files:
-                            if fi.content.type == "ref":
-                                document_ids += fi.content.value
+                            if fi.metadata.refs is not None:
+                                document_ids += fi.metadata.refs
         return list(set(document_ids))
+
+    def get_uploaded_files(self) -> List[Dict[str, Any]]:
+        """
+        Get the uploaded files from the chat data
+        """
+        for message in self.messages:
+            if message.role == MessageRole.USER and message.annotations is not None:
+                for annotation in message.annotations:
+                    if annotation.type == "document_file":
+                        return [file.model_dump() for file in annotation.data.files]
+        return []
 
 
 class SourceNodes(BaseModel):
@@ -251,7 +334,7 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
-    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> Optional[str]:
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
         url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if not url_prefix:
             logger.warning(

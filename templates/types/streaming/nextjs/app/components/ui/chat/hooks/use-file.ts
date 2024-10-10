@@ -2,12 +2,12 @@
 
 import { JSONValue } from "llamaindex";
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import {
   DocumentFile,
   DocumentFileType,
   MessageAnnotation,
   MessageAnnotationType,
+  UploadedFileMeta,
 } from "..";
 import { useClientConfig } from "./use-config";
 
@@ -51,7 +51,7 @@ export function useFile() {
   const uploadContent = async (
     file: File,
     requestParams: any = {},
-  ): Promise<string[]> => {
+  ): Promise<UploadedFileMeta> => {
     const base64 = await readContent({ file, asUrl: true });
     const uploadAPI = `${backend}/api/chat/upload`;
     const response = await fetch(uploadAPI, {
@@ -66,7 +66,7 @@ export function useFile() {
       }),
     });
     if (!response.ok) throw new Error("Failed to upload document.");
-    return await response.json();
+    return (await response.json()) as UploadedFileMeta;
   };
 
   const getAnnotations = () => {
@@ -112,34 +112,19 @@ export function useFile() {
 
     const filetype = docMineTypeMap[file.type];
     if (!filetype) throw new Error("Unsupported document type.");
-    const newDoc: Omit<DocumentFile, "content"> = {
-      id: uuidv4(),
-      filetype,
+    const uploadedFileMeta = await uploadContent(file, requestParams);
+    const newDoc: DocumentFile = {
+      id: uploadedFileMeta.id,
       filename: file.name,
       filesize: file.size,
+      filetype,
+      content: {
+        type: "ref",
+        value: uploadedFileMeta.refs || [],
+      },
+      metadata: uploadedFileMeta,
     };
-    switch (file.type) {
-      case "text/csv": {
-        const content = await readContent({ file });
-        return addDoc({
-          ...newDoc,
-          content: {
-            type: "text",
-            value: content,
-          },
-        });
-      }
-      default: {
-        const ids = await uploadContent(file, requestParams);
-        return addDoc({
-          ...newDoc,
-          content: {
-            type: "ref",
-            value: ids,
-          },
-        });
-      }
-    }
+    return addDoc(newDoc);
   };
 
   return {

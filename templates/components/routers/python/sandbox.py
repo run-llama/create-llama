@@ -54,12 +54,19 @@ class ExecutionResult(BaseModel):
         }
 
 
+class FileUpload(BaseModel):
+    id: str
+    name: str
+
+
 @sandbox_router.post("")
 async def create_sandbox(request: Request):
     request_data = await request.json()
+    artifact_data = request_data["artifact"]
+    sandbox_files = artifact_data["files"]
 
     try:
-        artifact = CodeArtifact(**request_data["artifact"])
+        artifact = CodeArtifact(**artifact_data)
     except Exception:
         logger.error(f"Could not create artifact from request data: {request_data}")
         return HTTPException(
@@ -94,6 +101,9 @@ async def create_sandbox(request: Request):
                 f"Installed dependencies: {', '.join(artifact.additional_dependencies)} in sandbox {sbx}"
             )
 
+    # Copy files
+    _upload_files(sbx, sandbox_files)
+
     # Copy code to disk
     if isinstance(artifact.code, list):
         for file in artifact.code:
@@ -124,6 +134,19 @@ async def create_sandbox(request: Request):
             output_urls=[],
             url=f"https://{sbx.get_host(artifact.port or 80)}",
         ).to_response()
+
+
+def _upload_files(
+    sandbox: Union[CodeInterpreter, Sandbox],
+    sandbox_files: List[str] = [],
+) -> None:
+    for file_path in sandbox_files:
+        file_name = os.path.basename(file_path)
+        local_file_path = f"output/uploaded/{file_name}"
+        with open(local_file_path, "rb") as f:
+            content = f.read()
+            sandbox.files.write(file_path, content)
+    return None
 
 
 def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]:
