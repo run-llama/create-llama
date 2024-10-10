@@ -150,8 +150,6 @@ export class FunctionCallingAgent extends Workflow {
           options: fullResponse.options,
         });
         yield fullResponse;
-      } else {
-        return; // Explicitly mark generator as done
       }
     };
 
