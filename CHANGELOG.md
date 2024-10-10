@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.2.19
+
+### Patch Changes
+
+- 3d41488: feat: use selected llamacloud for multiagent
+
 ## 0.2.18
 
 ### Patch Changes
