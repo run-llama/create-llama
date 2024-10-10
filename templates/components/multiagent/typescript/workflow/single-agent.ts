@@ -149,6 +149,7 @@ export class FunctionCallingAgent extends Workflow {
           content: "",
           options: fullResponse.options,
         });
+        yield fullResponse;
       }
     };
 
