@@ -1,20 +1,18 @@
 # flake8: noqa: E402
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from llama_cloud import PipelineType
-
-from app.settings import init_settings
-from llama_index.core.settings import Settings
-
+import logging
 
 from app.engine.index import get_client, get_index
-
-import logging
-from llama_index.core.readers import SimpleDirectoryReader
 from app.engine.service import LLamaCloudFileService
+from app.settings import init_settings
+from llama_cloud import PipelineType
+from llama_index.core.readers import SimpleDirectoryReader
+from llama_index.core.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -83,10 +81,6 @@ def generate_datasource():
                 project_id,
                 pipeline_id,
                 f,
-                custom_metadata={
-                    # Set private=false to mark the document as public (required for filtering)
-                    "private": "false",
-                },
             )
 
     logger.info("Finished generating the index")

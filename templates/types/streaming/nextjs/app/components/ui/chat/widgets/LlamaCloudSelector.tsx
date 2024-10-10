@@ -66,7 +66,16 @@ export function LlamaCloudSelector({
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && !config) {
       fetch(`${backend}/api/chat/config/llamacloud`)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((errorData) => {
+              window.alert(
+                `Error: ${JSON.stringify(errorData) || "Unknown error occurred"}`,
+              );
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
           const pipeline = defaultPipeline ?? data.pipeline; // defaultPipeline will override pipeline in .env
           setConfig({ ...data, pipeline });

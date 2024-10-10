@@ -25,6 +25,8 @@ async function* walk(dir: string): AsyncGenerator<string> {
 
 async function loadAndIndex() {
   const index = await getDataSource();
+  // ensure the index is available or create a new one
+  await index.ensureIndex();
   const projectId = await index.getProjectId();
   const pipelineId = await index.getPipelineId();
 
@@ -37,7 +39,6 @@ async function loadAndIndex() {
         projectId,
         pipelineId,
         new File([buffer], filename),
-        { private: "false" },
       );
     } catch (error) {
       if (

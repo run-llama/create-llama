@@ -1,10 +1,9 @@
 import logging
 import os
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.api.routers.models import ChatConfig
-
 
 config_router = r = APIRouter()
 
@@ -27,6 +26,10 @@ try:
 
     @r.get("/llamacloud")
     async def chat_llama_cloud_config():
+        if not os.getenv("LLAMA_CLOUD_API_KEY"):
+            raise HTTPException(
+                status_code=500, detail="LlamaCloud API KEY is not configured"
+            )
         projects = LLamaCloudFileService.get_all_projects_with_pipelines()
         pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
         project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
