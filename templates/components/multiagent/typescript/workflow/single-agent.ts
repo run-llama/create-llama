@@ -143,13 +143,15 @@ export class FunctionCallingAgent extends Workflow {
         fullResponse = chunk;
       }
 
-      if (fullResponse) {
+      if (fullResponse?.options && Object.keys(fullResponse.options).length) {
         memory.put({
           role: "assistant",
           content: "",
           options: fullResponse.options,
         });
         yield fullResponse;
+      } else {
+        return; // Explicitly mark generator as done
       }
     };
 
