@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-bump: use LlamaIndexTS 0.6.18
+Bump llama_index@0.11.17

@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.2.17
+
+### Patch Changes
+
+- cd3fcd0: bump: use LlamaIndexTS 0.6.18
+- 6335de1: Fix using LlamaCloud selector does not use the configured values in the environment (Python)
+
 ## 0.2.16
 
 ### Patch Changes
