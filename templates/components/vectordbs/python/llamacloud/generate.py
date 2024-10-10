@@ -78,9 +78,7 @@ def generate_datasource():
                 f"Adding file {input_file} to pipeline {index.name} in project {index.project_name}"
             )
             LLamaCloudFileService.add_file_to_pipeline(
-                project_id,
-                pipeline_id,
-                f,
+                project_id, pipeline_id, f, custom_metadata={}
             )
 
     logger.info("Finished generating the index")
