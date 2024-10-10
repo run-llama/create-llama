@@ -4,8 +4,10 @@ import path from "path";
 import { getDataSource } from "../engine";
 import { createTools } from "../engine/tools/index";
 
-const getQueryEngineTool = async (): Promise<QueryEngineTool | null> => {
-  const index = await getDataSource();
+export const getQueryEngineTool = async (
+  params?: any,
+): Promise<QueryEngineTool | null> => {
+  const index = await getDataSource(params);
   if (!index) {
     return null;
   }
