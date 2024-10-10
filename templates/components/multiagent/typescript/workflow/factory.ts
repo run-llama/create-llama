@@ -206,7 +206,10 @@ Decision (respond with either 'not_publish' or 'publish'):`;
   };
 
   const publish = async (context: Context, ev: PublishEvent) => {
-    const publisher = await createPublisher(chatHistoryWithAgentMessages);
+    const publisher = await createPublisher(
+      chatHistoryWithAgentMessages,
+      params,
+    );
 
     const publishResult = await runAgent(context, publisher, {
       message: `${ev.data.input}`,

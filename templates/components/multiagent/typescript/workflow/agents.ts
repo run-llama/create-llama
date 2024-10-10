@@ -80,8 +80,14 @@ Example:
   });
 };
 
-export const createPublisher = async (chatHistory: ChatMessage[]) => {
-  const tools = await lookupTools(["document_generator"]);
+export const createPublisher = async (
+  chatHistory: ChatMessage[],
+  params?: any,
+) => {
+  const queryEngineTool = await getQueryEngineTool(params);
+  const tools = (await lookupTools(["document_generator"])).concat(
+    queryEngineTool ? [queryEngineTool] : [],
+  );
   let systemPrompt = `You are an expert in publishing blog posts. You are given a task to publish a blog post. 
 If the writer says that there was an error, you should reply with the error and not publish the post.`;
   if (tools.length > 0) {
