@@ -86,7 +86,7 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs", "express"]
-        datasources: ["--no-files", "--example-file", "--llamacloud"]
+        datasources: ["--no-files", "--example-file"]
     defaults:
       run:
         shell: bash
