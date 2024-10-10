@@ -5,7 +5,9 @@ import {
   Workflow,
   WorkflowEvent,
 } from "@llamaindex/core/workflow";
+import { Message } from "ai";
 import { ChatMessage, ChatResponseChunk, Settings } from "llamaindex";
+import { getAnnotations } from "../llamaindex/streaming/annotations";
 import {
   createPublisher,
   createResearcher,
@@ -25,28 +27,15 @@ class WriteEvent extends WorkflowEvent<{
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 class PublishEvent extends WorkflowEvent<{ input: string }> {}
 
-const prepareChatHistory = (chatHistory: ChatMessage[]) => {
+const prepareChatHistory = (chatHistory: Message[]): ChatMessage[] => {
   // By default, the chat history only contains the assistant and user messages
   // all the agents messages are stored in annotation data which is not visible to the LLM
 
   const MAX_AGENT_MESSAGES = 10;
-
-  // Construct a new agent message from agent messages
-  // Get annotations from assistant messages
-  const agentAnnotations = chatHistory
-    .filter((msg) => msg.role === "assistant")
-    .flatMap((msg) => {
-      if ("annotations" in msg) {
-        return msg.annotations || [];
-      }
-      return [];
-    })
-    .filter(
-      (annotation): annotation is { type: string; data: any } =>
-        annotation && typeof annotation === "object" && "type" in annotation,
-    )
-    .filter((annotation) => annotation.type === "agent")
-    .slice(-MAX_AGENT_MESSAGES);
+  const agentAnnotations = getAnnotations<{ agent: string; text: string }>(
+    chatHistory,
+    { role: "assistant", type: "agent" },
+  ).slice(-MAX_AGENT_MESSAGES);
 
   const agentMessages = agentAnnotations
     .map(
@@ -68,13 +57,13 @@ const prepareChatHistory = (chatHistory: ChatMessage[]) => {
       ...chatHistory.slice(0, -1),
       agentMessage,
       chatHistory.slice(-1)[0],
-    ];
+    ] as ChatMessage[];
   }
-  return chatHistory;
+  return chatHistory as ChatMessage[];
 };
 
-export const createWorkflow = (chatHistory: ChatMessage[], params?: any) => {
-  const chatHistoryWithAgentMessages = prepareChatHistory(chatHistory);
+export const createWorkflow = (messages: Message[], params?: any) => {
+  const chatHistoryWithAgentMessages = prepareChatHistory(messages);
   const runAgent = async (
     context: Context,
     agent: Workflow,

@@ -1,7 +1,7 @@
 import { StopEvent } from "@llamaindex/core/workflow";
 import { Message, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatMessage, ChatResponseChunk } from "llamaindex";
+import { ChatResponseChunk } from "llamaindex";
 import { createWorkflow } from "./workflow/factory";
 import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
 
@@ -16,8 +16,7 @@ export const chat = async (req: Request, res: Response) => {
       });
     }
 
-    const chatHistory = messages as ChatMessage[];
-    const agent = createWorkflow(chatHistory, data);
+    const agent = createWorkflow(messages, data);
     const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
       userMessage.content,
     ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;

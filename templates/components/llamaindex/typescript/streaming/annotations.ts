@@ -172,3 +172,26 @@ function getValidAnnotation(annotation: JSONValue): Annotation {
   }
   return { type: annotation.type, data: annotation.data };
 }
+
+// validate and get all annotations of a specific type or role from the frontend messages
+export function getAnnotations<
+  T extends Annotation["data"] = Annotation["data"],
+>(
+  messages: Message[],
+  options?: {
+    role?: Message["role"]; // message role
+    type?: Annotation["type"]; // annotation type
+  },
+): {
+  type: string;
+  data: T;
+}[] {
+  const messagesByRole = options?.role
+    ? messages.filter((msg) => msg.role === options?.role)
+    : messages;
+  const annotations = getAllAnnotations(messagesByRole);
+  const annotationsByType = options?.type
+    ? annotations.filter((a) => a.type === options.type)
+    : annotations;
+  return annotationsByType as { type: string; data: T }[];
+}
