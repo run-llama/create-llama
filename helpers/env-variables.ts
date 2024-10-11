@@ -182,11 +182,11 @@ const getVectorDBEnvs = (
         },
         {
           name: "CHROMA_HOST",
-          description: "The API endpoint for your Chroma database",
+          description: "The hostname for your Chroma database. Eg: localhost",
         },
         {
           name: "CHROMA_PORT",
-          description: "The port for your Chroma database",
+          description: "The port for your Chroma database. Eg: 8000",
         },
       ];
       // TS Version doesn't support config local storage path
