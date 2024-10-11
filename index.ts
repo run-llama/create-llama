@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from "child_process";
 import { Command } from "commander";
-import Conf from "conf";
 import fs from "fs";
 import path from "path";
 import { bold, cyan, green, red, yellow } from "picocolors";
@@ -58,13 +57,6 @@ const program = new Command(packageJson.name)
     `
 
   Explicitly tell the CLI to bootstrap the application using Yarn
-`,
-  )
-  .option(
-    "--reset-preferences",
-    `
-
-  Explicitly tell the CLI to reset any stored preferences
 `,
   )
   .option(
@@ -279,14 +271,6 @@ const packageManager = !!options.useNpm
       : getPkgManager();
 
 async function run(): Promise<void> {
-  const conf = new Conf({ projectName: "create-llama" });
-
-  if (options.resetPreferences) {
-    conf.clear();
-    console.log(`Preferences reset successfully`);
-    return;
-  }
-
   if (typeof projectPath === "string") {
     projectPath = projectPath.trim();
   }
@@ -349,11 +333,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  const preferences = (conf.get("preferences") || {}) as QuestionArgs;
-  const answers = await askQuestions(
-    options as unknown as QuestionArgs,
-    preferences,
-  );
+  const answers = await askQuestions(options as unknown as QuestionArgs);
 
   await createApp({
     ...answers,
@@ -361,7 +341,6 @@ async function run(): Promise<void> {
     packageManager,
     externalPort: options.externalPort,
   });
-  conf.set("preferences", preferences);
 
   if (answers.postInstallAction === "VSCode") {
     console.log(`Starting VSCode in ${root}...`);

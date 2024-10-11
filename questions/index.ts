@@ -5,10 +5,9 @@ import { QuestionArgs, QuestionResults } from "./types";
 
 export const askQuestions = async (
   program: QuestionArgs,
-  preferences: QuestionArgs,
 ): Promise<QuestionResults> => {
   if (ciInfo.isCI || program.pro) {
-    await askProQuestions(program as unknown as QuestionArgs, preferences);
+    await askProQuestions(program as unknown as QuestionArgs);
     return program as unknown as QuestionResults;
   }
   return await askSimpleQuestions(program as unknown as QuestionArgs);

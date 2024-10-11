@@ -31,20 +31,16 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
   tools: [],
 };
 
-export const askProQuestions = async (
-  program: QuestionArgs,
-  preferences: QuestionArgs,
-) => {
-  const getPrefOrDefault = <K extends keyof Omit<QuestionArgs, "modelConfig">>(
+export const askProQuestions = async (program: QuestionArgs) => {
+  const getDefault = <K extends keyof Omit<QuestionArgs, "modelConfig">>(
     field: K,
-  ): Omit<QuestionArgs, "modelConfig">[K] =>
-    preferences[field] ?? defaults[field];
+  ): Omit<QuestionArgs, "modelConfig">[K] => defaults[field];
 
   // Ask for next action after installation
   async function checkAskPostInstallAction() {
     if (program.postInstallAction === undefined) {
       if (ciInfo.isCI) {
-        program.postInstallAction = getPrefOrDefault("postInstallAction");
+        program.postInstallAction = getDefault("postInstallAction");
       } else {
         program.postInstallAction = await askPostInstallAction(program);
       }
@@ -53,7 +49,7 @@ export const askProQuestions = async (
 
   if (!program.template) {
     if (ciInfo.isCI) {
-      program.template = getPrefOrDefault("template");
+      program.template = getDefault("template");
     } else {
       const styledRepo = blue(
         `https://github.com/${COMMUNITY_OWNER}/${COMMUNITY_REPO}`,
@@ -88,7 +84,6 @@ export const askProQuestions = async (
         questionHandlers,
       );
       program.template = template;
-      preferences.template = template;
     }
   }
 
@@ -112,7 +107,6 @@ export const askProQuestions = async (
     );
     const projectConfig = JSON.parse(communityProjectConfig);
     program.communityProjectConfig = projectConfig;
-    preferences.communityProjectConfig = projectConfig;
     return; // early return - no further questions needed for community projects
   }
 
@@ -132,7 +126,6 @@ export const askProQuestions = async (
       questionHandlers,
     );
     program.llamapack = llamapack;
-    preferences.llamapack = llamapack;
     await checkAskPostInstallAction();
     return; // early return - no further questions needed for llamapack projects
   }
@@ -141,11 +134,11 @@ export const askProQuestions = async (
     // Extractor template only supports FastAPI, empty data sources, and llamacloud
     // So we just use example file for extractor template, this allows user to choose vector database later
     program.dataSources = [EXAMPLE_FILE];
-    program.framework = preferences.framework = "fastapi";
+    program.framework = "fastapi";
   }
   if (!program.framework) {
     if (ciInfo.isCI) {
-      program.framework = getPrefOrDefault("framework");
+      program.framework = getDefault("framework");
     } else {
       const choices = [
         { title: "NextJS", value: "nextjs" },
@@ -164,7 +157,6 @@ export const askProQuestions = async (
         questionHandlers,
       );
       program.framework = framework;
-      preferences.framework = framework;
     }
   }
 
@@ -175,7 +167,7 @@ export const askProQuestions = async (
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       if (ciInfo.isCI) {
-        program.frontend = getPrefOrDefault("frontend");
+        program.frontend = getDefault("frontend");
       } else {
         const styledNextJS = blue("NextJS");
         const styledBackend = green(
@@ -190,12 +182,11 @@ export const askProQuestions = async (
           type: "toggle",
           name: "frontend",
           message: `Would you like to generate a ${styledNextJS} frontend for your ${styledBackend}backend?`,
-          initial: getPrefOrDefault("frontend"),
+          initial: getDefault("frontend"),
           active: "Yes",
           inactive: "No",
         });
         program.frontend = Boolean(frontend);
-        preferences.frontend = Boolean(frontend);
       }
     }
   } else {
@@ -210,7 +201,7 @@ export const askProQuestions = async (
 
   if (!program.observability && program.template === "streaming") {
     if (ciInfo.isCI) {
-      program.observability = getPrefOrDefault("observability");
+      program.observability = getDefault("observability");
     } else {
       const { observability } = await prompts(
         {
@@ -230,7 +221,6 @@ export const askProQuestions = async (
       );
 
       program.observability = observability;
-      preferences.observability = observability;
     }
   }
 
@@ -241,12 +231,11 @@ export const askProQuestions = async (
       framework: program.framework,
     });
     program.modelConfig = modelConfig;
-    preferences.modelConfig = modelConfig;
   }
 
   if (!program.dataSources) {
     if (ciInfo.isCI) {
-      program.dataSources = getPrefOrDefault("dataSources");
+      program.dataSources = getDefault("dataSources");
     } else {
       program.dataSources = [];
       // continue asking user for data sources if none are initially provided
@@ -383,7 +372,7 @@ export const askProQuestions = async (
   // Asking for LlamaParse if user selected file data source
   if (isUsingLlamaCloud) {
     // default to use LlamaParse if using LlamaCloud
-    program.useLlamaParse = preferences.useLlamaParse = true;
+    program.useLlamaParse = true;
   } else {
     // Extractor template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
     if (
@@ -393,7 +382,7 @@ export const askProQuestions = async (
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
         if (ciInfo.isCI) {
-          program.useLlamaParse = getPrefOrDefault("useLlamaParse");
+          program.useLlamaParse = getDefault("useLlamaParse");
         } else {
           const { useLlamaParse } = await prompts(
             {
@@ -408,7 +397,6 @@ export const askProQuestions = async (
             questionHandlers,
           );
           program.useLlamaParse = useLlamaParse;
-          preferences.useLlamaParse = useLlamaParse;
         }
       }
     }
@@ -419,7 +407,7 @@ export const askProQuestions = async (
     if (!program.llamaCloudKey) {
       // if already set, don't ask again
       if (ciInfo.isCI) {
-        program.llamaCloudKey = getPrefOrDefault("llamaCloudKey");
+        program.llamaCloudKey = getDefault("llamaCloudKey");
       } else {
         // Ask for LlamaCloud API key
         const { llamaCloudKey } = await prompts(
@@ -431,7 +419,7 @@ export const askProQuestions = async (
           },
           questionHandlers,
         );
-        program.llamaCloudKey = preferences.llamaCloudKey =
+        program.llamaCloudKey =
           llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
       }
     }
@@ -441,10 +429,9 @@ export const askProQuestions = async (
     // When using a LlamaCloud index, don't ask for vector database and use code in `llamacloud` folder for vector database
     const vectorDb = "llamacloud";
     program.vectorDb = vectorDb;
-    preferences.vectorDb = vectorDb;
   } else if (program.dataSources.length > 0 && !program.vectorDb) {
     if (ciInfo.isCI) {
-      program.vectorDb = getPrefOrDefault("vectorDb");
+      program.vectorDb = getDefault("vectorDb");
     } else {
       const { vectorDb } = await prompts(
         {
@@ -457,7 +444,6 @@ export const askProQuestions = async (
         questionHandlers,
       );
       program.vectorDb = vectorDb;
-      preferences.vectorDb = vectorDb;
     }
   }
 
@@ -466,7 +452,7 @@ export const askProQuestions = async (
     (program.template === "streaming" || program.template === "multiagent")
   ) {
     if (ciInfo.isCI) {
-      program.tools = getPrefOrDefault("tools");
+      program.tools = getDefault("tools");
     } else {
       const options = supportedTools.filter((t) =>
         t.supportedFrameworks?.includes(program.framework),
@@ -486,7 +472,6 @@ export const askProQuestions = async (
         supportedTools.find((t) => t.name === tool),
       );
       program.tools = tools;
-      preferences.tools = tools;
     }
   }
 
