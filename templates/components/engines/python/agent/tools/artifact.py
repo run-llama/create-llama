@@ -72,15 +72,15 @@ class CodeGeneratorTool:
         sandbox_files: Optional[List[str]] = None,
         old_code: Optional[str] = None,
     ) -> Dict:
-        """Generate a code artifact based on the input.
+        """Generate a code artifact based on the provided input.
 
         Args:
-            query (str): The description of the application you want to build.
-            sandbox_files (Optional[List[str]], optional): The list of sandbox file paths. Defaults to None.
+            query (str): A description of the application you want to build.
+            sandbox_files (Optional[List[str]], optional): A list of sandbox file paths. Defaults to None. Include these files if the code requires them.
             old_code (Optional[str], optional): The existing code to be modified. Defaults to None.
 
         Returns:
-            Dict: A dictionary containing the generated artifact information.
+            Dict: A dictionary containing information about the generated artifact.
         """
 
         if old_code:

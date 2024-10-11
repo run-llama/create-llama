@@ -16,7 +16,8 @@ import base64
 import logging
 import os
 import uuid
-from typing import Dict, List, Optional, Union
+from dataclasses import asdict
+from typing import Any, Dict, List, Optional, Union
 
 from app.engine.tools.artifact import CodeArtifact
 from app.engine.utils.file_helper import save_file
@@ -36,7 +37,7 @@ class ExecutionResult(BaseModel):
     template: str
     stdout: List[str]
     stderr: List[str]
-    runtime_error: Optional[Dict[str, Union[str, List[str]]]] = None
+    runtime_error: Optional[Dict[str, Any]] = None
     output_urls: List[Dict[str, str]]
     url: Optional[str]
 
@@ -63,7 +64,7 @@ class FileUpload(BaseModel):
 async def create_sandbox(request: Request):
     request_data = await request.json()
     artifact_data = request_data["artifact"]
-    sandbox_files = artifact_data["files"]
+    sandbox_files = artifact_data.get("files", [])
 
     try:
         artifact = CodeArtifact(**artifact_data)
@@ -102,7 +103,8 @@ async def create_sandbox(request: Request):
             )
 
     # Copy files
-    _upload_files(sbx, sandbox_files)
+    if len(sandbox_files) > 0:
+        _upload_files(sbx, sandbox_files)
 
     # Copy code to disk
     if isinstance(artifact.code, list):
@@ -117,11 +119,12 @@ async def create_sandbox(request: Request):
     if artifact.template == "code-interpreter-multilang":
         result = sbx.notebook.exec_cell(artifact.code or "")
         output_urls = _download_cell_results(result.results)
+        runtime_error = asdict(result.error) if result.error else None
         return ExecutionResult(
             template=artifact.template,
             stdout=result.logs.stdout,
             stderr=result.logs.stderr,
-            runtime_error=result.error,
+            runtime_error=runtime_error,
             output_urls=output_urls,
             url=None,
         ).to_response()
