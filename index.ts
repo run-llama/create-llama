@@ -18,8 +18,8 @@ import { getTools } from "./helpers/tools";
 import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
 import { askQuestions } from "./questions/index";
-import { QuestionArgs, onPromptState } from "./questions/questions";
-
+import { QuestionArgs } from "./questions/types";
+import { onPromptState } from "./questions/utils";
 // Run the initialization function
 initializeGlobalAgent();
 

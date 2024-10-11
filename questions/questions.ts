@@ -1,19 +1,8 @@
-import { execSync } from "child_process";
 import ciInfo from "ci-info";
-import fs from "fs";
-import path from "path";
-import { blue, green, red } from "picocolors";
+import { blue, green } from "picocolors";
 import prompts from "prompts";
-import { InstallAppArgs } from "../create-app";
-import {
-  TemplateDataSource,
-  TemplateDataSourceType,
-  TemplateFramework,
-  TemplateType,
-} from "../helpers";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
 import { EXAMPLE_FILE } from "../helpers/datasources";
-import { templatesDir } from "../helpers/dir";
 import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
 import { askModelConfig } from "../helpers/providers";
 import { getProjectOptions } from "../helpers/repo";
@@ -22,56 +11,14 @@ import {
   toolRequiresConfig,
   toolsRequireConfig,
 } from "../helpers/tools";
-
-export type QuestionResults = Omit<
-  InstallAppArgs,
-  "appPath" | "packageManager" | "externalPort"
->;
-export type PureQuestionArgs = {
-  askModels?: boolean;
-  askExamples?: boolean;
-  pro?: boolean;
-};
-export type QuestionArgs = QuestionResults & PureQuestionArgs;
-const supportedContextFileTypes = [
-  ".pdf",
-  ".doc",
-  ".docx",
-  ".xls",
-  ".xlsx",
-  ".csv",
-];
-const MACOS_FILE_SELECTION_SCRIPT = `
-osascript -l JavaScript -e '
-  a = Application.currentApplication();
-  a.includeStandardAdditions = true;
-  a.chooseFile({ withPrompt: "Please select files to process:", multipleSelectionsAllowed: true }).map(file => file.toString())
-'`;
-const MACOS_FOLDER_SELECTION_SCRIPT = `
-osascript -l JavaScript -e '
-  a = Application.currentApplication();
-  a.includeStandardAdditions = true;
-  a.chooseFolder({ withPrompt: "Please select folders to process:", multipleSelectionsAllowed: true }).map(folder => folder.toString())
-'`;
-const WINDOWS_FILE_SELECTION_SCRIPT = `
-Add-Type -AssemblyName System.Windows.Forms
-$openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
-$openFileDialog.InitialDirectory = [Environment]::GetFolderPath('Desktop')
-$openFileDialog.Multiselect = $true
-$result = $openFileDialog.ShowDialog()
-if ($result -eq 'OK') {
-  $openFileDialog.FileNames
-}
-`;
-const WINDOWS_FOLDER_SELECTION_SCRIPT = `
-Add-Type -AssemblyName System.windows.forms
-$folderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
-$dialogResult = $folderBrowser.ShowDialog()
-if ($dialogResult -eq [System.Windows.Forms.DialogResult]::OK)
-{
-    $folderBrowser.SelectedPath
-}
-`;
+import { getDataSourceChoices } from "./datasources";
+import { getVectorDbChoices } from "./stores";
+import { QuestionArgs } from "./types";
+import {
+  onPromptState,
+  questionHandlers,
+  selectLocalContextData,
+} from "./utils";
 
 const defaults: Omit<QuestionArgs, "modelConfig"> = {
   template: "streaming",
@@ -85,176 +32,6 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
   postInstallAction: "dependencies",
   dataSources: [],
   tools: [],
-};
-
-export const questionHandlers = {
-  onCancel: () => {
-    console.error("Exiting.");
-    process.exit(1);
-  },
-};
-
-const getVectorDbChoices = (framework: TemplateFramework) => {
-  const choices = [
-    {
-      title: "No, just store the data in the file system",
-      value: "none",
-    },
-    { title: "MongoDB", value: "mongo" },
-    { title: "PostgreSQL", value: "pg" },
-    { title: "Pinecone", value: "pinecone" },
-    { title: "Milvus", value: "milvus" },
-    { title: "Astra", value: "astra" },
-    { title: "Qdrant", value: "qdrant" },
-    { title: "ChromaDB", value: "chroma" },
-    { title: "Weaviate", value: "weaviate" },
-  ];
-
-  const vectordbLang = framework === "fastapi" ? "python" : "typescript";
-  const compPath = path.join(templatesDir, "components");
-  const vectordbPath = path.join(compPath, "vectordbs", vectordbLang);
-
-  const availableChoices = fs
-    .readdirSync(vectordbPath)
-    .filter((file) => fs.statSync(path.join(vectordbPath, file)).isDirectory());
-
-  const displayedChoices = choices.filter((choice) =>
-    availableChoices.includes(choice.value),
-  );
-
-  return displayedChoices;
-};
-
-export const getDataSourceChoices = (
-  framework: TemplateFramework,
-  selectedDataSource: TemplateDataSource[],
-  template?: TemplateType,
-) => {
-  // If LlamaCloud is already selected, don't show any other options
-  if (selectedDataSource.find((s) => s.type === "llamacloud")) {
-    return [];
-  }
-
-  const choices = [];
-
-  if (selectedDataSource.length > 0) {
-    choices.push({
-      title: "No",
-      value: "no",
-    });
-  }
-  if (selectedDataSource === undefined || selectedDataSource.length === 0) {
-    choices.push({
-      title: "No datasource",
-      value: "none",
-    });
-    choices.push({
-      title:
-        process.platform !== "linux"
-          ? "Use an example PDF"
-          : "Use an example PDF (you can add your own data files later)",
-      value: "exampleFile",
-    });
-  }
-
-  // Linux has many distros so we won't support file/folder picker for now
-  if (process.platform !== "linux") {
-    choices.push(
-      {
-        title: `Use local files (${supportedContextFileTypes.join(", ")})`,
-        value: "file",
-      },
-      {
-        title:
-          process.platform === "win32"
-            ? "Use a local folder"
-            : "Use local folders",
-        value: "folder",
-      },
-    );
-  }
-
-  if (framework === "fastapi" && template !== "extractor") {
-    choices.push({
-      title: "Use website content (requires Chrome)",
-      value: "web",
-    });
-    choices.push({
-      title: "Use data from a database (Mysql, PostgreSQL)",
-      value: "db",
-    });
-  }
-
-  if (!selectedDataSource.length && template !== "extractor") {
-    choices.push({
-      title: "Use managed index from LlamaCloud",
-      value: "llamacloud",
-    });
-  }
-  return choices;
-};
-
-const selectLocalContextData = async (type: TemplateDataSourceType) => {
-  try {
-    let selectedPath: string = "";
-    let execScript: string;
-    let execOpts: any = {};
-    switch (process.platform) {
-      case "win32": // Windows
-        execScript =
-          type === "file"
-            ? WINDOWS_FILE_SELECTION_SCRIPT
-            : WINDOWS_FOLDER_SELECTION_SCRIPT;
-        execOpts = { shell: "powershell.exe" };
-        break;
-      case "darwin": // MacOS
-        execScript =
-          type === "file"
-            ? MACOS_FILE_SELECTION_SCRIPT
-            : MACOS_FOLDER_SELECTION_SCRIPT;
-        break;
-      default: // Unsupported OS
-        console.log(red("Unsupported OS error!"));
-        process.exit(1);
-    }
-    selectedPath = execSync(execScript, execOpts).toString().trim();
-    const paths =
-      process.platform === "win32"
-        ? selectedPath.split("\r\n")
-        : selectedPath.split(", ");
-
-    for (const p of paths) {
-      if (
-        fs.statSync(p).isFile() &&
-        !supportedContextFileTypes.includes(path.extname(p))
-      ) {
-        console.log(
-          red(
-            `Please select a supported file type: ${supportedContextFileTypes}`,
-          ),
-        );
-        process.exit(1);
-      }
-    }
-    return paths;
-  } catch (error) {
-    console.log(
-      red(
-        "Got an error when trying to select local context data! Please try again or select another data source option.",
-      ),
-    );
-    process.exit(1);
-  }
-};
-
-export const onPromptState = (state: any) => {
-  if (state.aborted) {
-    // If we don't re-enable the terminal cursor before exiting
-    // the program, the cursor will remain hidden
-    process.stdout.write("\x1B[?25h");
-    process.stdout.write("\n");
-    process.exit(1);
-  }
 };
 
 export const askProQuestions = async (
@@ -765,8 +542,4 @@ export const askProQuestions = async (
   }
 
   await askPostInstallAction();
-};
-
-export const toChoice = (value: string) => {
-  return { title: value, value };
 };

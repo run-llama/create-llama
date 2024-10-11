@@ -2,12 +2,8 @@ import prompts from "prompts";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
-import {
-  PureQuestionArgs,
-  QuestionResults,
-  questionHandlers,
-} from "./questions";
-
+import { PureQuestionArgs, QuestionResults } from "./types";
+import { questionHandlers } from "./utils";
 type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
 
 type SimpleAnswers = {

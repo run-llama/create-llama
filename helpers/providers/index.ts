@@ -1,6 +1,6 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
-import { questionHandlers } from "../../questions/questions";
+import { questionHandlers } from "../../questions/utils";
 import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askAzureQuestions } from "./azure";

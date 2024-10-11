@@ -1,5 +1,6 @@
-import { askProQuestions, QuestionArgs, QuestionResults } from "./questions";
+import { askProQuestions } from "./questions";
 import { askSimpleQuestions } from "./simple";
+import { QuestionArgs, QuestionResults } from "./types";
 
 export const askQuestions = async (
   program: QuestionArgs,
