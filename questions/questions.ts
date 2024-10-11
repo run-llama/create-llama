@@ -34,7 +34,6 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
 export const askProQuestions = async (
   program: QuestionArgs,
   preferences: QuestionArgs,
-  openAiKey?: string,
 ) => {
   const getPrefOrDefault = <K extends keyof Omit<QuestionArgs, "modelConfig">>(
     field: K,
@@ -237,7 +236,7 @@ export const askProQuestions = async (
 
   if (!program.modelConfig) {
     const modelConfig = await askModelConfig({
-      openAiKey,
+      openAiKey: program.openAiKey,
       askModels: program.askModels ?? false,
       framework: program.framework,
     });
@@ -403,8 +402,8 @@ export const askProQuestions = async (
               message:
                 "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
               initial: false,
-              active: "yes",
-              inactive: "no",
+              active: "Yes",
+              inactive: "No",
             },
             questionHandlers,
           );

@@ -9,6 +9,7 @@ export type PureQuestionArgs = {
   askModels?: boolean;
   askExamples?: boolean;
   pro?: boolean;
+  openAiKey?: string;
 };
 
 export type QuestionArgs = QuestionResults & PureQuestionArgs;

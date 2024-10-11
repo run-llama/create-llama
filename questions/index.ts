@@ -1,3 +1,4 @@
+import ciInfo from "ci-info";
 import { askProQuestions } from "./questions";
 import { askSimpleQuestions } from "./simple";
 import { QuestionArgs, QuestionResults } from "./types";
@@ -5,18 +6,10 @@ import { QuestionArgs, QuestionResults } from "./types";
 export const askQuestions = async (
   program: QuestionArgs,
   preferences: QuestionArgs,
-  openAiKey?: string,
 ): Promise<QuestionResults> => {
-  if (program.pro) {
-    await askProQuestions(
-      program as unknown as QuestionArgs,
-      preferences,
-      openAiKey,
-    );
+  if (ciInfo.isCI || program.pro) {
+    await askProQuestions(program as unknown as QuestionArgs, preferences);
     return program as unknown as QuestionResults;
   }
-  return await askSimpleQuestions(
-    program as unknown as QuestionArgs,
-    openAiKey,
-  );
+  return await askSimpleQuestions(program as unknown as QuestionArgs);
 };

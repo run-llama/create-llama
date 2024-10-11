@@ -353,7 +353,6 @@ async function run(): Promise<void> {
   const answers = await askQuestions(
     options as unknown as QuestionArgs,
     preferences,
-    options.openAiKey,
   );
 
   await createApp({

@@ -16,7 +16,6 @@ type SimpleAnswers = {
 
 export const askSimpleQuestions = async (
   args: PureQuestionArgs,
-  openAiKey?: string,
 ): Promise<QuestionResults> => {
   const { appType } = await prompts(
     {
@@ -55,16 +54,16 @@ export const askSimpleQuestions = async (
       type: "toggle",
       name: "useLlamaCloud",
       message: "Do you want to use LlamaCloud services?",
-      active: "yes",
-      inactive: "no",
       initial: false,
+      active: "Yes",
+      inactive: "No",
       hint: "see https://www.llamaindex.ai/enterprise for more info",
     },
     questionHandlers,
   );
 
   const modelConfig = await askModelConfig({
-    openAiKey,
+    openAiKey: args.openAiKey,
     askModels: args.askModels ?? false,
     framework: language,
   });
