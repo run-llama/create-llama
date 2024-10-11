@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -12,6 +12,14 @@ class FileMetadata(BaseModel):
     outputPath: str
     filename: str
     url: str
+
+    def to_upload_response(self) -> Dict[str, Any]:
+        file_id = self.outputPath.split("/")[-1]
+        return {
+            "id": file_id,
+            "name": self.filename,
+            "url": self.url,
+        }
 
 
 def save_file(
@@ -58,7 +66,7 @@ def save_file(
     logger.info(f"Saved file to {file_path}")
 
     return FileMetadata(
-        outputPath=file_path,
+        outputPath=file_path if isinstance(file_path, str) else str(file_path),
         filename=file_name,
         url=f"{os.getenv('FILESERVER_URL_PREFIX')}/{file_path}",
     )

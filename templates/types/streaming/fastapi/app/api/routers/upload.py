@@ -1,9 +1,8 @@
 import logging
-import uuid
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.api.services.file import PrivateFileService
 
@@ -13,10 +12,6 @@ logger = logging.getLogger("uvicorn")
 
 
 class FileUploadRequest(BaseModel):
-    id: str = Field(
-        default_factory=lambda: str(uuid.uuid4()),
-        description="The session id (optional, if not provided, a new session will be created)",
-    )
     base64: str
     filename: str
     params: Any = None
@@ -24,8 +19,13 @@ class FileUploadRequest(BaseModel):
 
 @r.post("")
 def upload_file(request: FileUploadRequest) -> Dict[str, Any]:
+    """
+    To upload a private file from the chat UI.
+    Returns:
+        The metadata of the uploaded file.
+    """
     try:
-        logger.info(f"Processing file for session {request.id}")
+        logger.info(f"Processing file: {request.filename}")
         file_meta = PrivateFileService.process_file(
             request.filename, request.base64, request.params
         )
