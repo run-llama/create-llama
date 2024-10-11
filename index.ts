@@ -126,7 +126,14 @@ const program = new Command(packageJson.name)
     "--frontend",
     `
 
-  Whether to generate a frontend for your backend.
+  Generate a frontend for your backend.
+`,
+  )
+  .option(
+    "--no-frontend",
+    `
+
+  Do not generate a frontend for your backend.
 `,
   )
   .option(
@@ -163,6 +170,13 @@ const program = new Command(packageJson.name)
 
   Specify the tools you want to use by providing a comma-separated list. For example, 'wikipedia.WikipediaToolSpec,google.GoogleSearchToolSpec'. Use 'none' to not using any tools.
 `,
+    (tools, _) => {
+      if (tools === "none") {
+        return [];
+      } else {
+        return getTools(tools.split(","));
+      }
+    },
   )
   .option(
     "--use-llama-parse",
@@ -191,6 +205,7 @@ const program = new Command(packageJson.name)
 
   Allow interactive selection of LLM and embedding models of different model providers.
 `,
+    false,
   )
   .option(
     "--ask-examples",
@@ -198,30 +213,19 @@ const program = new Command(packageJson.name)
 
   Allow interactive selection of community templates and LlamaPacks.
 `,
+    false,
   )
   .allowUnknownOption()
   .parse(process.argv);
 
 const options = program.opts();
 
-if (process.argv.includes("--no-frontend")) {
-  options.frontend = false;
-}
-if (process.argv.includes("--tools")) {
-  if (options.tools === "none") {
-    options.tools = [];
-  } else {
-    options.tools = getTools(options.tools.split(","));
-  }
-}
 if (
   process.argv.includes("--no-llama-parse") ||
   options.template === "extractor"
 ) {
   options.useLlamaParse = false;
 }
-options.askModels = process.argv.includes("--ask-models");
-options.askExamples = process.argv.includes("--ask-examples");
 if (process.argv.includes("--no-files")) {
   options.dataSources = [];
 } else if (process.argv.includes("--example-file")) {
