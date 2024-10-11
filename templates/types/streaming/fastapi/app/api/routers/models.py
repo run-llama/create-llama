@@ -95,10 +95,7 @@ class Annotation(BaseModel):
     data: AnnotationFileData | List[str] | AgentAnnotation | ArtifactAnnotation
 
     def to_content(self) -> str | None:
-        # Note: This code only handles files that were not indexed in the vector database
-        # (i.e., files not uploaded through the upload file API)
         if self.type == "document_file" and isinstance(self.data, AnnotationFileData):
-            # We only support generating context content for CSV files for now
             # iterate through all files and construct content for LLM
             file_contents = [file.metadata.to_llm_content() for file in self.data.files]
             if len(file_contents) > 0:
