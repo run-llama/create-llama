@@ -42,8 +42,8 @@ importers:
         specifier: github:watson/ci-info#f43f6a1cefff47fb361c88cf4b943fdbcaafe540
         version: https://codeload.github.com/watson/ci-info/tar.gz/f43f6a1cefff47fb361c88cf4b943fdbcaafe540
       commander:
-        specifier: 2.20.0
-        version: 2.20.0
+        specifier: 12.1.0
+        version: 12.1.0
       conf:
         specifier: 10.2.0
         version: 10.2.0
@@ -530,8 +530,9 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  commander@2.20.0:
-    resolution: {integrity: sha512-7j2y+40w61zy6YC2iRNpUe/NwhNyoXrYpHMrSunaMG64nRnaf96zO/KMQR4OyN/UnE5KLyEBnKHd4aG3rskjpQ==}
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
 
   commander@9.5.0:
     resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
@@ -2506,7 +2507,7 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  commander@2.20.0: {}
+  commander@12.1.0: {}
 
   commander@9.5.0: {}
 

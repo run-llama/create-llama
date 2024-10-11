@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from "child_process";
-import Commander from "commander";
+import { Command } from "commander";
 import Conf from "conf";
 import fs from "fs";
 import path from "path";
@@ -29,12 +29,14 @@ const handleSigTerm = () => process.exit(0);
 process.on("SIGINT", handleSigTerm);
 process.on("SIGTERM", handleSigTerm);
 
-const program = new Commander.Command(packageJson.name)
+const program = new Command(packageJson.name)
   .version(packageJson.version)
-  .arguments("<project-directory>")
-  .usage(`${green("<project-directory>")} [options]`)
+  .arguments("[project-directory]")
+  .usage(`${green("[project-directory]")} [options]`)
   .action((name) => {
-    projectPath = name;
+    if (name) {
+      projectPath = name;
+    }
   })
   .option(
     "--use-npm",
@@ -199,30 +201,33 @@ const program = new Commander.Command(packageJson.name)
   )
   .allowUnknownOption()
   .parse(process.argv);
+
+const options = program.opts();
+
 if (process.argv.includes("--no-frontend")) {
-  program.frontend = false;
+  options.frontend = false;
 }
 if (process.argv.includes("--tools")) {
-  if (program.tools === "none") {
-    program.tools = [];
+  if (options.tools === "none") {
+    options.tools = [];
   } else {
-    program.tools = getTools(program.tools.split(","));
+    options.tools = getTools(options.tools.split(","));
   }
 }
 if (
   process.argv.includes("--no-llama-parse") ||
-  program.template === "extractor"
+  options.template === "extractor"
 ) {
-  program.useLlamaParse = false;
+  options.useLlamaParse = false;
 }
-program.askModels = process.argv.includes("--ask-models");
-program.askExamples = process.argv.includes("--ask-examples");
+options.askModels = process.argv.includes("--ask-models");
+options.askExamples = process.argv.includes("--ask-examples");
 if (process.argv.includes("--no-files")) {
-  program.dataSources = [];
+  options.dataSources = [];
 } else if (process.argv.includes("--example-file")) {
-  program.dataSources = getDataSources(program.files, program.exampleFile);
+  options.dataSources = getDataSources(options.files, options.exampleFile);
 } else if (process.argv.includes("--llamacloud")) {
-  program.dataSources = [
+  options.dataSources = [
     {
       type: "llamacloud",
       config: {},
@@ -230,40 +235,40 @@ if (process.argv.includes("--no-files")) {
     EXAMPLE_FILE,
   ];
 } else if (process.argv.includes("--web-source")) {
-  program.dataSources = [
+  options.dataSources = [
     {
       type: "web",
       config: {
-        baseUrl: program.webSource,
-        prefix: program.webSource,
+        baseUrl: options.webSource,
+        prefix: options.webSource,
         depth: 1,
       },
     },
   ];
 } else if (process.argv.includes("--db-source")) {
-  program.dataSources = [
+  options.dataSources = [
     {
       type: "db",
       config: {
-        uri: program.dbSource,
-        queries: program.dbQuery || "SELECT * FROM mytable",
+        uri: options.dbSource,
+        queries: options.dbQuery || "SELECT * FROM mytable",
       },
     },
   ];
 }
 
-const packageManager = !!program.useNpm
+const packageManager = !!options.useNpm
   ? "npm"
-  : !!program.usePnpm
+  : !!options.usePnpm
     ? "pnpm"
-    : !!program.useYarn
+    : !!options.useYarn
       ? "yarn"
       : getPkgManager();
 
 async function run(): Promise<void> {
   const conf = new Conf({ projectName: "create-llama" });
 
-  if (program.resetPreferences) {
+  if (options.resetPreferences) {
     conf.clear();
     console.log(`Preferences reset successfully`);
     return;
@@ -333,33 +338,33 @@ async function run(): Promise<void> {
 
   const preferences = (conf.get("preferences") || {}) as QuestionArgs;
   await askQuestions(
-    program as unknown as QuestionArgs,
+    options as unknown as QuestionArgs,
     preferences,
-    program.openAiKey,
+    options.openAiKey,
   );
 
   await createApp({
-    template: program.template,
-    framework: program.framework,
-    ui: program.ui,
+    template: options.template,
+    framework: options.framework,
+    ui: options.ui,
     appPath: resolvedProjectPath,
     packageManager,
-    frontend: program.frontend,
-    modelConfig: program.modelConfig,
-    llamaCloudKey: program.llamaCloudKey,
-    communityProjectConfig: program.communityProjectConfig,
-    llamapack: program.llamapack,
-    vectorDb: program.vectorDb,
-    externalPort: program.externalPort,
-    postInstallAction: program.postInstallAction,
-    dataSources: program.dataSources,
-    tools: program.tools,
-    useLlamaParse: program.useLlamaParse,
-    observability: program.observability,
+    frontend: options.frontend,
+    modelConfig: options.modelConfig,
+    llamaCloudKey: options.llamaCloudKey,
+    communityProjectConfig: options.communityProjectConfig,
+    llamapack: options.llamapack,
+    vectorDb: options.vectorDb,
+    externalPort: options.externalPort,
+    postInstallAction: options.postInstallAction,
+    dataSources: options.dataSources,
+    tools: options.tools,
+    useLlamaParse: options.useLlamaParse,
+    observability: options.observability,
   });
   conf.set("preferences", preferences);
 
-  if (program.postInstallAction === "VSCode") {
+  if (options.postInstallAction === "VSCode") {
     console.log(`Starting VSCode in ${root}...`);
     try {
       execSync(`code . --new-window --goto README.md`, {
@@ -383,15 +388,15 @@ Please check ${cyan(
         )} for more information.`,
       );
     }
-  } else if (program.postInstallAction === "runApp") {
+  } else if (options.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
     await runApp(
       root,
-      program.template,
-      program.frontend,
-      program.framework,
-      program.port,
-      program.externalPort,
+      options.template,
+      options.frontend,
+      options.framework,
+      options.port,
+      options.externalPort,
     );
   }
 }
