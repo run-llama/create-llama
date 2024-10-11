@@ -6,15 +6,12 @@ import { EXAMPLE_FILE } from "../helpers/datasources";
 import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
 import { askModelConfig } from "../helpers/providers";
 import { getProjectOptions } from "../helpers/repo";
-import {
-  supportedTools,
-  toolRequiresConfig,
-  toolsRequireConfig,
-} from "../helpers/tools";
+import { supportedTools, toolRequiresConfig } from "../helpers/tools";
 import { getDataSourceChoices } from "./datasources";
 import { getVectorDbChoices } from "./stores";
 import { QuestionArgs } from "./types";
 import {
+  askPostInstallAction,
   onPromptState,
   questionHandlers,
   selectLocalContextData,
@@ -45,59 +42,12 @@ export const askProQuestions = async (
     preferences[field] ?? defaults[field];
 
   // Ask for next action after installation
-  async function askPostInstallAction() {
+  async function checkAskPostInstallAction() {
     if (program.postInstallAction === undefined) {
       if (ciInfo.isCI) {
         program.postInstallAction = getPrefOrDefault("postInstallAction");
       } else {
-        const actionChoices = [
-          {
-            title: "Just generate code (~1 sec)",
-            value: "none",
-          },
-          {
-            title: "Start in VSCode (~1 sec)",
-            value: "VSCode",
-          },
-          {
-            title: "Generate code and install dependencies (~2 min)",
-            value: "dependencies",
-          },
-        ];
-
-        const modelConfigured =
-          !program.llamapack && program.modelConfig.isConfigured();
-        // If using LlamaParse, require LlamaCloud API key
-        const llamaCloudKeyConfigured = program.useLlamaParse
-          ? program.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
-          : true;
-        const hasVectorDb = program.vectorDb && program.vectorDb !== "none";
-        // Can run the app if all tools do not require configuration
-        if (
-          !hasVectorDb &&
-          modelConfigured &&
-          llamaCloudKeyConfigured &&
-          !toolsRequireConfig(program.tools)
-        ) {
-          actionChoices.push({
-            title:
-              "Generate code, install dependencies, and run the app (~2 min)",
-            value: "runApp",
-          });
-        }
-
-        const { action } = await prompts(
-          {
-            type: "select",
-            name: "action",
-            message: "How would you like to proceed?",
-            choices: actionChoices,
-            initial: 1,
-          },
-          questionHandlers,
-        );
-
-        program.postInstallAction = action;
+        program.postInstallAction = await askPostInstallAction(program);
       }
     }
   }
@@ -184,7 +134,7 @@ export const askProQuestions = async (
     );
     program.llamapack = llamapack;
     preferences.llamapack = llamapack;
-    await askPostInstallAction();
+    await checkAskPostInstallAction();
     return; // early return - no further questions needed for llamapack projects
   }
 
@@ -541,5 +491,5 @@ export const askProQuestions = async (
     }
   }
 
-  await askPostInstallAction();
+  await checkAskPostInstallAction();
 };

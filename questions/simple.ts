@@ -3,7 +3,7 @@ import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
-import { questionHandlers } from "./utils";
+import { askPostInstallAction, questionHandlers } from "./utils";
 type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
 
 type SimpleAnswers = {
@@ -69,13 +69,16 @@ export const askSimpleQuestions = async (
     framework: language,
   });
 
-  return convertAnswers({
+  const results = convertAnswers({
     appType,
     language,
     useLlamaCloud,
     llamaCloudKey: process.env.LLAMA_CLOUD_API_KEY || "",
     modelConfig,
   });
+
+  results.postInstallAction = await askPostInstallAction(results);
+  return results;
 };
 
 const convertAnswers = (answers: SimpleAnswers): QuestionResults => {

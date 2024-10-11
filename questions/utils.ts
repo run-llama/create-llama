@@ -2,7 +2,10 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { red } from "picocolors";
-import { TemplateDataSourceType } from "../helpers";
+import prompts from "prompts";
+import { TemplateDataSourceType, TemplatePostInstallAction } from "../helpers";
+import { toolsRequireConfig } from "../helpers/tools";
+import { QuestionResults } from "./types";
 
 export const supportedContextFileTypes = [
   ".pdf",
@@ -121,3 +124,55 @@ export const questionHandlers = {
     process.exit(1);
   },
 };
+
+// Ask for next action after installation
+export async function askPostInstallAction(
+  args: QuestionResults,
+): Promise<TemplatePostInstallAction> {
+  const actionChoices = [
+    {
+      title: "Just generate code (~1 sec)",
+      value: "none",
+    },
+    {
+      title: "Start in VSCode (~1 sec)",
+      value: "VSCode",
+    },
+    {
+      title: "Generate code and install dependencies (~2 min)",
+      value: "dependencies",
+    },
+  ];
+
+  const modelConfigured = !args.llamapack && args.modelConfig.isConfigured();
+  // If using LlamaParse, require LlamaCloud API key
+  const llamaCloudKeyConfigured = args.useLlamaParse
+    ? args.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
+    : true;
+  const hasVectorDb = args.vectorDb && args.vectorDb !== "none";
+  // Can run the app if all tools do not require configuration
+  if (
+    !hasVectorDb &&
+    modelConfigured &&
+    llamaCloudKeyConfigured &&
+    !toolsRequireConfig(args.tools)
+  ) {
+    actionChoices.push({
+      title: "Generate code, install dependencies, and run the app (~2 min)",
+      value: "runApp",
+    });
+  }
+
+  const { action } = await prompts(
+    {
+      type: "select",
+      name: "action",
+      message: "How would you like to proceed?",
+      choices: actionChoices,
+      initial: 1,
+    },
+    questionHandlers,
+  );
+
+  return action;
+}
