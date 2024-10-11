@@ -1,7 +1,7 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions";
+import { questionHandlers, toChoice } from "../../questions/questions";
 
 const MODELS = ["mistral-tiny", "mistral-small", "mistral-medium"];
 type ModelData = {

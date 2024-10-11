@@ -1,0 +1,127 @@
+import prompts from "prompts";
+import { askModelConfig } from "../helpers/providers";
+import { getTools } from "../helpers/tools";
+import { ModelConfig, TemplateFramework } from "../helpers/types";
+import {
+  PureQuestionArgs,
+  QuestionResults,
+  questionHandlers,
+} from "./questions";
+
+type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
+
+type SimpleAnswers = {
+  appType: AppType;
+  language: TemplateFramework;
+  useLlamaCloud: boolean;
+  llamaCloudKey: string;
+  modelConfig: ModelConfig;
+};
+
+export const askSimpleQuestions = async (
+  args: PureQuestionArgs,
+  openAiKey?: string,
+): Promise<QuestionResults> => {
+  const { appType } = await prompts(
+    {
+      type: "select",
+      name: "appType",
+      message: "What app do you want to build?",
+      choices: [
+        { title: "Agentic RAG", value: "rag" },
+        { title: "Code Artifact Agent", value: "code_artifact" },
+        { title: "Multi-Agent Report Gen", value: "multiagent" },
+        { title: "Structured extraction", value: "extractor" },
+      ],
+    },
+    questionHandlers,
+  );
+
+  let language: TemplateFramework = "fastapi";
+  if (appType !== "extractor") {
+    const res = await prompts(
+      {
+        type: "select",
+        name: "language",
+        message: "What language do you want to use?",
+        choices: [
+          { title: "Python (FastAPI)", value: "fastapi" },
+          { title: "Typescript (NextJS)", value: "nextjs" },
+        ],
+      },
+      questionHandlers,
+    );
+    language = res.language;
+  }
+
+  const { useLlamaCloud } = await prompts(
+    {
+      type: "toggle",
+      name: "useLlamaCloud",
+      message: "Do you want to use LlamaCloud services?",
+      active: "yes",
+      inactive: "no",
+      initial: false,
+      hint: "see https://www.llamaindex.ai/enterprise for more info",
+    },
+    questionHandlers,
+  );
+
+  const modelConfig = await askModelConfig({
+    openAiKey,
+    askModels: args.askModels ?? false,
+    framework: language,
+  });
+
+  return convertAnswers({
+    appType,
+    language,
+    useLlamaCloud,
+    llamaCloudKey: process.env.LLAMA_CLOUD_API_KEY || "",
+    modelConfig,
+  });
+};
+
+const convertAnswers = (answers: SimpleAnswers): QuestionResults => {
+  const lookup: Record<
+    AppType,
+    Pick<QuestionResults, "template" | "tools" | "frontend">
+  > = {
+    rag: {
+      template: "streaming",
+      tools: getTools(["duckduckgo"]),
+      frontend: true,
+    },
+    code_artifact: {
+      template: "streaming",
+      tools: getTools(["artifact"]),
+      frontend: true,
+    },
+    multiagent: {
+      template: "multiagent",
+      tools: getTools([
+        "document_generator",
+        "wikipedia.WikipediaToolSpec",
+        "duckduckgo",
+        "img_gen",
+      ]),
+      frontend: true,
+    },
+    extractor: { template: "extractor", tools: [], frontend: false },
+  };
+  const results = lookup[answers.appType];
+  return {
+    framework: answers.language,
+    ui: "shadcn",
+    llamaCloudKey: answers.llamaCloudKey,
+    useLlamaParse: answers.useLlamaCloud,
+    llamapack: "",
+    postInstallAction: "none",
+    dataSources: [],
+    vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
+    modelConfig: answers.modelConfig,
+    observability: "none",
+    ...results,
+    frontend: answers.language === "nextjs" ? false : results.frontend,
+  };
+};

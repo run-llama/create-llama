@@ -1,7 +1,7 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions";
+import { questionHandlers, toChoice } from "../../questions/questions";
 
 import got from "got";
 import ora from "ora";

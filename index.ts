@@ -17,7 +17,8 @@ import { runApp } from "./helpers/run-app";
 import { getTools } from "./helpers/tools";
 import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
-import { QuestionArgs, askQuestions, onPromptState } from "./questions";
+import { askQuestions } from "./questions/index";
+import { QuestionArgs, onPromptState } from "./questions/questions";
 
 // Run the initialization function
 initializeGlobalAgent();
@@ -215,6 +216,14 @@ const program = new Command(packageJson.name)
 `,
     false,
   )
+  .option(
+    "--pro",
+    `
+
+  Allow interactive selection of all features.
+`,
+    false,
+  )
   .allowUnknownOption()
   .parse(process.argv);
 
@@ -341,34 +350,21 @@ async function run(): Promise<void> {
   }
 
   const preferences = (conf.get("preferences") || {}) as QuestionArgs;
-  await askQuestions(
+  const answers = await askQuestions(
     options as unknown as QuestionArgs,
     preferences,
     options.openAiKey,
   );
 
   await createApp({
-    template: options.template,
-    framework: options.framework,
-    ui: options.ui,
+    ...answers,
     appPath: resolvedProjectPath,
     packageManager,
-    frontend: options.frontend,
-    modelConfig: options.modelConfig,
-    llamaCloudKey: options.llamaCloudKey,
-    communityProjectConfig: options.communityProjectConfig,
-    llamapack: options.llamapack,
-    vectorDb: options.vectorDb,
     externalPort: options.externalPort,
-    postInstallAction: options.postInstallAction,
-    dataSources: options.dataSources,
-    tools: options.tools,
-    useLlamaParse: options.useLlamaParse,
-    observability: options.observability,
   });
   conf.set("preferences", preferences);
 
-  if (options.postInstallAction === "VSCode") {
+  if (answers.postInstallAction === "VSCode") {
     console.log(`Starting VSCode in ${root}...`);
     try {
       execSync(`code . --new-window --goto README.md`, {
@@ -392,13 +388,13 @@ Please check ${cyan(
         )} for more information.`,
       );
     }
-  } else if (options.postInstallAction === "runApp") {
+  } else if (answers.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
     await runApp(
       root,
-      options.template,
-      options.frontend,
-      options.framework,
+      answers.template,
+      answers.frontend,
+      answers.framework,
       options.port,
       options.externalPort,
     );

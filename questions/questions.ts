@@ -4,32 +4,35 @@ import fs from "fs";
 import path from "path";
 import { blue, green, red } from "picocolors";
 import prompts from "prompts";
-import { InstallAppArgs } from "./create-app";
+import { InstallAppArgs } from "../create-app";
 import {
   TemplateDataSource,
   TemplateDataSourceType,
   TemplateFramework,
   TemplateType,
-} from "./helpers";
-import { COMMUNITY_OWNER, COMMUNITY_REPO } from "./helpers/constant";
-import { EXAMPLE_FILE } from "./helpers/datasources";
-import { templatesDir } from "./helpers/dir";
-import { getAvailableLlamapackOptions } from "./helpers/llama-pack";
-import { askModelConfig } from "./helpers/providers";
-import { getProjectOptions } from "./helpers/repo";
+} from "../helpers";
+import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
+import { EXAMPLE_FILE } from "../helpers/datasources";
+import { templatesDir } from "../helpers/dir";
+import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
+import { askModelConfig } from "../helpers/providers";
+import { getProjectOptions } from "../helpers/repo";
 import {
   supportedTools,
   toolRequiresConfig,
   toolsRequireConfig,
-} from "./helpers/tools";
+} from "../helpers/tools";
 
-export type QuestionArgs = Omit<
+export type QuestionResults = Omit<
   InstallAppArgs,
-  "appPath" | "packageManager"
-> & {
+  "appPath" | "packageManager" | "externalPort"
+>;
+export type PureQuestionArgs = {
   askModels?: boolean;
   askExamples?: boolean;
+  pro?: boolean;
 };
+export type QuestionArgs = QuestionResults & PureQuestionArgs;
 const supportedContextFileTypes = [
   ".pdf",
   ".doc",
@@ -254,7 +257,7 @@ export const onPromptState = (state: any) => {
   }
 };
 
-export const askQuestions = async (
+export const askProQuestions = async (
   program: QuestionArgs,
   preferences: QuestionArgs,
   openAiKey?: string,

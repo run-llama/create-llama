@@ -1,7 +1,7 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions";
+import { questionHandlers, toChoice } from "../../questions/questions";
 
 const MODELS = ["gemini-1.5-pro-latest", "gemini-pro", "gemini-pro-vision"];
 type ModelData = {
