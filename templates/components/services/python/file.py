@@ -62,7 +62,7 @@ class PrivateFileService:
         os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
         file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
 
-        return save_file(file_data, file_path=file_path)
+        return save_file(file_data, file_path=str(file_path))
 
     @staticmethod
     def _load_file_to_documents(file_metadata: FileMetadata) -> List[Document]:

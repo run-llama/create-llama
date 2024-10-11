@@ -17,7 +17,6 @@ class FileMetadata(BaseModel):
     )
 
     @computed_field
-    @property
     def file_id(self) -> Optional[str]:
         file_els = self.name.split("_", maxsplit=1)
         if len(file_els) == 2:
