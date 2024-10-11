@@ -95,12 +95,13 @@ class CodeGeneratorTool:
             ChatMessage(role="user", content=user_message),
         ]
         try:
-            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)
+            sllm = Settings.llm.as_structured_llm(output_cls=CodeArtifact)  # type: ignore
             response = sllm.chat(messages)
-            data: CodeArtifact = response.raw.model_dump()
+            data: CodeArtifact = response.raw
+            data_dict = data.model_dump()
             if sandbox_files:
-                data["files"] = sandbox_files
-            return data
+                data_dict["files"] = sandbox_files
+            return data_dict
         except Exception as e:
             logger.error(f"Failed to generate artifact: {str(e)}")
             raise e

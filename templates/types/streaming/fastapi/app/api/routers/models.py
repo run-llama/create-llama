@@ -262,7 +262,9 @@ class ChatData(BaseModel):
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
-                    if annotation.type == "document_file":
+                    if annotation.type == "document_file" and isinstance(
+                        annotation.data, AnnotationFileData
+                    ):
                         return [file.model_dump() for file in annotation.data.files]
         return []
 

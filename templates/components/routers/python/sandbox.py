@@ -174,7 +174,7 @@ def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]
                     output.append(
                         {
                             "type": ext,
-                            "filename": file_meta.filename,
+                            "filename": file_meta.name,
                             "url": file_meta.url,
                         }
                     )
