@@ -1,6 +1,5 @@
 import logging
 import os
-from textwrap import dedent
 from typing import Any, Dict, List, Literal, Optional
 
 from llama_index.core.llms import ChatMessage, MessageRole
@@ -30,11 +29,7 @@ class FileMetadata(BaseModel):
         """
         Construct content for LLM from the file metadata
         """
-        default_content = dedent(
-            f"""
-            ====={self.name}=====\n
-            """
-        )
+        default_content = f"=====File: {self.name}=====\n"
         if self.url is not None:
             default_content += f"File URL: {self.url}\n"
         else:
@@ -47,7 +42,7 @@ class FileMetadata(BaseModel):
             default_content += f"Document IDs: {self.refs}\n"
         # construct additional metadata for code interpreter
         sandbox_file_path = f"/tmp/{self.name}"
-        default_content += f"Sandbox file path: {sandbox_file_path}\n"
+        default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
         return default_content
 
 
@@ -60,31 +55,6 @@ class File(BaseModel):
         file_path = f"output/uploaded/{self.metadata.name}"
         with open(file_path, "r") as file:
             return file.read()
-
-    def to_llm_content(
-        self,
-        only_file_metadata: bool = False,
-        ignore_unsupported_filetype: bool = True,
-    ) -> str:
-        """
-        Construct content for LLM from the file
-        Args:
-            ignore_unsupported_filetype: If True, ignore the file type that is not supported
-        Returns:
-            The content for LLM
-        """
-        llm_content = ""
-        llm_content += self.metadata.to_llm_content()
-        if not only_file_metadata:
-            if self.filetype == "csv" or self.filetype == "txt":
-                file_content = self._load_file_content()
-                llm_content += f"Content:\n{file_content}\n"
-            else:
-                if ignore_unsupported_filetype:
-                    return f"Content:\nCould not load content for this file because the file type {self.filetype} is not supported"
-                else:
-                    raise ValueError(f"Unsupported file type: {self.filetype}")
-        return llm_content
 
 
 class AnnotationFileData(BaseModel):
@@ -124,16 +94,14 @@ class Annotation(BaseModel):
     type: str
     data: AnnotationFileData | List[str] | AgentAnnotation | ArtifactAnnotation
 
-    def to_content(self, only_file_metadata: bool = False) -> str | None:
+    def to_content(self) -> str | None:
         # Note: This code only handles files that were not indexed in the vector database
         # (i.e., files not uploaded through the upload file API)
         if self.type == "document_file":
             assert isinstance(self.data, AnnotationFileData)
             # We only support generating context content for CSV files for now
             # iterate through all files and construct content for LLM
-            file_contents = [
-                file.to_llm_content(only_file_metadata) for file in self.data.files
-            ]
+            file_contents = [file.metadata.to_llm_content() for file in self.data.files]
             if len(file_contents) > 0:
                 return "Use data from following files content\n" + "\n".join(
                     file_contents
@@ -175,15 +143,10 @@ class ChatData(BaseModel):
             raise ValueError("Messages must not be empty")
         return v
 
-    def get_last_message_content(
-        self,
-        only_file_metadata: bool = False,
-    ) -> str:
+    def get_last_message_content(self) -> str:
         """
         Get the content of the last message along with the data content if available.
         Fallback to use data content from previous messages
-        Args:
-            only_file_metadata: Either include the uploaded file content or not. If false, only file metadata will be included which is useful for code interpreter tool
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
@@ -193,10 +156,7 @@ class ChatData(BaseModel):
             if message.role == MessageRole.USER and message.annotations is not None:
                 annotation_contents = filter(
                     None,
-                    [
-                        annotation.to_content(only_file_metadata)
-                        for annotation in message.annotations
-                    ],
+                    [annotation.to_content() for annotation in message.annotations],
                 )
                 if not annotation_contents:
                     continue
@@ -289,16 +249,11 @@ class ChatData(BaseModel):
         Get the document IDs from the chat messages
         """
         document_ids: List[str] = []
-        for message in self.messages:
-            if message.role == MessageRole.USER and message.annotations is not None:
-                for annotation in message.annotations:
-                    if (
-                        annotation.type == "document_file"
-                        and annotation.data.files is not None
-                    ):
-                        for fi in annotation.data.files:
-                            if fi.metadata.refs is not None:
-                                document_ids += fi.metadata.refs
+        uploaded_files = self.get_uploaded_files()
+        for _file in uploaded_files:
+            file_metadata = _file.get("metadata", {})
+            refs = file_metadata.get("refs", [])
+            document_ids.extend(refs)
         return list(set(document_ids))
 
     def get_uploaded_files(self) -> List[Dict[str, Any]]:

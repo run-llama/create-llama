@@ -69,9 +69,7 @@ class PrivateFileService:
         """
         Load the file from the private directory and return the documents
         """
-        file_path = file_metadata.outputPath
-        file_name = file_metadata.filename
-        extension = file_path.split(".")[-1]
+        extension = file_metadata.name.split(".")[-1]
 
         # Load file to documents
         # If LlamaParse is enabled, use it to parse the file
@@ -82,10 +80,10 @@ class PrivateFileService:
             if reader_cls is None:
                 raise ValueError(f"File extension {extension} is not supported")
             reader = reader_cls()
-        documents = reader.load_data(Path(file_path))
+        documents = reader.load_data(Path(file_metadata.path))
         # Add custom metadata
         for doc in documents:
-            doc.metadata["file_name"] = file_name
+            doc.metadata["file_name"] = file_metadata.name
             doc.metadata["private"] = "true"
         return documents
 
@@ -169,6 +167,8 @@ class PrivateFileService:
         else:
             documents = cls._load_file_to_documents(file_metadata)
             cls._add_documents_to_vector_store_index(documents, index)
+            # Add document ids to the file metadata
+            file_metadata.document_ids = [doc.doc_id for doc in documents]
 
         # Return the file metadata
         return file_metadata
