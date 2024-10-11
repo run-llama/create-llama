@@ -66,18 +66,14 @@ export const askProQuestions = async (program: QuestionArgs) => {
               value: "multiagent",
             },
             { title: "Structured Extractor", value: "extractor" },
-            ...(program.askExamples
-              ? [
-                  {
-                    title: `Community template from ${styledRepo}`,
-                    value: "community",
-                  },
-                  {
-                    title: "Example using a LlamaPack",
-                    value: "llamapack",
-                  },
-                ]
-              : []),
+            {
+              title: `Community template from ${styledRepo}`,
+              value: "community",
+            },
+            {
+              title: "Example using a LlamaPack",
+              value: "llamapack",
+            },
           ],
           initial: 0,
         },

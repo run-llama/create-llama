@@ -201,14 +201,6 @@ const program = new Command(packageJson.name)
     false,
   )
   .option(
-    "--ask-examples",
-    `
-
-  Allow interactive selection of community templates and LlamaPacks.
-`,
-    false,
-  )
-  .option(
     "--pro",
     `
 
