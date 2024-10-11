@@ -72,8 +72,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       prompts:
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: 2.4.2
+        version: 2.4.2
       smol-toml:
         specifier: ^1.1.4
         version: 1.1.4
@@ -1499,8 +1499,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prompts@2.1.0:
-    resolution: {integrity: sha512-+x5TozgqYdOwWsQFZizE/Tra3fKvAoy037kOyU6cgz84n8f6zxngLOV4O32kTwt9FcLCxAqw0P/c8rOr9y+Gfg==}
+  prompts@2.4.2:
+    resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
     engines: {node: '>= 6'}
 
   pseudomap@1.0.2:
@@ -3516,7 +3516,7 @@ snapshots:
 
   prettier@3.2.5: {}
 
-  prompts@2.1.0:
+  prompts@2.4.2:
     dependencies:
       kleur: 3.0.3
       sisteransi: 1.0.5

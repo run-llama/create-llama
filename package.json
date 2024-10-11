@@ -59,7 +59,7 @@
     "ollama": "^0.5.0",
     "ora": "^8.0.1",
     "picocolors": "1.0.0",
-    "prompts": "2.1.0",
+    "prompts": "2.4.2",
     "smol-toml": "^1.1.4",
     "tar": "6.1.15",
     "terminal-link": "^3.0.0",
