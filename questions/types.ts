@@ -9,6 +9,7 @@ export type PureQuestionArgs = {
   askModels?: boolean;
   pro?: boolean;
   openAiKey?: string;
+  llamaCloudKey?: string;
 };
 
 export type QuestionArgs = QuestionResults & PureQuestionArgs;

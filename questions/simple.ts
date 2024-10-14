@@ -6,11 +6,13 @@ import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
 type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
 
+// TODO: configure data sources
+
 type SimpleAnswers = {
   appType: AppType;
   language: TemplateFramework;
   useLlamaCloud: boolean;
-  llamaCloudKey: string;
+  llamaCloudKey?: string;
   modelConfig: ModelConfig;
 };
 
@@ -62,6 +64,21 @@ export const askSimpleQuestions = async (
     questionHandlers,
   );
 
+  let llamaCloudKey = args.llamaCloudKey;
+  if (useLlamaCloud && !llamaCloudKey) {
+    // Ask for LlamaCloud API key, if not set
+    const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+      {
+        type: "text",
+        name: "llamaCloudKey",
+        message:
+          "Please provide your LlamaCloud API key (leave blank to skip):",
+      },
+      questionHandlers,
+    );
+    llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+  }
+
   const modelConfig = await askModelConfig({
     openAiKey: args.openAiKey,
     askModels: args.askModels ?? false,
@@ -72,7 +89,7 @@ export const askSimpleQuestions = async (
     appType,
     language,
     useLlamaCloud,
-    llamaCloudKey: process.env.LLAMA_CLOUD_API_KEY || "",
+    llamaCloudKey,
     modelConfig,
   });
 
