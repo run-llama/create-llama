@@ -142,13 +142,13 @@ class E2BCodeInterpreter:
         retry_count: int = 0,
     ) -> E2BToolOutput:
         """
-        Execute python code in a Jupyter notebook cell, the toll will return result, stdout, stderr, display_data, and error.
-        If the code need to use a file, ALWAYS pass the file path in the sandbox_files argument.
+        Execute Python code in a Jupyter notebook cell. The tool will return the result, stdout, stderr, display_data, and error.
+        If the code needs to use a file, ALWAYS pass the file path in the sandbox_files argument.
         You have a maximum of 3 retries to get the code to run successfully.
 
         Parameters:
-            code (str): The python code to be executed in a single cell.
-            sandbox_files (List[str]): List of local file paths be used the the code, the tool will throw error if a file is not found.
+            code (str): The Python code to be executed in a single cell.
+            sandbox_files (List[str]): List of local file paths to be used by the code. The tool will throw an error if a file is not found.
             retry_count (int): Number of times the tool has been retried.
         """
         if retry_count > 2:
@@ -160,7 +160,7 @@ class E2BCodeInterpreter:
                     display_data="",
                     error="",
                 ),
-                error_message="Tool failed to execute code successfully after 3 retries. Explain the error to the user and suggest a fix.",
+                error_message="Failed to execute the code after 3 retries. Explain the error to the user and suggest a fix.",
                 retry_count=retry_count,
             )
 
