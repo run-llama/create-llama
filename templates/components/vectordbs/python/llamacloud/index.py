@@ -31,6 +31,19 @@ class LlamaCloudConfig(BaseModel):
         description="The name of the LlamaCloud project",
     )
 
+    def __init__(self, **kwargs):
+        if "api_key" not in kwargs:
+            kwargs["api_key"] = os.getenv("LLAMA_CLOUD_API_KEY")
+        if "base_url" not in kwargs:
+            kwargs["base_url"] = os.getenv("LLAMA_CLOUD_BASE_URL")
+        if "organization_id" not in kwargs:
+            kwargs["organization_id"] = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
+        if "pipeline" not in kwargs:
+            kwargs["pipeline"] = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+        if "project" not in kwargs:
+            kwargs["project"] = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+        super().__init__(**kwargs)
+
     # Validate and throw error if the env variables are not set before starting the app
     @field_validator("pipeline", "project", "api_key", mode="before")
     @classmethod
@@ -48,20 +61,10 @@ class LlamaCloudConfig(BaseModel):
             "base_url": self.base_url,
         }
 
-    @classmethod
-    def from_env(cls):
-        return LlamaCloudConfig(
-            api_key=os.getenv("LLAMA_CLOUD_API_KEY"),
-            base_url=os.getenv("LLAMA_CLOUD_BASE_URL"),
-            organization_id=os.getenv("LLAMA_CLOUD_ORGANIZATION_ID"),
-            pipeline=os.getenv("LLAMA_CLOUD_INDEX_NAME"),
-            project=os.getenv("LLAMA_CLOUD_PROJECT_NAME"),
-        )
-
 
 class IndexConfig(BaseModel):
     llama_cloud_pipeline_config: LlamaCloudConfig = Field(
-        default_factory=LlamaCloudConfig.from_env,
+        default_factory=lambda: LlamaCloudConfig(),
         alias="llamaCloudPipeline",
     )
     callback_manager: Optional[CallbackManager] = Field(
@@ -88,5 +91,5 @@ def get_index(config: IndexConfig = None):
 
 
 def get_client():
-    config = LlamaCloudConfig.from_env()
+    config = LlamaCloudConfig()
     return llama_cloud_get_client(**config.to_client_kwargs())

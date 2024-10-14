@@ -75,7 +75,7 @@ export function createCallbackManager(stream: StreamData) {
   callbackManager.on("retrieve-end", (data) => {
     const { nodes, query } = data.detail;
     appendSourceData(stream, nodes);
-    appendEventData(stream, `Retrieving context for query: '${query}'`);
+    appendEventData(stream, `Retrieving context for query: '${query.query}'`);
     appendEventData(
       stream,
       `Retrieved ${nodes.length} sources to use as context for the query`,

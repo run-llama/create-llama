@@ -1,7 +1,7 @@
 import { initObservability } from "@/app/observability";
 import { StopEvent } from "@llamaindex/core/workflow";
 import { Message, StreamingTextResponse } from "ai";
-import { ChatMessage, ChatResponseChunk } from "llamaindex";
+import { ChatResponseChunk } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import { createWorkflow } from "./workflow/factory";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages }: { messages: Message[] } = body;
+    const { messages, data }: { messages: Message[]; data?: any } = body;
     const userMessage = messages.pop();
     if (!messages || !userMessage || userMessage.role !== "user") {
       return NextResponse.json(
@@ -28,8 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const chatHistory = messages as ChatMessage[];
-    const agent = createWorkflow(chatHistory);
+    const agent = createWorkflow(messages, data);
     // TODO: fix type in agent.run in LITS
     const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
       userMessage.content,

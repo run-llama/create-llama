@@ -27,6 +27,13 @@ const userMessage =
   dataSource !== "--no-files" ? "Physical standard for letters" : "Hello";
 
 test.describe(`Test streaming template ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
+  const isNode18 = process.version.startsWith("v18");
+  const isLlamaCloud = dataSource === "--llamacloud";
+  // llamacloud is using File API which is not supported on node 18
+  if (isNode18 && isLlamaCloud) {
+    test.skip(true, "Skipping tests for Node 18 and LlamaCloud data source");
+  }
+
   let port: number;
   let externalPort: number;
   let cwd: string;

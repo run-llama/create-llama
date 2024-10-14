@@ -18,11 +18,11 @@ def get_chat_engine(
     agent_type = os.getenv("EXAMPLE_TYPE", "").lower()
     match agent_type:
         case "choreography":
-            agent = create_choreography(chat_history)
+            agent = create_choreography(chat_history, **kwargs)
         case "orchestrator":
-            agent = create_orchestrator(chat_history)
+            agent = create_orchestrator(chat_history, **kwargs)
         case _:
-            agent = create_workflow(chat_history)
+            agent = create_workflow(chat_history, **kwargs)
 
     logger.info(f"Using agent pattern: {agent_type}")
 

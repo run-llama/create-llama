@@ -15,7 +15,7 @@ uvicorn = { extras = ["standard"], version = "^0.23.2" }
 python-dotenv = "^1.0.0"
 aiostream = "^0.5.2"
 cachetools = "^5.3.3"
-llama-index = "0.11.6"
+llama-index = "^0.11.17"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"

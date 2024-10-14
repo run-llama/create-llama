@@ -143,7 +143,7 @@ export class FunctionCallingAgent extends Workflow {
         fullResponse = chunk;
       }
 
-      if (fullResponse) {
+      if (fullResponse?.options && Object.keys(fullResponse.options).length) {
         memory.put({
           role: "assistant",
           content: "",
