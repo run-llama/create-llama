@@ -93,6 +93,12 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "llamacloud":
+      dependencies.push({
+        name: "llama-index-indices-managed-llama-cloud",
+        version: "^0.3.1",
+      });
+      break;
   }
 
   // Add data source dependencies
@@ -125,12 +131,6 @@ const getAdditionalDependencies = (
           dependencies.push({
             name: "psycopg2-binary",
             version: "^2.9.9",
-          });
-          break;
-        case "llamacloud":
-          dependencies.push({
-            name: "llama-index-indices-managed-llama-cloud",
-            version: "^0.3.1",
           });
           break;
       }

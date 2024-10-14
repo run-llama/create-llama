@@ -4,7 +4,7 @@ import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
-import { questionHandlers } from "../../questions";
+import { questionHandlers } from "../../questions/utils";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
