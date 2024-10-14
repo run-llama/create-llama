@@ -2,9 +2,9 @@ import base64
 import logging
 import os
 import uuid
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from app.engine.utils.file_helper import save_file
+from app.engine.utils.file_helper import FileMetadata, save_file
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
 from llama_index.core.tools import FunctionTool
@@ -78,10 +78,11 @@ class E2BCodeInterpreter:
 
                 with open(local_file_path, "rb") as f:
                     content = f.read()
-                    self.interpreter.files.write(sandbox_file_path, content)
+                    if self.interpreter and self.interpreter.files:
+                        self.interpreter.files.write(sandbox_file_path, content)
             logger.info(f"Uploaded {len(sandbox_files)} files to sandbox")
 
-    def _save_to_disk(self, base64_data: str, ext: str) -> Dict:
+    def _save_to_disk(self, base64_data: str, ext: str) -> FileMetadata:
         buffer = base64.b64decode(base64_data)
 
         filename = f"{uuid.uuid4()}.{ext}"  # generate a unique filename
@@ -166,40 +167,41 @@ class E2BCodeInterpreter:
         if self.interpreter is None:
             self._init_interpreter(sandbox_files)
 
-        logger.info(
-            f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
-        )
-        exec = self.interpreter.notebook.exec_cell(code)
-
-        if exec.error:
-            error_message = f"The code failed to execute successfully. Error: {exec.error}. Try to fix the code and run again."
-            logger.error(error_message)
-            # There would be an error from previous execution, kill the interpreter and return with error message
-            try:
-                self.interpreter.kill()
-            except Exception:
-                pass
-            finally:
-                self.interpreter = None
-            output = E2BToolOutput(
-                is_error=True,
-                logs=exec.logs,
-                results=[],
-                error_message=error_message,
-                retry_count=retry_count + 1,
+        if self.interpreter and self.interpreter.notebook:
+            logger.info(
+                f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
             )
-        else:
-            if len(exec.results) == 0:
-                output = E2BToolOutput(is_error=False, logs=exec.logs, results=[])
-            else:
-                results = self._parse_result(exec.results[0])
+            exec = self.interpreter.notebook.exec_cell(code)
+
+            if exec.error:
+                error_message = f"The code failed to execute successfully. Error: {exec.error}. Try to fix the code and run again."
+                logger.error(error_message)
+                # There would be an error from previous execution, kill the interpreter and return with error message
+                try:
+                    self.interpreter.kill()  # type: ignore
+                except Exception:
+                    pass
+                finally:
+                    self.interpreter = None
                 output = E2BToolOutput(
-                    is_error=False,
+                    is_error=True,
                     logs=exec.logs,
-                    results=results,
+                    results=[],
+                    error_message=error_message,
                     retry_count=retry_count + 1,
                 )
-        return output
+            else:
+                if len(exec.results) == 0:
+                    output = E2BToolOutput(is_error=False, logs=exec.logs, results=[])
+                else:
+                    results = self._parse_result(exec.results[0])
+                    output = E2BToolOutput(
+                        is_error=False,
+                        logs=exec.logs,
+                        results=results,
+                        retry_count=retry_count + 1,
+                    )
+            return output
 
 
 def get_tools(**kwargs):
