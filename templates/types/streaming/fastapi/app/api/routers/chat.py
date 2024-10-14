@@ -1,8 +1,6 @@
 import logging
-from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
-from llama_index.core.chat_engine.types import NodeWithScore
 from llama_index.core.llms import MessageRole
 
 from app.api.routers.events import EventCallbackHandler
@@ -42,10 +40,11 @@ async def chat(
         chat_engine = get_chat_engine(
             filters=filters, params=params, event_handlers=[event_handler]
         )
-        response = await chat_engine.astream_chat(last_message_content, messages)
-        process_response_nodes(response.source_nodes, background_tasks)
+        response = chat_engine.astream_chat(last_message_content, messages)
 
-        return VercelStreamResponse(request, event_handler, response, data)
+        return VercelStreamResponse(
+            request, event_handler, response, data, background_tasks
+        )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
@@ -76,17 +75,3 @@ async def chat_request(
         result=Message(role=MessageRole.ASSISTANT, content=response.response),
         nodes=SourceNodes.from_source_nodes(response.source_nodes),
     )
-
-
-def process_response_nodes(
-    nodes: List[NodeWithScore],
-    background_tasks: BackgroundTasks,
-):
-    try:
-        # Start background tasks to download documents from LlamaCloud if needed
-        from app.engine.service import LLamaCloudFileService
-
-        LLamaCloudFileService.download_files_from_nodes(nodes, background_tasks)
-    except ImportError:
-        logger.debug("LlamaCloud is not configured. Skipping post processing of nodes")
-        pass

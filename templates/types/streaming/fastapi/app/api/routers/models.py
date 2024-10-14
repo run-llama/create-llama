@@ -199,7 +199,6 @@ class ChatData(BaseModel):
                     ):
                         tool_output = annotation.data.toolOutput
                         if tool_output and not tool_output.get("isError", False):
-                            print("tool_output", tool_output)
                             output = tool_output.get("output", {})
                             if isinstance(output, dict) and output.get("code"):
                                 return output.get("code")
