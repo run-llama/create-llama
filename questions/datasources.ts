@@ -10,11 +10,6 @@ export const getDataSourceChoices = (
   selectedDataSource: TemplateDataSource[],
   template?: TemplateType,
 ) => {
-  // If LlamaCloud is already selected, don't show any other options
-  if (selectedDataSource.find((s) => s.type === "llamacloud")) {
-    return [];
-  }
-
   const choices = [];
 
   if (selectedDataSource.length > 0) {
@@ -65,11 +60,5 @@ export const getDataSourceChoices = (
     });
   }
 
-  if (!selectedDataSource.length && template !== "extractor") {
-    choices.push({
-      title: "Use managed index from LlamaCloud",
-      value: "llamacloud",
-    });
-  }
   return choices;
 };

@@ -46,7 +46,7 @@ export type TemplateDataSource = {
   type: TemplateDataSourceType;
   config: TemplateDataSourceConfig;
 };
-export type TemplateDataSourceType = "file" | "web" | "db" | "llamacloud";
+export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
 // Config for both file and folder
 export type FileSourceConfig = {

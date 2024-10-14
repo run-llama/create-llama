@@ -184,6 +184,25 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.modelConfig = modelConfig;
   }
 
+  if (!program.vectorDb) {
+    const { vectorDb } = await prompts(
+      {
+        type: "select",
+        name: "vectorDb",
+        message: "Would you like to use a vector database?",
+        choices: getVectorDbChoices(program.framework),
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    program.vectorDb = vectorDb;
+  }
+
+  if (program.vectorDb === "llamacloud") {
+    // When using a LlamaCloud index, don't ask for data sources just copy an example file
+    program.dataSources = [EXAMPLE_FILE];
+  }
+
   if (!program.dataSources) {
     program.dataSources = [];
     // continue asking user for data sources if none are initially provided
@@ -300,21 +319,11 @@ export const askProQuestions = async (program: QuestionArgs) => {
           });
           break;
         }
-        case "llamacloud": {
-          program.dataSources.push({
-            type: "llamacloud",
-            config: {},
-          });
-          program.dataSources.push(EXAMPLE_FILE);
-          break;
-        }
       }
     }
   }
 
-  const isUsingLlamaCloud = program.dataSources.some(
-    (ds) => ds.type === "llamacloud",
-  );
+  const isUsingLlamaCloud = program.vectorDb === "llamacloud";
 
   // Asking for LlamaParse if user selected file data source
   if (isUsingLlamaCloud) {
@@ -361,24 +370,6 @@ export const askProQuestions = async (program: QuestionArgs) => {
       );
       program.llamaCloudKey = llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
     }
-  }
-
-  if (isUsingLlamaCloud) {
-    // When using a LlamaCloud index, don't ask for vector database and use code in `llamacloud` folder for vector database
-    const vectorDb = "llamacloud";
-    program.vectorDb = vectorDb;
-  } else if (program.dataSources.length > 0 && !program.vectorDb) {
-    const { vectorDb } = await prompts(
-      {
-        type: "select",
-        name: "vectorDb",
-        message: "Would you like to use a vector database?",
-        choices: getVectorDbChoices(program.framework),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    program.vectorDb = vectorDb;
   }
 
   if (

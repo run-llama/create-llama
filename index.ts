@@ -224,13 +224,8 @@ if (process.argv.includes("--no-files")) {
 } else if (process.argv.includes("--example-file")) {
   options.dataSources = getDataSources(options.files, options.exampleFile);
 } else if (process.argv.includes("--llamacloud")) {
-  options.dataSources = [
-    {
-      type: "llamacloud",
-      config: {},
-    },
-    EXAMPLE_FILE,
-  ];
+  options.dataSources = [EXAMPLE_FILE];
+  options.vectorDb = "llamacloud";
 } else if (process.argv.includes("--web-source")) {
   options.dataSources = [
     {

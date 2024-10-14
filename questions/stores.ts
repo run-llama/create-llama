@@ -17,6 +17,7 @@ export const getVectorDbChoices = (framework: TemplateFramework) => {
     { title: "Qdrant", value: "qdrant" },
     { title: "ChromaDB", value: "chroma" },
     { title: "Weaviate", value: "weaviate" },
+    { title: "LlamaCloud (use Managed Index)", value: "llamacloud" },
   ];
 
   const vectordbLang = framework === "fastapi" ? "python" : "typescript";
