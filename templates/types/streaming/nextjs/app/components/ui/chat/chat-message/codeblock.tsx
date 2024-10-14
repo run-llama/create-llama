@@ -57,7 +57,7 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   const codeRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (codeRef.current) {
+    if (codeRef.current && codeRef.current.dataset.highlighted !== "yes") {
       hljs.highlightElement(codeRef.current);
     }
   }, [language, value]);
@@ -115,7 +115,14 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
         </div>
       </div>
       <pre className="border border-zinc-700">
-        <code ref={codeRef} className={`language-${language}`}>
+        <code
+          ref={codeRef}
+          className={`language-${language}`}
+          style={{
+            fontFamily:
+              'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+          }}
+        >
           {value}
         </code>
       </pre>
