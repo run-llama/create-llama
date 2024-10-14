@@ -1,12 +1,12 @@
 import json
 import logging
-from typing import List
+from typing import Awaitable, List
 
 from aiostream import stream
 from fastapi import BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
-from llama_index.core.schema import RelatedNodeInfo
+from llama_index.core.schema import NodeWithScore
 
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message, SourceNodes
@@ -27,7 +27,7 @@ class VercelStreamResponse(StreamingResponse):
         self,
         request: Request,
         event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
+        response: Awaitable[StreamingAgentChatResponse],
         chat_data: ChatData,
         background_tasks: BackgroundTasks,
     ):
@@ -41,7 +41,7 @@ class VercelStreamResponse(StreamingResponse):
         cls,
         request: Request,
         event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
+        response: Awaitable[StreamingAgentChatResponse],
         chat_data: ChatData,
         background_tasks: BackgroundTasks,
     ):
@@ -58,7 +58,7 @@ class VercelStreamResponse(StreamingResponse):
             result = await response
 
             # Once we got a source node, start a background task to download the files (if needed)
-            cls._download_llamacloud_files(result.source_nodes, background_tasks)
+            cls.process_response_nodes(result.source_nodes, background_tasks)
 
             # Yield the source nodes
             yield cls.convert_data(
@@ -127,9 +127,9 @@ class VercelStreamResponse(StreamingResponse):
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
     @classmethod
-    def _download_llamacloud_files(
+    def process_response_nodes(
         cls,
-        source_nodes: List[RelatedNodeInfo],
+        source_nodes: List[NodeWithScore],
         background_tasks: BackgroundTasks,
     ):
         try:
