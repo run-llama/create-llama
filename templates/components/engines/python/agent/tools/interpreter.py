@@ -202,6 +202,8 @@ class E2BCodeInterpreter:
                         retry_count=retry_count + 1,
                     )
             return output
+        else:
+            raise ValueError("Interpreter is not initialized.")
 
 
 def get_tools(**kwargs):
