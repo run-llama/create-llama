@@ -34,8 +34,10 @@ export const askSimpleQuestions = async (
   );
 
   let language: TemplateFramework = "fastapi";
+  let llamaCloudKey = args.llamaCloudKey;
+  let useLlamaCloud = false;
   if (appType !== "extractor") {
-    const res = await prompts(
+    const { language: newLanguage } = await prompts(
       {
         type: "select",
         name: "language",
@@ -47,35 +49,35 @@ export const askSimpleQuestions = async (
       },
       questionHandlers,
     );
-    language = res.language;
-  }
+    language = newLanguage;
 
-  const { useLlamaCloud } = await prompts(
-    {
-      type: "toggle",
-      name: "useLlamaCloud",
-      message: "Do you want to use LlamaCloud services?",
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-      hint: "see https://www.llamaindex.ai/enterprise for more info",
-    },
-    questionHandlers,
-  );
-
-  let llamaCloudKey = args.llamaCloudKey;
-  if (useLlamaCloud && !llamaCloudKey) {
-    // Ask for LlamaCloud API key, if not set
-    const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+    const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
-        type: "text",
-        name: "llamaCloudKey",
-        message:
-          "Please provide your LlamaCloud API key (leave blank to skip):",
+        type: "toggle",
+        name: "useLlamaCloud",
+        message: "Do you want to use LlamaCloud services?",
+        initial: false,
+        active: "Yes",
+        inactive: "No",
+        hint: "see https://www.llamaindex.ai/enterprise for more info",
       },
       questionHandlers,
     );
-    llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+    useLlamaCloud = newUseLlamaCloud;
+
+    if (useLlamaCloud && !llamaCloudKey) {
+      // Ask for LlamaCloud API key, if not set
+      const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+        {
+          type: "text",
+          name: "llamaCloudKey",
+          message:
+            "Please provide your LlamaCloud API key (leave blank to skip):",
+        },
+        questionHandlers,
+      );
+      llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+    }
   }
 
   const modelConfig = await askModelConfig({
