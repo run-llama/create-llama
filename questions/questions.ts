@@ -17,35 +17,37 @@ import {
 } from "./utils";
 
 export const askProQuestions = async (program: QuestionArgs) => {
-  const styledRepo = blue(
-    `https://github.com/${COMMUNITY_OWNER}/${COMMUNITY_REPO}`,
-  );
-  const { template } = await prompts(
-    {
-      type: "select",
-      name: "template",
-      message: "Which template would you like to use?",
-      choices: [
-        { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
-        {
-          title: "Multi-agent app (using workflows)",
-          value: "multiagent",
-        },
-        { title: "Structured Extractor", value: "extractor" },
-        {
-          title: `Community template from ${styledRepo}`,
-          value: "community",
-        },
-        {
-          title: "Example using a LlamaPack",
-          value: "llamapack",
-        },
-      ],
-      initial: 0,
-    },
-    questionHandlers,
-  );
-  program.template = template;
+  if (!program.template) {
+    const styledRepo = blue(
+      `https://github.com/${COMMUNITY_OWNER}/${COMMUNITY_REPO}`,
+    );
+    const { template } = await prompts(
+      {
+        type: "select",
+        name: "template",
+        message: "Which template would you like to use?",
+        choices: [
+          { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
+          {
+            title: "Multi-agent app (using workflows)",
+            value: "multiagent",
+          },
+          { title: "Structured Extractor", value: "extractor" },
+          {
+            title: `Community template from ${styledRepo}`,
+            value: "community",
+          },
+          {
+            title: "Example using a LlamaPack",
+            value: "llamapack",
+          },
+        ],
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    program.template = template;
+  }
 
   if (program.template === "community") {
     const projectOptions = await getProjectOptions(
@@ -96,47 +98,52 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.dataSources = [EXAMPLE_FILE];
     program.framework = "fastapi";
   }
-  const choices = [
-    { title: "NextJS", value: "nextjs" },
-    { title: "Express", value: "express" },
-    { title: "FastAPI (Python)", value: "fastapi" },
-  ];
 
-  const { framework } = await prompts(
-    {
-      type: "select",
-      name: "framework",
-      message: "Which framework would you like to use?",
-      choices,
-      initial: 0,
-    },
-    questionHandlers,
-  );
-  program.framework = framework;
+  if (!program.framework) {
+    const choices = [
+      { title: "NextJS", value: "nextjs" },
+      { title: "Express", value: "express" },
+      { title: "FastAPI (Python)", value: "fastapi" },
+    ];
+
+    const { framework } = await prompts(
+      {
+        type: "select",
+        name: "framework",
+        message: "Which framework would you like to use?",
+        choices,
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    program.framework = framework;
+  }
 
   if (
     (program.framework === "express" || program.framework === "fastapi") &&
     (program.template === "streaming" || program.template === "multiagent")
   ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
-    const styledNextJS = blue("NextJS");
-    const styledBackend = green(
-      program.framework === "express"
-        ? "Express "
-        : program.framework === "fastapi"
-          ? "FastAPI (Python) "
-          : "",
-    );
-    const { frontend } = await prompts({
-      onState: onPromptState,
-      type: "toggle",
-      name: "frontend",
-      message: `Would you like to generate a ${styledNextJS} frontend for your ${styledBackend}backend?`,
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-    });
-    program.frontend = Boolean(frontend);
+    if (program.frontend === undefined) {
+      const styledNextJS = blue("NextJS");
+      const styledBackend = green(
+        program.framework === "express"
+          ? "Express "
+          : program.framework === "fastapi"
+            ? "FastAPI (Python) "
+            : "",
+      );
+      const { frontend } = await prompts({
+        onState: onPromptState,
+        type: "toggle",
+        name: "frontend",
+        message: `Would you like to generate a ${styledNextJS} frontend for your ${styledBackend}backend?`,
+        initial: false,
+        active: "Yes",
+        inactive: "No",
+      });
+      program.frontend = Boolean(frontend);
+    }
   } else {
     program.frontend = false;
   }
