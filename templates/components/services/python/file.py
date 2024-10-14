@@ -69,7 +69,8 @@ class PrivateFileService:
         """
         Load the file from the private directory and return the documents
         """
-        extension = file_metadata.name.split(".")[-1]
+        _, extension = os.path.splitext(file_metadata.name)
+        extension = extension.lstrip(".")
 
         # Load file to documents
         # If LlamaParse is enabled, use it to parse the file
@@ -125,14 +126,13 @@ class PrivateFileService:
         pipeline_id = index._get_pipeline_id()
         # LlamaCloudIndex is a managed index so we can directly use the files
         upload_file = (file_name, BytesIO(file_data))
-        return [
-            LLamaCloudFileService.add_file_to_pipeline(
-                project_id,
-                pipeline_id,
-                upload_file,
-                custom_metadata={},
-            )
-        ]
+        _ = LLamaCloudFileService.add_file_to_pipeline(
+            project_id,
+            pipeline_id,
+            upload_file,
+            custom_metadata={},
+        )
+        return None
 
     @staticmethod
     def _sanitize_file_name(file_name: str) -> str:
@@ -168,7 +168,7 @@ class PrivateFileService:
             documents = cls._load_file_to_documents(file_metadata)
             cls._add_documents_to_vector_store_index(documents, index)
             # Add document ids to the file metadata
-            file_metadata.document_ids = [doc.doc_id for doc in documents]
+            file_metadata.refs = [doc.doc_id for doc in documents]
 
         # Return the file metadata
         return file_metadata

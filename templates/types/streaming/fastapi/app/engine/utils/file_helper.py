@@ -12,7 +12,7 @@ class FileMetadata(BaseModel):
     path: str = Field(..., description="The stored path of the file")
     name: str = Field(..., description="The name of the file")
     url: str = Field(..., description="The URL of the file")
-    document_ids: Optional[List[str]] = Field(
+    refs: Optional[List[str]] = Field(
         None, description="The indexed document IDs that the file is referenced to"
     )
 
@@ -28,9 +28,8 @@ class FileMetadata(BaseModel):
             "id": self.file_id,
             "name": self.name,
             "url": self.url,
+            "refs": self.refs,
         }
-        if self.document_ids is not None:
-            response["refs"] = self.document_ids
         return response
 
 

@@ -63,14 +63,19 @@ class FileUpload(BaseModel):
 @sandbox_router.post("")
 async def create_sandbox(request: Request):
     request_data = await request.json()
-    artifact_data = request_data["artifact"]
+    artifact_data = request_data.get("artifact", None)
     sandbox_files = artifact_data.get("files", [])
+
+    if not artifact_data:
+        raise HTTPException(
+            status_code=400, detail="Could not create artifact from the request data"
+        )
 
     try:
         artifact = CodeArtifact(**artifact_data)
     except Exception:
         logger.error(f"Could not create artifact from request data: {request_data}")
-        return HTTPException(
+        raise HTTPException(
             status_code=400, detail="Could not create artifact from the request data"
         )
 

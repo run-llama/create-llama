@@ -25,22 +25,33 @@ class FileMetadata(BaseModel):
     url: Optional[str] = None
     refs: Optional[List[str]] = None
 
+    def _get_url_llm_content(self) -> Optional[str]:
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if url_prefix:
+            if self.url is not None:
+                return f"File URL: {self.url}\n"
+            else:
+                # Construct url from file name
+                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{self.name}\n"
+        else:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
+            )
+            return None
+
     def to_llm_content(self) -> str:
         """
         Construct content for LLM from the file metadata
         """
         default_content = f"=====File: {self.name}=====\n"
-        if self.url is not None:
-            default_content += f"File URL: {self.url}\n"
-        else:
-            # Construct url from file name
-            url = f"https://{os.getenv('FILESERVER_URL_PREFIX')}/output/uploaded/{self.name}"
-            default_content += (
-                f"File URL (instruction: do not update this file URL yourself): {url}\n"
-            )
+        # Include file URL if it's available
+        url_content = self._get_url_llm_content()
+        if url_content:
+            default_content += url_content
+        # Include document IDs if it's available
         if self.refs is not None:
             default_content += f"Document IDs: {self.refs}\n"
-        # construct additional metadata for code interpreter
+        # Include sandbox file path
         sandbox_file_path = f"/tmp/{self.name}"
         default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
         return default_content
@@ -94,7 +105,7 @@ class Annotation(BaseModel):
     type: str
     data: AnnotationFileData | List[str] | AgentAnnotation | ArtifactAnnotation
 
-    def to_content(self) -> str | None:
+    def to_content(self) -> Optional[str]:
         if self.type == "document_file" and isinstance(self.data, AnnotationFileData):
             # iterate through all files and construct content for LLM
             file_contents = [file.metadata.to_llm_content() for file in self.data.files]
@@ -246,23 +257,23 @@ class ChatData(BaseModel):
         document_ids: List[str] = []
         uploaded_files = self.get_uploaded_files()
         for _file in uploaded_files:
-            file_metadata = _file.get("metadata", {})
-            refs = file_metadata.get("refs", [])
+            refs = _file.metadata.refs
             document_ids.extend(refs)
         return list(set(document_ids))
 
-    def get_uploaded_files(self) -> List[Dict[str, Any]]:
+    def get_uploaded_files(self) -> List[File]:
         """
         Get the uploaded files from the chat data
         """
+        uploaded_files = []
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
                     if annotation.type == "document_file" and isinstance(
                         annotation.data, AnnotationFileData
                     ):
-                        return [file.model_dump() for file in annotation.data.files]
-        return []
+                        uploaded_files.extend(annotation.data.files)
+        return uploaded_files
 
 
 class SourceNodes(BaseModel):
