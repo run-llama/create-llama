@@ -1,6 +1,5 @@
-import ciInfo from "ci-info";
 import prompts from "prompts";
-import { questionHandlers } from "../../questions";
+import { questionHandlers } from "../../questions/utils";
 import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askAzureQuestions } from "./azure";
@@ -27,7 +26,7 @@ export async function askModelConfig({
   framework,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
-  if (askModels && !ciInfo.isCI) {
+  if (askModels) {
     let choices = [
       { title: "OpenAI", value: "openai" },
       { title: "Groq", value: "groq" },

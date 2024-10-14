@@ -93,6 +93,12 @@ const getAdditionalDependencies = (
       });
       break;
     }
+    case "llamacloud":
+      dependencies.push({
+        name: "llama-index-indices-managed-llama-cloud",
+        version: "^0.3.1",
+      });
+      break;
   }
 
   // Add data source dependencies
@@ -123,14 +129,8 @@ const getAdditionalDependencies = (
             extras: ["rsa"],
           });
           dependencies.push({
-            name: "psycopg2",
+            name: "psycopg2-binary",
             version: "^2.9.9",
-          });
-          break;
-        case "llamacloud":
-          dependencies.push({
-            name: "llama-index-indices-managed-llama-cloud",
-            version: "^0.3.1",
           });
           break;
       }
@@ -277,6 +277,17 @@ const mergePoetryDependencies = (
       // Otherwise, serialize just the version string
       existingDependencies[dependency.name] = value.version;
     }
+  }
+};
+
+const copyRouterCode = async (root: string, tools: Tool[]) => {
+  // Copy sandbox router if the artifact tool is selected
+  if (tools?.some((t) => t.name === "artifact")) {
+    await copy("sandbox.py", path.join(root, "app", "api", "routers"), {
+      parents: true,
+      cwd: path.join(templatesDir, "components", "routers", "python"),
+      rename: assetRelocator,
+    });
   }
 };
 
@@ -431,6 +442,9 @@ export const installPythonTemplate = async ({
       parents: true,
       cwd: path.join(compPath, "engines", "python", engine),
     });
+
+    // Copy router code
+    await copyRouterCode(root, tools ?? []);
   }
 
   if (template === "multiagent") {

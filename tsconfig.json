@@ -18,7 +18,7 @@
     "create-app.ts",
     "index.ts",
     "./helpers",
-    "questions.ts",
+    "./questions",
     "package.json",
     "types/**/*"
   ],

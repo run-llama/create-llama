@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -55,17 +55,30 @@ class AgentAnnotation(BaseModel):
     text: str
 
 
+class ArtifactAnnotation(BaseModel):
+    toolCall: Dict[str, Any]
+    toolOutput: Dict[str, Any]
+
+
 class Annotation(BaseModel):
     type: str
-    data: AnnotationFileData | List[str] | AgentAnnotation
+    data: Union[AnnotationFileData, List[str], AgentAnnotation, ArtifactAnnotation]
 
-    def to_content(self) -> str | None:
+    def to_content(self) -> Optional[str]:
         if self.type == "document_file":
-            # We only support generating context content for CSV files for now
-            csv_files = [file for file in self.data.files if file.filetype == "csv"]
-            if len(csv_files) > 0:
-                return "Use data from following CSV raw content\n" + "\n".join(
-                    [f"```csv\n{csv_file.content.value}\n```" for csv_file in csv_files]
+            if isinstance(self.data, AnnotationFileData):
+                # We only support generating context content for CSV files for now
+                csv_files = [file for file in self.data.files if file.filetype == "csv"]
+                if len(csv_files) > 0:
+                    return "Use data from following CSV raw content\n" + "\n".join(
+                        [
+                            f"```csv\n{csv_file.content.value}\n```"
+                            for csv_file in csv_files
+                        ]
+                    )
+            else:
+                logger.warning(
+                    f"Unexpected data type for document_file annotation: {type(self.data)}"
                 )
         else:
             logger.warning(
@@ -146,8 +159,29 @@ class ChatData(BaseModel):
                             break
         return agent_messages
 
+    def _get_latest_code_artifact(self) -> Optional[str]:
+        """
+        Get latest code artifact from annotations to append to the user message
+        """
+        for message in reversed(self.messages):
+            if (
+                message.role == MessageRole.ASSISTANT
+                and message.annotations is not None
+            ):
+                for annotation in message.annotations:
+                    # type is tools and has `toolOutput` attribute
+                    if annotation.type == "tools" and isinstance(
+                        annotation.data, ArtifactAnnotation
+                    ):
+                        tool_output = annotation.data.toolOutput
+                        if tool_output and not tool_output.get("isError", False):
+                            return tool_output.get("output", {}).get("code", None)
+        return None
+
     def get_history_messages(
-        self, include_agent_messages: bool = False
+        self,
+        include_agent_messages: bool = False,
+        include_code_artifact: bool = True,
     ) -> List[ChatMessage]:
         """
         Get the history messages
@@ -164,7 +198,14 @@ class ChatData(BaseModel):
                     content="Previous agent events: \n" + "\n".join(agent_messages),
                 )
                 chat_messages.append(message)
-
+        if include_code_artifact:
+            latest_code_artifact = self._get_latest_code_artifact()
+            if latest_code_artifact:
+                message = ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content=f"The existing code is:\n```\n{latest_code_artifact}\n```",
+                )
+                chat_messages.append(message)
         return chat_messages
 
     def is_last_message_from_user(self) -> bool:
@@ -180,6 +221,7 @@ class ChatData(BaseModel):
                 for annotation in message.annotations:
                     if (
                         annotation.type == "document_file"
+                        and isinstance(annotation.data, AnnotationFileData)
                         and annotation.data.files is not None
                     ):
                         for fi in annotation.data.files:
@@ -209,7 +251,7 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
-    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> Optional[str]:
         url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if not url_prefix:
             logger.warning(

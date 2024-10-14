@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -8,8 +10,8 @@ class CrawlUrl(BaseModel):
 
 
 class WebLoaderConfig(BaseModel):
-    driver_arguments: list[str] = Field(default=None)
-    urls: list[CrawlUrl]
+    driver_arguments: Optional[List[str]] = Field(default_factory=list)
+    urls: List[CrawlUrl]
 
 
 def get_web_documents(config: WebLoaderConfig):

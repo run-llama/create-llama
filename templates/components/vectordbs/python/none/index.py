@@ -3,7 +3,7 @@ import os
 from datetime import timedelta
 from typing import Optional
 
-from cachetools import TTLCache, cached
+from cachetools import TTLCache, cached  # type: ignore
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.indices import load_index_from_storage
 from llama_index.core.storage import StorageContext

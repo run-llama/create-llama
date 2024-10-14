@@ -119,6 +119,22 @@ export function Artifact({
           className="w-[45vw] fixed top-0 right-0 h-screen z-50 artifact-panel animate-slideIn"
           ref={panelRef}
         >
+          <div className="flex justify-between items-center pl-5 pr-10 py-6 border-b">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold m-0">{artifact?.title}</h2>
+              <span className="text-sm text-gray-500">Version: v{version}</span>
+            </div>
+            <Button
+              onClick={() => {
+                closePanel();
+                setOpenOutputPanel(false);
+              }}
+              variant="outline"
+            >
+              Close
+            </Button>
+          </div>
+
           {sandboxCreating && (
             <div className="flex justify-center items-center h-full">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -159,35 +175,26 @@ function ArtifactOutput({
   const { url: sandboxUrl, outputUrls, runtimeError, stderr, stdout } = result;
 
   return (
-    <>
-      <div className="flex justify-between items-center pl-5 pr-10 py-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold m-0">{artifact.title}</h2>
-          <span className="text-sm text-gray-500">Version: v{version}</span>
+    <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
+      <TabsList className="grid grid-cols-2 max-w-[400px] mx-auto">
+        <TabsTrigger value="code">Code</TabsTrigger>
+        <TabsTrigger value="preview">Preview</TabsTrigger>
+      </TabsList>
+      <TabsContent value="code" className="h-[80%] mb-4 overflow-auto">
+        <div className="m-4 overflow-auto">
+          <Markdown content={markdownCode} />
         </div>
-        <Button onClick={closePanel}>Close</Button>
-      </div>
-      <Tabs defaultValue="code" className="h-full p-4 overflow-auto">
-        <TabsList className="grid grid-cols-2 max-w-[400px] mx-auto">
-          <TabsTrigger value="code">Code</TabsTrigger>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-        </TabsList>
-        <TabsContent value="code" className="h-[80%] mb-4 overflow-auto">
-          <div className="m-4 overflow-auto">
-            <Markdown content={markdownCode} />
-          </div>
-        </TabsContent>
-        <TabsContent
-          value="preview"
-          className="h-[80%] mb-4 overflow-auto mt-4 space-y-4"
-        >
-          {runtimeError && <RunTimeError runtimeError={runtimeError} />}
-          <ArtifactLogs stderr={stderr} stdout={stdout} />
-          {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
-          {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
-        </TabsContent>
-      </Tabs>
-    </>
+      </TabsContent>
+      <TabsContent
+        value="preview"
+        className="h-[80%] mb-4 overflow-auto mt-4 space-y-4"
+      >
+        {runtimeError && <RunTimeError runtimeError={runtimeError} />}
+        <ArtifactLogs stderr={stderr} stdout={stdout} />
+        {sandboxUrl && <CodeSandboxPreview url={sandboxUrl} />}
+        {outputUrls && <InterpreterOutput outputUrls={outputUrls} />}
+      </TabsContent>
+    </Tabs>
   );
 }
 

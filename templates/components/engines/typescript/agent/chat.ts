@@ -1,6 +1,6 @@
 import {
+  BaseChatEngine,
   BaseToolWithCall,
-  ChatEngine,
   OpenAIAgent,
   QueryEngineTool,
 } from "llamaindex";
@@ -45,7 +45,7 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
   const agent = new OpenAIAgent({
     tools,
     systemPrompt: process.env.SYSTEM_PROMPT,
-  }) as unknown as ChatEngine;
+  }) as unknown as BaseChatEngine;
 
   return agent;
 }

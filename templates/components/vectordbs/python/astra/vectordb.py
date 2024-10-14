@@ -15,6 +15,6 @@ def get_vector_store():
         token=token,
         api_endpoint=endpoint,
         collection_name=collection,
-        embedding_dimension=int(os.getenv("EMBEDDING_DIM")),
+        embedding_dimension=int(os.getenv("EMBEDDING_DIM", 768)),
     )
     return store

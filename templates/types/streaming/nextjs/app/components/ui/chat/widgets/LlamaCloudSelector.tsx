@@ -45,7 +45,7 @@ export function LlamaCloudSelector({
   setRequestData,
   onSelect,
   defaultPipeline,
-  shouldCheckValid = true,
+  shouldCheckValid = false,
 }: LlamaCloudSelectorProps) {
   const { backend } = useClientConfig();
   const [config, setConfig] = useState<LlamaCloudConfig>();
@@ -66,7 +66,16 @@ export function LlamaCloudSelector({
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" && !config) {
       fetch(`${backend}/api/chat/config/llamacloud`)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((errorData) => {
+              window.alert(
+                `Error: ${JSON.stringify(errorData) || "Unknown error occurred"}`,
+              );
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
           const pipeline = defaultPipeline ?? data.pipeline; // defaultPipeline will override pipeline in .env
           setConfig({ ...data, pipeline });
@@ -95,7 +104,8 @@ export function LlamaCloudSelector({
       </div>
     );
   }
-  if (!isValid(config) && shouldCheckValid) {
+
+  if (shouldCheckValid && !isValid(config.projects, config.pipeline)) {
     return (
       <p className="text-red-500">
         Invalid LlamaCloud configuration. Check console logs.
@@ -107,7 +117,11 @@ export function LlamaCloudSelector({
   return (
     <Select
       onValueChange={handlePipelineSelect}
-      defaultValue={JSON.stringify(pipeline)}
+      defaultValue={
+        isValid(projects, pipeline, false)
+          ? JSON.stringify(pipeline)
+          : undefined
+      }
     >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Select a pipeline" />
@@ -137,26 +151,33 @@ export function LlamaCloudSelector({
   );
 }
 
-function isValid(config: LlamaCloudConfig): boolean {
-  const { projects, pipeline } = config;
+function isValid(
+  projects: LLamaCloudProject[] | undefined,
+  pipeline: PipelineConfig | undefined,
+  logErrors: boolean = true,
+): boolean {
   if (!projects?.length) return false;
   if (!pipeline) return false;
   const matchedProject = projects.find(
     (project: LLamaCloudProject) => project.name === pipeline.project,
   );
   if (!matchedProject) {
-    console.error(
-      `LlamaCloud project ${pipeline.project} not found. Check LLAMA_CLOUD_PROJECT_NAME variable`,
-    );
+    if (logErrors) {
+      console.error(
+        `LlamaCloud project ${pipeline.project} not found. Check LLAMA_CLOUD_PROJECT_NAME variable`,
+      );
+    }
     return false;
   }
   const pipelineExists = matchedProject.pipelines.some(
     (p) => p.name === pipeline.pipeline,
   );
   if (!pipelineExists) {
-    console.error(
-      `LlamaCloud pipeline ${pipeline.pipeline} not found. Check LLAMA_CLOUD_INDEX_NAME variable`,
-    );
+    if (logErrors) {
+      console.error(
+        `LlamaCloud pipeline ${pipeline.pipeline} not found. Check LLAMA_CLOUD_INDEX_NAME variable`,
+      );
+    }
     return false;
   }
   return true;

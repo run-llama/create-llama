@@ -6,14 +6,15 @@ load_dotenv()
 import logging
 import os
 
-from app.engine.loaders import get_documents
-from app.engine.vectordb import get_vector_store
-from app.settings import init_settings
-from llama_index.core.ingestion import IngestionPipeline
+from llama_index.core.ingestion import DocstoreStrategy, IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.settings import Settings
 from llama_index.core.storage import StorageContext
 from llama_index.core.storage.docstore import SimpleDocumentStore
+
+from app.engine.loaders import get_documents
+from app.engine.vectordb import get_vector_store
+from app.settings import init_settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -40,7 +41,7 @@ def run_pipeline(docstore, vector_store, documents):
             Settings.embed_model,
         ],
         docstore=docstore,
-        docstore_strategy="upserts_and_delete",
+        docstore_strategy=DocstoreStrategy.UPSERTS_AND_DELETE,  # type: ignore
         vector_store=vector_store,
     )
 

@@ -1,5 +1,55 @@
 # create-llama
 
+## 0.3.0
+
+### Minor Changes
+
+- 7562cb4: Simplified default questions and added pro mode
+
+### Patch Changes
+
+- 0a69fe0: fix: missing params when init Astra vectorstore
+- 98a82b0: docs: chroma env variables
+
+## 0.2.19
+
+### Patch Changes
+
+- 3d41488: feat: use selected llamacloud for multiagent
+
+## 0.2.18
+
+### Patch Changes
+
+- 75e1f61: Fix cannot query public document from llamacloud
+- 88220f1: fix workflow doesn't stop when user presses stop generation button
+- 75e1f61: Fix typescript templates cannot upload file to llamacloud
+- 88220f1: Bump llama_index@0.11.17
+
+## 0.2.17
+
+### Patch Changes
+
+- cd3fcd0: bump: use LlamaIndexTS 0.6.18
+- 6335de1: Fix using LlamaCloud selector does not use the configured values in the environment (Python)
+
+## 0.2.16
+
+### Patch Changes
+
+- 0e78ba4: Fix: programmatically ensure index for LlamaCloud
+- 0e78ba4: Fix .env not loaded on poetry run generate
+- 7f4ac22: Don't need to run generate script for LlamaCloud
+- 5263bde: Use selected LlamaCloud index in multi-agent template
+
+## 0.2.15
+
+### Patch Changes
+
+- 16e6124: Bump package for llamatrace observability
+- 3790ca0: Add multi-agent task selector for TS template
+- d18f039: Add e2b code artifact tool for the FastAPI template
+
 ## 0.2.14
 
 ### Patch Changes

@@ -1,4 +1,5 @@
 import os
+
 from llama_index.vector_stores.milvus import MilvusVectorStore
 
 
@@ -15,6 +16,6 @@ def get_vector_store():
         user=os.getenv("MILVUS_USERNAME"),
         password=os.getenv("MILVUS_PASSWORD"),
         collection_name=collection,
-        dim=int(os.getenv("EMBEDDING_DIM")),
+        dim=int(os.getenv("EMBEDDING_DIM", 768)),
     )
     return store

@@ -14,7 +14,12 @@ async function loadAndIndex() {
 
   // create vector store and a collection
   const collectionName = process.env.ASTRA_DB_COLLECTION!;
-  const vectorStore = new AstraDBVectorStore();
+  const vectorStore = new AstraDBVectorStore({
+    params: {
+      endpoint: process.env.ASTRA_DB_ENDPOINT!,
+      token: process.env.ASTRA_DB_APPLICATION_TOKEN!,
+    },
+  });
   await vectorStore.createAndConnect(collectionName, {
     vector: {
       dimension: parseInt(process.env.EMBEDDING_DIM!),

@@ -7,7 +7,7 @@ from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger("uvicorn")
 
@@ -15,31 +15,39 @@ logger = logging.getLogger("uvicorn")
 class LlamaCloudConfig(BaseModel):
     # Private attributes
     api_key: str = Field(
-        default=os.getenv("LLAMA_CLOUD_API_KEY"),
         exclude=True,  # Exclude from the model representation
     )
     base_url: Optional[str] = Field(
-        default=os.getenv("LLAMA_CLOUD_BASE_URL"),
         exclude=True,
     )
     organization_id: Optional[str] = Field(
-        default=os.getenv("LLAMA_CLOUD_ORGANIZATION_ID"),
         exclude=True,
     )
     # Configuration attributes, can be set by the user
     pipeline: str = Field(
         description="The name of the pipeline to use",
-        default=os.getenv("LLAMA_CLOUD_INDEX_NAME"),
     )
     project: str = Field(
         description="The name of the LlamaCloud project",
-        default=os.getenv("LLAMA_CLOUD_PROJECT_NAME"),
     )
 
+    def __init__(self, **kwargs):
+        if "api_key" not in kwargs:
+            kwargs["api_key"] = os.getenv("LLAMA_CLOUD_API_KEY")
+        if "base_url" not in kwargs:
+            kwargs["base_url"] = os.getenv("LLAMA_CLOUD_BASE_URL")
+        if "organization_id" not in kwargs:
+            kwargs["organization_id"] = os.getenv("LLAMA_CLOUD_ORGANIZATION_ID")
+        if "pipeline" not in kwargs:
+            kwargs["pipeline"] = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+        if "project" not in kwargs:
+            kwargs["project"] = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+        super().__init__(**kwargs)
+
     # Validate and throw error if the env variables are not set before starting the app
-    @validator("pipeline", "project", "api_key", pre=True, always=True)
+    @field_validator("pipeline", "project", "api_key", mode="before")
     @classmethod
-    def validate_env_vars(cls, value):
+    def validate_fields(cls, value):
         if value is None:
             raise ValueError(
                 "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
@@ -56,7 +64,7 @@ class LlamaCloudConfig(BaseModel):
 
 class IndexConfig(BaseModel):
     llama_cloud_pipeline_config: LlamaCloudConfig = Field(
-        default=LlamaCloudConfig(),
+        default_factory=lambda: LlamaCloudConfig(),
         alias="llamaCloudPipeline",
     )
     callback_manager: Optional[CallbackManager] = Field(

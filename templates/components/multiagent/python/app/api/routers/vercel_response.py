@@ -1,6 +1,6 @@
+import asyncio
 import json
 import logging
-from abc import ABC
 from typing import AsyncGenerator, List
 
 from aiostream import stream
@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 logger = logging.getLogger("uvicorn")
 
 
-class VercelStreamResponse(StreamingResponse, ABC):
+class VercelStreamResponse(StreamingResponse):
     """
     Base class to convert the response from the chat engine to the streaming format expected by Vercel
     """
@@ -23,26 +23,34 @@ class VercelStreamResponse(StreamingResponse, ABC):
 
     def __init__(self, request: Request, chat_data: ChatData, *args, **kwargs):
         self.request = request
-
-        stream = self._create_stream(request, chat_data, *args, **kwargs)
-        content = self.content_generator(stream)
-
+        self.chat_data = chat_data
+        content = self.content_generator(*args, **kwargs)
         super().__init__(content=content)
 
-    async def content_generator(self, stream):
+    async def content_generator(self, event_handler, events):
+        logger.info("Starting content_generator")
+        stream = self._create_stream(
+            self.request, self.chat_data, event_handler, events
+        )
         is_stream_started = False
+        try:
+            async with stream.stream() as streamer:
+                async for output in streamer:
+                    if not is_stream_started:
+                        is_stream_started = True
+                        # Stream a blank message to start the stream
+                        yield self.convert_text("")
 
-        async with stream.stream() as streamer:
-            async for output in streamer:
-                if not is_stream_started:
-                    is_stream_started = True
-                    # Stream a blank message to start the stream
-                    yield self.convert_text("")
-
-                yield output
-
-                if await self.request.is_disconnected():
-                    break
+                    yield output
+        except asyncio.CancelledError:
+            logger.info("Stopping workflow")
+            await event_handler.cancel_run()
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in content_generator: {str(e)}", exc_info=True
+            )
+        finally:
+            logger.info("The stream has been stopped!")
 
     def _create_stream(
         self,
