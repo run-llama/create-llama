@@ -5,14 +5,14 @@ import { askSimpleQuestions } from "./simple";
 import { QuestionArgs, QuestionResults } from "./types";
 
 export const askQuestions = async (
-  program: QuestionArgs,
+  args: QuestionArgs,
 ): Promise<QuestionResults> => {
   if (ciInfo.isCI) {
-    return await getCIQuestionResults(program);
-  } else if (program.pro) {
+    return await getCIQuestionResults(args);
+  } else if (args.pro) {
     // TODO: refactor pro questions to return a result object
-    await askProQuestions(program as unknown as QuestionArgs);
-    return program as unknown as QuestionResults;
+    await askProQuestions(args);
+    return args as unknown as QuestionResults;
   }
-  return await askSimpleQuestions(program as unknown as QuestionArgs);
+  return await askSimpleQuestions(args);
 };

@@ -7,8 +7,6 @@ import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
 type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
 
-// TODO: configure data sources
-
 type SimpleAnswers = {
   appType: AppType;
   language: TemplateFramework;
