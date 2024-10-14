@@ -1,4 +1,5 @@
 import prompts from "prompts";
+import { EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -100,17 +101,19 @@ export const askSimpleQuestions = async (
 const convertAnswers = (answers: SimpleAnswers): QuestionResults => {
   const lookup: Record<
     AppType,
-    Pick<QuestionResults, "template" | "tools" | "frontend">
+    Pick<QuestionResults, "template" | "tools" | "frontend" | "dataSources">
   > = {
     rag: {
       template: "streaming",
       tools: getTools(["duckduckgo"]),
       frontend: true,
+      dataSources: [EXAMPLE_FILE],
     },
     code_artifact: {
       template: "streaming",
       tools: getTools(["artifact"]),
       frontend: true,
+      dataSources: [],
     },
     multiagent: {
       template: "multiagent",
@@ -121,8 +124,14 @@ const convertAnswers = (answers: SimpleAnswers): QuestionResults => {
         "img_gen",
       ]),
       frontend: true,
+      dataSources: [EXAMPLE_FILE],
     },
-    extractor: { template: "extractor", tools: [], frontend: false },
+    extractor: {
+      template: "extractor",
+      tools: [],
+      frontend: false,
+      dataSources: [EXAMPLE_FILE],
+    },
   };
   const results = lookup[answers.appType];
   return {
@@ -132,7 +141,6 @@ const convertAnswers = (answers: SimpleAnswers): QuestionResults => {
     useLlamaParse: answers.useLlamaCloud,
     llamapack: "",
     postInstallAction: "none",
-    dataSources: [],
     vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
     modelConfig: answers.modelConfig,
     observability: "none",
