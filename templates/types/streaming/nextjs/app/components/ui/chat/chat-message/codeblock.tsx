@@ -1,10 +1,9 @@
 "use client";
 
+import hljs from "highlight.js";
+import "highlight.js/styles/atom-one-dark-reasonable.css";
 import { Check, Copy, Download } from "lucide-react";
-import { FC, memo, useMemo } from "react";
-import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
-import { coldarkDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
-
+import { FC, memo, useEffect, useRef } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 
@@ -55,33 +54,13 @@ export const generateRandomString = (length: number, lowercase = false) => {
 
 const CodeBlock: FC<Props> = memo(({ language, value }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
+  const codeRef = useRef<HTMLElement>(null);
 
-  const MemoizedSyntaxHighlighter = useMemo(() => {
-    const Component = ({ value }: { value: string }) => (
-      <SyntaxHighlighter
-        language="jsx"
-        style={coldarkDark}
-        PreTag="div"
-        showLineNumbers
-        customStyle={{
-          width: "100%",
-          background: "transparent",
-          padding: "1.5rem 1rem",
-          borderRadius: "0.5rem",
-        }}
-        codeTagProps={{
-          style: {
-            fontSize: "0.9rem",
-            fontFamily: "var(--font-mono)",
-          },
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
-    );
-    Component.displayName = `Component_${language}`;
-    return Component;
-  }, [language]);
+  useEffect(() => {
+    if (codeRef.current) {
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [language, value]);
 
   const downloadAsFile = () => {
     if (typeof window === "undefined") {
@@ -135,7 +114,11 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
           </Button>
         </div>
       </div>
-      <MemoizedSyntaxHighlighter value={value} />
+      <pre className="border border-zinc-700">
+        <code ref={codeRef} className={`language-${language}`}>
+          {value}
+        </code>
+      </pre>
     </div>
   );
 });
