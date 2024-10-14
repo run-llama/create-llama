@@ -24,7 +24,7 @@ export async function getCIQuestionResults(
     modelConfig: await askModelConfig({
       openAiKey: program.openAiKey,
       askModels: false,
-      framework: defaults.framework,
+      framework: program.framework,
     }),
   };
 }
