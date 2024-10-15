@@ -20,6 +20,12 @@ export type ImageData = {
 };
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
+export const DOCUMENT_FILE_TYPES: DocumentFileType[] = [
+  "csv",
+  "pdf",
+  "txt",
+  "docx",
+];
 
 export type UploadedFileMeta = {
   id: string;

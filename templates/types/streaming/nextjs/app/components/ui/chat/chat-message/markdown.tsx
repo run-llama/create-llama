@@ -5,7 +5,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-import { SourceData } from "..";
+import { DOCUMENT_FILE_TYPES, DocumentFileType, SourceData } from "..";
 import { useClientConfig } from "../hooks/use-config";
 import { DocumentInfo, SourceNumberButton } from "./chat-sources";
 import { CodeBlock } from "./codeblock";
@@ -124,14 +124,23 @@ export default function Markdown({
         a({ href, children }) {
           // If href starts with `{backend}/api/files`, then it's a local document and we use DocumenInfo for rendering
           if (href?.startsWith(backend + "/api/files")) {
-            return (
-              <DocumentInfo
-                document={{
-                  url: href,
-                  sources: [],
-                }}
-              />
-            );
+            // Check if the file is document file type
+            const fileExtension = href.split(".").pop()?.toLowerCase();
+
+            if (
+              fileExtension &&
+              DOCUMENT_FILE_TYPES.includes(fileExtension as DocumentFileType)
+            ) {
+              return (
+                <DocumentInfo
+                  document={{
+                    url: href,
+                    sources: [],
+                  }}
+                  className="mb-2 mt-2"
+                />
+              );
+            }
           }
           // If a text link starts with 'citation:', then render it as a citation reference
           if (
