@@ -1,19 +1,17 @@
 "use client";
 
+import hljs from "highlight.js";
+// instead of atom-one-dark theme, there are a lot of others: https://highlightjs.org/demo
+import "highlight.js/styles/atom-one-dark-reasonable.css";
 import { Check, Copy, Download } from "lucide-react";
-import { FC, memo } from "react";
-import { Prism, SyntaxHighlighterProps } from "react-syntax-highlighter";
-import { coldarkDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
-
+import { FC, memo, useEffect, useRef } from "react";
 import { Button } from "../../button";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
-
-// TODO: Remove this when @type/react-syntax-highlighter is updated
-const SyntaxHighlighter = Prism as unknown as FC<SyntaxHighlighterProps>;
 
 interface Props {
   language: string;
   value: string;
+  className?: string;
 }
 
 interface languageMap {
@@ -56,8 +54,15 @@ export const generateRandomString = (length: number, lowercase = false) => {
   return lowercase ? result.toLowerCase() : result;
 };
 
-const CodeBlock: FC<Props> = memo(({ language, value }) => {
+const CodeBlock: FC<Props> = memo(({ language, value, className }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
+  const codeRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (codeRef.current && codeRef.current.dataset.highlighted !== "yes") {
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [language, value]);
 
   const downloadAsFile = () => {
     if (typeof window === "undefined") {
@@ -93,7 +98,9 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   };
 
   return (
-    <div className="codeblock relative w-full bg-zinc-950 font-sans">
+    <div
+      className={`codeblock relative w-full bg-zinc-950 font-sans ${className}`}
+    >
       <div className="flex w-full items-center justify-between bg-zinc-800 px-6 py-2 pr-4 text-zinc-100">
         <span className="text-xs lowercase">{language}</span>
         <div className="flex items-center space-x-1">
@@ -111,26 +118,11 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
           </Button>
         </div>
       </div>
-      <SyntaxHighlighter
-        language={language}
-        style={coldarkDark}
-        PreTag="div"
-        showLineNumbers
-        customStyle={{
-          width: "100%",
-          background: "transparent",
-          padding: "1.5rem 1rem",
-          borderRadius: "0.5rem",
-        }}
-        codeTagProps={{
-          style: {
-            fontSize: "0.9rem",
-            fontFamily: "var(--font-mono)",
-          },
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
+      <pre className="border border-zinc-700">
+        <code ref={codeRef} className={`language-${language} font-mono`}>
+          {value}
+        </code>
+      </pre>
     </div>
   );
 });

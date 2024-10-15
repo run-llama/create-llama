@@ -4,7 +4,7 @@ import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers } from "../../questions";
+import { questionHandlers } from "../../questions/utils";
 
 export const TSYSTEMS_LLMHUB_API_URL =
   "https://llm-server.llmhub.t-systems.net/v2";

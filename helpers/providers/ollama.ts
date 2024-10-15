@@ -3,7 +3,7 @@ import ollama, { type ModelResponse } from "ollama";
 import { red } from "picocolors";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions";
+import { questionHandlers, toChoice } from "../../questions/utils";
 
 type ModelData = {
   dimensions: number;

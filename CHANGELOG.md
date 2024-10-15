@@ -1,5 +1,16 @@
 # create-llama
 
+## 0.3.0
+
+### Minor Changes
+
+- 7562cb4: Simplified default questions and added pro mode
+
+### Patch Changes
+
+- 0a69fe0: fix: missing params when init Astra vectorstore
+- 98a82b0: docs: chroma env variables
+
 ## 0.2.19
 
 ### Patch Changes

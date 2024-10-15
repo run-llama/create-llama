@@ -1,7 +1,7 @@
 import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
-import { questionHandlers } from "../../questions";
+import { questionHandlers } from "../../questions/utils";
 
 const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
   "gpt-35-turbo": { openAIModel: "gpt-3.5-turbo" },
