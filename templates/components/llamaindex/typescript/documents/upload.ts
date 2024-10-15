@@ -6,7 +6,7 @@ import { FileMetadata, parseFile, storeFile } from "./helper";
 import { runPipeline } from "./pipeline";
 
 export async function uploadDocument(
-  index: VectorStoreIndex | LlamaCloudIndex,
+  index: VectorStoreIndex | LlamaCloudIndex | null,
   filename: string,
   raw: string,
 ): Promise<FileMetadata> {
