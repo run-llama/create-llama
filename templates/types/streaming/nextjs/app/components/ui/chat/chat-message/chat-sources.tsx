@@ -97,10 +97,16 @@ export function SourceNumberButton({
   );
 }
 
-function DocumentInfo({ document }: { document: Document }) {
-  if (!document.sources.length) return null;
+export function DocumentInfo({ document }: { document: Document }) {
   const { url, sources } = document;
-  const fileName = sources[0].metadata.file_name as string | undefined;
+  let fileName: string | undefined;
+  if (sources.length > 0) {
+    fileName = sources[0].metadata.file_name as string | undefined;
+  } else {
+    // Extract filename from URL if sources is empty
+    const urlParts = url.split("/");
+    fileName = urlParts[urlParts.length - 1];
+  }
   const fileExt = fileName?.split(".").pop();
   const fileImage = fileExt ? FileIcon[fileExt as DocumentFileType] : null;
 

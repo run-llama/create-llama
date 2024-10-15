@@ -6,7 +6,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
 import { SourceData } from "..";
-import { SourceNumberButton } from "./chat-sources";
+import { useClientConfig } from "../hooks/use-config";
+import { DocumentInfo, SourceNumberButton } from "./chat-sources";
 import { CodeBlock } from "./codeblock";
 
 const MemoizedReactMarkdown: FC<Options> = memo(
@@ -78,6 +79,7 @@ export default function Markdown({
   sources?: SourceData;
 }) {
   const processedContent = preprocessContent(content, sources);
+  const { backend } = useClientConfig();
 
   return (
     <MemoizedReactMarkdown
@@ -119,6 +121,17 @@ export default function Markdown({
           );
         },
         a({ href, children }) {
+          // If href starts with http://localhost:8000/api/files, render DocumentPreview
+          if (href?.startsWith(backend + "/api/files")) {
+            return (
+              <DocumentInfo
+                document={{
+                  url: href,
+                  sources: [],
+                }}
+              />
+            );
+          }
           // If a text link starts with 'citation:', then render it as a citation reference
           if (
             Array.isArray(children) &&
