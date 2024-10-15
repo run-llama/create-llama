@@ -64,22 +64,12 @@ class E2BCodeInterpreter:
         self.interpreter = CodeInterpreter(api_key=self.api_key)
         if len(sandbox_files) > 0:
             for file_path in sandbox_files:
-                # The file path is a local path, but sometimes AI passes a sandbox file path
-                # We need to support both
                 file_name = os.path.basename(file_path)
-                if file_path.startswith("/tmp"):
-                    # The file path is a sandbox file path
-                    sandbox_file_path = file_path
-                    local_file_path = os.path.join(self.uploaded_files_dir, file_name)
-                else:
-                    # The file path is a local file path
-                    local_file_path = file_path
-                    sandbox_file_path = f"tmp/{file_name}"
-
+                local_file_path = os.path.join(self.uploaded_files_dir, file_name)
                 with open(local_file_path, "rb") as f:
                     content = f.read()
                     if self.interpreter and self.interpreter.files:
-                        self.interpreter.files.write(sandbox_file_path, content)
+                        self.interpreter.files.write(file_path, content)
             logger.info(f"Uploaded {len(sandbox_files)} files to sandbox")
 
     def _save_to_disk(self, base64_data: str, ext: str) -> FileMetadata:
