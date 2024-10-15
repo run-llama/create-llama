@@ -32,6 +32,7 @@ type CodeArtifact = {
   port: number | null;
   file_path: string;
   code: string;
+  files?: string[];
 };
 
 const sandboxTimeout = 10 * 60 * 1000; // 10 minute in ms
@@ -82,6 +83,11 @@ export async function POST(req: Request) {
     }
   }
 
+  // Copy files
+  if (artifact.files) {
+    await uploadFiles(sbx, artifact.files);
+  }
+
   // Copy code to fs
   if (artifact.code && Array.isArray(artifact.code)) {
     artifact.code.forEach(async (file) => {
@@ -117,6 +123,13 @@ export async function POST(req: Request) {
       }),
     );
   }
+}
+
+async function uploadFiles(sbx: Sandbox | CodeInterpreter, files: string[]) {
+  files.forEach(async (file) => {
+    await sbx.files.write(file, file);
+    console.log(`Copied file to ${file} in ${sbx.sandboxID}`);
+  });
 }
 
 async function downloadCellResults(

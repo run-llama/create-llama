@@ -134,7 +134,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
           stdout: [],
           stderr: [],
         },
-        text: "Max retries reached",
+        text: "Failed to execute the code after 3 retries. Explain the error to the user and suggest a fix.",
         extraResult: [],
       };
     }
