@@ -5,7 +5,13 @@ import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
-type AppType = "rag" | "code_artifact" | "multiagent" | "extractor";
+
+type AppType =
+  | "rag"
+  | "code_artifact"
+  | "multiagent"
+  | "extractor"
+  | "data_scientist";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -25,6 +31,7 @@ export const askSimpleQuestions = async (
       message: "What app do you want to build?",
       choices: [
         { title: "Agentic RAG", value: "rag" },
+        { title: "Data Scientist", value: "data_scientist" },
         { title: "Code Artifact Agent", value: "code_artifact" },
         { title: "Multi-Agent Report Gen", value: "multiagent" },
         { title: "Structured extraction", value: "extractor" },
@@ -108,6 +115,12 @@ const convertAnswers = (answers: SimpleAnswers): QuestionResults => {
       tools: getTools(["duckduckgo"]),
       frontend: true,
       dataSources: [EXAMPLE_FILE],
+    },
+    data_scientist: {
+      template: "streaming",
+      tools: getTools(["interpreter", "document_generator"]),
+      frontend: true,
+      dataSources: [],
     },
     code_artifact: {
       template: "streaming",
