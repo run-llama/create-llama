@@ -10,6 +10,7 @@ import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 interface Props {
   language: string;
   value: string;
+  className?: string;
 }
 
 interface languageMap {
@@ -52,7 +53,7 @@ export const generateRandomString = (length: number, lowercase = false) => {
   return lowercase ? result.toLowerCase() : result;
 };
 
-const CodeBlock: FC<Props> = memo(({ language, value }) => {
+const CodeBlock: FC<Props> = memo(({ language, value, className }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
   const codeRef = useRef<HTMLElement>(null);
 
@@ -96,7 +97,9 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   };
 
   return (
-    <div className="codeblock relative w-full bg-zinc-950 font-sans">
+    <div
+      className={`codeblock relative w-full bg-zinc-950 font-sans ${className}`}
+    >
       <div className="flex w-full items-center justify-between bg-zinc-800 px-6 py-2 pr-4 text-zinc-100">
         <span className="text-xs lowercase">{language}</span>
         <div className="flex items-center space-x-1">
@@ -115,14 +118,7 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
         </div>
       </div>
       <pre className="border border-zinc-700">
-        <code
-          ref={codeRef}
-          className={`language-${language}`}
-          style={{
-            fontFamily:
-              'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
-          }}
-        >
+        <code ref={codeRef} className={`language-${language} font-mono`}>
           {value}
         </code>
       </pre>
