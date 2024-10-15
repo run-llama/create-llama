@@ -1,3 +1,5 @@
+import { Document } from "llamaindex";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { getExtractors } from "../../engine/loader";
@@ -5,13 +7,33 @@ import { getExtractors } from "../../engine/loader";
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
   "text/plain": "txt",
+  "text/csv": "csv",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     "docx",
 };
 
 const UPLOADED_FOLDER = "output/uploaded";
 
+export type FileMetadata = {
+  id: string;
+  name: string;
+  url: string;
+  refs: string[];
+};
+
 export async function storeAndParseFile(
+  filename: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+): Promise<FileMetadata> {
+  const fileMetadata = await storeFile(filename, fileBuffer, mimeType);
+  const documents: Document[] = await parseFile(fileBuffer, filename, mimeType);
+  // Update document IDs in the file metadata
+  fileMetadata.refs = documents.map((document) => document.id_ as string);
+  return fileMetadata;
+}
+
+export async function storeFile(
   filename: string,
   fileBuffer: Buffer,
   mimeType: string,
@@ -19,9 +41,24 @@ export async function storeAndParseFile(
   const fileExt = MIME_TYPE_TO_EXT[mimeType];
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
+  const fileId = crypto.randomUUID();
+  const newFilename = `${fileId}_${sanitizeFileName(filename)}`;
+  const filepath = path.join(UPLOADED_FOLDER, newFilename);
+  const fileUrl = await saveDocument(filepath, fileBuffer);
+  return {
+    id: fileId,
+    name: newFilename,
+    url: fileUrl,
+    refs: [] as string[],
+  } as FileMetadata;
+}
+
+export async function parseFile(
+  fileBuffer: Buffer,
+  filename: string,
+  mimeType: string,
+) {
   const documents = await loadDocuments(fileBuffer, mimeType);
-  const filepath = path.join(UPLOADED_FOLDER, filename);
-  await saveDocument(filepath, fileBuffer);
   for (const document of documents) {
     document.metadata = {
       ...document.metadata,
@@ -48,12 +85,6 @@ export async function saveDocument(filepath: string, content: string | Buffer) {
   if (path.isAbsolute(filepath)) {
     throw new Error("Absolute file paths are not allowed.");
   }
-  const fileName = path.basename(filepath);
-  if (!/^[a-zA-Z0-9_.-]+$/.test(fileName)) {
-    throw new Error(
-      "File name is not allowed to contain any special characters.",
-    );
-  }
   if (!process.env.FILESERVER_URL_PREFIX) {
     throw new Error("FILESERVER_URL_PREFIX environment variable is not set.");
   }
@@ -70,4 +101,8 @@ export async function saveDocument(filepath: string, content: string | Buffer) {
   const fileurl = `${process.env.FILESERVER_URL_PREFIX}/${filepath}`;
   console.log(`Saved document to ${filepath}. Reachable at URL: ${fileurl}`);
   return fileurl;
+}
+
+function sanitizeFileName(fileName: string) {
+  return fileName.replace(/[^a-zA-Z0-9_.-]/g, "_");
 }
