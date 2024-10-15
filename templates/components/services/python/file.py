@@ -5,7 +5,7 @@ import re
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.utils.file_helper import FileMetadata, save_file
@@ -15,6 +15,7 @@ from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
 )
 from llama_index.core.schema import Document
+from llama_index.core.tools.function_tool import FunctionTool
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 
@@ -112,7 +113,7 @@ class PrivateFileService:
         index: LlamaCloudIndex,
         file_name: str,
         file_data: bytes,
-    ) -> None:
+    ) -> str:
         """
         Add the file to the LlamaCloud index.
         LlamaCloudIndex is a managed index so we can directly use the files.
@@ -126,13 +127,13 @@ class PrivateFileService:
         pipeline_id = index._get_pipeline_id()
         # LlamaCloudIndex is a managed index so we can directly use the files
         upload_file = (file_name, BytesIO(file_data))
-        _ = LLamaCloudFileService.add_file_to_pipeline(
+        doc_id = LLamaCloudFileService.add_file_to_pipeline(
             project_id,
             pipeline_id,
             upload_file,
             custom_metadata={},
         )
-        return None
+        return doc_id
 
     @staticmethod
     def _sanitize_file_name(file_name: str) -> str:
@@ -161,14 +162,37 @@ class PrivateFileService:
         file_data, extension = cls._preprocess_base64_file(base64_content)
         file_metadata = cls._store_file(new_file_name, file_data)
 
-        # Insert the file into the index
-        if isinstance(index, LlamaCloudIndex):
-            _ = cls._add_file_to_llama_cloud_index(index, new_file_name, file_data)
+        tools = cls._get_available_tools()
+        code_executor_tools = ["interpreter", "artifact"]
+        # If the file is CSV and there is a code executor tool, we don't need to index.
+        if extension == ".csv" and any(tool in tools for tool in code_executor_tools):
+            return file_metadata
         else:
-            documents = cls._load_file_to_documents(file_metadata)
-            cls._add_documents_to_vector_store_index(documents, index)
-            # Add document ids to the file metadata
-            file_metadata.refs = [doc.doc_id for doc in documents]
+            # Insert the file into the index and update document ids to the file metadata
+            if isinstance(index, LlamaCloudIndex):
+                doc_id = cls._add_file_to_llama_cloud_index(
+                    index, new_file_name, file_data
+                )
+                # Add document ids to the file metadata
+                file_metadata.refs = [doc_id]
+            else:
+                documents = cls._load_file_to_documents(file_metadata)
+                cls._add_documents_to_vector_store_index(documents, index)
+                # Add document ids to the file metadata
+                file_metadata.refs = [doc.doc_id for doc in documents]
 
         # Return the file metadata
         return file_metadata
+
+    @staticmethod
+    def _get_available_tools() -> Dict[str, List[FunctionTool]]:
+        try:
+            from app.engine.tools import ToolFactory
+
+            tools = ToolFactory.from_env(map_result=True)
+            return tools
+        except ImportError:
+            # There is no tool code
+            return {}
+        except Exception as e:
+            raise ValueError(f"Failed to get available tools: {e}") from e

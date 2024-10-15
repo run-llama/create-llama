@@ -258,7 +258,8 @@ class ChatData(BaseModel):
         uploaded_files = self.get_uploaded_files()
         for _file in uploaded_files:
             refs = _file.metadata.refs
-            document_ids.extend(refs)
+            if refs is not None:
+                document_ids.extend(refs)
         return list(set(document_ids))
 
     def get_uploaded_files(self) -> List[File]:
