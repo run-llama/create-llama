@@ -45,51 +45,13 @@ class VercelStreamResponse(StreamingResponse):
         chat_data: ChatData,
         background_tasks: BackgroundTasks,
     ):
-        # Yield the events from the event handler
-        async def _event_generator():
-            async for event in event_handler.async_event_gen():
-                event_response = event.to_response()
-                if event_response is not None:
-                    yield cls.convert_data(event_response)
-
-        # Yield the text response
-        async def _chat_response_generator():
-            # Wait for the response from the chat engine
-            result = await response
-
-            # Once we got a source node, start a background task to download the files (if needed)
-            cls.process_response_nodes(result.source_nodes, background_tasks)
-
-            # Yield the source nodes
-            yield cls.convert_data(
-                {
-                    "type": "sources",
-                    "data": {
-                        "nodes": [
-                            SourceNodes.from_source_node(node).model_dump()
-                            for node in result.source_nodes
-                        ]
-                    },
-                }
-            )
-
-            final_response = ""
-            async for token in result.async_response_gen():
-                final_response += token
-                yield cls.convert_text(token)
-
-            # Generate next questions if next question prompt is configured
-            question_data = await cls._generate_next_questions(
-                chat_data.messages, final_response
-            )
-            if question_data:
-                yield cls.convert_data(question_data)
-
-            # the text_generator is the leading stream, once it's finished, also finish the event stream
-            event_handler.is_done = True
+        chat_response_generator = cls._chat_response_generator(
+            response, background_tasks, event_handler, chat_data
+        )
+        event_generator = cls._event_generator(event_handler)
 
         # Merge the chat response generator and the event generator
-        combine = stream.merge(_chat_response_generator(), _event_generator())
+        combine = stream.merge(chat_response_generator, event_generator)
         is_stream_started = False
         async with combine.stream() as streamer:
             async for output in streamer:
@@ -103,17 +65,60 @@ class VercelStreamResponse(StreamingResponse):
                 if await request.is_disconnected():
                     break
 
-    @staticmethod
-    async def _generate_next_questions(chat_history: List[Message], response: str):
-        questions = await NextQuestionSuggestion.suggest_next_questions(
-            chat_history, response
-        )
-        if questions:
-            return {
-                "type": "suggested_questions",
-                "data": questions,
+    @classmethod
+    async def _event_generator(cls, event_handler: EventCallbackHandler):
+        """
+        Yield the events from the event handler
+        """
+        async for event in event_handler.async_event_gen():
+            event_response = event.to_response()
+            if event_response is not None:
+                yield cls.convert_data(event_response)
+
+    @classmethod
+    async def _chat_response_generator(
+        cls,
+        response: Awaitable[StreamingAgentChatResponse],
+        background_tasks: BackgroundTasks,
+        event_handler: EventCallbackHandler,
+        chat_data: ChatData,
+    ):
+        """
+        Yield the text response and source nodes from the chat engine
+        """
+        # Wait for the response from the chat engine
+        result = await response
+
+        # Once we got a source node, start a background task to download the files (if needed)
+        cls._process_response_nodes(result.source_nodes, background_tasks)
+
+        # Yield the source nodes
+        yield cls.convert_data(
+            {
+                "type": "sources",
+                "data": {
+                    "nodes": [
+                        SourceNodes.from_source_node(node).model_dump()
+                        for node in result.source_nodes
+                    ]
+                },
             }
-        return None
+        )
+
+        final_response = ""
+        async for token in result.async_response_gen():
+            final_response += token
+            yield cls.convert_text(token)
+
+        # Generate next questions if next question prompt is configured
+        question_data = await cls._generate_next_questions(
+            chat_data.messages, final_response
+        )
+        if question_data:
+            yield cls.convert_data(question_data)
+
+        # the text_generator is the leading stream, once it's finished, also finish the event stream
+        event_handler.is_done = True
 
     @classmethod
     def convert_text(cls, token: str):
@@ -126,9 +131,8 @@ class VercelStreamResponse(StreamingResponse):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
-    @classmethod
-    def process_response_nodes(
-        cls,
+    @staticmethod
+    def _process_response_nodes(
         source_nodes: List[NodeWithScore],
         background_tasks: BackgroundTasks,
     ):
@@ -144,3 +148,15 @@ class VercelStreamResponse(StreamingResponse):
                 "LlamaCloud is not configured. Skipping post processing of nodes"
             )
             pass
+
+    @staticmethod
+    async def _generate_next_questions(chat_history: List[Message], response: str):
+        questions = await NextQuestionSuggestion.suggest_next_questions(
+            chat_history, response
+        )
+        if questions:
+            return {
+                "type": "suggested_questions",
+                "data": questions,
+            }
+        return None
