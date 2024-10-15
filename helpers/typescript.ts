@@ -279,12 +279,7 @@ async function updatePackageJson({
       "remark-gfm": undefined,
       "remark-math": undefined,
       "react-markdown": undefined,
-      "react-syntax-highlighter": undefined,
-    };
-
-    packageJson.devDependencies = {
-      ...packageJson.devDependencies,
-      "@types/react-syntax-highlighter": undefined,
+      "highlight.js": undefined,
     };
   }
 

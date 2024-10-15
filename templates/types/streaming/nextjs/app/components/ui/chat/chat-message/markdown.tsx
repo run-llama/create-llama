@@ -114,6 +114,7 @@ export default function Markdown({
               key={Math.random()}
               language={(match && match[1]) || ""}
               value={String(children).replace(/\n$/, "")}
+              className="mb-2"
               {...props}
             />
           );
