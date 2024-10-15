@@ -11,7 +11,6 @@ export type UploadedFileMeta = {
 };
 
 export type DocumentFile = {
-  id: string;
   type: DocumentFileType;
   url: string;
   metadata: UploadedFileMeta;
