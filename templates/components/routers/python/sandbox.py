@@ -150,7 +150,7 @@ def _upload_files(
 ) -> None:
     for file_path in sandbox_files:
         file_name = os.path.basename(file_path)
-        local_file_path = f"output/uploaded/{file_name}"
+        local_file_path = os.path.join("output", "uploaded", file_name)
         with open(local_file_path, "rb") as f:
             content = f.read()
             sandbox.files.write(file_path, content)
@@ -172,7 +172,7 @@ def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]
                 data = result[ext]
 
                 if ext in ["png", "svg", "jpeg", "pdf"]:
-                    file_path = f"output/tools/{uuid.uuid4()}.{ext}"
+                    file_path = os.path.join("output", "tools", f"{uuid.uuid4()}.{ext}")
                     base64_data = data
                     buffer = base64.b64decode(base64_data)
                     file_meta = save_file(content=buffer, file_path=file_path)

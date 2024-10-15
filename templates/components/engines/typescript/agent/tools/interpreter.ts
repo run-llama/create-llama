@@ -7,8 +7,8 @@ import path from "node:path";
 
 export type InterpreterParameter = {
   code: string;
-  sandbox_files: string[];
-  retry_count: number;
+  sandboxFiles: string[];
+  retryCount: number;
 };
 
 export type InterpreterToolParams = {
@@ -22,6 +22,7 @@ export type InterpreterToolOutput = {
   logs: Logs;
   text?: string;
   extraResult: InterpreterExtraResult[];
+  retryCount?: number;
 };
 
 type InterpreterExtraType =
@@ -56,7 +57,7 @@ You have a maximum of 3 retries to get the code to run successfully.
         type: "string",
         description: "The python code to execute in a single cell.",
       },
-      sandbox_files: {
+      sandboxFiles: {
         type: "array",
         description:
           "List of local file paths to be used by the code. The tool will throw an error if a file is not found.",
@@ -64,7 +65,7 @@ You have a maximum of 3 retries to get the code to run successfully.
           type: "string",
         },
       },
-      retry_count: {
+      retryCount: {
         type: "number",
         description: "The number of times the tool has been retried",
         default: 0,
@@ -107,15 +108,15 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       });
     }
     // upload files to sandbox
-    if (input.sandbox_files) {
-      console.log(`Uploading ${input.sandbox_files.length} files to sandbox`);
-      for (const filePath of input.sandbox_files) {
+    if (input.sandboxFiles) {
+      console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
+      for (const filePath of input.sandboxFiles) {
         const fileName = path.basename(filePath);
         const localFilePath = path.join(this.uploadedFilesDir, fileName);
         const content = fs.readFileSync(localFilePath);
         await this.codeInterpreter?.files.write(filePath, content);
       }
-      console.log(`Uploaded ${input.sandbox_files.length} files to sandbox`);
+      console.log(`Uploaded ${input.sandboxFiles.length} files to sandbox`);
     }
     return this.codeInterpreter;
   }
@@ -124,17 +125,17 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     input: InterpreterParameter,
   ): Promise<InterpreterToolOutput> {
     console.log(
-      `Sandbox files: ${input.sandbox_files}. Retry count: ${input.retry_count}`,
+      `Sandbox files: ${input.sandboxFiles}. Retry count: ${input.retryCount}`,
     );
 
-    if (input.retry_count >= 3) {
+    if (input.retryCount >= 3) {
       return {
         isError: true,
         logs: {
           stdout: [],
           stderr: [],
         },
-        text: "Failed to execute the code after 3 retries. Explain the error to the user and suggest a fix.",
+        text: "Max retries reached",
         extraResult: [],
       };
     }
@@ -151,6 +152,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       logs: exec.logs,
       text: exec.text,
       extraResult,
+      retryCount: input.retryCount + 1,
     };
     return result;
   }

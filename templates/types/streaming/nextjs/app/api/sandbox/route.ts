@@ -19,6 +19,8 @@ import {
   Result,
   Sandbox,
 } from "@e2b/code-interpreter";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { saveDocument } from "../chat/llamaindex/documents/helper";
 
 type CodeArtifact = {
@@ -85,7 +87,14 @@ export async function POST(req: Request) {
 
   // Copy files
   if (artifact.files) {
-    await uploadFiles(sbx, artifact.files);
+    artifact.files.forEach(async (sandboxFilePath) => {
+      const fileName = path.basename(sandboxFilePath);
+      const localFilePath = path.join("output", "uploaded", fileName);
+      const fileContent = await fs.readFile(localFilePath);
+
+      await sbx.files.write(sandboxFilePath, fileContent);
+      console.log(`Copied file to ${sandboxFilePath} in ${sbx.sandboxID}`);
+    });
   }
 
   // Copy code to fs
@@ -123,13 +132,6 @@ export async function POST(req: Request) {
       }),
     );
   }
-}
-
-async function uploadFiles(sbx: Sandbox | CodeInterpreter, files: string[]) {
-  files.forEach(async (file) => {
-    await sbx.files.write(file, file);
-    console.log(`Copied file to ${file} in ${sbx.sandboxID}`);
-  });
 }
 
 async function downloadCellResults(
