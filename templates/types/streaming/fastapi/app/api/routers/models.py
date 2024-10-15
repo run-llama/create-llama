@@ -297,7 +297,7 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
-    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> str:
+    def get_url_from_metadata(cls, metadata: Dict[str, Any]) -> Optional[str]:
         url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if not url_prefix:
             logger.warning(

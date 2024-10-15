@@ -176,7 +176,7 @@ class E2BCodeInterpreter:
             if exec.error:
                 error_message = f"The code failed to execute successfully. Error: {exec.error}. Try to fix the code and run again."
                 logger.error(error_message)
-                # There would be an error from previous execution, kill the interpreter and return with error message
+                # Calling the generated code caused an error. Kill the interpreter and return the error to the LLM so it can try to fix the error
                 try:
                     self.interpreter.kill()  # type: ignore
                 except Exception:

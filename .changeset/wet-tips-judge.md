@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Add upload file to sandbox
+Add upload file to sandbox (artifact and code interpreter)
