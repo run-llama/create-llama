@@ -12,7 +12,6 @@ export type UploadedFileMeta = {
 
 export type DocumentFile = {
   id: string;
-  name: string;
   type: DocumentFileType;
   url: string;
   metadata: UploadedFileMeta;
@@ -74,7 +73,7 @@ function getFileContent(file: DocumentFile): string {
     if (fileMetadata.url) {
       urlContent = `File URL: ${fileMetadata.url}\n`;
     } else {
-      urlContent = `File URL (instruction: do not update this file URL yourself): ${urlPrefix}/output/uploaded/${file.name}\n`;
+      urlContent = `File URL (instruction: do not update this file URL yourself): ${urlPrefix}/output/uploaded/${fileMetadata.name}\n`;
     }
   } else {
     console.warn(

@@ -7,8 +7,8 @@ import path from "node:path";
 
 export type InterpreterParameter = {
   code: string;
-  sandboxFiles: string[];
-  retryCount: number;
+  sandboxFiles?: string[];
+  retryCount?: number;
 };
 
 export type InterpreterToolParams = {
@@ -46,7 +46,6 @@ export type InterpreterExtraResult = {
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
   name: "interpreter",
   description: `Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.
-Execute Python code in a Jupyter notebook cell. The tool will return the result, stdout, stderr, display_data, and error.
 If the code needs to use a file, ALWAYS pass the file path in the sandbox_files argument.
 You have a maximum of 3 retries to get the code to run successfully.
 `,
@@ -64,11 +63,13 @@ You have a maximum of 3 retries to get the code to run successfully.
         items: {
           type: "string",
         },
+        nullable: true,
       },
       retryCount: {
         type: "number",
         description: "The number of times the tool has been retried",
         default: 0,
+        nullable: true,
       },
     },
     required: ["code"],
@@ -128,7 +129,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       `Sandbox files: ${input.sandboxFiles}. Retry count: ${input.retryCount}`,
     );
 
-    if (input.retryCount >= 3) {
+    if (input.retryCount && input.retryCount >= 3) {
       return {
         isError: true,
         logs: {
@@ -152,7 +153,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       logs: exec.logs,
       text: exec.text,
       extraResult,
-      retryCount: input.retryCount + 1,
+      retryCount: input.retryCount ? input.retryCount + 1 : 1,
     };
     return result;
   }
