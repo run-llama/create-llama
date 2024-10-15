@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -10,13 +10,6 @@ from pydantic.alias_generators import to_camel
 from app.config import DATA_DIR
 
 logger = logging.getLogger("uvicorn")
-
-
-class FileContent(BaseModel):
-    type: Literal["text", "ref"]
-    # If the file is pure text then the value is be a string
-    # otherwise, it's a list of document IDs
-    value: str | List[str]
 
 
 class FileMetadata(BaseModel):
@@ -58,7 +51,6 @@ class FileMetadata(BaseModel):
 
 
 class File(BaseModel):
-    id: str
     filetype: str
     metadata: FileMetadata
 

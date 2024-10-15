@@ -21,11 +21,6 @@ export type ImageData = {
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
-export type DocumentFileContent = {
-  type: "ref" | "text";
-  value: string[] | string;
-};
-
 export type UploadedFileMeta = {
   id: string;
   name: string;
@@ -34,11 +29,9 @@ export type UploadedFileMeta = {
 };
 
 export type DocumentFile = {
-  id?: string;
   filename: string;
   filesize: number;
   filetype: DocumentFileType;
-  content: DocumentFileContent;
   metadata?: UploadedFileMeta;
 };
 

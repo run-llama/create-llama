@@ -23,11 +23,11 @@ export interface DocumentPreviewProps {
 }
 
 export function DocumentPreview(props: DocumentPreviewProps) {
-  const { filename, filesize, content, filetype } = props.file;
+  const { filename, filesize, filetype, metadata } = props.file;
 
-  if (content.type === "ref") {
+  if (metadata?.refs?.length) {
     return (
-      <div title={`Document IDs: ${(content.value as string[]).join(", ")}`}>
+      <div title={`Document IDs: ${metadata.refs.join(", ")}`}>
         <PreviewCard {...props} />
       </div>
     );
@@ -53,9 +53,9 @@ export function DocumentPreview(props: DocumentPreviewProps) {
           </DrawerClose>
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
-          {content.type === "text" && (
+          {metadata?.refs?.length && (
             <pre className="bg-secondary rounded-md p-4 block text-sm">
-              {content.value as string}
+              {metadata.refs.join(", ")}
             </pre>
           )}
         </div>
@@ -77,7 +77,7 @@ function PreviewCard(props: DocumentPreviewProps) {
     <div
       className={cn(
         "p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative",
-        file.content.type === "ref" ? "" : "cursor-pointer",
+        file.metadata?.refs?.length ? "" : "cursor-pointer",
       )}
     >
       <div className="flex flex-row items-center gap-2">

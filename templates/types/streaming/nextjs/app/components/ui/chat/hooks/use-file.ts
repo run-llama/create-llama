@@ -25,7 +25,7 @@ export function useFile() {
   const [files, setFiles] = useState<DocumentFile[]>([]);
 
   const docEqual = (a: DocumentFile, b: DocumentFile) => {
-    if (a.id === b.id) return true;
+    if (a.metadata?.id === b.metadata?.id) return true;
     if (a.filename === b.filename && a.filesize === b.filesize) return true;
     return false;
   };
@@ -40,7 +40,9 @@ export function useFile() {
   };
 
   const removeDoc = (file: DocumentFile) => {
-    setFiles((prev) => prev.filter((f) => f.id !== file.id));
+    setFiles((prev) =>
+      prev.filter((f) => f.metadata?.id !== file.metadata?.id),
+    );
   };
 
   const reset = () => {
@@ -114,14 +116,9 @@ export function useFile() {
     if (!filetype) throw new Error("Unsupported document type.");
     const uploadedFileMeta = await uploadContent(file, requestParams);
     const newDoc: DocumentFile = {
-      id: uploadedFileMeta.id,
       filename: file.name,
       filesize: file.size,
       filetype,
-      content: {
-        type: "ref",
-        value: uploadedFileMeta.refs || [],
-      },
       metadata: uploadedFileMeta,
     };
     return addDoc(newDoc);
