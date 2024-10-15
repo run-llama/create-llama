@@ -23,16 +23,16 @@ export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
 export type UploadedFileMeta = {
   id: string;
-  name: string;
+  name: string; // The uploaded file name in the backend (including uuid and sanitized)
   url?: string;
   refs?: string[];
 };
 
 export type DocumentFile = {
-  filename: string;
+  filename: string; // The original file name
   filesize: number;
   filetype: DocumentFileType;
-  metadata?: UploadedFileMeta;
+  metadata?: UploadedFileMeta; // undefined when the file is not uploaded yet
 };
 
 export type DocumentFileData = {

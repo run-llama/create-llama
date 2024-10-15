@@ -122,7 +122,7 @@ export default function Markdown({
           );
         },
         a({ href, children }) {
-          // If href starts with http://localhost:8000/api/files, render DocumentPreview
+          // If href starts with `{backend}/api/files`, then it's a local document and we use DocumenInfo for rendering
           if (href?.startsWith(backend + "/api/files")) {
             return (
               <DocumentInfo
