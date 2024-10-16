@@ -28,7 +28,13 @@ const PdfFocusProvider = dynamic(
   { ssr: false },
 );
 
+const MAX_DOCUMENT_ID_LENGTH = 30;
+
 export default function PdfDialog(props: PdfDialogProps) {
+  const truncatedDocumentId =
+    props.documentId.length > MAX_DOCUMENT_ID_LENGTH
+      ? `${props.documentId.slice(0, MAX_DOCUMENT_ID_LENGTH)}...`
+      : props.documentId;
   return (
     <Drawer direction="left">
       <DrawerTrigger asChild>{props.trigger}</DrawerTrigger>
@@ -55,9 +61,10 @@ export default function PdfDialog(props: PdfDialogProps) {
           <PdfFocusProvider>
             <PDFViewer
               file={{
-                id: props.documentId,
+                id: truncatedDocumentId,
                 url: props.url,
               }}
+              containerClassName="first:break-all"
             />
           </PdfFocusProvider>
         </div>
