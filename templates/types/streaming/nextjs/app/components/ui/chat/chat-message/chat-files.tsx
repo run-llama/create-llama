@@ -7,7 +7,7 @@ export function ChatFiles({ data }: { data: DocumentFileData }) {
     <div className="flex gap-2 items-center">
       {data.files.map((file, index) => (
         <DocumentPreview
-          key={file.metadata?.id ?? `${file.filename}-${index}`}
+          key={file.id ?? `${file.filename}-${index}`}
           file={file}
         />
       ))}
