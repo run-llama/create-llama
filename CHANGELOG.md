@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.3.1
+
+### Patch Changes
+
+- f3577c5: Fix event streaming is blocked
+- f3577c5: Add upload file to sandbox (artifact and code interpreter)
+
 ## 0.3.0
 
 ### Minor Changes
