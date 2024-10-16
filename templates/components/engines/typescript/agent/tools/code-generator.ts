@@ -48,11 +48,13 @@ export type CodeArtifact = {
   port: number | null;
   file_path: string;
   code: string;
+  files?: string[];
 };
 
 export type CodeGeneratorParameter = {
   requirement: string;
   oldCode?: string;
+  sandboxFiles?: string[];
 };
 
 export type CodeGeneratorToolParams = {
@@ -75,6 +77,15 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<CodeGeneratorParameter>> =
           description: "The existing code to be modified",
           nullable: true,
         },
+        sandboxFiles: {
+          type: "array",
+          description:
+            "A list of sandbox file paths. Include these files if the code requires them.",
+          items: {
+            type: "string",
+          },
+          nullable: true,
+        },
       },
       required: ["requirement"],
     },
@@ -93,6 +104,9 @@ export class CodeGeneratorTool implements BaseTool<CodeGeneratorParameter> {
         input.requirement,
         input.oldCode,
       );
+      if (input.sandboxFiles) {
+        artifact.files = input.sandboxFiles;
+      }
       return artifact as JSONValue;
     } catch (error) {
       return { isError: true };

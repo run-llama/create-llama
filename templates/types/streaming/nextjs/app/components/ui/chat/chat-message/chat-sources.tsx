@@ -1,8 +1,7 @@
-import { Check, Copy, FileText } from "lucide-react";
-import Image from "next/image";
+import { Check, Copy } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "../../button";
-import { FileIcon } from "../../document-preview";
+import { PreviewCard } from "../../document-preview";
 import {
   HoverCard,
   HoverCardContent,
@@ -49,13 +48,7 @@ export function ChatSources({ data }: { data: SourceData }) {
   );
 }
 
-export function SourceInfo({
-  node,
-  index,
-}: {
-  node?: SourceNode;
-  index: number;
-}) {
+function SourceInfo({ node, index }: { node?: SourceNode; index: number }) {
   if (!node) return <SourceNumberButton index={index} />;
   return (
     <HoverCard>
@@ -97,49 +90,33 @@ export function SourceNumberButton({
   );
 }
 
-function DocumentInfo({ document }: { document: Document }) {
-  if (!document.sources.length) return null;
+export function DocumentInfo({
+  document,
+  className,
+}: {
+  document: Document;
+  className?: string;
+}) {
   const { url, sources } = document;
-  const fileName = sources[0].metadata.file_name as string | undefined;
-  const fileExt = fileName?.split(".").pop();
-  const fileImage = fileExt ? FileIcon[fileExt as DocumentFileType] : null;
+  // Extract filename from URL
+  const urlParts = url.split("/");
+  const fileName = urlParts.length > 0 ? urlParts[urlParts.length - 1] : url;
+  const fileExt = fileName?.split(".").pop() as DocumentFileType | undefined;
+
+  const previewFile = {
+    filename: fileName,
+    filetype: fileExt,
+  };
 
   const DocumentDetail = (
-    <div
-      key={url}
-      className="h-28 w-48 flex flex-col justify-between p-4 border rounded-md shadow-md cursor-pointer"
-    >
-      <p
-        title={fileName}
-        className={cn(
-          fileName ? "truncate" : "text-blue-900 break-words",
-          "text-left",
-        )}
-      >
-        {fileName ?? url}
-      </p>
-      <div className="flex justify-between items-center">
-        <div className="space-x-2 flex">
-          {sources.map((node: SourceNode, index: number) => {
-            return (
-              <div key={node.id}>
-                <SourceInfo node={node} index={index} />
-              </div>
-            );
-          })}
-        </div>
-        {fileImage ? (
-          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
-            <Image
-              className="h-full w-auto"
-              priority
-              src={fileImage}
-              alt="Icon"
-            />
+    <div className={`relative ${className}`}>
+      <PreviewCard className={"cursor-pointer"} file={previewFile} />
+      <div className="absolute bottom-2 right-2 space-x-2 flex">
+        {sources.map((node: SourceNode, index: number) => (
+          <div key={node.id}>
+            <SourceInfo node={node} index={index} />
           </div>
-        ) : (
-          <FileText className="text-gray-500" />
-        )}
+        ))}
       </div>
     </div>
   );

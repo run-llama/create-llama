@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.schema import NodeWithScore
@@ -12,19 +12,52 @@ from app.config import DATA_DIR
 logger = logging.getLogger("uvicorn")
 
 
-class FileContent(BaseModel):
-    type: Literal["text", "ref"]
-    # If the file is pure text then the value is be a string
-    # otherwise, it's a list of document IDs
-    value: str | List[str]
+class FileMetadata(BaseModel):
+    id: str
+    name: str
+    url: Optional[str] = None
+    refs: Optional[List[str]] = None
+
+    def _get_url_llm_content(self) -> Optional[str]:
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if url_prefix:
+            if self.url is not None:
+                return f"File URL: {self.url}\n"
+            else:
+                # Construct url from file name
+                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{self.name}\n"
+        else:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
+            )
+            return None
+
+    def to_llm_content(self) -> str:
+        """
+        Construct content for LLM from the file metadata
+        """
+        default_content = f"=====File: {self.name}=====\n"
+        # Include file URL if it's available
+        url_content = self._get_url_llm_content()
+        if url_content:
+            default_content += url_content
+        # Include document IDs if it's available
+        if self.refs is not None:
+            default_content += f"Document IDs: {self.refs}\n"
+        # Include sandbox file path
+        sandbox_file_path = f"/tmp/{self.name}"
+        default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
+        return default_content
 
 
 class File(BaseModel):
-    id: str
-    content: FileContent
-    filename: str
-    filesize: int
     filetype: str
+    metadata: FileMetadata
+
+    def _load_file_content(self) -> str:
+        file_path = f"output/uploaded/{self.metadata.name}"
+        with open(file_path, "r") as file:
+            return file.read()
 
 
 class AnnotationFileData(BaseModel):
@@ -62,24 +95,18 @@ class ArtifactAnnotation(BaseModel):
 
 class Annotation(BaseModel):
     type: str
-    data: Union[AnnotationFileData, List[str], AgentAnnotation, ArtifactAnnotation]
+    data: AnnotationFileData | List[str] | AgentAnnotation | ArtifactAnnotation
 
     def to_content(self) -> Optional[str]:
-        if self.type == "document_file":
-            if isinstance(self.data, AnnotationFileData):
-                # We only support generating context content for CSV files for now
-                csv_files = [file for file in self.data.files if file.filetype == "csv"]
-                if len(csv_files) > 0:
-                    return "Use data from following CSV raw content\n" + "\n".join(
-                        [
-                            f"```csv\n{csv_file.content.value}\n```"
-                            for csv_file in csv_files
-                        ]
-                    )
-            else:
-                logger.warning(
-                    f"Unexpected data type for document_file annotation: {type(self.data)}"
+        if self.type == "document_file" and isinstance(self.data, AnnotationFileData):
+            # iterate through all files and construct content for LLM
+            file_contents = [file.metadata.to_llm_content() for file in self.data.files]
+            if len(file_contents) > 0:
+                return "Use data from following files content\n" + "\n".join(
+                    file_contents
                 )
+        elif self.type == "image":
+            raise NotImplementedError("Use image file is not supported yet!")
         else:
             logger.warning(
                 f"The annotation {self.type} is not supported for generating context content"
@@ -175,7 +202,11 @@ class ChatData(BaseModel):
                     ):
                         tool_output = annotation.data.toolOutput
                         if tool_output and not tool_output.get("isError", False):
-                            return tool_output.get("output", {}).get("code", None)
+                            output = tool_output.get("output", {})
+                            if isinstance(output, dict) and output.get("code"):
+                                return output.get("code")
+                            else:
+                                return None
         return None
 
     def get_history_messages(
@@ -216,18 +247,26 @@ class ChatData(BaseModel):
         Get the document IDs from the chat messages
         """
         document_ids: List[str] = []
+        uploaded_files = self.get_uploaded_files()
+        for _file in uploaded_files:
+            refs = _file.metadata.refs
+            if refs is not None:
+                document_ids.extend(refs)
+        return list(set(document_ids))
+
+    def get_uploaded_files(self) -> List[File]:
+        """
+        Get the uploaded files from the chat data
+        """
+        uploaded_files = []
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 for annotation in message.annotations:
-                    if (
-                        annotation.type == "document_file"
-                        and isinstance(annotation.data, AnnotationFileData)
-                        and annotation.data.files is not None
+                    if annotation.type == "document_file" and isinstance(
+                        annotation.data, AnnotationFileData
                     ):
-                        for fi in annotation.data.files:
-                            if fi.content.type == "ref":
-                                document_ids += fi.content.value
-        return list(set(document_ids))
+                        uploaded_files.extend(annotation.data.files)
+        return uploaded_files
 
 
 class SourceNodes(BaseModel):

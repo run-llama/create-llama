@@ -5,8 +5,9 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-import { SourceData } from "..";
-import { SourceNumberButton } from "./chat-sources";
+import { DOCUMENT_FILE_TYPES, DocumentFileType, SourceData } from "..";
+import { useClientConfig } from "../hooks/use-config";
+import { DocumentInfo, SourceNumberButton } from "./chat-sources";
 import { CodeBlock } from "./codeblock";
 
 const MemoizedReactMarkdown: FC<Options> = memo(
@@ -78,6 +79,7 @@ export default function Markdown({
   sources?: SourceData;
 }) {
   const processedContent = preprocessContent(content, sources);
+  const { backend } = useClientConfig();
 
   return (
     <MemoizedReactMarkdown
@@ -86,7 +88,7 @@ export default function Markdown({
       rehypePlugins={[rehypeKatex as any]}
       components={{
         p({ children }) {
-          return <p className="mb-2 last:mb-0">{children}</p>;
+          return <div className="mb-2 last:mb-0">{children}</div>;
         },
         code({ node, inline, className, children, ...props }) {
           if (children.length) {
@@ -120,6 +122,26 @@ export default function Markdown({
           );
         },
         a({ href, children }) {
+          // If href starts with `{backend}/api/files`, then it's a local document and we use DocumenInfo for rendering
+          if (href?.startsWith(backend + "/api/files")) {
+            // Check if the file is document file type
+            const fileExtension = href.split(".").pop()?.toLowerCase();
+
+            if (
+              fileExtension &&
+              DOCUMENT_FILE_TYPES.includes(fileExtension as DocumentFileType)
+            ) {
+              return (
+                <DocumentInfo
+                  document={{
+                    url: new URL(decodeURIComponent(href)).href,
+                    sources: [],
+                  }}
+                  className="mb-2 mt-2"
+                />
+              );
+            }
+          }
           // If a text link starts with 'citation:', then render it as a citation reference
           if (
             Array.isArray(children) &&

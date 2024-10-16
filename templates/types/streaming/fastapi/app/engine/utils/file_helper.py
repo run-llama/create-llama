@@ -1,17 +1,36 @@
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, computed_field
 
 logger = logging.getLogger(__name__)
 
 
 class FileMetadata(BaseModel):
-    outputPath: str
-    filename: str
-    url: str
+    path: str = Field(..., description="The stored path of the file")
+    name: str = Field(..., description="The name of the file")
+    url: str = Field(..., description="The URL of the file")
+    refs: Optional[List[str]] = Field(
+        None, description="The indexed document IDs that the file is referenced to"
+    )
+
+    @computed_field
+    def file_id(self) -> Optional[str]:
+        file_els = self.name.split("_", maxsplit=1)
+        if len(file_els) == 2:
+            return file_els[0]
+        return None
+
+    def to_upload_response(self) -> Dict[str, Any]:
+        response = {
+            "id": self.file_id,
+            "name": self.name,
+            "url": self.url,
+            "refs": self.refs,
+        }
+        return response
 
 
 def save_file(
@@ -58,7 +77,7 @@ def save_file(
     logger.info(f"Saved file to {file_path}")
 
     return FileMetadata(
-        outputPath=file_path,
-        filename=file_name,
+        path=file_path if isinstance(file_path, str) else str(file_path),
+        name=file_name,
         url=f"{os.getenv('FILESERVER_URL_PREFIX')}/{file_path}",
     )

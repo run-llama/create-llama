@@ -20,18 +20,25 @@ export type ImageData = {
 };
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
+export const DOCUMENT_FILE_TYPES: DocumentFileType[] = [
+  "csv",
+  "pdf",
+  "txt",
+  "docx",
+];
 
-export type DocumentFileContent = {
-  type: "ref" | "text";
-  value: string[] | string;
+export type UploadedFileMeta = {
+  id: string;
+  name: string; // The uploaded file name in the backend (including uuid and sanitized)
+  url?: string;
+  refs?: string[];
 };
 
 export type DocumentFile = {
-  id: string;
-  filename: string;
+  filename: string; // The original file name
   filesize: number;
   filetype: DocumentFileType;
-  content: DocumentFileContent;
+  metadata?: UploadedFileMeta; // undefined when the file is not uploaded yet
 };
 
 export type DocumentFileData = {

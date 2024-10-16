@@ -1,14 +1,18 @@
 import json
-from typing import List
+import logging
+from typing import Awaitable, List
 
 from aiostream import stream
-from fastapi import Request
+from fastapi import BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
+from llama_index.core.schema import NodeWithScore
 
 from app.api.routers.events import EventCallbackHandler
 from app.api.routers.models import ChatData, Message, SourceNodes
 from app.api.services.suggestion import NextQuestionSuggestion
+
+logger = logging.getLogger("uvicorn")
 
 
 class VercelStreamResponse(StreamingResponse):
@@ -18,6 +22,103 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+
+    def __init__(
+        self,
+        request: Request,
+        event_handler: EventCallbackHandler,
+        response: Awaitable[StreamingAgentChatResponse],
+        chat_data: ChatData,
+        background_tasks: BackgroundTasks,
+    ):
+        content = VercelStreamResponse.content_generator(
+            request, event_handler, response, chat_data, background_tasks
+        )
+        super().__init__(content=content)
+
+    @classmethod
+    async def content_generator(
+        cls,
+        request: Request,
+        event_handler: EventCallbackHandler,
+        response: Awaitable[StreamingAgentChatResponse],
+        chat_data: ChatData,
+        background_tasks: BackgroundTasks,
+    ):
+        chat_response_generator = cls._chat_response_generator(
+            response, background_tasks, event_handler, chat_data
+        )
+        event_generator = cls._event_generator(event_handler)
+
+        # Merge the chat response generator and the event generator
+        combine = stream.merge(chat_response_generator, event_generator)
+        is_stream_started = False
+        async with combine.stream() as streamer:
+            async for output in streamer:
+                if not is_stream_started:
+                    is_stream_started = True
+                    # Stream a blank message to start displaying the response in the UI
+                    yield cls.convert_text("")
+
+                yield output
+
+                if await request.is_disconnected():
+                    break
+
+    @classmethod
+    async def _event_generator(cls, event_handler: EventCallbackHandler):
+        """
+        Yield the events from the event handler
+        """
+        async for event in event_handler.async_event_gen():
+            event_response = event.to_response()
+            if event_response is not None:
+                yield cls.convert_data(event_response)
+
+    @classmethod
+    async def _chat_response_generator(
+        cls,
+        response: Awaitable[StreamingAgentChatResponse],
+        background_tasks: BackgroundTasks,
+        event_handler: EventCallbackHandler,
+        chat_data: ChatData,
+    ):
+        """
+        Yield the text response and source nodes from the chat engine
+        """
+        # Wait for the response from the chat engine
+        result = await response
+
+        # Once we got a source node, start a background task to download the files (if needed)
+        cls._process_response_nodes(result.source_nodes, background_tasks)
+
+        # Yield the source nodes
+        yield cls.convert_data(
+            {
+                "type": "sources",
+                "data": {
+                    "nodes": [
+                        SourceNodes.from_source_node(node).model_dump()
+                        for node in result.source_nodes
+                    ]
+                },
+            }
+        )
+
+        final_response = ""
+        async for token in result.async_response_gen():
+            final_response += token
+            yield cls.convert_text(token)
+
+        # Generate next questions if next question prompt is configured
+        question_data = await cls._generate_next_questions(
+            chat_data.messages, final_response
+        )
+        if question_data:
+            yield cls.convert_data(question_data)
+
+        # the text_generator is the leading stream, once it's finished, also finish the event stream
+        event_handler.is_done = True
 
     @classmethod
     def convert_text(cls, token: str):
@@ -30,76 +131,23 @@ class VercelStreamResponse(StreamingResponse):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
-    def __init__(
-        self,
-        request: Request,
-        event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
-        chat_data: ChatData,
+    @staticmethod
+    def _process_response_nodes(
+        source_nodes: List[NodeWithScore],
+        background_tasks: BackgroundTasks,
     ):
-        content = VercelStreamResponse.content_generator(
-            request, event_handler, response, chat_data
-        )
-        super().__init__(content=content)
+        try:
+            # Start background tasks to download documents from LlamaCloud if needed
+            from app.engine.service import LLamaCloudFileService
 
-    @classmethod
-    async def content_generator(
-        cls,
-        request: Request,
-        event_handler: EventCallbackHandler,
-        response: StreamingAgentChatResponse,
-        chat_data: ChatData,
-    ):
-        # Yield the text response
-        async def _chat_response_generator():
-            final_response = ""
-            async for token in response.async_response_gen():
-                final_response += token
-                yield cls.convert_text(token)
-
-            # Generate next questions if next question prompt is configured
-            question_data = await cls._generate_next_questions(
-                chat_data.messages, final_response
+            LLamaCloudFileService.download_files_from_nodes(
+                source_nodes, background_tasks
             )
-            if question_data:
-                yield cls.convert_data(question_data)
-
-            # the text_generator is the leading stream, once it's finished, also finish the event stream
-            event_handler.is_done = True
-
-            # Yield the source nodes
-            yield cls.convert_data(
-                {
-                    "type": "sources",
-                    "data": {
-                        "nodes": [
-                            SourceNodes.from_source_node(node).model_dump()
-                            for node in response.source_nodes
-                        ]
-                    },
-                }
+        except ImportError:
+            logger.debug(
+                "LlamaCloud is not configured. Skipping post processing of nodes"
             )
-
-        # Yield the events from the event handler
-        async def _event_generator():
-            async for event in event_handler.async_event_gen():
-                event_response = event.to_response()
-                if event_response is not None:
-                    yield cls.convert_data(event_response)
-
-        combine = stream.merge(_chat_response_generator(), _event_generator())
-        is_stream_started = False
-        async with combine.stream() as streamer:
-            async for output in streamer:
-                if not is_stream_started:
-                    is_stream_started = True
-                    # Stream a blank message to start the stream
-                    yield cls.convert_text("")
-
-                yield output
-
-                if await request.is_disconnected():
-                    break
+            pass
 
     @staticmethod
     async def _generate_next_questions(chat_history: List[Message], response: str):

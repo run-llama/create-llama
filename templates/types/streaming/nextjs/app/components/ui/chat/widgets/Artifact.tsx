@@ -26,6 +26,7 @@ export type CodeArtifact = {
   port: number | null;
   file_path: string;
   code: string;
+  files?: string[];
 };
 
 type ArtifactResult = {
@@ -201,10 +202,10 @@ function ArtifactOutput({
 function RunTimeError({
   runtimeError,
 }: {
-  runtimeError: { name: string; value: string; tracebackRaw: string[] };
+  runtimeError: { name: string; value: string; tracebackRaw?: string[] };
 }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 1000 });
-  const contentToCopy = `Fix this error:\n${runtimeError.name}\n${runtimeError.value}\n${runtimeError.tracebackRaw.join("\n")}`;
+  const contentToCopy = `Fix this error:\n${runtimeError.name}\n${runtimeError.value}\n${runtimeError.tracebackRaw?.join("\n")}`;
   return (
     <Collapsible className="bg-red-100 text-red-800 rounded-md py-2 px-4 space-y-4">
       <CollapsibleTrigger className="font-bold w-full text-start flex items-center justify-between">
@@ -215,7 +216,7 @@ function RunTimeError({
         <div className="flex flex-col gap-2">
           <p className="font-semibold">{runtimeError.name}</p>
           <p>{runtimeError.value}</p>
-          {runtimeError.tracebackRaw.map((trace, index) => (
+          {runtimeError.tracebackRaw?.map((trace, index) => (
             <pre key={index} className="whitespace-pre-wrap text-sm mb-2">
               {trace}
             </pre>

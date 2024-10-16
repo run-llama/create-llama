@@ -95,9 +95,9 @@ export default function ChatInput(
       )}
       {files.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {files.map((file) => (
+          {files.map((file, index) => (
             <DocumentPreview
-              key={file.id}
+              key={file.metadata?.id ?? `${file.filename}-${index}`}
               file={file}
               onRemove={() => removeDoc(file)}
             />

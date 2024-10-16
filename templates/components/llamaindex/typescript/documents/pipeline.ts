@@ -7,7 +7,7 @@ import {
 } from "llamaindex";
 
 export async function runPipeline(
-  currentIndex: VectorStoreIndex,
+  currentIndex: VectorStoreIndex | null,
   documents: Document[],
 ) {
   // Use ingestion pipeline to process the documents into nodes and add them to the vector store
@@ -21,8 +21,18 @@ export async function runPipeline(
     ],
   });
   const nodes = await pipeline.run({ documents });
-  await currentIndex.insertNodes(nodes);
-  currentIndex.storageContext.docStore.persist();
-  console.log("Added nodes to the vector store.");
-  return documents.map((document) => document.id_);
+  if (currentIndex) {
+    await currentIndex.insertNodes(nodes);
+    currentIndex.storageContext.docStore.persist();
+    console.log("Added nodes to the vector store.");
+    return documents.map((document) => document.id_);
+  } else {
+    // Initialize a new index with the documents
+    const newIndex = await VectorStoreIndex.fromDocuments(documents);
+    newIndex.storageContext.docStore.persist();
+    console.log(
+      "Got empty index, created new index with the uploaded documents",
+    );
+    return documents.map((document) => document.id_);
+  }
 }

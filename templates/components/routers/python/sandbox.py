@@ -16,7 +16,8 @@ import base64
 import logging
 import os
 import uuid
-from typing import Dict, List, Optional, Union
+from dataclasses import asdict
+from typing import Any, Dict, List, Optional, Union
 
 from app.engine.tools.artifact import CodeArtifact
 from app.engine.utils.file_helper import save_file
@@ -36,7 +37,7 @@ class ExecutionResult(BaseModel):
     template: str
     stdout: List[str]
     stderr: List[str]
-    runtime_error: Optional[Dict[str, Union[str, List[str]]]] = None
+    runtime_error: Optional[Dict[str, Any]] = None
     output_urls: List[Dict[str, str]]
     url: Optional[str]
 
@@ -54,15 +55,27 @@ class ExecutionResult(BaseModel):
         }
 
 
+class FileUpload(BaseModel):
+    id: str
+    name: str
+
+
 @sandbox_router.post("")
 async def create_sandbox(request: Request):
     request_data = await request.json()
+    artifact_data = request_data.get("artifact", None)
+    sandbox_files = artifact_data.get("files", [])
+
+    if not artifact_data:
+        raise HTTPException(
+            status_code=400, detail="Could not create artifact from the request data"
+        )
 
     try:
-        artifact = CodeArtifact(**request_data["artifact"])
+        artifact = CodeArtifact(**artifact_data)
     except Exception:
         logger.error(f"Could not create artifact from request data: {request_data}")
-        return HTTPException(
+        raise HTTPException(
             status_code=400, detail="Could not create artifact from the request data"
         )
 
@@ -94,6 +107,10 @@ async def create_sandbox(request: Request):
                 f"Installed dependencies: {', '.join(artifact.additional_dependencies)} in sandbox {sbx}"
             )
 
+    # Copy files
+    if len(sandbox_files) > 0:
+        _upload_files(sbx, sandbox_files)
+
     # Copy code to disk
     if isinstance(artifact.code, list):
         for file in artifact.code:
@@ -107,11 +124,12 @@ async def create_sandbox(request: Request):
     if artifact.template == "code-interpreter-multilang":
         result = sbx.notebook.exec_cell(artifact.code or "")
         output_urls = _download_cell_results(result.results)
+        runtime_error = asdict(result.error) if result.error else None
         return ExecutionResult(
             template=artifact.template,
             stdout=result.logs.stdout,
             stderr=result.logs.stderr,
-            runtime_error=result.error,
+            runtime_error=runtime_error,
             output_urls=output_urls,
             url=None,
         ).to_response()
@@ -124,6 +142,19 @@ async def create_sandbox(request: Request):
             output_urls=[],
             url=f"https://{sbx.get_host(artifact.port or 80)}",
         ).to_response()
+
+
+def _upload_files(
+    sandbox: Union[CodeInterpreter, Sandbox],
+    sandbox_files: List[str] = [],
+) -> None:
+    for file_path in sandbox_files:
+        file_name = os.path.basename(file_path)
+        local_file_path = os.path.join("output", "uploaded", file_name)
+        with open(local_file_path, "rb") as f:
+            content = f.read()
+            sandbox.files.write(file_path, content)
+    return None
 
 
 def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]:
@@ -141,14 +172,14 @@ def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]
                 data = result[ext]
 
                 if ext in ["png", "svg", "jpeg", "pdf"]:
-                    file_path = f"output/tools/{uuid.uuid4()}.{ext}"
+                    file_path = os.path.join("output", "tools", f"{uuid.uuid4()}.{ext}")
                     base64_data = data
                     buffer = base64.b64decode(base64_data)
                     file_meta = save_file(content=buffer, file_path=file_path)
                     output.append(
                         {
                             "type": ext,
-                            "filename": file_meta.filename,
+                            "filename": file_meta.name,
                             "url": file_meta.url,
                         }
                     )

@@ -7,6 +7,8 @@ import path from "node:path";
 
 export type InterpreterParameter = {
   code: string;
+  sandboxFiles?: string[];
+  retryCount?: number;
 };
 
 export type InterpreterToolParams = {
@@ -18,7 +20,9 @@ export type InterpreterToolParams = {
 export type InterpreterToolOutput = {
   isError: boolean;
   logs: Logs;
+  text?: string;
   extraResult: InterpreterExtraResult[];
+  retryCount?: number;
 };
 
 type InterpreterExtraType =
@@ -41,14 +45,31 @@ export type InterpreterExtraResult = {
 
 const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
   name: "interpreter",
-  description:
-    "Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.",
+  description: `Execute python code in a Jupyter notebook cell and return any result, stdout, stderr, display_data, and error.
+If the code needs to use a file, ALWAYS pass the file path in the sandbox_files argument.
+You have a maximum of 3 retries to get the code to run successfully.
+`,
   parameters: {
     type: "object",
     properties: {
       code: {
         type: "string",
         description: "The python code to execute in a single cell.",
+      },
+      sandboxFiles: {
+        type: "array",
+        description:
+          "List of local file paths to be used by the code. The tool will throw an error if a file is not found.",
+        items: {
+          type: "string",
+        },
+        nullable: true,
+      },
+      retryCount: {
+        type: "number",
+        description: "The number of times the tool has been retried",
+        default: 0,
+        nullable: true,
       },
     },
     required: ["code"],
@@ -57,6 +78,7 @@ const DEFAULT_META_DATA: ToolMetadata<JSONSchemaType<InterpreterParameter>> = {
 
 export class InterpreterTool implements BaseTool<InterpreterParameter> {
   private readonly outputDir = "output/tools";
+  private readonly uploadedFilesDir = "output/uploaded";
   private apiKey?: string;
   private fileServerURLPrefix?: string;
   metadata: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
@@ -80,33 +102,64 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     }
   }
 
-  public async initInterpreter() {
+  public async initInterpreter(input: InterpreterParameter) {
     if (!this.codeInterpreter) {
       this.codeInterpreter = await CodeInterpreter.create({
         apiKey: this.apiKey,
       });
     }
+    // upload files to sandbox
+    if (input.sandboxFiles) {
+      console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
+      for (const filePath of input.sandboxFiles) {
+        const fileName = path.basename(filePath);
+        const localFilePath = path.join(this.uploadedFilesDir, fileName);
+        const content = fs.readFileSync(localFilePath);
+        await this.codeInterpreter?.files.write(filePath, content);
+      }
+      console.log(`Uploaded ${input.sandboxFiles.length} files to sandbox`);
+    }
     return this.codeInterpreter;
   }
 
-  public async codeInterpret(code: string): Promise<InterpreterToolOutput> {
+  public async codeInterpret(
+    input: InterpreterParameter,
+  ): Promise<InterpreterToolOutput> {
     console.log(
-      `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${code}\n${"=".repeat(50)}`,
+      `Sandbox files: ${input.sandboxFiles}. Retry count: ${input.retryCount}`,
     );
-    const interpreter = await this.initInterpreter();
-    const exec = await interpreter.notebook.execCell(code);
+
+    if (input.retryCount && input.retryCount >= 3) {
+      return {
+        isError: true,
+        logs: {
+          stdout: [],
+          stderr: [],
+        },
+        text: "Max retries reached",
+        extraResult: [],
+      };
+    }
+
+    console.log(
+      `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${input.code}\n${"=".repeat(50)}`,
+    );
+    const interpreter = await this.initInterpreter(input);
+    const exec = await interpreter.notebook.execCell(input.code);
     if (exec.error) console.error("[Code Interpreter error]", exec.error);
     const extraResult = await this.getExtraResult(exec.results[0]);
     const result: InterpreterToolOutput = {
       isError: !!exec.error,
       logs: exec.logs,
+      text: exec.text,
       extraResult,
+      retryCount: input.retryCount ? input.retryCount + 1 : 1,
     };
     return result;
   }
 
   async call(input: InterpreterParameter): Promise<InterpreterToolOutput> {
-    const result = await this.codeInterpret(input.code);
+    const result = await this.codeInterpret(input);
     return result;
   }
 

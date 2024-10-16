@@ -23,11 +23,11 @@ export interface DocumentPreviewProps {
 }
 
 export function DocumentPreview(props: DocumentPreviewProps) {
-  const { filename, filesize, content, filetype } = props.file;
+  const { filename, filesize, filetype, metadata } = props.file;
 
-  if (content.type === "ref") {
+  if (metadata?.refs?.length) {
     return (
-      <div title={`Document IDs: ${(content.value as string[]).join(", ")}`}>
+      <div title={`Document IDs: ${metadata.refs.join(", ")}`}>
         <PreviewCard {...props} />
       </div>
     );
@@ -37,7 +37,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
     <Drawer direction="left">
       <DrawerTrigger asChild>
         <div>
-          <PreviewCard {...props} />
+          <PreviewCard className="cursor-pointer" {...props} />
         </div>
       </DrawerTrigger>
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
@@ -53,9 +53,9 @@ export function DocumentPreview(props: DocumentPreviewProps) {
           </DrawerClose>
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
-          {content.type === "text" && (
+          {metadata?.refs?.length && (
             <pre className="bg-secondary rounded-md p-4 block text-sm">
-              {content.value as string}
+              {metadata.refs.join(", ")}
             </pre>
           )}
         </div>
@@ -71,31 +71,41 @@ export const FileIcon: Record<DocumentFileType, string> = {
   txt: TxtIcon,
 };
 
-function PreviewCard(props: DocumentPreviewProps) {
-  const { onRemove, file } = props;
+export function PreviewCard(props: {
+  file: {
+    filename: string;
+    filesize?: number;
+    filetype?: DocumentFileType;
+  };
+  onRemove?: () => void;
+  className?: string;
+}) {
+  const { onRemove, file, className } = props;
   return (
     <div
       className={cn(
         "p-2 w-60 max-w-60 bg-secondary rounded-lg text-sm relative",
-        file.content.type === "ref" ? "" : "cursor-pointer",
+        className,
       )}
     >
       <div className="flex flex-row items-center gap-2">
-        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md flex items-center justify-center">
           <Image
-            className="h-full w-auto"
+            className="h-full w-auto object-contain"
             priority
-            src={FileIcon[file.filetype]}
+            src={FileIcon[file.filetype || "txt"]}
             alt="Icon"
           />
         </div>
         <div className="overflow-hidden">
           <div className="truncate font-semibold">
-            {file.filename} ({inKB(file.filesize)} KB)
+            {file.filename} {file.filesize ? `(${inKB(file.filesize)} KB)` : ""}
           </div>
-          <div className="truncate text-token-text-tertiary flex items-center gap-2">
-            <span>{file.filetype.toUpperCase()} File</span>
-          </div>
+          {file.filetype && (
+            <div className="truncate text-token-text-tertiary flex items-center gap-2">
+              <span>{file.filetype.toUpperCase()} File</span>
+            </div>
+          )}
         </div>
       </div>
       {onRemove && (

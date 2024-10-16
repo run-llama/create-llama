@@ -3,17 +3,17 @@ import { MessageContent, MessageContentDetail } from "llamaindex";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
-export type DocumentFileContent = {
-  type: "ref" | "text";
-  value: string[] | string;
+export type UploadedFileMeta = {
+  id: string;
+  name: string;
+  url?: string;
+  refs?: string[];
 };
 
 export type DocumentFile = {
-  id: string;
-  filename: string;
-  filesize: number;
-  filetype: DocumentFileType;
-  content: DocumentFileContent;
+  type: DocumentFileType;
+  url: string;
+  metadata: UploadedFileMeta;
 };
 
 type Annotation = {
@@ -29,28 +29,25 @@ export function isValidMessages(messages: Message[]): boolean {
 
 export function retrieveDocumentIds(messages: Message[]): string[] {
   // retrieve document Ids from the annotations of all messages (if any)
+  const documentFiles = retrieveDocumentFiles(messages);
+  return documentFiles.map((file) => file.metadata?.refs || []).flat();
+}
+
+export function retrieveDocumentFiles(messages: Message[]): DocumentFile[] {
   const annotations = getAllAnnotations(messages);
   if (annotations.length === 0) return [];
 
-  const ids: string[] = [];
-
+  const files: DocumentFile[] = [];
   for (const { type, data } of annotations) {
     if (
       type === "document_file" &&
       "files" in data &&
       Array.isArray(data.files)
     ) {
-      const files = data.files as DocumentFile[];
-      for (const file of files) {
-        if (Array.isArray(file.content.value)) {
-          // it's an array, so it's an array of doc IDs
-          ids.push(...file.content.value);
-        }
-      }
+      files.push(...data.files);
     }
   }
-
-  return ids;
+  return files;
 }
 
 export function retrieveMessageContent(messages: Message[]): MessageContent {
@@ -63,6 +60,36 @@ export function retrieveMessageContent(messages: Message[]): MessageContent {
     ...retrieveLatestArtifact(messages),
     ...convertAnnotations(messages),
   ];
+}
+
+function getFileContent(file: DocumentFile): string {
+  const fileMetadata = file.metadata;
+  let defaultContent = `=====File: ${fileMetadata.name}=====\n`;
+  // Include file URL if it's available
+  const urlPrefix = process.env.FILESERVER_URL_PREFIX;
+  let urlContent = "";
+  if (urlPrefix) {
+    if (fileMetadata.url) {
+      urlContent = `File URL: ${fileMetadata.url}\n`;
+    } else {
+      urlContent = `File URL (instruction: do not update this file URL yourself): ${urlPrefix}/output/uploaded/${fileMetadata.name}\n`;
+    }
+  } else {
+    console.warn(
+      "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server",
+    );
+  }
+  defaultContent += urlContent;
+
+  // Include document IDs if it's available
+  if (fileMetadata.refs) {
+    defaultContent += `Document IDs: ${fileMetadata.refs}\n`;
+  }
+  // Include sandbox file paths
+  const sandboxFilePath = `/tmp/${fileMetadata.name}`;
+  defaultContent += `Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): ${sandboxFilePath}\n`;
+
+  return defaultContent;
 }
 
 function getAllAnnotations(messages: Message[]): Annotation[] {
@@ -131,25 +158,11 @@ function convertAnnotations(messages: Message[]): MessageContentDetail[] {
       "files" in data &&
       Array.isArray(data.files)
     ) {
-      // get all CSV files and convert their whole content to one text message
-      // currently CSV files are the only files where we send the whole content - we don't use an index
-      const csvFiles: DocumentFile[] = data.files.filter(
-        (file: DocumentFile) => file.filetype === "csv",
-      );
-      if (csvFiles && csvFiles.length > 0) {
-        const csvContents = csvFiles.map((file: DocumentFile) => {
-          const fileContent = Array.isArray(file.content.value)
-            ? file.content.value.join("\n")
-            : file.content.value;
-          return "```csv\n" + fileContent + "\n```";
-        });
-        const text =
-          "Use the following CSV content:\n" + csvContents.join("\n\n");
-        content.push({
-          type: "text",
-          text,
-        });
-      }
+      const fileContent = data.files.map(getFileContent).join("\n");
+      content.push({
+        type: "text",
+        text: fileContent,
+      });
     }
   });
 
