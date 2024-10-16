@@ -88,7 +88,9 @@ export const askProQuestions = async (program: QuestionArgs) => {
       questionHandlers,
     );
     program.llamapack = llamapack;
-    program.postInstallAction = await askPostInstallAction(program);
+    if (!program.postInstallAction) {
+      program.postInstallAction = await askPostInstallAction(program);
+    }
     return; // early return - no further questions needed for llamapack projects
   }
 
@@ -396,5 +398,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.tools = tools;
   }
 
-  program.postInstallAction = await askPostInstallAction(program);
+  if (!program.postInstallAction) {
+    program.postInstallAction = await askPostInstallAction(program);
+  }
 };

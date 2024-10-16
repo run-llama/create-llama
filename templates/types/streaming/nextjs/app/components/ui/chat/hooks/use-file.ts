@@ -33,7 +33,9 @@ export function useFile() {
   };
 
   const removeDoc = (file: DocumentFile) => {
-    setFiles((prev) => prev.filter((f) => f.id !== file.id));
+    setFiles((prev) =>
+      prev.filter((f) => f.metadata?.id !== file.metadata?.id),
+    );
   };
 
   const reset = () => {
