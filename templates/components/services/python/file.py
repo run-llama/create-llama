@@ -1,8 +1,6 @@
 import base64
 import mimetypes
 import os
-import re
-import uuid
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -53,17 +51,6 @@ class PrivateFileService:
         extension = mimetypes.guess_extension(mime_type)
         # File data as bytes
         return base64.b64decode(data), extension
-
-    @staticmethod
-    def _store_file(file_name, file_data) -> FileMetadata:
-        """
-        Store the file to the private directory and return the file metadata
-        """
-        # Store file to the private directory
-        os.makedirs(PrivateFileService.PRIVATE_STORE_PATH, exist_ok=True)
-        file_path = Path(os.path.join(PrivateFileService.PRIVATE_STORE_PATH, file_name))
-
-        return save_file(file_data, file_path=str(file_path))
 
     @staticmethod
     def _load_file_to_documents(file_metadata: FileMetadata) -> List[Document]:
@@ -135,11 +122,6 @@ class PrivateFileService:
         )
         return doc_id
 
-    @staticmethod
-    def _sanitize_file_name(file_name: str) -> str:
-        file_name, extension = os.path.splitext(file_name)
-        return re.sub(r"[^a-zA-Z0-9]", "_", file_name) + extension
-
     @classmethod
     def process_file(
         cls,
@@ -154,13 +136,14 @@ class PrivateFileService:
         index_config = IndexConfig(**params)
         index = get_index(index_config)
 
-        # Generate a new file name if the same file is uploaded multiple times
-        file_id = str(uuid.uuid4())
-        new_file_name = f"{file_id}_{cls._sanitize_file_name(file_name)}"
-
         # Preprocess and store the file
         file_data, extension = cls._preprocess_base64_file(base64_content)
-        file_metadata = cls._store_file(new_file_name, file_data)
+
+        file_metadata = save_file(
+            file_data,
+            file_name=file_name,
+            save_dir=PrivateFileService.PRIVATE_STORE_PATH,
+        )
 
         tools = cls._get_available_tools()
         code_executor_tools = ["interpreter", "artifact"]
@@ -171,7 +154,7 @@ class PrivateFileService:
             # Insert the file into the index and update document ids to the file metadata
             if isinstance(index, LlamaCloudIndex):
                 doc_id = cls._add_file_to_llama_cloud_index(
-                    index, new_file_name, file_data
+                    index, file_metadata.name, file_data
                 )
                 # Add document ids to the file metadata
                 file_metadata.refs = [doc_id]

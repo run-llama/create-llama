@@ -32,7 +32,7 @@ class E2BCodeInterpreter:
     output_dir = "output/tools"
     uploaded_files_dir = "output/uploaded"
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: Optional[str] = None):
         if api_key is None:
             api_key = os.getenv("E2B_API_KEY")
         filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
@@ -75,10 +75,10 @@ class E2BCodeInterpreter:
     def _save_to_disk(self, base64_data: str, ext: str) -> FileMetadata:
         buffer = base64.b64decode(base64_data)
 
-        filename = f"{uuid.uuid4()}.{ext}"  # generate a unique filename
-        output_path = os.path.join(self.output_dir, filename)
+        # Output from e2b doesn't have a name. Create a random name for it.
+        filename = f"e2b_file_{uuid.uuid4()}.{ext}"
 
-        file_metadata = save_file(buffer, file_path=output_path)
+        file_metadata = save_file(buffer, file_name=filename, save_dir=self.output_dir)
 
         return file_metadata
 

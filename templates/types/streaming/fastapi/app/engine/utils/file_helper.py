@@ -1,61 +1,61 @@
 import logging
 import os
+import re
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
 
 class FileMetadata(BaseModel):
-    path: str = Field(..., description="The stored path of the file")
+    id: str = Field(..., description="The ID of the file", exclude=True)
+    path: str = Field(..., description="The stored path of the file", exclude=True)
     name: str = Field(..., description="The name of the file")
     url: str = Field(..., description="The URL of the file")
     refs: Optional[List[str]] = Field(
         None, description="The indexed document IDs that the file is referenced to"
     )
 
-    @computed_field
-    def file_id(self) -> Optional[str]:
-        file_els = self.name.split("_", maxsplit=1)
+    @model_validator(mode="before")
+    def validate_file_name(cls, v):
+        """
+        Validate if the file name follows the format: <file_id>_<file_name>
+        where <file_id> is the same as the id
+        """
+        file_id = v.get("id")
+        file_name = v.get("name")
+        file_els = file_name.split("_", maxsplit=1)
         if len(file_els) == 2:
-            return file_els[0]
-        return None
-
-    def to_upload_response(self) -> Dict[str, Any]:
-        response = {
-            "id": self.file_id,
-            "name": self.name,
-            "url": self.url,
-            "refs": self.refs,
-        }
-        return response
+            if file_els[0] != file_id:
+                raise ValueError(
+                    "File name must follow the format: <file_id>_<file_name>"
+                )
+        return v
 
 
 def save_file(
     content: bytes | str,
-    file_name: Optional[str] = None,
-    file_path: Optional[str] = None,
+    file_name: str,
+    save_dir: Optional[str] = None,
 ) -> FileMetadata:
     """
     Save the content to a file in the local file server (accessible via URL)
     Args:
         content (bytes | str): The content to save, either bytes or string.
-        file_name (Optional[str]): The name of the file. If not provided, a random name will be generated with .txt extension.
-        file_path (Optional[str]): The path to save the file to. If not provided, a random name will be generated.
+        file_name (str): The original name of the file.
+        save_dir (Optional[str]): The relative path from the current working directory. Defaults to the `output/uploaded` directory.
     Returns:
         The metadata of the saved file.
     """
-    if file_name is not None and file_path is not None:
-        raise ValueError("Either file_name or file_path should be provided")
+    if save_dir is None:
+        save_dir = os.path.join(os.getcwd(), "output/uploaded")
 
-    if file_path is None:
-        if file_name is None:
-            file_name = f"{uuid.uuid4()}.txt"
-        file_path = os.path.join(os.getcwd(), file_name)
-    else:
-        file_name = os.path.basename(file_path)
+    file_id = str(uuid.uuid4())
+    new_file_name = f"{file_id}_{_sanitize_file_name(file_name)}"
+
+    file_path = os.path.join(save_dir, new_file_name)
 
     if isinstance(content, str):
         content = content.encode()
@@ -77,7 +77,17 @@ def save_file(
     logger.info(f"Saved file to {file_path}")
 
     return FileMetadata(
+        id=file_id,
         path=file_path if isinstance(file_path, str) else str(file_path),
-        name=file_name,
+        name=new_file_name,
         url=f"{os.getenv('FILESERVER_URL_PREFIX')}/{file_path}",
+        refs=None,
     )
+
+
+def _sanitize_file_name(file_name: str) -> str:
+    """
+    Sanitize the file name by replacing all non-alphanumeric characters with underscores
+    """
+    name, ext = os.path.splitext(file_name)
+    return re.sub(r"[^a-zA-Z0-9]", "_", name) + ext

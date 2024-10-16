@@ -12,9 +12,8 @@ from app.config import DATA_DIR
 logger = logging.getLogger("uvicorn")
 
 
-class FileMetadata(BaseModel):
-    id: str
-    name: str
+class UploadedFileMetadata(BaseModel):
+    name: str  # Uploaded file name
     url: Optional[str] = None
     refs: Optional[List[str]] = None
 
@@ -50,18 +49,16 @@ class FileMetadata(BaseModel):
         return default_content
 
 
-class File(BaseModel):
-    filetype: str
-    metadata: FileMetadata
-
-    def _load_file_content(self) -> str:
-        file_path = f"output/uploaded/{self.metadata.name}"
-        with open(file_path, "r") as file:
-            return file.read()
+class DocumentFile(BaseModel):
+    id: str
+    filename: str  # Original file name
+    filetype: Optional[str] = None
+    filesize: Optional[int] = None
+    metadata: UploadedFileMetadata
 
 
 class AnnotationFileData(BaseModel):
-    files: List[File] = Field(
+    files: List[DocumentFile] = Field(
         default=[],
         description="List of files",
     )
@@ -247,14 +244,14 @@ class ChatData(BaseModel):
         Get the document IDs from the chat messages
         """
         document_ids: List[str] = []
-        uploaded_files = self.get_uploaded_files()
+        uploaded_files = self.get_document_files()
         for _file in uploaded_files:
             refs = _file.metadata.refs
             if refs is not None:
                 document_ids.extend(refs)
         return list(set(document_ids))
 
-    def get_uploaded_files(self) -> List[File]:
+    def get_document_files(self) -> List[DocumentFile]:
         """
         Get the uploaded files from the chat data
         """
