@@ -5,8 +5,11 @@ export function ChatFiles({ data }: { data: DocumentFileData }) {
   if (!data.files.length) return null;
   return (
     <div className="flex gap-2 items-center">
-      {data.files.map((file) => (
-        <DocumentPreview key={file.metadata?.id} file={file} />
+      {data.files.map((file, index) => (
+        <DocumentPreview
+          key={file.metadata?.id ?? `${file.filename}-${index}`}
+          file={file}
+        />
       ))}
     </div>
   );

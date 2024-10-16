@@ -111,7 +111,7 @@ export function DocumentInfo({
   const DocumentDetail = (
     <div className={`relative ${className}`}>
       <PreviewCard className={"cursor-pointer"} file={previewFile} />
-      <div className="absolute bottom-2 left-2 space-x-2 flex">
+      <div className="absolute bottom-2 right-2 space-x-2 flex">
         {sources.map((node: SourceNode, index: number) => (
           <div key={node.id}>
             <SourceInfo node={node} index={index} />
