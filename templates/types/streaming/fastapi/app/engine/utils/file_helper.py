@@ -4,35 +4,23 @@ import re
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 
 class FileMetadata(BaseModel):
-    id: str = Field(..., description="The ID of the file", exclude=True)
-    path: str = Field(..., description="The stored path of the file", exclude=True)
+    id: str = Field(..., description="The ID of the file")
     name: str = Field(..., description="The name of the file")
     url: str = Field(..., description="The URL of the file")
+    path: Optional[str] = Field(
+        None,
+        description="The stored path of the file. It'll be excluded from the request",
+        exclude=True,
+    )
     refs: Optional[List[str]] = Field(
         None, description="The indexed document IDs that the file is referenced to"
     )
-
-    @model_validator(mode="before")
-    def validate_file_name(cls, v):
-        """
-        Validate if the file name follows the format: <file_id>_<file_name>
-        where <file_id> is the same as the id
-        """
-        file_id = v.get("id")
-        file_name = v.get("name")
-        file_els = file_name.split("_", maxsplit=1)
-        if len(file_els) == 2:
-            if file_els[0] != file_id:
-                raise ValueError(
-                    "File name must follow the format: <file_id>_<file_name>"
-                )
-        return v
 
 
 def save_file(
@@ -78,8 +66,8 @@ def save_file(
 
     return FileMetadata(
         id=file_id,
-        path=file_path if isinstance(file_path, str) else str(file_path),
         name=new_file_name,
+        path=file_path,
         url=f"{os.getenv('FILESERVER_URL_PREFIX')}/{file_path}",
         refs=None,
     )

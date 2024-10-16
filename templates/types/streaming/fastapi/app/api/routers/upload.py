@@ -4,8 +4,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.api.routers.models import DocumentFile
 from app.api.services.file import PrivateFileService
-from app.engine.utils.file_helper import FileMetadata
 
 file_upload_router = r = APIRouter()
 
@@ -20,16 +20,8 @@ class FileUploadRequest(BaseModel):
     params: Any = None
 
 
-class DocumentFileResponse(BaseModel):
-    id: str
-    filename: str
-    filesize: Optional[int] = None
-    filetype: Optional[str] = None
-    metadata: FileMetadata
-
-
 @r.post("")
-def upload_file(request: FileUploadRequest) -> DocumentFileResponse:
+def upload_file(request: FileUploadRequest) -> DocumentFile:
     """
     To upload a private file from the chat UI.
     """
@@ -39,7 +31,7 @@ def upload_file(request: FileUploadRequest) -> DocumentFileResponse:
             request.filename, request.base64, request.params
         )
 
-        document_file = DocumentFileResponse(
+        document_file = DocumentFile(
             id=file_meta.id,
             metadata=file_meta,
             # Still return the original fields of the request to display in the chat UI.

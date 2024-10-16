@@ -8,23 +8,26 @@ from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
 
 from app.config import DATA_DIR
+from app.engine.utils.file_helper import FileMetadata
 
 logger = logging.getLogger("uvicorn")
 
 
-class UploadedFileMetadata(BaseModel):
-    name: str  # Uploaded file name
-    url: Optional[str] = None
-    refs: Optional[List[str]] = None
+class DocumentFile(BaseModel):
+    id: str
+    filename: str  # Original file name
+    filetype: Optional[str] = None
+    filesize: Optional[int] = None
+    metadata: FileMetadata
 
     def _get_url_llm_content(self) -> Optional[str]:
         url_prefix = os.getenv("FILESERVER_URL_PREFIX")
         if url_prefix:
-            if self.url is not None:
-                return f"File URL: {self.url}\n"
+            if self.metadata.url is not None:
+                return f"File URL: {self.metadata.url}\n"
             else:
                 # Construct url from file name
-                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{self.name}\n"
+                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{self.metadata.name}\n"
         else:
             logger.warning(
                 "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
@@ -35,26 +38,18 @@ class UploadedFileMetadata(BaseModel):
         """
         Construct content for LLM from the file metadata
         """
-        default_content = f"=====File: {self.name}=====\n"
+        default_content = f"=====File: {self.metadata.name}=====\n"
         # Include file URL if it's available
         url_content = self._get_url_llm_content()
         if url_content:
             default_content += url_content
         # Include document IDs if it's available
-        if self.refs is not None:
-            default_content += f"Document IDs: {self.refs}\n"
+        if self.metadata.refs is not None:
+            default_content += f"Document IDs: {self.metadata.refs}\n"
         # Include sandbox file path
-        sandbox_file_path = f"/tmp/{self.name}"
+        sandbox_file_path = f"/tmp/{self.metadata.name}"
         default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
         return default_content
-
-
-class DocumentFile(BaseModel):
-    id: str
-    filename: str  # Original file name
-    filetype: Optional[str] = None
-    filesize: Optional[int] = None
-    metadata: UploadedFileMetadata
 
 
 class AnnotationFileData(BaseModel):
@@ -97,7 +92,7 @@ class Annotation(BaseModel):
     def to_content(self) -> Optional[str]:
         if self.type == "document_file" and isinstance(self.data, AnnotationFileData):
             # iterate through all files and construct content for LLM
-            file_contents = [file.metadata.to_llm_content() for file in self.data.files]
+            file_contents = [file.to_llm_content() for file in self.data.files]
             if len(file_contents) > 0:
                 return "Use data from following files content\n" + "\n".join(
                     file_contents
