@@ -7,7 +7,6 @@ import {
   DocumentFileType,
   MessageAnnotation,
   MessageAnnotationType,
-  UploadedFileMeta,
 } from "..";
 import { useClientConfig } from "./use-config";
 
@@ -24,14 +23,8 @@ export function useFile() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [files, setFiles] = useState<DocumentFile[]>([]);
 
-  const docEqual = (a: DocumentFile, b: DocumentFile) => {
-    if (a.metadata?.id === b.metadata?.id) return true;
-    if (a.filename === b.filename && a.filesize === b.filesize) return true;
-    return false;
-  };
-
   const addDoc = (file: DocumentFile) => {
-    const existedFile = files.find((f) => docEqual(f, file));
+    const existedFile = files.find((f) => f.id === file.id);
     if (!existedFile) {
       setFiles((prev) => [...prev, file]);
       return true;
@@ -40,9 +33,7 @@ export function useFile() {
   };
 
   const removeDoc = (file: DocumentFile) => {
-    setFiles((prev) =>
-      prev.filter((f) => f.metadata?.id !== file.metadata?.id),
-    );
+    setFiles((prev) => prev.filter((f) => f.id !== file.id));
   };
 
   const reset = () => {
@@ -53,7 +44,8 @@ export function useFile() {
   const uploadContent = async (
     file: File,
     requestParams: any = {},
-  ): Promise<UploadedFileMeta> => {
+  ): Promise<DocumentFile> => {
+    // TODO: change API for Python and TS to return DocumentFile
     const base64 = await readContent({ file, asUrl: true });
     const uploadAPI = `${backend}/api/chat/upload`;
     const response = await fetch(uploadAPI, {
@@ -68,7 +60,7 @@ export function useFile() {
       }),
     });
     if (!response.ok) throw new Error("Failed to upload document.");
-    return (await response.json()) as UploadedFileMeta;
+    return (await response.json()) as DocumentFile;
   };
 
   const getAnnotations = () => {
@@ -114,13 +106,7 @@ export function useFile() {
 
     const filetype = docMineTypeMap[file.type];
     if (!filetype) throw new Error("Unsupported document type.");
-    const uploadedFileMeta = await uploadContent(file, requestParams);
-    const newDoc: DocumentFile = {
-      filename: file.name,
-      filesize: file.size,
-      filetype,
-      metadata: uploadedFileMeta,
-    };
+    const newDoc = await uploadContent(file, requestParams);
     return addDoc(newDoc);
   };
 

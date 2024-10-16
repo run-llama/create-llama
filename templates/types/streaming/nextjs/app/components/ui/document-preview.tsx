@@ -23,9 +23,9 @@ export interface DocumentPreviewProps {
 }
 
 export function DocumentPreview(props: DocumentPreviewProps) {
-  const { filename, filesize, filetype, metadata } = props.file;
+  const { id, filename, filesize, filetype, metadata } = props.file;
 
-  if (metadata?.refs?.length) {
+  if (metadata.refs?.length) {
     return (
       <div title={`Document IDs: ${metadata.refs.join(", ")}`}>
         <PreviewCard {...props} />
@@ -53,7 +53,7 @@ export function DocumentPreview(props: DocumentPreviewProps) {
           </DrawerClose>
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
-          {metadata?.refs?.length && (
+          {metadata.refs?.length && (
             <pre className="bg-secondary rounded-md p-4 block text-sm">
               {metadata.refs.join(", ")}
             </pre>
