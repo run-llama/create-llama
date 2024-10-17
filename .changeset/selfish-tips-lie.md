@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Simplify the data file of document file
+Simplify and unify handling file uploads
