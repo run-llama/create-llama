@@ -100,5 +100,6 @@ export async function saveDocument(filepath: string, content: string | Buffer) {
 }
 
 function sanitizeFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9_.-]/g, "_");
+  // Remove file extension and sanitize
+  return fileName.split(".")[0].replace(/[^a-zA-Z0-9_-]/g, "_");
 }
