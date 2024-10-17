@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.2
+
+### Patch Changes
+
+- 6d1b6b9: Update README.md for pro mode
+
 ## 0.3.1
 
 ### Patch Changes
