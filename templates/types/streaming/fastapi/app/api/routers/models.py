@@ -22,13 +22,10 @@ class AnnotationFileData(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "csvFiles": [
+                "files": [
                     {
-                        "content": "Name, Age\nAlice, 25\nBob, 30",
-                        "name": "example.csv",
-                        "size": 123,
-                        "id": "123",
-                        "type": "text/csv",
+                        "content": "data:text/plain;base64,aGVsbG8gd29ybGQK=",
+                        "name": "example.txt",
                     }
                 ]
             }
