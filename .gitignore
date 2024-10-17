@@ -51,3 +51,7 @@ e2e/cache
 
 # build artifacts
 create-llama-*.tgz
+
+# vscode
+.vscode
+!.vscode/settings.json

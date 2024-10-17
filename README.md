@@ -24,14 +24,14 @@ to start the development server. You can then visit [http://localhost:3000](http
 
 ## What you'll get
 
+- A set of pre-configured use cases to get you started, e.g. Agentic RAG, Data Analysis, Report Generation, etc.
 - A Next.js-powered front-end using components from [shadcn/ui](https://ui.shadcn.com/). The app is set up as a chat interface that can answer questions about your data or interact with your agent
-- Your choice of 3 back-ends:
+- Your choice of two back-ends:
   - **Next.js**: if you select this option, you’ll have a full-stack Next.js application that you can deploy to a host like [Vercel](https://vercel.com/) in just a few clicks. This uses [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex), our TypeScript library.
-  - **Express**: if you want a more traditional Node.js application you can generate an Express backend. This also uses LlamaIndex.TS.
-  - **Python FastAPI**: if you select this option, you’ll get a backend powered by the [llama-index Python package](https://pypi.org/project/llama-index/), which you can deploy to a service like Render or fly.io.
-- The back-end has two endpoints (one streaming, the other one non-streaming) that allow you to send the state of your chat and receive additional responses
-- You add arbitrary data sources to your chat, like local files, websites, or data retrieved from a database.
-- Turn your chat into an AI agent by adding tools (functions called by the LLM).
+  - **Python FastAPI**: if you select this option, you’ll get a separate backend powered by the [llama-index Python package](https://pypi.org/project/llama-index/), which you can deploy to a service like [Render](https://render.com/) or [fly.io](https://fly.io/). The separate Next.js front-end will connect to this backend.
+- Each back-end has two endpoints:
+  - One streaming chat endpoint, that allow you to send the state of your chat and receive additional responses
+  - One endpoint to upload private files which can be used in your chat
 - The app uses OpenAI by default, so you'll need an OpenAI API key, or you can customize it to use any of the dozens of LLMs we support.
 
 Here's how it looks like:
@@ -40,9 +40,9 @@ https://github.com/user-attachments/assets/d57af1a1-d99b-4e9c-98d9-4cbd1327eff8
 
 ## Using your data
 
-You can supply your own data; the app will index it and answer questions. Your generated app will have a folder called `data` (If you're using Express or Python and generate a frontend, it will be `./backend/data`).
+Optionally, you can supply your own data; the app will index it and make use of it, e.g. to answer questions. Your generated app will have a folder called `data` (If you're using Express or Python and generate a frontend, it will be `./backend/data`).
 
-The app will ingest any supported files you put in this directory. Your Next.js and Express apps use LlamaIndex.TS so they will be able to ingest any PDF, text, CSV, Markdown, Word and HTML files. The Python backend can read even more types, including video and audio files.
+The app will ingest any supported files you put in this directory. Your Next.js and Express apps use LlamaIndex.TS, so they will be able to ingest any PDF, text, CSV, Markdown, Word and HTML files. The Python backend can read even more types, including video and audio files.
 
 Before you can use your data, you need to index it. If you're using the Next.js or Express apps, run:
 
@@ -57,10 +57,6 @@ If you're using the Python backend, you can trigger indexing of your data by cal
 ```bash
 poetry run generate
 ```
-
-## Want a front-end?
-
-Optionally generate a frontend if you've selected the Python or Express back-ends. If you do so, `create-llama` will generate two folders: `frontend`, for your Next.js-based frontend code, and `backend` containing your API.
 
 ## Customizing the AI models
 
@@ -94,46 +90,40 @@ Need to install the following packages:
   create-llama@latest
 Ok to proceed? (y) y
 ✔ What is your project named? … my-app
-✔ Which template would you like to use? › Agentic RAG (e.g. chat with docs)
-✔ Which framework would you like to use? › NextJS
-✔ Would you like to set up observability? › No
+✔ What app do you want to build? › Agentic RAG
+✔ What language do you want to use? › Python (FastAPI)
+✔ Do you want to use LlamaCloud services? … No / Yes
+✔ Please provide your LlamaCloud API key (leave blank to skip): …
 ✔ Please provide your OpenAI API key (leave blank to skip): …
-✔ Which data source would you like to use? › Use an example PDF
-✔ Would you like to add another data source? › No
-✔ Would you like to use LlamaParse (improved parser for RAG - requires API key)? … no / yes
-✔ Would you like to use a vector database? › No, just store the data in the file system
-✔ Would you like to build an agent using tools? If so, select the tools here, otherwise just press enter › Weather
 ? How would you like to proceed? › - Use arrow-keys. Return to submit.
-   Just generate code (~1 sec)
-❯  Start in VSCode (~1 sec)
-   Generate code and install dependencies (~2 min)
-   Generate code, install dependencies, and run the app (~2 min)
+    Just generate code (~1 sec)
+❯   Start in VSCode (~1 sec)
+    Generate code and install dependencies (~2 min)
 ```
 
 ### Running non-interactively
 
 You can also pass command line arguments to set up a new project
-non-interactively. See `create-llama --help`:
+non-interactively. For a list of the latest options, call `create-llama --help`.
 
-```bash
-create-llama <project-directory> [options]
+### Running in pro mode
 
-Options:
-  -V, --version                      output the version number
+If you prefer more advanced customization options, you can run `create-llama` in pro mode using the `--pro` flag.
 
-  --use-npm
+In pro mode, instead of selecting a predefined use case, you'll be prompted to select each technical component of your project. This allows for greater flexibility in customizing your project, including:
 
-    Explicitly tell the CLI to bootstrap the app using npm
+- **Vector Store**: Choose from a variety of vector stores for keeping your documents, including MongoDB, Pinecone, Weaviate, Qdrant and Chroma.
+- **Tools**: Choose from a variety of agent tools (functions called by the LLM), such as:
+  - Code Interpreter: Executes Python code in a secure Jupyter notebook environment
+  - Artifact Code Generator: Generates code artifacts that can be run in a sandbox
+  - OpenAPI Action: Facilitates requests to a provided OpenAPI schema
+  - Image Generator: Creates images based on text descriptions
+  - Web Search: Performs web searches to retrieve up-to-date information
+- **Data Sources**: Integrate various data sources into your chat application, including local files, websites, or database-retrieved data.
+- **Backend Options**: Besides using Next.js or FastAPI, you can also select to use Express for a more traditional Node.js application.
+- **Observability**: Choose from a variety of LLM observability tools, including LlamaTrace and Traceloop.
 
-  --use-pnpm
-
-    Explicitly tell the CLI to bootstrap the app using pnpm
-
-  --use-yarn
-
-    Explicitly tell the CLI to bootstrap the app using Yarn
-
-```
+Pro mode is ideal for developers who want fine-grained control over their project's configuration and are comfortable with more technical setup options.
 
 ## LlamaIndex Documentation
 
