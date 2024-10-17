@@ -12,7 +12,7 @@ npx create-llama@latest
 
 to get started, or watch this video for a demo session:
 
-https://github.com/user-attachments/assets/dd3edc36-4453-4416-91c2-d24326c6c167
+<img src="https://github.com/user-attachments/assets/c4a7fe18-8e30-498a-96f8-78127dd706b9" width="100%">
 
 Once your app is generated, run
 
