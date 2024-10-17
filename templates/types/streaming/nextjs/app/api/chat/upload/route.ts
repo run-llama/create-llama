@@ -14,8 +14,15 @@ export async function POST(request: NextRequest) {
       filename,
       base64,
       params,
-    }: { filename: string; base64: string; params?: any } =
-      await request.json();
+      filetype,
+      filesize,
+    }: {
+      filename: string;
+      base64: string;
+      params?: any;
+      filetype: string;
+      filesize: number;
+    } = await request.json();
     if (!base64 || !filename) {
       return NextResponse.json(
         { error: "base64 and filename is required in the request body" },
@@ -27,6 +34,8 @@ export async function POST(request: NextRequest) {
     const documentFile = {
       id: uploadedFileMeta.id,
       filename: filename, // Original filename
+      filesize,
+      filetype,
       metadata: uploadedFileMeta,
     };
     return NextResponse.json(documentFile);
