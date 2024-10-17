@@ -104,8 +104,8 @@ export function DocumentInfo({
   const fileExt = fileName?.split(".").pop() as DocumentFileType | undefined;
 
   const previewFile = {
-    filename: fileName,
-    filetype: fileExt,
+    name: fileName,
+    type: fileExt as DocumentFileType,
   };
 
   const DocumentDetail = (

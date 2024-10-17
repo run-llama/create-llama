@@ -1,5 +1,6 @@
 import { JSONValue } from "ai";
 import React from "react";
+import { DocumentFile } from ".";
 import { Button } from "../button";
 import { DocumentPreview } from "../document-preview";
 import FileUploader from "../file-uploader";
@@ -65,8 +66,8 @@ export default function ChatInput(
   };
 
   const handleUploadFile = async (file: File) => {
-    if (imageUrl || files.length > 0) {
-      alert("You can only upload one file at a time.");
+    if (imageUrl) {
+      alert("You can only upload one image at a time.");
       return;
     }
     try {
@@ -95,9 +96,9 @@ export default function ChatInput(
       )}
       {files.length > 0 && (
         <div className="flex gap-4 w-full overflow-auto py-2">
-          {files.map((file, index) => (
+          {files.map((file: DocumentFile) => (
             <DocumentPreview
-              key={file.metadata?.id ?? `${file.filename}-${index}`}
+              key={file.id}
               file={file}
               onRemove={() => removeDoc(file)}
             />

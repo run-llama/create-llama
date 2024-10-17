@@ -111,13 +111,16 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
     // upload files to sandbox
     if (input.sandboxFiles) {
       console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
-      for (const filePath of input.sandboxFiles) {
-        const fileName = path.basename(filePath);
-        const localFilePath = path.join(this.uploadedFilesDir, fileName);
-        const content = fs.readFileSync(localFilePath);
-        await this.codeInterpreter?.files.write(filePath, content);
+      try {
+        for (const filePath of input.sandboxFiles) {
+          const fileName = path.basename(filePath);
+          const localFilePath = path.join(this.uploadedFilesDir, fileName);
+          const content = fs.readFileSync(localFilePath);
+          await this.codeInterpreter?.files.write(filePath, content);
+        }
+      } catch (error) {
+        console.error("Got error when uploading files to sandbox", error);
       }
-      console.log(`Uploaded ${input.sandboxFiles.length} files to sandbox`);
     }
     return this.codeInterpreter;
   }

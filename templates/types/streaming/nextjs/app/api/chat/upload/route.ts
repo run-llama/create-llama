@@ -11,19 +11,23 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const {
-      filename,
+      name,
       base64,
       params,
-    }: { filename: string; base64: string; params?: any } =
-      await request.json();
-    if (!base64 || !filename) {
+    }: {
+      name: string;
+      base64: string;
+      params?: any;
+    } = await request.json();
+    if (!base64 || !name) {
       return NextResponse.json(
-        { error: "base64 and filename is required in the request body" },
+        { error: "base64 and name is required in the request body" },
         { status: 400 },
       );
     }
     const index = await getDataSource(params);
-    return NextResponse.json(await uploadDocument(index, filename, base64));
+    const documentFile = await uploadDocument(index, name, base64);
+    return NextResponse.json(documentFile);
   } catch (error) {
     console.error("[Upload API]", error);
     return NextResponse.json(

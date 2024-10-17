@@ -3,17 +3,13 @@ import { MessageContent, MessageContentDetail } from "llamaindex";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
-export type UploadedFileMeta = {
+export type DocumentFile = {
   id: string;
   name: string;
-  url?: string;
-  refs?: string[];
-};
-
-export type DocumentFile = {
-  type: DocumentFileType;
+  size: number;
+  type: string;
   url: string;
-  metadata: UploadedFileMeta;
+  refs?: string[];
 };
 
 type Annotation = {
@@ -30,7 +26,7 @@ export function isValidMessages(messages: Message[]): boolean {
 export function retrieveDocumentIds(messages: Message[]): string[] {
   // retrieve document Ids from the annotations of all messages (if any)
   const documentFiles = retrieveDocumentFiles(messages);
-  return documentFiles.map((file) => file.metadata?.refs || []).flat();
+  return documentFiles.map((file) => file.refs || []).flat();
 }
 
 export function retrieveDocumentFiles(messages: Message[]): DocumentFile[] {
@@ -63,16 +59,15 @@ export function retrieveMessageContent(messages: Message[]): MessageContent {
 }
 
 function getFileContent(file: DocumentFile): string {
-  const fileMetadata = file.metadata;
-  let defaultContent = `=====File: ${fileMetadata.name}=====\n`;
+  let defaultContent = `=====File: ${file.name}=====\n`;
   // Include file URL if it's available
   const urlPrefix = process.env.FILESERVER_URL_PREFIX;
   let urlContent = "";
   if (urlPrefix) {
-    if (fileMetadata.url) {
-      urlContent = `File URL: ${fileMetadata.url}\n`;
+    if (file.url) {
+      urlContent = `File URL: ${file.url}\n`;
     } else {
-      urlContent = `File URL (instruction: do not update this file URL yourself): ${urlPrefix}/output/uploaded/${fileMetadata.name}\n`;
+      urlContent = `File URL (instruction: do not update this file URL yourself): ${urlPrefix}/output/uploaded/${file.name}\n`;
     }
   } else {
     console.warn(
@@ -82,11 +77,11 @@ function getFileContent(file: DocumentFile): string {
   defaultContent += urlContent;
 
   // Include document IDs if it's available
-  if (fileMetadata.refs) {
-    defaultContent += `Document IDs: ${fileMetadata.refs}\n`;
+  if (file.refs) {
+    defaultContent += `Document IDs: ${file.refs}\n`;
   }
   // Include sandbox file paths
-  const sandboxFilePath = `/tmp/${fileMetadata.name}`;
+  const sandboxFilePath = `/tmp/${file.name}`;
   defaultContent += `Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): ${sandboxFilePath}\n`;
 
   return defaultContent;

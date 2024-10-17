@@ -27,18 +27,13 @@ export const DOCUMENT_FILE_TYPES: DocumentFileType[] = [
   "docx",
 ];
 
-export type UploadedFileMeta = {
-  id: string;
-  name: string; // The uploaded file name in the backend (including uuid and sanitized)
-  url?: string;
-  refs?: string[];
-};
-
 export type DocumentFile = {
-  filename: string; // The original file name
-  filesize: number;
-  filetype: DocumentFileType;
-  metadata?: UploadedFileMeta; // undefined when the file is not uploaded yet
+  id: string;
+  name: string; // The uploaded file name in the backend
+  size: number; // The file size in bytes
+  type: DocumentFileType;
+  url: string; // The URL of the uploaded file in the backend
+  refs?: string[]; // DocumentIDs of the uploaded file in the vector index
 };
 
 export type DocumentFileData = {
