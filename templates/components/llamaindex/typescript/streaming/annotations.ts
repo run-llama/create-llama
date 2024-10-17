@@ -6,14 +6,14 @@ export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 export type UploadedFileMeta = {
   id: string;
   name: string;
-  url?: string;
+  url: string;
   refs?: string[];
 };
 
 export type DocumentFile = {
-  type: DocumentFileType;
-  url: string;
-  metadata: UploadedFileMeta;
+  id: string;
+  filename: string;
+  metadata: Omit<UploadedFileMeta, "id">;
 };
 
 type Annotation = {

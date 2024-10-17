@@ -2,14 +2,15 @@ import { Document, LLamaCloudFileService, VectorStoreIndex } from "llamaindex";
 import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { FileMetadata, parseFile, storeFile } from "./helper";
+import { UploadedFileMeta } from "../streaming/annotations";
+import { parseFile, storeFile } from "./helper";
 import { runPipeline } from "./pipeline";
 
 export async function uploadDocument(
   index: VectorStoreIndex | LlamaCloudIndex | null,
   filename: string,
   raw: string,
-): Promise<FileMetadata> {
+): Promise<UploadedFileMeta> {
   const [header, content] = raw.split(",");
   const mimeType = header.replace("data:", "").replace(";base64", "");
   const fileBuffer = Buffer.from(content, "base64");

@@ -23,7 +23,13 @@ export async function POST(request: NextRequest) {
       );
     }
     const index = await getDataSource(params);
-    return NextResponse.json(await uploadDocument(index, filename, base64));
+    const uploadedFileMeta = await uploadDocument(index, filename, base64);
+    const documentFile = {
+      id: uploadedFileMeta.id,
+      filename: filename, // Original filename
+      metadata: uploadedFileMeta,
+    };
+    return NextResponse.json(documentFile);
   } catch (error) {
     console.error("[Upload API]", error);
     return NextResponse.json(
