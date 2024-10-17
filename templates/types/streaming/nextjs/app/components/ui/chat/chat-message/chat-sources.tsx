@@ -102,10 +102,12 @@ export function DocumentInfo({
   const urlParts = url.split("/");
   const fileName = urlParts.length > 0 ? urlParts[urlParts.length - 1] : url;
   const fileExt = fileName?.split(".").pop() as DocumentFileType | undefined;
+  const fileSize = 0;
 
   const previewFile = {
-    filename: fileName,
-    filetype: fileExt,
+    name: fileName,
+    size: fileSize,
+    type: fileExt as DocumentFileType,
   };
 
   const DocumentDetail = (

@@ -4,7 +4,7 @@ import os
 import uuid
 from typing import List, Optional
 
-from app.engine.utils.file_helper import FileMetadata, save_file
+from app.services.file import DocumentFile, FileService
 from e2b_code_interpreter import CodeInterpreter
 from e2b_code_interpreter.models import Logs
 from llama_index.core.tools import FunctionTool
@@ -72,15 +72,17 @@ class E2BCodeInterpreter:
                         self.interpreter.files.write(file_path, content)
             logger.info(f"Uploaded {len(sandbox_files)} files to sandbox")
 
-    def _save_to_disk(self, base64_data: str, ext: str) -> FileMetadata:
+    def _save_to_disk(self, base64_data: str, ext: str) -> DocumentFile:
         buffer = base64.b64decode(base64_data)
 
         # Output from e2b doesn't have a name. Create a random name for it.
         filename = f"e2b_file_{uuid.uuid4()}.{ext}"
 
-        file_metadata = save_file(buffer, file_name=filename, save_dir=self.output_dir)
+        document_file = FileService.save_file(
+            buffer, file_name=filename, save_dir=self.output_dir
+        )
 
-        return file_metadata
+        return document_file
 
     def _parse_result(self, result) -> List[InterpreterExtraResult]:
         """
@@ -99,12 +101,12 @@ class E2BCodeInterpreter:
             for ext, data in zip(formats, results):
                 match ext:
                     case "png" | "svg" | "jpeg" | "pdf":
-                        file_metadata = self._save_to_disk(data, ext)
+                        document_file = self._save_to_disk(data, ext)
                         output.append(
                             InterpreterExtraResult(
                                 type=ext,
-                                filename=file_metadata.name,
-                                url=file_metadata.url,
+                                filename=document_file.name,
+                                url=document_file.url,
                             )
                         )
                     case _:

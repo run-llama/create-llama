@@ -23,11 +23,11 @@ export interface DocumentPreviewProps {
 }
 
 export function DocumentPreview(props: DocumentPreviewProps) {
-  const { filename, filesize, filetype, metadata } = props.file;
+  const { name, size, type, refs } = props.file;
 
-  if (metadata.refs?.length) {
+  if (refs?.length) {
     return (
-      <div title={`Document IDs: ${metadata.refs.join(", ")}`}>
+      <div title={`Document IDs: ${refs.join(", ")}`}>
         <PreviewCard {...props} />
       </div>
     );
@@ -43,9 +43,9 @@ export function DocumentPreview(props: DocumentPreviewProps) {
       <DrawerContent className="w-3/5 mt-24 h-full max-h-[96%] ">
         <DrawerHeader className="flex justify-between">
           <div className="space-y-2">
-            <DrawerTitle>{filetype.toUpperCase()} Raw Content</DrawerTitle>
+            <DrawerTitle>{type.toUpperCase()} Raw Content</DrawerTitle>
             <DrawerDescription>
-              {filename} ({inKB(filesize)} KB)
+              {name} ({inKB(size)} KB)
             </DrawerDescription>
           </div>
           <DrawerClose asChild>
@@ -53,9 +53,9 @@ export function DocumentPreview(props: DocumentPreviewProps) {
           </DrawerClose>
         </DrawerHeader>
         <div className="m-4 max-h-[80%] overflow-auto">
-          {metadata.refs?.length && (
+          {refs?.length && (
             <pre className="bg-secondary rounded-md p-4 block text-sm">
-              {metadata.refs.join(", ")}
+              {refs.join(", ")}
             </pre>
           )}
         </div>
@@ -73,9 +73,9 @@ export const FileIcon: Record<DocumentFileType, string> = {
 
 export function PreviewCard(props: {
   file: {
-    filename: string;
-    filesize?: number;
-    filetype?: DocumentFileType;
+    name: string;
+    size: number;
+    type: DocumentFileType;
   };
   onRemove?: () => void;
   className?: string;
@@ -93,17 +93,17 @@ export function PreviewCard(props: {
           <Image
             className="h-full w-auto object-contain"
             priority
-            src={FileIcon[file.filetype || "txt"]}
+            src={FileIcon[file.type]}
             alt="Icon"
           />
         </div>
         <div className="overflow-hidden">
           <div className="truncate font-semibold">
-            {file.filename} {file.filesize ? `(${inKB(file.filesize)} KB)` : ""}
+            {file.name} {file.size ? `(${inKB(file.size)} KB)` : ""}
           </div>
-          {file.filetype && (
+          {file.type && (
             <div className="truncate text-token-text-tertiary flex items-center gap-2">
-              <span>{file.filetype.toUpperCase()} File</span>
+              <span>{file.type.toUpperCase()} File</span>
             </div>
           )}
         </div>

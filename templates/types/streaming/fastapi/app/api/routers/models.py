@@ -8,48 +8,9 @@ from pydantic import BaseModel, Field, validator
 from pydantic.alias_generators import to_camel
 
 from app.config import DATA_DIR
-from app.engine.utils.file_helper import FileMetadata
+from app.services.file import DocumentFile
 
 logger = logging.getLogger("uvicorn")
-
-
-class DocumentFile(BaseModel):
-    id: str
-    filename: str  # Original file name
-    filetype: Optional[str] = None
-    filesize: Optional[int] = None
-    metadata: FileMetadata
-
-    def _get_url_llm_content(self) -> Optional[str]:
-        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-        if url_prefix:
-            if self.metadata.url is not None:
-                return f"File URL: {self.metadata.url}\n"
-            else:
-                # Construct url from file name
-                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{self.metadata.name}\n"
-        else:
-            logger.warning(
-                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
-            )
-            return None
-
-    def to_llm_content(self) -> str:
-        """
-        Construct content for LLM from the file metadata
-        """
-        default_content = f"=====File: {self.metadata.name}=====\n"
-        # Include file URL if it's available
-        url_content = self._get_url_llm_content()
-        if url_content:
-            default_content += url_content
-        # Include document IDs if it's available
-        if self.metadata.refs is not None:
-            default_content += f"Document IDs: {self.metadata.refs}\n"
-        # Include sandbox file path
-        sandbox_file_path = f"/tmp/{self.metadata.name}"
-        default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
-        return default_content
 
 
 class AnnotationFileData(BaseModel):
@@ -64,8 +25,9 @@ class AnnotationFileData(BaseModel):
                 "csvFiles": [
                     {
                         "content": "Name, Age\nAlice, 25\nBob, 30",
-                        "filename": "example.csv",
-                        "filesize": 123,
+                        "name": "example.csv",
+                        "original_name": "example.csv",
+                        "size": 123,
                         "id": "123",
                         "type": "text/csv",
                     }
@@ -73,6 +35,45 @@ class AnnotationFileData(BaseModel):
             }
         }
         alias_generator = to_camel
+
+    @staticmethod
+    def _get_url_llm_content(file: DocumentFile) -> Optional[str]:
+        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
+        if url_prefix:
+            if file.url is not None:
+                return f"File URL: {file.url}\n"
+            else:
+                # Construct url from file name
+                return f"File URL (instruction: do not update this file URL yourself): {url_prefix}/output/uploaded/{file.name}\n"
+        else:
+            logger.warning(
+                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
+            )
+            return None
+
+    @classmethod
+    def _get_file_content(cls, file: DocumentFile) -> str:
+        """
+        Construct content for LLM from the file metadata
+        """
+        default_content = f"=====File: {file.name}=====\n"
+        # Include file URL if it's available
+        url_content = cls._get_url_llm_content(file)
+        if url_content:
+            default_content += url_content
+        # Include document IDs if it's available
+        if file.refs is not None:
+            default_content += f"Document IDs: {file.refs}\n"
+        # Include sandbox file path
+        sandbox_file_path = f"/tmp/{file.name}"
+        default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
+        return default_content
+
+    def to_llm_content(self) -> Optional[str]:
+        file_contents = [self._get_file_content(file) for file in self.files]
+        if len(file_contents) == 0:
+            return None
+        return "Use data from following files content\n" + "\n".join(file_contents)
 
 
 class AgentAnnotation(BaseModel):
@@ -91,12 +92,7 @@ class Annotation(BaseModel):
 
     def to_content(self) -> Optional[str]:
         if self.type == "document_file" and isinstance(self.data, AnnotationFileData):
-            # iterate through all files and construct content for LLM
-            file_contents = [file.to_llm_content() for file in self.data.files]
-            if len(file_contents) > 0:
-                return "Use data from following files content\n" + "\n".join(
-                    file_contents
-                )
+            return self.data.to_llm_content()
         elif self.type == "image":
             raise NotImplementedError("Use image file is not supported yet!")
         else:
@@ -241,7 +237,7 @@ class ChatData(BaseModel):
         document_ids: List[str] = []
         uploaded_files = self.get_document_files()
         for _file in uploaded_files:
-            refs = _file.metadata.refs
+            refs = _file.refs
             if refs is not None:
                 document_ids.extend(refs)
         return list(set(document_ids))

@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { getExtractors } from "../../engine/loader";
+import { DocumentFile } from "../streaming/annotations";
 
 const MIME_TYPE_TO_EXT: Record<string, string> = {
   "application/pdf": "pdf",
@@ -14,27 +15,20 @@ const MIME_TYPE_TO_EXT: Record<string, string> = {
 
 const UPLOADED_FOLDER = "output/uploaded";
 
-export type FileMetadata = {
-  id: string;
-  name: string;
-  url: string;
-  refs: string[];
-};
-
 export async function storeAndParseFile(
-  filename: string,
+  name: string,
   fileBuffer: Buffer,
   mimeType: string,
-): Promise<FileMetadata> {
-  const fileMetadata = await storeFile(filename, fileBuffer, mimeType);
-  const documents: Document[] = await parseFile(fileBuffer, filename, mimeType);
+): Promise<DocumentFile> {
+  const file = await storeFile(name, fileBuffer, mimeType);
+  const documents: Document[] = await parseFile(fileBuffer, name, mimeType);
   // Update document IDs in the file metadata
-  fileMetadata.refs = documents.map((document) => document.id_ as string);
-  return fileMetadata;
+  file.refs = documents.map((document) => document.id_ as string);
+  return file;
 }
 
 export async function storeFile(
-  filename: string,
+  name: string,
   fileBuffer: Buffer,
   mimeType: string,
 ) {
@@ -42,15 +36,18 @@ export async function storeFile(
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
   const fileId = crypto.randomUUID();
-  const newFilename = `${fileId}_${sanitizeFileName(filename)}`;
+  const newFilename = `${fileId}_${sanitizeFileName(name)}`;
   const filepath = path.join(UPLOADED_FOLDER, newFilename);
   const fileUrl = await saveDocument(filepath, fileBuffer);
   return {
     id: fileId,
     name: newFilename,
+    original_name: name,
+    size: fileBuffer.length,
+    type: fileExt,
     url: fileUrl,
     refs: [] as string[],
-  } as FileMetadata;
+  } as DocumentFile;
 }
 
 export async function parseFile(
