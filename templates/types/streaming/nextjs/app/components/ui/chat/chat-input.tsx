@@ -67,7 +67,7 @@ export default function ChatInput(
 
   const handleUploadFile = async (file: File) => {
     if (imageUrl) {
-      alert("You can only upload one file at a time.");
+      alert("You can only upload one image at a time.");
       return;
     }
     try {

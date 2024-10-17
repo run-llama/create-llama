@@ -45,7 +45,6 @@ export function useFile() {
     file: File,
     requestParams: any = {},
   ): Promise<DocumentFile> => {
-    // TODO: change API for Python and TS to return DocumentFile
     const base64 = await readContent({ file, asUrl: true });
     const uploadAPI = `${backend}/api/chat/upload`;
     const response = await fetch(uploadAPI, {

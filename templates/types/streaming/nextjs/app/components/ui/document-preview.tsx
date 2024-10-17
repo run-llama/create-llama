@@ -23,7 +23,7 @@ export interface DocumentPreviewProps {
 }
 
 export function DocumentPreview(props: DocumentPreviewProps) {
-  const { id, filename, filesize, filetype, metadata } = props.file;
+  const { filename, filesize, filetype, metadata } = props.file;
 
   if (metadata.refs?.length) {
     return (
