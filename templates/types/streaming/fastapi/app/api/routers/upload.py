@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -15,8 +15,6 @@ logger = logging.getLogger("uvicorn")
 class FileUploadRequest(BaseModel):
     base64: str
     name: str
-    size: Optional[int] = None
-    type: Optional[str] = None
     params: Any = None
 
 

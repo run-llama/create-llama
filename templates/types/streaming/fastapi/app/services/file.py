@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 PRIVATE_STORE_PATH = str(Path("output", "uploaded"))
 TOOL_STORE_PATH = str(Path("output", "tools"))
-LLAMA_CLOUD_STORE_PATH = str(Path("output", "llama_cloud"))
+LLAMA_CLOUD_STORE_PATH = str(Path("output", "llamacloud"))
 
 
 class DocumentFile(BaseModel):
@@ -54,8 +54,8 @@ class FileService:
         """
         try:
             from app.engine.index import IndexConfig, get_index
-        except ImportError:
-            raise ValueError("IndexConfig or get_index is not found")
+        except ImportError as e:
+            raise ValueError("IndexConfig or get_index is not found") from e
 
         if params is None:
             params = {}
@@ -113,7 +113,7 @@ class FileService:
             The metadata of the saved file.
         """
         if save_dir is None:
-            save_dir = os.path.join(os.getcwd(), "output/uploaded")
+            save_dir = os.path.join("output", "uploaded")
 
         file_id = str(uuid.uuid4())
         new_file_name = f"{file_id}_{_sanitize_file_name(file_name)}"
@@ -236,8 +236,8 @@ class FileService:
         """
         try:
             from app.engine.service import LLamaCloudFileService
-        except ImportError:
-            raise ValueError("LlamaCloudFileService is not found")
+        except ImportError as e:
+            raise ValueError("LlamaCloudFileService is not found") from e
 
         project_id = index._get_project_id()
         pipeline_id = index._get_pipeline_id()
@@ -256,8 +256,8 @@ def _sanitize_file_name(file_name: str) -> str:
     """
     Sanitize the file name by replacing all non-alphanumeric characters with underscores
     """
-    name, ext = os.path.splitext(file_name)
-    return re.sub(r"[^a-zA-Z0-9]", "_", name) + ext
+    sanitized_name = re.sub(r"[^a-zA-Z0-9.]", "_", file_name)
+    return sanitized_name
 
 
 def _get_llamaparse_parser():

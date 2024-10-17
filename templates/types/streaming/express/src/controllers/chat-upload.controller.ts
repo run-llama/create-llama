@@ -4,11 +4,11 @@ import { uploadDocument } from "./llamaindex/documents/upload";
 
 export const chatUpload = async (req: Request, res: Response) => {
   const {
-    filename,
+    name,
     base64,
     params,
-  }: { filename: string; base64: string; params?: any } = req.body;
-  if (!base64 || !filename) {
+  }: { name: string; base64: string; params?: any } = req.body;
+  if (!base64 || !name) {
     return res.status(400).json({
       error: "base64 and filename is required in the request body",
     });
@@ -20,5 +20,5 @@ export const chatUpload = async (req: Request, res: Response) => {
         "StorageContext is empty - call 'npm run generate' to generate the storage first",
     });
   }
-  return res.status(200).json(await uploadDocument(index, filename, base64));
+  return res.status(200).json(await uploadDocument(index, name, base64));
 };

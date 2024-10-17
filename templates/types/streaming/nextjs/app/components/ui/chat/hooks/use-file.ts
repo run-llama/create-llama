@@ -56,8 +56,6 @@ export function useFile() {
         ...requestParams,
         base64,
         name: file.name,
-        type: docMineTypeMap[file.type],
-        size: file.size,
       }),
     });
     if (!response.ok) throw new Error("Failed to upload document.");
