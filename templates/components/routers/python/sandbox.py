@@ -172,10 +172,14 @@ def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]
                 data = result[ext]
 
                 if ext in ["png", "svg", "jpeg", "pdf"]:
-                    file_path = os.path.join("output", "tools", f"{uuid.uuid4()}.{ext}")
                     base64_data = data
                     buffer = base64.b64decode(base64_data)
-                    file_meta = save_file(content=buffer, file_path=file_path)
+                    file_name = f"{uuid.uuid4()}.{ext}"
+                    file_meta = save_file(
+                        content=buffer,
+                        file_name=file_name,
+                        save_dir=os.path.join("output", "tools"),
+                    )
                     output.append(
                         {
                             "type": ext,
