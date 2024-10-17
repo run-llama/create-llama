@@ -26,7 +26,6 @@ class AnnotationFileData(BaseModel):
                     {
                         "content": "Name, Age\nAlice, 25\nBob, 30",
                         "name": "example.csv",
-                        "original_name": "example.csv",
                         "size": 123,
                         "id": "123",
                         "type": "text/csv",

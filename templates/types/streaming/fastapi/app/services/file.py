@@ -29,7 +29,6 @@ LLAMA_CLOUD_STORE_PATH = str(Path("output", "llamacloud"))
 class DocumentFile(BaseModel):
     id: str
     name: str  # Stored file name
-    original_name: str  # Original file name
     type: str = None
     size: int = None
     url: str = None
@@ -116,7 +115,11 @@ class FileService:
             save_dir = os.path.join("output", "uploaded")
 
         file_id = str(uuid.uuid4())
-        new_file_name = f"{file_id}_{_sanitize_file_name(file_name)}"
+        sanitized_name = _sanitize_file_name(file_name)
+        file_extension = os.path.splitext(file_name)[1].lstrip(".")
+        if file_extension == "":
+            raise ValueError("File is not supported")
+        new_file_name = f"{sanitized_name}_{file_id}.{file_extension}"
 
         file_path = os.path.join(save_dir, new_file_name)
 
@@ -150,9 +153,6 @@ class FileService:
             )
             file_url_prefix = "http://localhost:8000/api/files"
         file_size = os.path.getsize(file_path)
-        file_type = mimetypes.guess_extension(
-            mimetypes.guess_type(file_path)[0]
-        ).lstrip(".")
 
         file_url = os.path.join(
             file_url_prefix,
@@ -163,8 +163,7 @@ class FileService:
         return DocumentFile(
             id=file_id,
             name=new_file_name,
-            original_name=file_name,
-            type=file_type,
+            type=file_extension,
             size=file_size,
             path=file_path,
             url=file_url,

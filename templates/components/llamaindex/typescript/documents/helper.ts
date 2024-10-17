@@ -36,13 +36,12 @@ export async function storeFile(
   if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
 
   const fileId = crypto.randomUUID();
-  const newFilename = `${fileId}_${sanitizeFileName(name)}`;
+  const newFilename = `${sanitizeFileName(name)}_${fileId}.${fileExt}`;
   const filepath = path.join(UPLOADED_FOLDER, newFilename);
   const fileUrl = await saveDocument(filepath, fileBuffer);
   return {
     id: fileId,
     name: newFilename,
-    original_name: name,
     size: fileBuffer.length,
     type: fileExt,
     url: fileUrl,

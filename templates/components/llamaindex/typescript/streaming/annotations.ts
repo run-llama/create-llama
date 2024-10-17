@@ -6,7 +6,6 @@ export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 export type DocumentFile = {
   id: string;
   name: string;
-  original_name: string;
   size: number;
   type: string;
   url: string;

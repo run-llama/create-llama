@@ -30,7 +30,6 @@ export const DOCUMENT_FILE_TYPES: DocumentFileType[] = [
 export type DocumentFile = {
   id: string;
   name: string; // The uploaded file name in the backend
-  original_name: string; // The original file name
   size: number; // The file size in bytes
   type: DocumentFileType;
   url: string; // The URL of the uploaded file in the backend
