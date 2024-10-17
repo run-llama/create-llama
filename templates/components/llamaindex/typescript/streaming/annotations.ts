@@ -83,7 +83,6 @@ function getFileContent(file: DocumentFile): string {
   // Include sandbox file paths
   const sandboxFilePath = `/tmp/${file.name}`;
   defaultContent += `Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): ${sandboxFilePath}\n`;
-  console.log("Content: ", defaultContent);
 
   return defaultContent;
 }

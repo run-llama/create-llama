@@ -74,7 +74,7 @@ export const FileIcon: Record<DocumentFileType, string> = {
 export function PreviewCard(props: {
   file: {
     name: string;
-    size: number;
+    size?: number;
     type: DocumentFileType;
   };
   onRemove?: () => void;

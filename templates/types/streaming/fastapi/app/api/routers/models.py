@@ -233,7 +233,7 @@ class ChatData(BaseModel):
         document_ids: List[str] = []
         uploaded_files = self.get_document_files()
         for _file in uploaded_files:
-            refs = _file.refs
+            refs = getattr(_file, "refs", None)
             if refs is not None:
                 document_ids.extend(refs)
         return list(set(document_ids))

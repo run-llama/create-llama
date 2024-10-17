@@ -17,7 +17,7 @@ from llama_index.core.schema import Document
 from llama_index.core.tools.function_tool import FunctionTool
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,14 @@ class DocumentFile(BaseModel):
     type: str = None
     size: int = None
     url: str = None
-    path: Optional[str] = None
-    refs: Optional[List[str]] = None
+    path: Optional[str] = Field(
+        None,
+        description="The stored file path. Used internally in the server.",
+        exclude=True,
+    )
+    refs: Optional[List[str]] = Field(
+        None, description="The document ids in the index."
+    )
 
 
 class FileService:
@@ -115,11 +121,12 @@ class FileService:
             save_dir = os.path.join("output", "uploaded")
 
         file_id = str(uuid.uuid4())
-        sanitized_name = _sanitize_file_name(file_name)
-        file_extension = os.path.splitext(file_name)[1].lstrip(".")
-        if file_extension == "":
-            raise ValueError("File is not supported")
-        new_file_name = f"{sanitized_name}_{file_id}.{file_extension}"
+        name, extension = os.path.splitext(file_name)
+        extension = extension.lstrip(".")
+        sanitized_name = _sanitize_file_name(name)
+        if extension == "":
+            raise ValueError("File is not supported!")
+        new_file_name = f"{sanitized_name}_{file_id}.{extension}"
 
         file_path = os.path.join(save_dir, new_file_name)
 
@@ -163,7 +170,7 @@ class FileService:
         return DocumentFile(
             id=file_id,
             name=new_file_name,
-            type=file_extension,
+            type=extension,
             size=file_size,
             path=file_path,
             url=file_url,
@@ -281,11 +288,13 @@ def _default_file_loaders_map():
 def _get_available_tools() -> Dict[str, List[FunctionTool]]:
     try:
         from app.engine.tools import ToolFactory
+    except ImportError:
+        logger.warning("ToolFactory not found, no tools will be available")
+        return {}
 
+    try:
         tools = ToolFactory.from_env(map_result=True)
         return tools  # type: ignore
-    except ImportError:
-        # There is no tool code
-        return {}
     except Exception as e:
-        raise ValueError(f"Failed to get available tools: {e}") from e
+        logger.error(f"Error loading tools from environment: {str(e)}")
+        raise ValueError(f"Failed to get available tools: {str(e)}") from e
