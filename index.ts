@@ -8,7 +8,7 @@ import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
-import { EXAMPLE_FILE, getDataSources } from "./helpers/datasources";
+import { getDataSources, getExampleData } from "./helpers/datasources";
 import { getPkgManager } from "./helpers/get-pkg-manager";
 import { isFolderEmpty } from "./helpers/is-folder-empty";
 import { initializeGlobalAgent } from "./helpers/proxy";
@@ -222,9 +222,13 @@ if (
 if (process.argv.includes("--no-files")) {
   options.dataSources = [];
 } else if (process.argv.includes("--example-file")) {
-  options.dataSources = getDataSources(options.files, options.exampleFile);
+  options.dataSources = getDataSources(
+    options.files,
+    options.exampleFile,
+    options.template,
+  );
 } else if (process.argv.includes("--llamacloud")) {
-  options.dataSources = [EXAMPLE_FILE];
+  options.dataSources = [getExampleData(options.template)];
   options.vectorDb = "llamacloud";
 } else if (process.argv.includes("--web-source")) {
   options.dataSources = [
