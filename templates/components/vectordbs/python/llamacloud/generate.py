@@ -8,7 +8,7 @@ load_dotenv()
 import logging
 
 from app.engine.index import get_client, get_index
-from app.engine.service import LLamaCloudFileService
+from app.engine.service import LLamaCloudFileService  # type: ignore
 from app.settings import init_settings
 from llama_cloud import PipelineType
 from llama_index.core.readers import SimpleDirectoryReader

@@ -241,7 +241,7 @@ class FileService:
         LlamaCloudIndex is a managed index so we can directly use the files.
         """
         try:
-            from app.engine.service import LLamaCloudFileService
+            from app.engine.service import LLamaCloudFileService  # type: ignore
         except ImportError as e:
             raise ValueError("LlamaCloudFileService is not found") from e
 
