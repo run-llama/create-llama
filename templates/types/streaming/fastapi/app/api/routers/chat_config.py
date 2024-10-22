@@ -12,7 +12,9 @@ logger = logging.getLogger("uvicorn")
 
 def _is_llama_cloud_service_configured():
     try:
-        from app.engine.service import LLamaCloudFileService  # type: ignore
+        from app.engine.service import (
+            LLamaCloudFileService,  # type: ignore # noqa: F401
+        )
 
         return True
     except ImportError:
