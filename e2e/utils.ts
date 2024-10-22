@@ -81,7 +81,6 @@ export async function runCreateLlama({
   const commandArgs = [
     "create-llama",
     name,
-    "--pro", // Always run in pro mode for e2e tests
     "--template",
     templateType,
     "--framework",
