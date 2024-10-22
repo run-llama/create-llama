@@ -1,4 +1,3 @@
-import ciInfo from "ci-info";
 import ollama, { type ModelResponse } from "ollama";
 import { red } from "picocolors";
 import prompts from "prompts";
@@ -34,9 +33,7 @@ export async function askOllamaQuestions({
     },
   };
 
-  // use default model values in CI or if user should not be asked
-  const useDefaults = ciInfo.isCI || !askModels;
-  if (!useDefaults) {
+  if (askModels) {
     const { model } = await prompts(
       {
         type: "select",

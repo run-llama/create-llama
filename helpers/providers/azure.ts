@@ -1,4 +1,3 @@
-import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
 import { questionHandlers } from "../../questions/utils";
@@ -67,9 +66,7 @@ export async function askAzureQuestions({
     },
   };
 
-  // use default model values in CI or if user should not be asked
-  const useDefaults = ciInfo.isCI || !askModels;
-  if (!useDefaults) {
+  if (askModels) {
     const { model } = await prompts(
       {
         type: "select",
