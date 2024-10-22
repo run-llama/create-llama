@@ -1,4 +1,3 @@
-import ciInfo from "ci-info";
 import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions/utils";
@@ -53,9 +52,7 @@ export async function askMistralQuestions({
     config.apiKey = key || process.env.MISTRAL_API_KEY;
   }
 
-  // use default model values in CI or if user should not be asked
-  const useDefaults = ciInfo.isCI || !askModels;
-  if (!useDefaults) {
+  if (askModels) {
     const { model } = await prompts(
       {
         type: "select",

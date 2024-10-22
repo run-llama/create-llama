@@ -1,8 +1,9 @@
 """Open Meteo weather map tool spec."""
 
 import logging
-import requests
-import pytz
+
+import pytz  # type: ignore
+import requests  # type: ignore
 from llama_index.core.tools import FunctionTool
 
 logger = logging.getLogger(__name__)

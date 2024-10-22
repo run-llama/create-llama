@@ -36,4 +36,8 @@ ignore_missing_imports = true
 follow_imports = "silent"
 implicit_optional = true
 strict_optional = false
-disable_error_code = ["return-value", "import-untyped", "assignment"]
+disable_error_code = ["return-value", "assignment"]
+
+[[tool.mypy.overrides]]
+module = "app.*"
+ignore_missing_imports = false

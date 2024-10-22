@@ -105,7 +105,7 @@ class DocumentGenerator:
         Generate HTML content from the original markdown content.
         """
         try:
-            import markdown
+            import markdown  # type: ignore
         except ImportError:
             raise ImportError(
                 "Failed to import required modules. Please install markdown."
