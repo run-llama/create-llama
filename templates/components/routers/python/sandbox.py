@@ -20,8 +20,8 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Union
 
 from app.engine.tools.artifact import CodeArtifact
-from app.engine.utils.file_helper import save_file
-from e2b_code_interpreter import CodeInterpreter, Sandbox
+from app.services.file import FileService
+from e2b_code_interpreter import CodeInterpreter, Sandbox  # type: ignore
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -175,7 +175,7 @@ def _download_cell_results(cell_results: Optional[List]) -> List[Dict[str, str]]
                     base64_data = data
                     buffer = base64.b64decode(base64_data)
                     file_name = f"{uuid.uuid4()}.{ext}"
-                    file_meta = save_file(
+                    file_meta = FileService.save_file(
                         content=buffer,
                         file_name=file_name,
                         save_dir=os.path.join("output", "tools"),
