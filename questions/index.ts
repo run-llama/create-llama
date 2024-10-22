@@ -1,4 +1,4 @@
-import { ciInfo } from "../helpers/ci";
+import ciInfo from "ci-info";
 import { getCIQuestionResults } from "./ci";
 import { askProQuestions } from "./questions";
 import { askSimpleQuestions } from "./simple";
