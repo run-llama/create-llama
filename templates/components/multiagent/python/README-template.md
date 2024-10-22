@@ -5,14 +5,14 @@ This is a [LlamaIndex](https://www.llamaindex.ai/) multi-agents project using [W
 This example is using three agents to generate a blog post:
 
 - a researcher that retrieves content via a RAG pipeline,
-- a writer that specializes in writing blog posts and
-- a reviewer that is reviewing the blog post.
+- an analyst that analyzes the financial data,
+- a reporter that writes the financial report.
 
 There are three different methods how the agents can interact to reach their goal:
 
-1. [Choreography](./app/examples/choreography.py) - the agents decide themselves to delegate a task to another agent
-1. [Orchestrator](./app/examples/orchestrator.py) - a central orchestrator decides which agent should execute a task
-1. [Explicit Workflow](./app/examples/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
+1. [Choreography](./app/financial_report/choreography.py) - the agents decide themselves to delegate a task to another agent
+1. [Orchestrator](./app/financial_report/orchestrator.py) - a central orchestrator decides which agent should execute a task
+1. [Explicit Workflow](./app/financial_report/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
 
 ## Getting Started
 
@@ -46,10 +46,10 @@ You can test the endpoint with the following curl request:
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
+--data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla." }] }'
 ```
 
-You can start editing the API by modifying `app/api/routers/chat.py` or `app/examples/workflow.py`. The API auto-updates as you save the files.
+You can start editing the API by modifying `app/api/routers/chat.py` or `app/financial_report/workflow.py`. The API auto-updates as you save the files.
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 

@@ -96,6 +96,12 @@ async function generateContextData(
   }
 }
 
+const downloadFile = async (url: string, destPath: string) => {
+  const response = await fetch(url);
+  const fileBuffer = await response.arrayBuffer();
+  await fsExtra.writeFile(destPath, Buffer.from(fileBuffer));
+};
+
 const prepareContextData = async (
   root: string,
   dataSources: TemplateDataSource[],
@@ -103,12 +109,17 @@ const prepareContextData = async (
   await makeDir(path.join(root, "data"));
   for (const dataSource of dataSources) {
     const dataSourceConfig = dataSource?.config as FileSourceConfig;
-    // Copy local data
     const dataPath = dataSourceConfig.path;
-
     const destPath = path.join(root, "data", path.basename(dataPath));
-    console.log("Copying data from path:", dataPath);
-    await fsExtra.copy(dataPath, destPath);
+    // If the path is URLs, download the data and save it to the data directory
+    if (dataPath.startsWith("http")) {
+      console.log("Downloading file from URL:", dataPath);
+      await downloadFile(dataPath, destPath);
+    } else {
+      // Copy local data
+      console.log("Copying data from path:", dataPath);
+      await fsExtra.copy(dataPath, destPath);
+    }
   }
 };
 

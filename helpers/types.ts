@@ -50,7 +50,7 @@ export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
 // Config for both file and folder
 export type FileSourceConfig = {
-  path: string;
+  path: string; // Could be an URL to download the data while creating the project
 };
 export type WebSourceConfig = {
   baseUrl?: string;

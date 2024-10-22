@@ -1,5 +1,5 @@
 import prompts from "prompts";
-import { EXAMPLE_FILE } from "../helpers/datasources";
+import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -11,7 +11,8 @@ type AppType =
   | "code_artifact"
   | "multiagent"
   | "extractor"
-  | "data_scientist";
+  | "data_scientist"
+  | "financial_report";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -31,6 +32,7 @@ export const askSimpleQuestions = async (
       choices: [
         { title: "Agentic RAG", value: "rag" },
         { title: "Data Scientist", value: "data_scientist" },
+        { title: "Financial Report", value: "financial_report" },
         { title: "Code Artifact Agent", value: "code_artifact" },
         { title: "Multi-Agent Report Gen", value: "multiagent" },
         { title: "Structured extraction", value: "extractor" },
@@ -129,6 +131,12 @@ const convertAnswers = async (
       frontend: true,
       dataSources: [],
       modelConfig: MODEL_GPT4o,
+    },
+    financial_report: {
+      template: "multiagent",
+      tools: getTools(["duckduckgo", "document_generator"]),
+      frontend: true,
+      dataSources: EXAMPLE_10K_SEC_FILES,
     },
     code_artifact: {
       template: "streaming",

@@ -2,9 +2,9 @@ import logging
 import os
 from typing import List, Optional
 
-from app.examples.choreography import create_choreography
-from app.examples.orchestrator import create_orchestrator
-from app.examples.workflow import create_workflow
+from app.financial_report.choreography import create_choreography
+from app.financial_report.orchestrator import create_orchestrator
+from app.financial_report.workflow import create_workflow
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import Workflow
 
@@ -23,7 +23,5 @@ def get_chat_engine(
             agent = create_orchestrator(chat_history, **kwargs)
         case _:
             agent = create_workflow(chat_history, **kwargs)
-
-    logger.info(f"Using agent pattern: {agent_type}")
 
     return agent
