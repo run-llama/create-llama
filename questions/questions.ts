@@ -1,7 +1,7 @@
 import { blue, green } from "picocolors";
 import prompts from "prompts";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
-import { EXAMPLE_FILE } from "../helpers/datasources";
+import { getExampleData } from "../helpers/datasources";
 import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
 import { askModelConfig } from "../helpers/providers";
 import { getProjectOptions } from "../helpers/repo";
@@ -97,7 +97,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
   if (program.template === "extractor") {
     // Extractor template only supports FastAPI, empty data sources, and llamacloud
     // So we just use example file for extractor template, this allows user to choose vector database later
-    program.dataSources = [EXAMPLE_FILE];
+    program.dataSources = [getExampleData("extractor")];
     program.framework = "fastapi";
   }
 
@@ -202,7 +202,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
 
   if (program.vectorDb === "llamacloud") {
     // When using a LlamaCloud index, don't ask for data sources just copy an example file
-    program.dataSources = [EXAMPLE_FILE];
+    program.dataSources = [getExampleData(program.template)];
   }
 
   if (!program.dataSources) {
@@ -235,7 +235,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
       }
       switch (selectedSource) {
         case "exampleFile": {
-          program.dataSources.push(EXAMPLE_FILE);
+          program.dataSources.push(getExampleData(program.template));
           break;
         }
         case "file":

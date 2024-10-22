@@ -1,5 +1,5 @@
 import prompts from "prompts";
-import { EXAMPLE_FILE } from "../helpers/datasources";
+import { getExampleData } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -121,7 +121,7 @@ const convertAnswers = async (
       template: "streaming",
       tools: getTools(["duckduckgo"]),
       frontend: true,
-      dataSources: [EXAMPLE_FILE],
+      dataSources: [getExampleData("streaming")],
     },
     data_scientist: {
       template: "streaming",
@@ -146,13 +146,13 @@ const convertAnswers = async (
         "img_gen",
       ]),
       frontend: true,
-      dataSources: [EXAMPLE_FILE],
+      dataSources: [getExampleData("multiagent")],
     },
     extractor: {
       template: "extractor",
       tools: [],
       frontend: false,
-      dataSources: [EXAMPLE_FILE],
+      dataSources: [getExampleData("extractor")],
     },
   };
   const results = lookup[answers.appType];

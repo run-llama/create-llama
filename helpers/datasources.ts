@@ -2,18 +2,35 @@ import fs from "fs/promises";
 import path from "path";
 import yaml, { Document } from "yaml";
 import { templatesDir } from "./dir";
-import { DbSourceConfig, TemplateDataSource, WebSourceConfig } from "./types";
+import {
+  DbSourceConfig,
+  TemplateDataSource,
+  TemplateType,
+  WebSourceConfig,
+} from "./types";
 
-export const EXAMPLE_FILE: TemplateDataSource = {
-  type: "file",
-  config: {
-    path: path.join(templatesDir, "components", "data", "101.pdf"),
-  },
-};
+export function getExampleData(template?: TemplateType): TemplateDataSource {
+  if (template && template === "extractor") {
+    return {
+      type: "file",
+      config: {
+        path: path.join(templatesDir, "components", "data", "apple_2020.pdf"),
+      },
+    } as TemplateDataSource;
+  } else {
+    return {
+      type: "file",
+      config: {
+        path: path.join(templatesDir, "components", "data", "101.pdf"),
+      },
+    } as TemplateDataSource;
+  }
+}
 
 export function getDataSources(
   files?: string,
   exampleFile?: boolean,
+  template?: TemplateType,
 ): TemplateDataSource[] | undefined {
   let dataSources: TemplateDataSource[] | undefined = undefined;
   if (files) {
@@ -25,8 +42,11 @@ export function getDataSources(
       },
     }));
   }
-  if (exampleFile) {
-    dataSources = [...(dataSources ? dataSources : []), EXAMPLE_FILE];
+  if (exampleFile && template) {
+    dataSources = [
+      ...(dataSources ? dataSources : []),
+      getExampleData(template),
+    ];
   }
   return dataSources;
 }
