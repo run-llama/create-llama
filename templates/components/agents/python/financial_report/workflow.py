@@ -1,10 +1,10 @@
 from textwrap import dedent
 from typing import AsyncGenerator, List, Optional
 
-from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
-from app.financial_report.agents.analyst import create_analyst
-from app.financial_report.agents.reporter import create_reporter
-from app.financial_report.agents.researcher import create_researcher
+from app.agents.analyst import create_analyst
+from app.agents.reporter import create_reporter
+from app.agents.researcher import create_researcher
+from app.workflows.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings

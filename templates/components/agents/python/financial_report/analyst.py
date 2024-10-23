@@ -1,7 +1,7 @@
 from textwrap import dedent
 from typing import List, Tuple
 
-from app.agents.single import FunctionCallingAgent
+from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import FunctionTool
 

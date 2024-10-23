@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from app.agents.multi import AgentOrchestrator
-from app.financial_report.agents.analyst import create_analyst
-from app.financial_report.agents.reporter import create_reporter
-from app.financial_report.agents.researcher import create_researcher
+from app.agents.analyst import create_analyst
+from app.agents.reporter import create_reporter
+from app.agents.researcher import create_researcher
+from app.workflows.multi import AgentOrchestrator
 from llama_index.core.chat_engine.types import ChatMessage
 
 

@@ -11,8 +11,9 @@ type AppType =
   | "code_artifact"
   | "multiagent"
   | "extractor"
-  | "data_scientist"
-  | "financial_report";
+  | "data_scientist";
+
+type AgentTemplate = "financial_report" | "blog";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -32,9 +33,8 @@ export const askSimpleQuestions = async (
       choices: [
         { title: "Agentic RAG", value: "rag" },
         { title: "Data Scientist", value: "data_scientist" },
-        { title: "Financial Report", value: "financial_report" },
         { title: "Code Artifact Agent", value: "code_artifact" },
-        { title: "Multi-Agent Report Gen", value: "multiagent" },
+        { title: "Multi-Agent Financial Report", value: "multiagent" },
         { title: "Structured extraction", value: "extractor" },
       ],
     },
@@ -99,6 +99,31 @@ export const askSimpleQuestions = async (
   return results;
 };
 
+const getDefaultAgentTemplateParams = (agentTemplate: AgentTemplate) => {
+  if (agentTemplate === "financial_report") {
+    return {
+      agents: "financial_report",
+      tools: getTools(["document_generator", "duckduckgo"]),
+      dataSources: EXAMPLE_10K_SEC_FILES,
+      frontend: true,
+    };
+  } else if (agentTemplate === "blog") {
+    return {
+      agents: "blog",
+      tools: getTools([
+        "document_generator",
+        "wikipedia.WikipediaToolSpec",
+        "duckduckgo",
+        "img_gen",
+      ]),
+      dataSources: [EXAMPLE_FILE],
+      frontend: true,
+    };
+  } else {
+    throw new Error(`Unknown agent template: ${agentTemplate}`);
+  }
+};
+
 const convertAnswers = async (
   args: PureQuestionArgs,
   answers: SimpleAnswers,
@@ -115,7 +140,10 @@ const convertAnswers = async (
   };
   const lookup: Record<
     AppType,
-    Pick<QuestionResults, "template" | "tools" | "frontend" | "dataSources"> & {
+    Pick<
+      QuestionResults,
+      "template" | "tools" | "frontend" | "dataSources" | "agents"
+    > & {
       modelConfig?: ModelConfig;
     }
   > = {
@@ -132,12 +160,6 @@ const convertAnswers = async (
       dataSources: [],
       modelConfig: MODEL_GPT4o,
     },
-    financial_report: {
-      template: "multiagent",
-      tools: getTools(["duckduckgo", "document_generator"]),
-      frontend: true,
-      dataSources: EXAMPLE_10K_SEC_FILES,
-    },
     code_artifact: {
       template: "streaming",
       tools: getTools(["artifact"]),
@@ -147,14 +169,7 @@ const convertAnswers = async (
     },
     multiagent: {
       template: "multiagent",
-      tools: getTools([
-        "document_generator",
-        "wikipedia.WikipediaToolSpec",
-        "duckduckgo",
-        "img_gen",
-      ]),
-      frontend: true,
-      dataSources: [EXAMPLE_FILE],
+      ...getDefaultAgentTemplateParams("financial_report"),
     },
     extractor: {
       template: "extractor",

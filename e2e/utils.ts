@@ -34,6 +34,7 @@ export type RunCreateLlamaOptions = {
   tools?: string;
   useLlamaParse?: boolean;
   observability?: string;
+  agents?: string;
 };
 
 export async function runCreateLlama({
@@ -52,6 +53,7 @@ export async function runCreateLlama({
   tools,
   useLlamaParse,
   observability,
+  agents,
 }: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
@@ -118,6 +120,9 @@ export async function runCreateLlama({
   }
   if (observability) {
     commandArgs.push("--observability", observability);
+  }
+  if (templateType === "multiagent" && agents) {
+    commandArgs.push("--agents", agents);
   }
 
   const command = commandArgs.join(" ");

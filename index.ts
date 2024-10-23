@@ -208,6 +208,13 @@ const program = new Command(packageJson.name)
 `,
     false,
   )
+  .option(
+    "--agents <agents>",
+    `
+
+  Select which agents to use for the multi-agent template (e.g: financial_report, blog).
+`,
+  )
   .allowUnknownOption()
   .parse(process.argv);
 
@@ -321,6 +328,8 @@ async function run(): Promise<void> {
   }
 
   const answers = await askQuestions(options as unknown as QuestionArgs);
+
+  console.log("answers", answers);
 
   await createApp({
     ...answers,

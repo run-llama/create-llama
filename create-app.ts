@@ -41,6 +41,7 @@ export async function createApp({
   tools,
   useLlamaParse,
   observability,
+  agents,
 }: InstallAppArgs): Promise<void> {
   const root = path.resolve(appPath);
 
@@ -86,6 +87,7 @@ export async function createApp({
     tools,
     useLlamaParse,
     observability,
+    agents,
   };
 
   if (frontend) {

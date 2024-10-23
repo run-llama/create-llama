@@ -49,9 +49,13 @@ export type TemplateDataSource = {
 export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
 // Config for both file and folder
-export type FileSourceConfig = {
-  path: string; // Could be an URL to download the data while creating the project
-};
+export type FileSourceConfig =
+  | {
+      path: string;
+    }
+  | {
+      url: URL;
+    };
 export type WebSourceConfig = {
   baseUrl?: string;
   prefix?: string;
@@ -94,4 +98,5 @@ export interface InstallTemplateArgs {
   postInstallAction?: TemplatePostInstallAction;
   tools?: Tool[];
   observability?: TemplateObservability;
+  agents?: string;
 }

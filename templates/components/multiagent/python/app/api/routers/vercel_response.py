@@ -4,9 +4,9 @@ import logging
 from typing import AsyncGenerator, List
 
 from aiostream import stream
-from app.agents.single import AgentRunEvent, AgentRunResult
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
+from app.workflows.single import AgentRunEvent, AgentRunResult
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 

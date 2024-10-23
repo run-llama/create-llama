@@ -109,16 +109,27 @@ const prepareContextData = async (
   await makeDir(path.join(root, "data"));
   for (const dataSource of dataSources) {
     const dataSourceConfig = dataSource?.config as FileSourceConfig;
-    const dataPath = dataSourceConfig.path;
-    const destPath = path.join(root, "data", path.basename(dataPath));
     // If the path is URLs, download the data and save it to the data directory
-    if (dataPath.startsWith("http")) {
-      console.log("Downloading file from URL:", dataPath);
-      await downloadFile(dataPath, destPath);
+    if ("url" in dataSourceConfig) {
+      console.log(
+        "Downloading file from URL:",
+        dataSourceConfig.url.toString(),
+      );
+      const destPath = path.join(
+        root,
+        "data",
+        path.basename(dataSourceConfig.url.toString()),
+      );
+      await downloadFile(dataSourceConfig.url.toString(), destPath);
     } else {
       // Copy local data
-      console.log("Copying data from path:", dataPath);
-      await fsExtra.copy(dataPath, destPath);
+      console.log("Copying data from path:", dataSourceConfig.path);
+      const destPath = path.join(
+        root,
+        "data",
+        path.basename(dataSourceConfig.path),
+      );
+      await fsExtra.copy(dataSourceConfig.path, destPath);
     }
   }
 };

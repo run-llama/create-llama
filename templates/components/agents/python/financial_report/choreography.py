@@ -1,9 +1,9 @@
 from textwrap import dedent
 from typing import List, Optional
 
-from app.agents.multi import AgentCallingAgent
-from app.financial_report.agents.analyst import create_analyst
-from app.financial_report.agents.researcher import create_researcher
+from app.agents.analyst import create_analyst
+from app.agents.researcher import create_researcher
+from app.workflows.multi import AgentCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 
 
