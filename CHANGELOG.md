@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.5
+
+### Patch Changes
+
+- 2209409: Add financial report as the default use case in the multi-agent template (Python).
+
 ## 0.3.4
 
 ### Patch Changes
