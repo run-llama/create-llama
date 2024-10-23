@@ -2,18 +2,14 @@ import prompts from "prompts";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
-import {
-  ModelConfig,
-  TemplateAgents,
-  TemplateFramework,
-} from "../helpers/types";
+import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
 
 type AppType =
   | "rag"
   | "code_artifact"
-  | "multiagent"
+  | "financial_report_agent"
   | "extractor"
   | "data_scientist";
 
@@ -35,8 +31,11 @@ export const askSimpleQuestions = async (
       choices: [
         { title: "Agentic RAG", value: "rag" },
         { title: "Data Scientist", value: "data_scientist" },
+        {
+          title: "Financial Report Generator (using Workflows)",
+          value: "financial_report_agent",
+        },
         { title: "Code Artifact Agent", value: "code_artifact" },
-        { title: "Multi-Agent Financial Report", value: "multiagent" },
         { title: "Structured extraction", value: "extractor" },
       ],
     },
@@ -48,9 +47,9 @@ export const askSimpleQuestions = async (
   let useLlamaCloud = false;
 
   if (appType !== "extractor") {
-    // Default multiagent with financial report use case only supports Python
+    // Default financial report agent use case only supports Python
     // TODO: Add support for Typescript frameworks
-    if (appType !== "multiagent") {
+    if (appType !== "financial_report_agent") {
       const { language: newLanguage } = await prompts(
         {
           type: "select",
@@ -106,29 +105,6 @@ export const askSimpleQuestions = async (
   return results;
 };
 
-const getDefaultAgentTemplateParams = (agentTemplate: TemplateAgents) => {
-  if (agentTemplate === "financial_report") {
-    return {
-      tools: getTools(["document_generator", "interpreter"]),
-      dataSources: EXAMPLE_10K_SEC_FILES,
-      frontend: true,
-    };
-  } else if (agentTemplate === "blog") {
-    return {
-      tools: getTools([
-        "document_generator",
-        "wikipedia.WikipediaToolSpec",
-        "duckduckgo",
-        "img_gen",
-      ]),
-      dataSources: [EXAMPLE_FILE],
-      frontend: true,
-    };
-  } else {
-    throw new Error(`Unknown agent template: ${agentTemplate}`);
-  }
-};
-
 const convertAnswers = async (
   args: PureQuestionArgs,
   answers: SimpleAnswers,
@@ -172,10 +148,13 @@ const convertAnswers = async (
       dataSources: [],
       modelConfig: MODEL_GPT4o,
     },
-    multiagent: {
+    financial_report_agent: {
       template: "multiagent",
       agents: "financial_report",
-      ...getDefaultAgentTemplateParams("financial_report"),
+      tools: getTools(["document_generator", "interpreter"]),
+      dataSources: EXAMPLE_10K_SEC_FILES,
+      frontend: true,
+      modelConfig: MODEL_GPT4o,
     },
     extractor: {
       template: "extractor",
