@@ -28,7 +28,6 @@ class VercelStreamResponse(StreamingResponse):
         super().__init__(content=content)
 
     async def content_generator(self, event_handler, events):
-        logger.info("Starting content_generator")
         stream = self._create_stream(
             self.request, self.chat_data, event_handler, events
         )

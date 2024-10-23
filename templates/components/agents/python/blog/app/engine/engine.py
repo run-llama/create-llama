@@ -24,4 +24,6 @@ def get_chat_engine(
         case _:
             agent = create_workflow(chat_history, **kwargs)
 
+    logger.info(f"Using agent pattern: {agent_type}")
+
     return agent

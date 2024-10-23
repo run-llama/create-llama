@@ -2,7 +2,11 @@ import prompts from "prompts";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
-import { ModelConfig, TemplateFramework } from "../helpers/types";
+import {
+  ModelConfig,
+  TemplateAgent,
+  TemplateFramework,
+} from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
 
@@ -12,8 +16,6 @@ type AppType =
   | "multiagent"
   | "extractor"
   | "data_scientist";
-
-type AgentTemplate = "financial_report" | "blog";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -99,17 +101,15 @@ export const askSimpleQuestions = async (
   return results;
 };
 
-const getDefaultAgentTemplateParams = (agentTemplate: AgentTemplate) => {
+const getDefaultAgentTemplateParams = (agentTemplate: TemplateAgent) => {
   if (agentTemplate === "financial_report") {
     return {
-      agents: "financial_report",
       tools: getTools(["document_generator", "interpreter"]),
       dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
     };
   } else if (agentTemplate === "blog") {
     return {
-      agents: "blog",
       tools: getTools([
         "document_generator",
         "wikipedia.WikipediaToolSpec",
@@ -169,6 +169,7 @@ const convertAnswers = async (
     },
     multiagent: {
       template: "multiagent",
+      agents: "financial_report" as TemplateAgent,
       ...getDefaultAgentTemplateParams("financial_report"),
     },
     extractor: {

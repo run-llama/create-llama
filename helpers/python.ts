@@ -448,7 +448,7 @@ export const installPythonTemplate = async ({
     // Copy agent code
     if (template === "multiagent") {
       if (agents) {
-        await copy("**", path.join(root, "app", "agents"), {
+        await copy("**", path.join(root), {
           parents: true,
           cwd: path.join(compPath, "agents", "python", agents),
         });

@@ -48,6 +48,7 @@ export type TemplateDataSource = {
 };
 export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
+export type TemplateAgent = "financial_report" | "blog";
 // Config for both file and folder
 export type FileSourceConfig =
   | {
@@ -98,5 +99,5 @@ export interface InstallTemplateArgs {
   postInstallAction?: TemplatePostInstallAction;
   tools?: Tool[];
   observability?: TemplateObservability;
-  agents?: string;
+  agents?: TemplateAgent;
 }
