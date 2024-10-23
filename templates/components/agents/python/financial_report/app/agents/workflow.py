@@ -44,7 +44,6 @@ class ResearchEvent(Event):
 
 class AnalyzeEvent(Event):
     input: str
-    is_good: bool = False
 
 
 class ReportEvent(Event):
