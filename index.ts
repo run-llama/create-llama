@@ -329,8 +329,6 @@ async function run(): Promise<void> {
 
   const answers = await askQuestions(options as unknown as QuestionArgs);
 
-  console.log("answers", answers);
-
   await createApp({
     ...answers,
     appPath: resolvedProjectPath,

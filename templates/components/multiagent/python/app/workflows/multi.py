@@ -1,7 +1,7 @@
 from typing import Any, List
 
-from app.agents.planner import StructuredPlannerAgent
-from app.agents.single import (
+from app.workflows.planner import StructuredPlannerAgent
+from app.workflows.single import (
     AgentRunResult,
     ContextAwareTool,
     FunctionCallingAgent,
