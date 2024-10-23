@@ -103,7 +103,7 @@ const getDefaultAgentTemplateParams = (agentTemplate: AgentTemplate) => {
   if (agentTemplate === "financial_report") {
     return {
       agents: "financial_report",
-      tools: getTools(["document_generator", "duckduckgo"]),
+      tools: getTools(["document_generator", "interpreter"]),
       dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
     };

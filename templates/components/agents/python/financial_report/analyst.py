@@ -1,6 +1,7 @@
 from textwrap import dedent
 from typing import List, Tuple
 
+from app.engine.tools import ToolFactory
 from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import FunctionTool
@@ -18,7 +19,16 @@ def _get_analyst_params() -> Tuple[List[type[FunctionTool]], str, str]:
         Always use the provided information, don't make up any information yourself.
         """
     )
-    description = "Expert in analyzing financial data."
+    configured_tools = ToolFactory.from_env(map_result=True)
+    # Check if the interpreter tool is configured
+    if "interpreter" in configured_tools.keys():
+        tools.extend(configured_tools["interpreter"])
+        prompt_instructions += dedent("""
+            You are able to visualize the financial data using code interpreter tool.
+            It's very useful to create and include visualizations to the report (make sure you include the right code and data for the visualization).
+            Never include any code into the report, just the visualization.
+        """)
+        description = "Expert in analyzing financial data, able to visualize the financial data using code interpreter tool."
     return tools, prompt_instructions, description
 
 
