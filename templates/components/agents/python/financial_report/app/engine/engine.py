@@ -1,11 +1,8 @@
-import logging
 from typing import List, Optional
 
 from app.agents.workflow import create_workflow
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import Workflow
-
-logger = logging.getLogger("uvicorn")
 
 
 def get_chat_engine(

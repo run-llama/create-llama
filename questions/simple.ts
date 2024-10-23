@@ -4,7 +4,7 @@ import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import {
   ModelConfig,
-  TemplateAgent,
+  TemplateAgents,
   TemplateFramework,
 } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
@@ -101,7 +101,7 @@ export const askSimpleQuestions = async (
   return results;
 };
 
-const getDefaultAgentTemplateParams = (agentTemplate: TemplateAgent) => {
+const getDefaultAgentTemplateParams = (agentTemplate: TemplateAgents) => {
   if (agentTemplate === "financial_report") {
     return {
       tools: getTools(["document_generator", "interpreter"]),
@@ -169,7 +169,7 @@ const convertAnswers = async (
     },
     multiagent: {
       template: "multiagent",
-      agents: "financial_report" as TemplateAgent,
+      agents: "financial_report" as TemplateAgents,
       ...getDefaultAgentTemplateParams("financial_report"),
     },
     extractor: {
