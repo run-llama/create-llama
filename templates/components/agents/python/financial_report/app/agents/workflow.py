@@ -148,7 +148,9 @@ class FinancialReportWorkflow(Workflow):
         self, ctx: Context, ev: ReportEvent, reporter: FunctionCallingAgent
     ) -> StopEvent:
         try:
-            result: AgentRunResult = await self.run_agent(ctx, reporter, ev.input)
+            result: AgentRunResult = await self.run_agent(
+                ctx, reporter, ev.input, streaming=ctx.data["streaming"]
+            )
             return StopEvent(result=result)
         except Exception as e:
             ctx.write_event_to_stream(

@@ -238,7 +238,9 @@ class BlogPostWorkflow(Workflow):
         publisher: FunctionCallingAgent,
     ) -> StopEvent:
         try:
-            result: AgentRunResult = await self.run_agent(ctx, publisher, ev.input)
+            result: AgentRunResult = await self.run_agent(
+                ctx, publisher, ev.input, streaming=ctx.data["streaming"]
+            )
             return StopEvent(result=result)
         except Exception as e:
             ctx.write_event_to_stream(
