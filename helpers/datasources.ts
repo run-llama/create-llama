@@ -11,6 +11,25 @@ export const EXAMPLE_FILE: TemplateDataSource = {
   },
 };
 
+export const EXAMPLE_10K_SEC_FILES: TemplateDataSource[] = [
+  {
+    type: "file",
+    config: {
+      url: new URL(
+        "https://s2.q4cdn.com/470004039/files/doc_earnings/2023/q4/filing/_10-K-Q4-2023-As-Filed.pdf",
+      ),
+    },
+  },
+  {
+    type: "file",
+    config: {
+      url: new URL(
+        "https://ir.tesla.com/_flysystem/s3/sec/000162828024002390/tsla-20231231-gen.pdf",
+      ),
+    },
+  },
+];
+
 export function getDataSources(
   files?: string,
   exampleFile?: boolean,

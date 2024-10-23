@@ -1,10 +1,10 @@
 from textwrap import dedent
 from typing import List, Optional
 
-from app.agents.multi import AgentCallingAgent
-from app.agents.single import FunctionCallingAgent
-from app.examples.publisher import create_publisher
-from app.examples.researcher import create_researcher
+from app.agents.publisher import create_publisher
+from app.agents.researcher import create_researcher
+from app.workflows.multi import AgentCallingAgent
+from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 
 

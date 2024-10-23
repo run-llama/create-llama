@@ -2,9 +2,9 @@ import os
 from textwrap import dedent
 from typing import List
 
-from app.agents.single import FunctionCallingAgent
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
+from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 

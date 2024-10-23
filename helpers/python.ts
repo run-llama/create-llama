@@ -362,6 +362,7 @@ export const installPythonTemplate = async ({
   postInstallAction,
   observability,
   modelConfig,
+  agents,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -373,6 +374,7 @@ export const installPythonTemplate = async ({
   | "postInstallAction"
   | "observability"
   | "modelConfig"
+  | "agents"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
   let templatePath;
@@ -442,6 +444,24 @@ export const installPythonTemplate = async ({
       parents: true,
       cwd: path.join(compPath, "engines", "python", engine),
     });
+
+    // Copy agent code
+    if (template === "multiagent") {
+      if (agents) {
+        await copy("**", path.join(root), {
+          parents: true,
+          cwd: path.join(compPath, "agents", "python", agents),
+          rename: assetRelocator,
+        });
+      } else {
+        console.log(
+          red(
+            "There is no agent selected for multi-agent template. Please pick an agent to use via --agents flag.",
+          ),
+        );
+        process.exit(1);
+      }
+    }
 
     // Copy router code
     await copyRouterCode(root, tools ?? []);

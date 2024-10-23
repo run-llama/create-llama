@@ -208,6 +208,13 @@ const program = new Command(packageJson.name)
 `,
     false,
   )
+  .option(
+    "--agents <agents>",
+    `
+
+  Select which agents to use for the multi-agent template (e.g: financial_report, blog).
+`,
+  )
   .allowUnknownOption()
   .parse(process.argv);
 

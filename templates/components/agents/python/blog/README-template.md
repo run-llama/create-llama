@@ -1,5 +1,3 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) multi-agents project using [Workflows](https://docs.llamaindex.ai/en/stable/understanding/workflows/).
-
 ## Overview
 
 This example is using three agents to generate a blog post:
@@ -25,7 +23,6 @@ poetry install
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
-
 Second, generate the embeddings of the documents in the `./data` directory:
 
 ```shell
@@ -39,7 +36,6 @@ poetry run python main.py
 ```
 
 Per default, the example is using the explicit workflow. You can change the example by setting the `EXAMPLE_TYPE` environment variable to `choreography` or `orchestrator`.
-
 The example provides one streaming API endpoint `/api/chat`.
 You can test the endpoint with the following curl request:
 
@@ -65,5 +61,4 @@ To learn more about LlamaIndex, take a look at the following resources:
 
 - [LlamaIndex Documentation](https://docs.llamaindex.ai) - learn about LlamaIndex.
 - [Workflows Introduction](https://docs.llamaindex.ai/en/stable/understanding/workflows/) - learn about LlamaIndex workflows.
-
-You can check out [the LlamaIndex GitHub repository](https://github.com/run-llama/llama_index) - your feedback and contributions are welcome!
+  You can check out [the LlamaIndex GitHub repository](https://github.com/run-llama/llama_index) - your feedback and contributions are welcome!

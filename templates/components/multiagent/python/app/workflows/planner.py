@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
 
-from app.agents.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
+from app.workflows.single import AgentRunEvent, AgentRunResult, FunctionCallingAgent
 from llama_index.core.agent.runner.planner import (
     DEFAULT_INITIAL_PLAN_PROMPT,
     DEFAULT_PLAN_REFINE_PROMPT,

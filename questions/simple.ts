@@ -1,5 +1,5 @@
 import prompts from "prompts";
-import { EXAMPLE_FILE } from "../helpers/datasources";
+import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -9,7 +9,7 @@ import { askPostInstallAction, questionHandlers } from "./utils";
 type AppType =
   | "rag"
   | "code_artifact"
-  | "multiagent"
+  | "financial_report_agent"
   | "extractor"
   | "data_scientist";
 
@@ -31,8 +31,11 @@ export const askSimpleQuestions = async (
       choices: [
         { title: "Agentic RAG", value: "rag" },
         { title: "Data Scientist", value: "data_scientist" },
+        {
+          title: "Financial Report Generator (using Workflows)",
+          value: "financial_report_agent",
+        },
         { title: "Code Artifact Agent", value: "code_artifact" },
-        { title: "Multi-Agent Report Gen", value: "multiagent" },
         { title: "Structured extraction", value: "extractor" },
       ],
     },
@@ -42,20 +45,25 @@ export const askSimpleQuestions = async (
   let language: TemplateFramework = "fastapi";
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
+
   if (appType !== "extractor") {
-    const { language: newLanguage } = await prompts(
-      {
-        type: "select",
-        name: "language",
-        message: "What language do you want to use?",
-        choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
-        ],
-      },
-      questionHandlers,
-    );
-    language = newLanguage;
+    // Default financial report agent use case only supports Python
+    // TODO: Add support for Typescript frameworks
+    if (appType !== "financial_report_agent") {
+      const { language: newLanguage } = await prompts(
+        {
+          type: "select",
+          name: "language",
+          message: "What language do you want to use?",
+          choices: [
+            { title: "Python (FastAPI)", value: "fastapi" },
+            { title: "Typescript (NextJS)", value: "nextjs" },
+          ],
+        },
+        questionHandlers,
+      );
+      language = newLanguage;
+    }
 
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
@@ -113,7 +121,10 @@ const convertAnswers = async (
   };
   const lookup: Record<
     AppType,
-    Pick<QuestionResults, "template" | "tools" | "frontend" | "dataSources"> & {
+    Pick<
+      QuestionResults,
+      "template" | "tools" | "frontend" | "dataSources" | "agents"
+    > & {
       modelConfig?: ModelConfig;
     }
   > = {
@@ -137,16 +148,13 @@ const convertAnswers = async (
       dataSources: [],
       modelConfig: MODEL_GPT4o,
     },
-    multiagent: {
+    financial_report_agent: {
       template: "multiagent",
-      tools: getTools([
-        "document_generator",
-        "wikipedia.WikipediaToolSpec",
-        "duckduckgo",
-        "img_gen",
-      ]),
+      agents: "financial_report",
+      tools: getTools(["document_generator", "interpreter"]),
+      dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
-      dataSources: [EXAMPLE_FILE],
+      modelConfig: MODEL_GPT4o,
     },
     extractor: {
       template: "extractor",

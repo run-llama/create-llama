@@ -2,9 +2,9 @@ import logging
 import os
 from typing import List, Optional
 
-from app.examples.choreography import create_choreography
-from app.examples.orchestrator import create_orchestrator
-from app.examples.workflow import create_workflow
+from app.agents.choreography import create_choreography
+from app.agents.orchestrator import create_orchestrator
+from app.agents.workflow import create_workflow
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.workflow import Workflow
 

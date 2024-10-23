@@ -4,9 +4,9 @@ import logging
 from typing import AsyncGenerator, List
 
 from aiostream import stream
-from app.agents.single import AgentRunEvent, AgentRunResult
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
+from app.workflows.single import AgentRunEvent, AgentRunResult
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
@@ -28,7 +28,6 @@ class VercelStreamResponse(StreamingResponse):
         super().__init__(content=content)
 
     async def content_generator(self, event_handler, events):
-        logger.info("Starting content_generator")
         stream = self._create_stream(
             self.request, self.chat_data, event_handler, events
         )
