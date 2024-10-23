@@ -171,7 +171,7 @@ const convertAnswers = async (
     },
     multiagent: {
       template: "multiagent",
-      agents: "financial_report" as TemplateAgents,
+      agents: "financial_report",
       ...getDefaultAgentTemplateParams("financial_report"),
     },
     extractor: {

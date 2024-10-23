@@ -1,6 +1,6 @@
 import os
 from textwrap import dedent
-from typing import List
+from typing import List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.workflows.single import FunctionCallingAgent
@@ -9,7 +9,7 @@ from llama_index.core.tools import BaseTool, QueryEngineTool, ToolMetadata
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
 
 
-def _create_query_engine_tools(params=None) -> list[type[BaseTool]]:
+def _create_query_engine_tools(params=None) -> Optional[list[type[BaseTool]]]:
     """
     Provide an agent worker that can be used to query the index.
     """
@@ -85,6 +85,9 @@ def create_researcher(chat_history: List[ChatMessage], **kwargs):
     Researcher is an agent that take responsibility for using tools to complete a given task.
     """
     tools = _create_query_engine_tools(**kwargs)
+
+    if tools is None:
+        raise ValueError("No tools found for researcher agent")
 
     return FunctionCallingAgent(
         name="researcher",
