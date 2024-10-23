@@ -10,7 +10,7 @@ First, setup the environment with poetry:
 poetry install
 ```
 
-Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
+Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider and `E2B_API_KEY` for the [E2B's code interpreter tool](https://e2b.dev/docs)).
 
 Second, generate the embeddings of the documents in the `./data` directory:
 
@@ -30,7 +30,7 @@ You can test the endpoint with the following curl request:
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla." }] }'
+--data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
 ```
 
 You can start editing the API by modifying `app/api/routers/chat.py` or `app/financial_report/workflow.py`. The API auto-updates as you save the files.

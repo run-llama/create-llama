@@ -46,7 +46,9 @@ export const askSimpleQuestions = async (
   let language: TemplateFramework = "fastapi";
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
-  if (appType !== "extractor") {
+  // Default multiagent with financial report use case only supports Python
+  // TODO: Add support for Typescript frameworks
+  if (appType !== "extractor" && appType !== "multiagent") {
     const { language: newLanguage } = await prompts(
       {
         type: "select",
