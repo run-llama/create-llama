@@ -87,7 +87,7 @@ class FinancialReportWorkflow(Workflow):
             dedent(
                 """
                 You are an expert in decision-making, helping people create financial reports for the provided data.
-                If the conversation already has a report and user wants to get a file/document of the report, respond with 'publish'.
+                If the user doesn't need to add or update anything, respond with 'publish'.
                 Otherwise, respond with 'research'.
 
                 Here is the chat history:

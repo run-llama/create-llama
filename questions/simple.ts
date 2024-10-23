@@ -46,22 +46,25 @@ export const askSimpleQuestions = async (
   let language: TemplateFramework = "fastapi";
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
-  // Default multiagent with financial report use case only supports Python
-  // TODO: Add support for Typescript frameworks
-  if (appType !== "extractor" && appType !== "multiagent") {
-    const { language: newLanguage } = await prompts(
-      {
-        type: "select",
-        name: "language",
-        message: "What language do you want to use?",
-        choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
-        ],
-      },
-      questionHandlers,
-    );
-    language = newLanguage;
+
+  if (appType !== "extractor") {
+    // Default multiagent with financial report use case only supports Python
+    // TODO: Add support for Typescript frameworks
+    if (appType !== "multiagent") {
+      const { language: newLanguage } = await prompts(
+        {
+          type: "select",
+          name: "language",
+          message: "What language do you want to use?",
+          choices: [
+            { title: "Python (FastAPI)", value: "fastapi" },
+            { title: "Typescript (NextJS)", value: "nextjs" },
+          ],
+        },
+        questionHandlers,
+      );
+      language = newLanguage;
+    }
 
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {

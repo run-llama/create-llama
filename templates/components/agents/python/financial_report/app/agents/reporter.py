@@ -19,6 +19,7 @@ def _get_reporter_params(
 
         ## Instructions
         You are responsible for representing the analysis in a well-formatted report. If tables or visualizations provided, add them to the right sections that are most relevant.
+        Use only the provided information to create the report. Do not make up any information yourself.
         Finally, the report should be presented in markdown format.
         """
     )
