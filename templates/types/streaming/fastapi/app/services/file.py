@@ -241,7 +241,7 @@ class FileService:
         LlamaCloudIndex is a managed index so we can directly use the files.
         """
         try:
-            from app.engine.service import LLamaCloudFileService
+            from app.engine.service import LLamaCloudFileService  # type: ignore
         except ImportError as e:
             raise ValueError("LlamaCloudFileService is not found") from e
 
@@ -287,7 +287,7 @@ def _default_file_loaders_map():
 
 def _get_available_tools() -> Dict[str, List[FunctionTool]]:
     try:
-        from app.engine.tools import ToolFactory
+        from app.engine.tools import ToolFactory  # type: ignore
     except ImportError:
         logger.warning("ToolFactory not found, no tools will be available")
         return {}

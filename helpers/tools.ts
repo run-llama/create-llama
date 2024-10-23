@@ -170,7 +170,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "e2b_code_interpreter",
-        version: "^0.0.11b38",
+        version: "0.0.11b38",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],

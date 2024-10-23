@@ -1,5 +1,17 @@
 # create-llama
 
+## 0.3.4
+
+### Patch Changes
+
+- 384a136: Fix import error if the artifact tool is selected
+
+## 0.3.3
+
+### Patch Changes
+
+- 99b8247: Simplify and unify handling file uploads
+
 ## 0.3.2
 
 ### Patch Changes

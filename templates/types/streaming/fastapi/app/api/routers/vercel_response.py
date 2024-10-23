@@ -138,7 +138,7 @@ class VercelStreamResponse(StreamingResponse):
     ):
         try:
             # Start background tasks to download documents from LlamaCloud if needed
-            from app.engine.service import LLamaCloudFileService
+            from app.engine.service import LLamaCloudFileService  # type: ignore
 
             LLamaCloudFileService.download_files_from_nodes(
                 source_nodes, background_tasks

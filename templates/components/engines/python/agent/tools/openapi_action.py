@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple
+
 from llama_index.tools.openapi import OpenAPIToolSpec
 from llama_index.tools.requests import RequestsToolSpec
 
@@ -43,11 +44,12 @@ class OpenAPIActionToolSpec(OpenAPIToolSpec, RequestsToolSpec):
         Returns:
             List[Document]: A list of Document objects.
         """
-        import yaml
         from urllib.parse import urlparse
 
+        import yaml  # type: ignore
+
         if uri.startswith("http"):
-            import requests
+            import requests  # type: ignore
 
             response = requests.get(uri)
             if response.status_code != 200:

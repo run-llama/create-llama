@@ -12,7 +12,9 @@ logger = logging.getLogger("uvicorn")
 
 def _is_llama_cloud_service_configured():
     try:
-        from app.engine.service import LLamaCloudFileService  # noqa
+        from app.engine.service import (
+            LLamaCloudFileService,  # type: ignore # noqa: F401
+        )
 
         return True
     except ImportError:
@@ -20,7 +22,7 @@ def _is_llama_cloud_service_configured():
 
 
 async def chat_llama_cloud_config():
-    from app.engine.service import LLamaCloudFileService
+    from app.engine.service import LLamaCloudFileService  # type: ignore
 
     if not os.getenv("LLAMA_CLOUD_API_KEY"):
         raise HTTPException(

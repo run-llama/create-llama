@@ -3,7 +3,7 @@ import os
 import uuid
 from typing import Optional
 
-import requests
+import requests  # type: ignore
 from llama_index.core.tools import FunctionTool
 from pydantic import BaseModel, Field
 

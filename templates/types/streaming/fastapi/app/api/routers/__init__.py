@@ -11,7 +11,7 @@ api_router.include_router(file_upload_router, prefix="/chat/upload")
 
 # Dynamically adding additional routers if they exist
 try:
-    from .sandbox import sandbox_router  # noqa: F401
+    from .sandbox import sandbox_router  # type: ignore
 
     api_router.include_router(sandbox_router, prefix="/sandbox")
 except ImportError:

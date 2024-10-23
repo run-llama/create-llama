@@ -1,4 +1,3 @@
-import ciInfo from "ci-info";
 import got from "got";
 import ora from "ora";
 import { red } from "picocolors";
@@ -80,9 +79,7 @@ export async function askLLMHubQuestions({
     config.apiKey = key || process.env.T_SYSTEMS_LLMHUB_API_KEY;
   }
 
-  // use default model values in CI or if user should not be asked
-  const useDefaults = ciInfo.isCI || !askModels;
-  if (!useDefaults) {
+  if (askModels) {
     const { model } = await prompts(
       {
         type: "select",
