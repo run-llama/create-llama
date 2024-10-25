@@ -35,7 +35,7 @@ Always use the provided information, don't make up any information yourself.`;
   if (tools.length > 0) {
     systemPrompt = `${systemPrompt}
 You are able to visualize the financial data using code interpreter tool.
-It's very useful to create and include visualizations to the report. Never include any code into the report, just the visualization.`;
+It's very useful to create and include visualizations in the report. Never include any code in the report, just the visualization.`;
   }
   return new FunctionCallingAgent({
     name: "analyst",
