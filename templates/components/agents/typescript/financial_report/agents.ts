@@ -18,7 +18,7 @@ export const createResearcher = async (
     systemPrompt: `You are a researcher agent. You are responsible for retrieving information from the corpus.
 ## Instructions:
 + Don't synthesize the information, just return the whole retrieved information.
-+ Don't need to retrieve the information that is already provided in the chat history and response with: "There is no new information, please reuse the information from the conversation."
++ Don't need to retrieve the information that is already provided in the chat history and respond with: "There is no new information, please reuse the information from the conversation."
 `,
     chatHistory,
   });
