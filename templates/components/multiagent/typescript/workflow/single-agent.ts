@@ -182,7 +182,9 @@ export class FunctionCallingAgent extends Workflow {
       // TODO: make logger optional in callTool in framework
       const toolOutput = await callTool(targetTool, call, {
         log: () => {},
-        error: console.error.bind(console),
+        error: (...args: unknown[]) => {
+          console.error(`[Tool ${call.name} Error]:`, ...args);
+        },
         warn: () => {},
       });
       toolMsgs.push({
