@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.7
+
+### Patch Changes
+
+- fa80378: DocumentInfo working with relative URLs
+
 ## 0.3.6
 
 ### Patch Changes
