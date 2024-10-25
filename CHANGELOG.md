@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.8
+
+### Patch Changes
+
+- 4a83469: Add multi-agent financial report for Typescript (and update LITS to 0.7.10)
+
 ## 0.3.7
 
 ### Patch Changes
