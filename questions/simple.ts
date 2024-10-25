@@ -47,23 +47,19 @@ export const askSimpleQuestions = async (
   let useLlamaCloud = false;
 
   if (appType !== "extractor") {
-    // Default financial report agent use case only supports Python
-    // TODO: Add support for Typescript frameworks
-    if (appType !== "financial_report_agent") {
-      const { language: newLanguage } = await prompts(
-        {
-          type: "select",
-          name: "language",
-          message: "What language do you want to use?",
-          choices: [
-            { title: "Python (FastAPI)", value: "fastapi" },
-            { title: "Typescript (NextJS)", value: "nextjs" },
-          ],
-        },
-        questionHandlers,
-      );
-      language = newLanguage;
-    }
+    const { language: newLanguage } = await prompts(
+      {
+        type: "select",
+        name: "language",
+        message: "What language do you want to use?",
+        choices: [
+          { title: "Python (FastAPI)", value: "fastapi" },
+          { title: "Typescript (NextJS)", value: "nextjs" },
+        ],
+      },
+      questionHandlers,
+    );
+    language = newLanguage;
 
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
