@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { bold, cyan, yellow } from "picocolors";
+import { bold, cyan, red, yellow } from "picocolors";
 import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
@@ -26,6 +26,7 @@ export const installTSTemplate = async ({
   tools,
   dataSources,
   useLlamaParse,
+  agents,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -131,6 +132,31 @@ export const installTSTemplate = async ({
       parents: true,
       cwd: path.join(multiagentPath, "workflow"),
     });
+
+    // Copy agents use case code for multiagent template
+    if (agents) {
+      console.log("\nCopying agent:", agents, "\n");
+
+      const agentsCodePath = path.join(
+        compPath,
+        "agents",
+        "typescript",
+        agents,
+      );
+
+      await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
+        parents: true,
+        cwd: agentsCodePath,
+        rename: assetRelocator,
+      });
+    } else {
+      console.log(
+        red(
+          "There is no agent selected for multi-agent template. Please pick an agent to use via --agents flag.",
+        ),
+      );
+      process.exit(1);
+    }
 
     if (framework === "nextjs") {
       // patch route.ts file
