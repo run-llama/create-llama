@@ -28,7 +28,7 @@ export const createAnalyst = async (chatHistory: ChatMessage[]) => {
   let systemPrompt = `You are an expert in analyzing financial data.
 You are given a task and a set of financial data to analyze. Your task is to analyze the financial data and return a report.
 Your response should include a detailed analysis of the financial data, including any trends, patterns, or insights that you find.
-Construct the analysis in a textual format like tables would be great!
+Construct the analysis in textual format; including tables would be great!
 Don't need to synthesize the data, just analyze and provide your findings.
 Always use the provided information, don't make up any information yourself.`;
   const tools = await lookupTools(["interpreter"]);
