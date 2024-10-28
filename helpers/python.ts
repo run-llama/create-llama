@@ -173,35 +173,23 @@ const getAdditionalDependencies = (
       }
       break;
     case "groq":
-      // Fastembed==0.2.0 does not support python3.13 at the moment
-      // Fixed the python version less than 3.13
-      dependencies.push({
-        name: "python",
-        version: "^3.11,<3.13",
-      });
       dependencies.push({
         name: "llama-index-llms-groq",
         version: "0.2.0",
       });
       dependencies.push({
-        name: "llama-index-embeddings-fastembed",
-        version: "^0.2.0",
+        name: "llama-index-embeddings-huggingface",
+        version: "^0.3.1",
       });
       break;
     case "anthropic":
-      // Fastembed==0.2.0 does not support python3.13 at the moment
-      // Fixed the python version less than 3.13
-      dependencies.push({
-        name: "python",
-        version: "^3.11,<3.13",
-      });
       dependencies.push({
         name: "llama-index-llms-anthropic",
         version: "0.3.0",
       });
       dependencies.push({
-        name: "llama-index-embeddings-fastembed",
-        version: "^0.2.0",
+        name: "llama-index-embeddings-huggingface",
+        version: "^0.3.1",
       });
       break;
     case "gemini":
@@ -232,6 +220,16 @@ const getAdditionalDependencies = (
       dependencies.push({
         name: "llama-index-embeddings-azure-openai",
         version: "0.2.4",
+      });
+      break;
+    case "huggingface":
+      dependencies.push({
+        name: "llama-index-llms-huggingface",
+        version: "^0.3.5",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-huggingface",
+        version: "^0.3.1",
       });
       break;
     case "t-systems":

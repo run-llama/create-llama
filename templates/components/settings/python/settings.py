@@ -21,6 +21,8 @@ def init_settings():
             init_mistral()
         case "azure-openai":
             init_azure_openai()
+        case "huggingface":
+            init_huggingface()
         case "t-systems":
             from .llmhub import init_llmhub
 
@@ -138,6 +140,42 @@ def init_fastembed():
     )
 
 
+def init_huggingface_embedding():
+    try:
+        from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    except ImportError:
+        raise ImportError(
+            "Hugging Face support is not installed. Please install it with `poetry add llama-index-embeddings-huggingface`"
+        )
+
+    embedding_model = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    backend = os.getenv("EMBEDDING_BACKEND", "onnx")  # "torch", "onnx", or "openvino"
+    trust_remote_code = (
+        os.getenv("EMBEDDING_TRUST_REMOTE_CODE", "false").lower() == "true"
+    )
+
+    Settings.embed_model = HuggingFaceEmbedding(
+        model_name=embedding_model,
+        trust_remote_code=trust_remote_code,
+        backend=backend,
+    )
+
+
+def init_huggingface():
+    try:
+        from llama_index.llms.huggingface import HuggingFaceLLM
+    except ImportError:
+        raise ImportError(
+            "Hugging Face support is not installed. Please install it with `poetry add llama-index-llms-huggingface` and `poetry add llama-index-embeddings-huggingface`"
+        )
+
+    Settings.llm = HuggingFaceLLM(
+        model_name=os.getenv("MODEL"),
+        tokenizer_name=os.getenv("MODEL"),
+    )
+    init_huggingface_embedding()
+
+
 def init_groq():
     try:
         from llama_index.llms.groq import Groq
@@ -147,8 +185,8 @@ def init_groq():
         )
 
     Settings.llm = Groq(model=os.getenv("MODEL"))
-    # Groq does not provide embeddings, so we use FastEmbed instead
-    init_fastembed()
+    # Groq does not provide embeddings, so we use open Sentence Transformer models instead
+    init_huggingface_embedding()
 
 
 def init_anthropic():
@@ -168,8 +206,8 @@ def init_anthropic():
     }
 
     Settings.llm = Anthropic(model=model_map[os.getenv("MODEL")])
-    # Anthropic does not provide embeddings, so we use FastEmbed instead
-    init_fastembed()
+    # Anthropic does not provide embeddings, so we use open Sentence Transformer models instead
+    init_huggingface_embedding()
 
 
 def init_gemini():

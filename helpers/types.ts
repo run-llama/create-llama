@@ -9,6 +9,7 @@ export type ModelProvider =
   | "gemini"
   | "mistral"
   | "azure-openai"
+  | "huggingface"
   | "t-systems";
 export type ModelConfig = {
   provider: ModelProvider;
