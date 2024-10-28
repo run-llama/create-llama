@@ -1,3 +1,4 @@
+import { useChatUI } from "@llamaindex/chat-ui";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -42,12 +43,12 @@ export interface LlamaCloudSelectorProps {
 }
 
 export function LlamaCloudSelector({
-  setRequestData,
   onSelect,
   defaultPipeline,
   shouldCheckValid = false,
 }: LlamaCloudSelectorProps) {
   const { backend } = useClientConfig();
+  const { setRequestData } = useChatUI();
   const [config, setConfig] = useState<LlamaCloudConfig>();
 
   const updateRequestParams = useCallback(
@@ -96,6 +97,10 @@ export function LlamaCloudSelector({
   const handlePipelineSelect = async (value: string) => {
     setPipeline(JSON.parse(value) as PipelineConfig);
   };
+
+  if (process.env.NEXT_PUBLIC_USE_LLAMACLOUD !== "true") {
+    return null;
+  }
 
   if (!config) {
     return (
