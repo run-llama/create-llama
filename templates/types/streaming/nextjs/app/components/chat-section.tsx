@@ -6,6 +6,7 @@ import {
   ChatMessages,
   ChatSection as ChatSectionUI,
   useChatUI,
+  useFile,
 } from "@llamaindex/chat-ui";
 import { useChat } from "ai/react";
 import { useEffect, useState } from "react";
@@ -13,6 +14,8 @@ import { Button } from "./ui/button";
 import ChatMessageAvatar from "./ui/chat/chat-message/chat-avatar";
 import { useClientConfig } from "./ui/chat/hooks/use-config";
 import { LlamaCloudSelector } from "./ui/chat/widgets/LlamaCloudSelector";
+import { DocumentPreview } from "./ui/document-preview";
+import UploadImagePreview from "./ui/upload-image-preview";
 
 export default function ChatSection() {
   const { backend } = useClientConfig();
@@ -40,18 +43,72 @@ export default function ChatSection() {
         <ChatMessages.Actions />
         <StarterQuestions />
       </ChatMessages>
-      <ChatInput className="shadow-xl rounded-xl">
-        {/* TODO: Refactor file components for display uploaded files */}
-        <ChatInput.Preview />
-        <ChatInput.Form>
-          <ChatInput.Field />
-          {/* TODO: handle upload file  */}
-          <ChatInput.Upload />
-          <LlamaCloudSelector />
-          <ChatInput.Submit />
-        </ChatInput.Form>
-      </ChatInput>
+      <CustomChatInput />
     </ChatSectionUI>
+  );
+}
+
+// TODO: replace old ChatInput component
+function CustomChatInput() {
+  const { requestData } = useChatUI();
+  const { backend } = useClientConfig();
+  const {
+    imageUrl,
+    setImageUrl,
+    uploadFile,
+    files,
+    removeDoc,
+    reset,
+    getAnnotations,
+  } = useFile({ uploadAPI: `${backend}/api/chat/upload` });
+
+  const handleUploadFile = async (file: File) => {
+    if (imageUrl) {
+      alert("You can only upload one image at a time.");
+      return;
+    }
+    try {
+      await uploadFile(file, requestData);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const annotations = getAnnotations();
+
+  return (
+    <ChatInput
+      className="shadow-xl rounded-xl"
+      resetUploadedFiles={reset}
+      annotations={annotations}
+    >
+      <ChatInput.Preview />
+      <div>
+        {imageUrl && (
+          <UploadImagePreview
+            url={imageUrl}
+            onRemove={() => setImageUrl(null)}
+          />
+        )}
+        {files.length > 0 && (
+          <div className="flex gap-4 w-full overflow-auto py-2">
+            {files.map((file) => (
+              <DocumentPreview
+                key={file.id}
+                file={file}
+                onRemove={() => removeDoc(file)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <ChatInput.Form>
+        <ChatInput.Field />
+        <ChatInput.Upload onUpload={handleUploadFile} />
+        <LlamaCloudSelector />
+        <ChatInput.Submit />
+      </ChatInput.Form>
+    </ChatInput>
   );
 }
 
