@@ -1,7 +1,8 @@
-import { useChatMessage, useChatUI } from "@llamaindex/chat-ui";
+import { useChatMessage } from "@llamaindex/chat-ui";
 import { Fragment } from "react";
 import {
   AgentEventData,
+  ChatHandler,
   DocumentFileData,
   EventData,
   ImageData,
@@ -26,8 +27,11 @@ type ContentDisplayConfig = {
   component: JSX.Element | null;
 };
 
-export function ChatMessageContent() {
-  const { append } = useChatUI();
+export function ChatMessageContent({
+  append,
+}: {
+  append: ChatHandler["append"];
+}) {
   const { message, isLast } = useChatMessage();
 
   const annotations = message.annotations as MessageAnnotation[] | undefined;

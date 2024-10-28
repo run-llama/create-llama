@@ -8,7 +8,7 @@ import ChatMessageAvatar from "./chat-message/chat-avatar";
 import { useClientConfig } from "./hooks/use-config";
 
 export default function CustomChatMessages() {
-  const { messages } = useChatUI();
+  const { messages, append } = useChatUI();
 
   return (
     <ChatMessages className="shadow-xl rounded-xl">
@@ -20,7 +20,7 @@ export default function CustomChatMessages() {
             isLast={message === messages[messages.length - 1]}
           >
             <ChatMessageAvatar />
-            <ChatMessageContent />
+            <ChatMessageContent append={append} />
             <ChatMessage.Actions />
           </ChatMessage>
         ))}
