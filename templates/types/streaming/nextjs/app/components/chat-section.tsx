@@ -28,7 +28,6 @@ export default function ChatSection() {
       <ChatMessages className="shadow-xl rounded-xl">
         <ChatMessages.List>
           {handler.messages.map((message) => (
-            // TODO: add id to Message interface in @llamaindex/chat-ui
             <ChatMessage key={message.id} message={message}>
               <ChatMessageAvatar />
               <ChatMessage.Content />
@@ -49,7 +48,6 @@ export default function ChatSection() {
           {/* TODO: handle upload file  */}
           <ChatInput.Upload />
           <LlamaCloudSelector />
-          {/* TODO: change chat to append (useful for sending annotations along with the message) */}
           <ChatInput.Submit />
         </ChatInput.Form>
       </ChatInput>
@@ -60,7 +58,7 @@ export default function ChatSection() {
 // TODO: extract a component or move to CustomChatMessages
 function StarterQuestions() {
   const { backend } = useClientConfig();
-  const { chat } = useChatUI();
+  const { append } = useChatUI();
   const [starterQuestions, setStarterQuestions] = useState<string[]>();
 
   useEffect(() => {
@@ -82,7 +80,11 @@ function StarterQuestions() {
     <div className="absolute bottom-6 left-0 w-full">
       <div className="grid grid-cols-2 gap-2 mx-20">
         {starterQuestions.map((question, i) => (
-          <Button key={i} variant="outline" onClick={() => chat(question)}>
+          <Button
+            key={i}
+            variant="outline"
+            onClick={() => append({ role: "user", content: question })}
+          >
             {question}
           </Button>
         ))}
