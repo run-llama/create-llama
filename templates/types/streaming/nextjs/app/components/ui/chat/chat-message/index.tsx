@@ -1,8 +1,7 @@
-import { Message } from "ai";
+import { useChatMessage, useChatUI } from "@llamaindex/chat-ui";
 import { Fragment } from "react";
 import {
   AgentEventData,
-  ChatHandler,
   DocumentFileData,
   EventData,
   ImageData,
@@ -27,19 +26,10 @@ type ContentDisplayConfig = {
   component: JSX.Element | null;
 };
 
-export function ChatMessageContent({
-  message,
-  isLoading,
-  append,
-  isLastMessage,
-  artifactVersion,
-}: {
-  message: Message;
-  isLoading: boolean;
-  append: Pick<ChatHandler, "append">["append"];
-  isLastMessage: boolean;
-  artifactVersion: number | undefined;
-}) {
+export function ChatMessageContent() {
+  const { append } = useChatUI();
+  const { message, isLast } = useChatMessage();
+
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   if (!annotations?.length) return <Markdown content={message.content} />;
 
@@ -78,10 +68,7 @@ export function ChatMessageContent({
     },
     {
       order: -3,
-      component:
-        eventData.length > 0 ? (
-          <ChatEvents isLoading={isLoading} data={eventData} />
-        ) : null,
+      component: eventData.length > 0 ? <ChatEvents data={eventData} /> : null,
     },
     {
       order: -2,
@@ -101,9 +88,7 @@ export function ChatMessageContent({
     },
     {
       order: -1,
-      component: toolData[0] ? (
-        <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />
-      ) : null,
+      component: toolData[0] ? <ChatTools data={toolData[0]} /> : null,
     },
     {
       order: 0,
@@ -119,7 +104,7 @@ export function ChatMessageContent({
         <SuggestedQuestions
           questions={suggestedQuestionsData[0]}
           append={append}
-          isLastMessage={isLastMessage}
+          isLastMessage={isLast}
         />
       ) : null,
     },

@@ -1,3 +1,4 @@
+import { useChatMessage, useChatUI } from "@llamaindex/chat-ui";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../button";
@@ -8,15 +9,12 @@ import {
 } from "../../collapsible";
 import { EventData } from "../index";
 
-export function ChatEvents({
-  data,
-  isLoading,
-}: {
-  data: EventData[];
-  isLoading: boolean;
-}) {
+export function ChatEvents({ data }: { data: EventData[] }) {
+  const { isLoading } = useChatUI();
+  const { isLast } = useChatMessage();
   const [isOpen, setIsOpen] = useState(false);
 
+  const showLoading = isLast && isLoading;
   const buttonLabel = isOpen ? "Hide events" : "Show events";
 
   const EventIcon = isOpen ? (
@@ -30,7 +28,7 @@ export function ChatEvents({
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <Button variant="secondary" className="space-x-2">
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {showLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             <span>{buttonLabel}</span>
             {EventIcon}
           </Button>

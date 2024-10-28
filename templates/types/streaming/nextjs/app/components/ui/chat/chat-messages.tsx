@@ -1,52 +1,26 @@
 "use client";
 
 import { ChatMessage, ChatMessages, useChatUI } from "@llamaindex/chat-ui";
-import { useEffect, useMemo, useState } from "react";
-import { ToolData } from ".";
+import { useEffect, useState } from "react";
 import { Button } from "../button";
 import { ChatMessageContent } from "./chat-message";
 import ChatMessageAvatar from "./chat-message/chat-avatar";
 import { useClientConfig } from "./hooks/use-config";
 
 export default function CustomChatMessages() {
-  const { messages, isLoading, append } = useChatUI();
-
-  // build a map of message id to artifact version
-  const artifactVersionMap = useMemo(() => {
-    const map = new Map<string, number | undefined>();
-    let versionIndex = 1;
-    messages.forEach((m) => {
-      m.annotations?.forEach((annotation: any) => {
-        if (
-          typeof annotation === "object" &&
-          annotation != null &&
-          "type" in annotation &&
-          annotation.type === "tools"
-        ) {
-          const data = annotation.data as ToolData;
-          if (data?.toolCall?.name === "artifact") {
-            map.set(m.id, versionIndex);
-            versionIndex++;
-          }
-        }
-      });
-    });
-    return map;
-  }, [messages]);
+  const { messages } = useChatUI();
 
   return (
     <ChatMessages className="shadow-xl rounded-xl">
       <ChatMessages.List>
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message}>
+          <ChatMessage
+            key={message.id}
+            message={message}
+            isLast={message === messages[messages.length - 1]}
+          >
             <ChatMessageAvatar />
-            <ChatMessageContent
-              message={message}
-              isLoading={isLoading}
-              append={append}
-              isLastMessage={message === messages[messages.length - 1]}
-              artifactVersion={artifactVersionMap.get(message.id)}
-            />
+            <ChatMessageContent />
             <ChatMessage.Actions />
           </ChatMessage>
         ))}
