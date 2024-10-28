@@ -1,9 +1,5 @@
-import { Check, Copy } from "lucide-react";
-
 import { Message } from "ai";
 import { Fragment } from "react";
-import { Button } from "../../button";
-import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import {
   AgentEventData,
   ChatHandler,
@@ -18,7 +14,6 @@ import {
   getSourceAnnotationData,
 } from "../index";
 import { ChatAgentEvents } from "./chat-agent-events";
-import ChatAvatar from "./chat-avatar";
 import { ChatEvents } from "./chat-events";
 import { ChatFiles } from "./chat-files";
 import { ChatImage } from "./chat-image";
@@ -32,7 +27,7 @@ type ContentDisplayConfig = {
   component: JSX.Element | null;
 };
 
-function ChatMessageContent({
+export function ChatMessageContent({
   message,
   isLoading,
   append,
@@ -137,48 +132,6 @@ function ChatMessageContent({
         .map((content, index) => (
           <Fragment key={index}>{content.component}</Fragment>
         ))}
-    </div>
-  );
-}
-
-export default function ChatMessage({
-  chatMessage,
-  isLoading,
-  append,
-  isLastMessage,
-  artifactVersion,
-}: {
-  chatMessage: Message;
-  isLoading: boolean;
-  append: Pick<ChatHandler, "append">["append"];
-  isLastMessage: boolean;
-  artifactVersion: number | undefined;
-}) {
-  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
-  return (
-    <div className="flex items-start gap-4 pr-5 pt-5">
-      <ChatAvatar role={chatMessage.role} />
-      <div className="group flex flex-1 justify-between gap-2">
-        <ChatMessageContent
-          message={chatMessage}
-          isLoading={isLoading}
-          append={append}
-          isLastMessage={isLastMessage}
-          artifactVersion={artifactVersion}
-        />
-        <Button
-          onClick={() => copyToClipboard(chatMessage.content)}
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100"
-        >
-          {isCopied ? (
-            <Check className="h-4 w-4" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
