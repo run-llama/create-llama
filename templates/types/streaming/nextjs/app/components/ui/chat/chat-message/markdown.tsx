@@ -1,21 +1,7 @@
-import "katex/dist/katex.min.css";
-import { FC, memo } from "react";
-import ReactMarkdown, { Options } from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-
+import { CodeBlock, Markdown as MarkdownUI } from "@llamaindex/chat-ui";
 import { DOCUMENT_FILE_TYPES, DocumentFileType, SourceData } from "..";
 import { useClientConfig } from "../hooks/use-config";
 import { DocumentInfo, SourceNumberButton } from "./chat-sources";
-import { CodeBlock } from "./codeblock";
-
-const MemoizedReactMarkdown: FC<Options> = memo(
-  ReactMarkdown,
-  (prevProps, nextProps) =>
-    prevProps.children === nextProps.children &&
-    prevProps.className === nextProps.className,
-);
 
 const preprocessLaTeX = (content: string) => {
   // Replace block-level LaTeX delimiters \[ \] with $$ $$
@@ -82,10 +68,8 @@ export default function Markdown({
   const { backend } = useClientConfig();
 
   return (
-    <MemoizedReactMarkdown
-      className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words custom-markdown"
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex as any]}
+    <MarkdownUI
+      content={processedContent}
       components={{
         p({ children }) {
           return <div className="mb-2 last:mb-0">{children}</div>;
@@ -165,8 +149,6 @@ export default function Markdown({
           );
         },
       }}
-    >
-      {processedContent}
-    </MemoizedReactMarkdown>
+    />
   );
 }
