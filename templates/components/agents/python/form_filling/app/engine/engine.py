@@ -22,32 +22,11 @@ def get_chat_engine(
     query_engine = index.as_query_engine(similarity_top_k=top_k)
     query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
-    configured_tools = ToolFactory.from_env(map_result=True)
-    form_filling_tools = configured_tools.get("form_filling", [])  # type: ignore
-    if not form_filling_tools:
-        raise ValueError("Form filling tool is missing!")
-
-    extractor_tool = next(
-        (
-            tool
-            for tool in form_filling_tools
-            if tool.metadata.get_name() == "extract_questions"
-        ),
-        None,
-    )
-    filling_tool = next(
-        (
-            tool
-            for tool in form_filling_tools
-            if tool.metadata.get_name() == "fill_form"
-        ),
-        None,
-    )
-
+    configured_tools = ToolFactory.from_env(map_result=True)  # type: dict[str, list[Any]]
     workflow = FormFillingWorkflow(
         query_engine_tool=query_engine_tool,
-        extractor_tool=extractor_tool,
-        filling_tool=filling_tool,
+        extractor_tool=configured_tools.get("extract_questions"),
+        filling_tool=configured_tools.get("fill_form"),
         chat_history=chat_history,
     )
 

@@ -24,8 +24,8 @@ def _get_reporter_params(
         """
     )
     configured_tools = ToolFactory.from_env(map_result=True)
-    if "document_generator" in configured_tools:  # type: ignore
-        tools.extend(configured_tools["document_generator"])  # type: ignore
+    if "generate_document" in configured_tools:  # type: ignore
+        tools.extend(configured_tools["generate_document"])  # type: ignore
         prompt_instructions += (
             "\nYou are also able to generate a file document (PDF/HTML) of the report."
         )

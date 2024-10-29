@@ -69,7 +69,9 @@ class ToolFactory:
                             tool_type, tool_name, config
                         )
                         if map_result:
-                            tools[tool_name] = loaded_tools  # type: ignore
+                            tools.update(
+                                {tool.metadata.name: tool for tool in loaded_tools}
+                            )
                         else:
                             tools.extend(loaded_tools)  # type: ignore
 
