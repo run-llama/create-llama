@@ -79,7 +79,6 @@ class FileService:
         )
 
         tools = _get_available_tools()
-        print(tools)
         csv_tools = [
             "interpreter",
             "artifact",
@@ -87,7 +86,7 @@ class FileService:
             "extract_questions",
             "form_filling",
         ]
-        # If the file is CSV and there is a code executor tool, we don't need to index.
+        # Don't index csv file if csv tools are available
         if extension == "csv" and any(tool in tools for tool in csv_tools):
             return document_file
         else:

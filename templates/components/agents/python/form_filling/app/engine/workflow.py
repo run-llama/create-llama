@@ -284,14 +284,14 @@ class FormFillingWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             AgentRunEvent(
-                name="Completer",
+                name="Processor",
                 msg="Filling missing cells",
             )
         )
         # Call the fill cells tool
         result = self._call_tool(
             ctx,
-            agent_name="Completer",
+            agent_name="Processor",
             tool=self.filling_tool,
             tool_selection=ev.tool_call,
         )

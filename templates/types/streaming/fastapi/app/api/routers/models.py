@@ -153,7 +153,6 @@ class ChatData(BaseModel):
             annotation_text = "\n".join(all_annotation_contents)
             message_content = f"{message_content}\n{annotation_text}"
 
-        print(message_content)
         return message_content
 
     def _get_agent_messages(self, max_messages: int = 10) -> List[str]:
