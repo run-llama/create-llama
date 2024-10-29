@@ -10,6 +10,7 @@ type AppType =
   | "rag"
   | "code_artifact"
   | "financial_report_agent"
+  | "form_filling"
   | "extractor"
   | "data_scientist";
 
@@ -34,6 +35,10 @@ export const askSimpleQuestions = async (
         {
           title: "Financial Report Generator (using Workflows)",
           value: "financial_report_agent",
+        },
+        {
+          title: "Form filling (using Workflows)",
+          value: "form_filling",
         },
         { title: "Code Artifact Agent", value: "code_artifact" },
         { title: "Structured extraction", value: "extractor" },
@@ -148,6 +153,14 @@ const convertAnswers = async (
       template: "multiagent",
       agents: "financial_report",
       tools: getTools(["document_generator", "interpreter"]),
+      dataSources: EXAMPLE_10K_SEC_FILES,
+      frontend: true,
+      modelConfig: MODEL_GPT4o,
+    },
+    form_filling: {
+      template: "multiagent",
+      agents: "form_filling",
+      tools: getTools(["form_filling"]),
       dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
       modelConfig: MODEL_GPT4o,

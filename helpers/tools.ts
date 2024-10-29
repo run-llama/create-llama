@@ -267,6 +267,22 @@ For better results, you can specify the region parameter to get results from a s
       },
     ],
   },
+  {
+    display: "Form Filling",
+    name: "form_filling",
+    supportedFrameworks: ["fastapi"],
+    type: ToolType.LOCAL,
+    dependencies: [
+      {
+        name: "pandas",
+        version: "^2.2.3",
+      },
+      {
+        name: "tabulate",
+        version: "^0.9.0",
+      },
+    ],
+  },
 ];
 
 export const getTool = (toolName: string): Tool | undefined => {

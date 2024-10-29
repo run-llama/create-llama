@@ -60,9 +60,11 @@ class AnnotationFileData(BaseModel):
         # Include document IDs if it's available
         if file.refs is not None:
             default_content += f"Document IDs: {file.refs}\n"
-        # Include sandbox file path
+        # file path
         sandbox_file_path = f"/tmp/{file.name}"
+        local_file_path = f"output/uploaded/{file.name}"
         default_content += f"Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): {sandbox_file_path}\n"
+        default_content += f"Local file path (instruction: Use for local tools: form filling, extractor): {local_file_path}\n"
         return default_content
 
     def to_llm_content(self) -> Optional[str]:
@@ -128,24 +130,30 @@ class ChatData(BaseModel):
 
     def get_last_message_content(self) -> str:
         """
-        Get the content of the last message along with the data content if available.
-        Fallback to use data content from previous messages
+        Get the content of the last message along with the data content from all user messages
         """
         if len(self.messages) == 0:
             raise ValueError("There is not any message in the chat")
+
         last_message = self.messages[-1]
         message_content = last_message.content
-        for message in reversed(self.messages):
+
+        # Collect annotation contents from all user messages
+        all_annotation_contents = []
+        for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 annotation_contents = filter(
                     None,
                     [annotation.to_content() for annotation in message.annotations],
                 )
-                if not annotation_contents:
-                    continue
-                annotation_text = "\n".join(annotation_contents)
-                message_content = f"{message_content}\n{annotation_text}"
-                break
+                all_annotation_contents.extend(annotation_contents)
+
+        # Add all annotation contents if any exist
+        if all_annotation_contents:
+            annotation_text = "\n".join(all_annotation_contents)
+            message_content = f"{message_content}\n{annotation_text}"
+
+        print(message_content)
         return message_content
 
     def _get_agent_messages(self, max_messages: int = 10) -> List[str]:

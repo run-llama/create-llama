@@ -57,8 +57,9 @@ export type EventData = {
 };
 
 export type AgentEventData = {
-  agent: string;
-  text: string;
+  name: string;
+  msg: string;
+  event_type: "text" | "progress";
 };
 
 export type ToolData = {

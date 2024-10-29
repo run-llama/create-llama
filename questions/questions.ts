@@ -177,6 +177,34 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.observability = observability;
   }
 
+  // Ask agents
+  if (program.template === "multiagent" && !program.agents) {
+    const { agents } = await prompts(
+      {
+        type: "select",
+        name: "agents",
+        message: "Which agents would you like to use?",
+        choices: [
+          {
+            title: "Financial report (generate a financial report)",
+            value: "financial_report",
+          },
+          {
+            title: "Form filling (fill missing value in a CSV file)",
+            value: "form_filling",
+          },
+          {
+            title: "Blog writer (Write a blog post)",
+            value: "blog_writer",
+          },
+        ],
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    program.agents = agents;
+  }
+
   if (!program.modelConfig) {
     const modelConfig = await askModelConfig({
       openAiKey: program.openAiKey,

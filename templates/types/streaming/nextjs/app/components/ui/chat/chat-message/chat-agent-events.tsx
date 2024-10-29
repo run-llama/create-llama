@@ -1,5 +1,5 @@
 import { icons, LucideIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../button";
 import {
   Drawer,
@@ -9,6 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../drawer";
+import { Progress } from "../../progress";
 import { AgentEventData } from "../index";
 import Markdown from "./markdown";
 
@@ -20,10 +21,18 @@ const AgentIcons: Record<string, LucideIcon> = {
   publisher: icons.BookCheck,
 };
 
+type ProgressData = {
+  progress_id: string;
+  total_steps: number;
+  current_step: number;
+  step_msg: string;
+};
+
 type MergedEvent = {
   agent: string;
   texts: string[];
   icon: LucideIcon;
+  progress?: ProgressData;
 };
 
 export function ChatAgentEvents({
@@ -51,6 +60,63 @@ export function ChatAgentEvents({
 }
 
 const MAX_TEXT_LENGTH = 150;
+const MAX_LINES = 3;
+
+function TextContent({
+  texts,
+  maxLength = MAX_TEXT_LENGTH,
+  maxLines = MAX_LINES,
+}: {
+  texts: string[];
+  maxLength?: number;
+  maxLines?: number;
+}) {
+  return (
+    <>
+      <ul className="list-decimal space-y-2">
+        {texts.slice(0, maxLines).map((text, index) => (
+          <li className="whitespace-break-spaces" key={index}>
+            {text.slice(0, maxLength)}
+            {text.length > maxLength && "..."}
+          </li>
+        ))}
+      </ul>
+      {texts.length > maxLines && (
+        <AgentEventDialog
+          content={texts.map((text) => `\n${text}\n`).join("")}
+          title={`All Steps`}
+        >
+          <span className="font-semibold underline cursor-pointer">
+            Show all
+          </span>
+        </AgentEventDialog>
+      )}
+    </>
+  );
+}
+
+function ProgressContent({
+  progress,
+  isFinished,
+  progressValue,
+}: {
+  progress: ProgressData;
+  isFinished: boolean;
+  progressValue: number;
+}) {
+  return (
+    <div className="space-y-2 mt-2">
+      {!isFinished && progress.step_msg && (
+        <p className="text-sm text-muted-foreground">{progress.step_msg}</p>
+      )}
+      <Progress value={progressValue} className="w-full h-2" />
+      <p className="text-sm text-muted-foreground">
+        {isFinished ? "Processed" : "Processing"} {progress.current_step + 1} of{" "}
+        {progress.total_steps} steps...
+      </p>
+    </div>
+  );
+}
 
 function AgentEventContent({
   event,
@@ -61,8 +127,20 @@ function AgentEventContent({
   isLast: boolean;
   isFinished: boolean;
 }) {
-  const { agent, texts } = event;
+  const { agent, texts, progress } = event;
   const AgentIcon = event.icon;
+  const [progressValue, setProgressValue] = useState(0);
+
+  useEffect(() => {
+    if (progress) {
+      // Add 1 to current_step to match the display value
+      const value = Math.round(
+        ((progress.current_step + 1) / progress.total_steps) * 100,
+      );
+      setProgressValue(value);
+    }
+  }, [progress]);
+
   return (
     <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
       <div className="w-[100px] flex flex-col items-center gap-2">
@@ -79,26 +157,18 @@ function AgentEventContent({
         </div>
         <span className="font-bold">{agent}</span>
       </div>
-      <ul className="flex-1 list-decimal space-y-2">
-        {texts.map((text, index) => (
-          <li className="whitespace-break-spaces" key={index}>
-            {text.length <= MAX_TEXT_LENGTH && <span>{text}</span>}
-            {text.length > MAX_TEXT_LENGTH && (
-              <div>
-                <span>{text.slice(0, MAX_TEXT_LENGTH)}...</span>
-                <AgentEventDialog
-                  content={text}
-                  title={`Agent "${agent}" - Step: ${index + 1}`}
-                >
-                  <span className="font-semibold underline cursor-pointer ml-2">
-                    Show more
-                  </span>
-                </AgentEventDialog>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="flex-1">
+        {texts.length > 0 && (
+          <TextContent texts={texts} maxLines={progress ? 1 : MAX_LINES} />
+        )}
+        {progress && (
+          <ProgressContent
+            progress={progress}
+            isFinished={isFinished}
+            progressValue={progressValue}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -136,15 +206,41 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
   for (const event of events) {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
-    if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
-      // If the last event in mergedEvents has the same non-null agent, add the title to it
-      lastMergedEvent.texts.push(event.text);
+    // Check the event_type first
+    if (event.event_type === "progress") {
+      try {
+        const progressData = JSON.parse(event.msg) as ProgressData;
+
+        if (lastMergedEvent && lastMergedEvent.agent === event.name) {
+          lastMergedEvent.progress = progressData;
+          lastMergedEvent.texts.push(progressData.step_msg);
+        } else {
+          mergedEvents.push({
+            agent: event.name,
+            texts: [],
+            icon: AgentIcons[event.name.toLowerCase()] ?? icons.Bot,
+            progress: progressData,
+          });
+        }
+      } catch (e) {
+        console.error(
+          "Failed to parse progress data:",
+          e,
+          "Raw text:",
+          event.msg,
+        );
+      }
+      continue;
+    }
+
+    // Handle regular text events
+    if (lastMergedEvent && lastMergedEvent.agent === event.name) {
+      lastMergedEvent.texts.push(event.msg);
     } else {
-      // Otherwise, create a new merged event
       mergedEvents.push({
-        agent: event.agent,
-        texts: [event.text],
-        icon: AgentIcons[event.agent] ?? icons.Bot,
+        agent: event.name,
+        texts: [event.msg],
+        icon: AgentIcons[event.name.toLowerCase()] ?? icons.Bot,
       });
     }
   }

@@ -79,9 +79,16 @@ class FileService:
         )
 
         tools = _get_available_tools()
-        code_executor_tools = ["interpreter", "artifact"]
+        print(tools)
+        csv_tools = [
+            "interpreter",
+            "artifact",
+            "fill_form",
+            "extract_questions",
+            "form_filling",
+        ]
         # If the file is CSV and there is a code executor tool, we don't need to index.
-        if extension == "csv" and any(tool in tools for tool in code_executor_tools):
+        if extension == "csv" and any(tool in tools for tool in csv_tools):
             return document_file
         else:
             # Insert the file into the index and update document ids to the file metadata
