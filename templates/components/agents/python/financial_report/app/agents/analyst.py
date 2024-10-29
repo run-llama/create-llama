@@ -23,7 +23,7 @@ def _get_analyst_params() -> Tuple[List[type[FunctionTool]], str, str]:
     configured_tools = ToolFactory.from_env(map_result=True)
     # Check if the interpreter tool is configured
     if "interpret" in configured_tools.keys():
-        tools.extend(configured_tools["interpret"])
+        tools.append(configured_tools["interpret"])
         prompt_instructions += dedent("""
             You are able to visualize the financial data using code interpreter tool.
             It's very useful to create and include visualizations to the report (make sure you include the right code and data for the visualization).

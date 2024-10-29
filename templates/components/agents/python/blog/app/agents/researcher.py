@@ -50,7 +50,7 @@ def _get_research_tools(**kwargs) -> QueryEngineTool:
     configured_tools = ToolFactory.from_env(map_result=True)
     for tool_name, tool in configured_tools.items():
         if tool_name in researcher_tool_names:
-            tools.extend(tool)
+            tools.append(tool)
     return tools
 
 

@@ -56,7 +56,7 @@ class ToolFactory:
             A dictionary of tool names to lists of FunctionTools if map_result is True,
             otherwise a list of FunctionTools.
         """
-        tools: Union[Dict[str, List[FunctionTool]], List[FunctionTool]] = (
+        tools: Union[Dict[str, FunctionTool], List[FunctionTool]] = (
             {} if map_result else []
         )
 
@@ -69,7 +69,7 @@ class ToolFactory:
                             tool_type, tool_name, config
                         )
                         if map_result:
-                            tools.update(
+                            tools.update(  # type: ignore
                                 {tool.metadata.name: tool for tool in loaded_tools}
                             )
                         else:

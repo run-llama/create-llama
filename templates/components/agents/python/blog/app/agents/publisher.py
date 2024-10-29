@@ -12,7 +12,7 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
     # Get configured tools from the tools.yaml file
     configured_tools = ToolFactory.from_env(map_result=True)
     if "generate_document" in configured_tools.keys():
-        tools.extend(configured_tools["generate_document"])
+        tools.append(configured_tools["generate_document"])
         prompt_instructions = dedent("""
             Normally, reply the blog post content to the user directly. 
             But if user requested to generate a file, use the generate_document tool to generate the file and reply the link to the file.
