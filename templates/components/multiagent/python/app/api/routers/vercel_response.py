@@ -6,7 +6,6 @@ from typing import AsyncGenerator, Awaitable, Generator, List
 from aiostream import stream
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
-from app.workflows.single import AgentRunEvent, AgentRunResult
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
@@ -55,8 +54,8 @@ class VercelStreamResponse(StreamingResponse):
         self,
         request: Request,
         chat_data: ChatData,
-        event_handler: Awaitable[AgentRunResult | AsyncGenerator],
-        events: AsyncGenerator[AgentRunEvent, None],
+        event_handler: Awaitable,
+        events: AsyncGenerator,
         verbose: bool = True,
     ):
         # Yield the text response
@@ -64,23 +63,22 @@ class VercelStreamResponse(StreamingResponse):
             result = await event_handler
             final_response = ""
 
-            if isinstance(result, AgentRunResult):
-                content = result.response.message.content
-                if content:
-                    for token in content:
-                        final_response += str(token)
-                        yield self.convert_text(token)
-
             if isinstance(result, AsyncGenerator):
                 async for token in result:
                     final_response += str(token.delta)
                     yield self.convert_text(token.delta)
-
-            if isinstance(result, Generator):
+            elif isinstance(result, Generator):
                 for chunk in result:
                     chunk_str = str(chunk)
                     final_response += chunk_str
                     yield self.convert_text(chunk_str)
+            else:
+                if hasattr(result, "response"):
+                    content = result.response.message.content
+                    if content:
+                        for token in content:
+                            final_response += str(token)
+                            yield self.convert_text(token)
 
             # Generate next questions if next question prompt is configured
             question_data = await self._generate_next_questions(

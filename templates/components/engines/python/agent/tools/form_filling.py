@@ -148,16 +148,16 @@ class FormFillingTool:
         file_content: Optional[str] = None,
     ) -> dict:
         """
-        Use thi tool to fill cell values into a CSV file.
-        Requires cell values to fill and either the path to the CSV file or the content of the CSV file.
+        Use this tool to fill cell values into a CSV file.
+        Requires cell values to be used for filling out, as well as either the path to the CSV file or the content of the CSV file.
 
         Args:
-            cell_values (list[CellValue]): The cell values to fill in the CSV file (call `extract_questions` and query engine to construct the cell values).
-            file_path (Optional[str]): The local file path to the CSV file to fill (not sandbox path).
-            file_content (Optional[str]): The content of the CSV file to fill.
+            cell_values (list[CellValue]): The cell values used to fill out the CSV file (call `extract_questions` and query engine to construct the cell values).
+            file_path (Optional[str]): The local file path to the CSV file that should be filled out (not as sandbox path).
+            file_content (Optional[str]): The content of the CSV file that should be filled out.
 
         Returns:
-            dict: A dictionary containing the filled content and metadata of the filled file.
+            dict: A dictionary containing the content and metadata of the filled-out file.
         """
         file_name, file_extension = self._get_file_name_and_extension(
             file_path, file_content

@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from app.engine.index import get_index
 from app.engine.tools import ToolFactory
@@ -22,12 +22,11 @@ def get_chat_engine(
     query_engine = index.as_query_engine(similarity_top_k=top_k)
     query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
-    configured_tools: dict[str, list[Any]] = ToolFactory.from_env(map_result=True)
-    form_filling_tools = configured_tools.get("form_filling", [])
+    configured_tools = ToolFactory.from_env(map_result=True)
+    form_filling_tools = configured_tools.get("form_filling", [])  # type: ignore
     if not form_filling_tools:
         raise ValueError("Form filling tool is missing!")
 
-    # TODO: Separate the extract question and fill form tools
     extractor_tool = next(
         (
             tool

@@ -139,7 +139,7 @@ class ChatData(BaseModel):
         message_content = last_message.content
 
         # Collect annotation contents from all user messages
-        all_annotation_contents = []
+        all_annotation_contents: List[str] = []
         for message in self.messages:
             if message.role == MessageRole.USER and message.annotations is not None:
                 annotation_contents = filter(
@@ -149,7 +149,7 @@ class ChatData(BaseModel):
                 all_annotation_contents.extend(annotation_contents)
 
         # Add all annotation contents if any exist
-        if all_annotation_contents:
+        if len(all_annotation_contents) > 0:
             annotation_text = "\n".join(all_annotation_contents)
             message_content = f"{message_content}\n{annotation_text}"
 

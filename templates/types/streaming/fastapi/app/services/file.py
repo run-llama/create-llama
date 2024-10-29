@@ -6,7 +6,7 @@ import re
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from llama_index.core import VectorStoreIndex
 from llama_index.core.ingestion import IngestionPipeline
@@ -14,7 +14,6 @@ from llama_index.core.readers.file.base import (
     _try_loading_included_file_formats as get_file_loaders_map,
 )
 from llama_index.core.schema import Document
-from llama_index.core.tools.function_tool import FunctionTool
 from llama_index.indices.managed.llama_cloud.base import LlamaCloudIndex
 from llama_index.readers.file import FlatReader
 from pydantic import BaseModel, Field
@@ -78,16 +77,8 @@ class FileService:
             save_dir=PRIVATE_STORE_PATH,
         )
 
-        tools = _get_available_tools()
-        csv_tools = [
-            "interpreter",
-            "artifact",
-            "fill_form",
-            "extract_questions",
-            "form_filling",
-        ]
         # Don't index csv file if csv tools are available
-        if extension == "csv" and any(tool in tools for tool in csv_tools):
+        if extension == "csv":
             return document_file
         else:
             # Insert the file into the index and update document ids to the file metadata
@@ -289,18 +280,3 @@ def _default_file_loaders_map():
     default_loaders[".txt"] = FlatReader
     default_loaders[".csv"] = FlatReader
     return default_loaders
-
-
-def _get_available_tools() -> Dict[str, List[FunctionTool]]:
-    try:
-        from app.engine.tools import ToolFactory  # type: ignore
-    except ImportError:
-        logger.warning("ToolFactory not found, no tools will be available")
-        return {}
-
-    try:
-        tools = ToolFactory.from_env(map_result=True)
-        return tools  # type: ignore
-    except Exception as e:
-        logger.error(f"Error loading tools from environment: {str(e)}")
-        raise ValueError(f"Failed to get available tools: {str(e)}") from e
