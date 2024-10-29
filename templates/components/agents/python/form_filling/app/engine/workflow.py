@@ -2,7 +2,7 @@ import json
 import os
 import uuid
 from enum import Enum
-from typing import List, Optional
+from typing import AsyncGenerator, List, Optional
 
 from app.engine.tools.form_filling import CellValue, MissingCell
 from llama_index.core import Settings
@@ -128,39 +128,23 @@ class FormFillingWorkflow(Workflow):
         Handle an LLM input and decide the next step.
         """
         chat_history: list[ChatMessage] = ev.input
-        # If the response flag is True, it means the LLM has finished the task and we need to stream the response
-        if ev.response:
-            # Stream the response
-            res = await self.llm.astream_chat(
-                messages=chat_history,
-            )
-            return StopEvent(result=res)
 
-        # Call LLM with tools
-        response = await self.llm.achat_with_tools(
-            tools=self.tools,
-            chat_history=chat_history,
-        )
-        self.memory.put(response.message)
+        generator = self._tool_call_generator(chat_history)
 
-        # If tool calls are found, call it accordingly
-        tool_calls = self.llm.get_tool_calls_from_response(
-            response, error_on_no_tool_call=False
-        )
-        for tool_call in tool_calls:
-            if tool_call.tool_name == self.extractor_tool.metadata.get_name():
-                return ExtractMissingCellsEvent(tool_call=tool_call)
-            elif tool_call.tool_name == self.query_engine_tool.metadata.get_name():
-                return FindAnswersEvent(tool_call=tool_call)
-            elif tool_call.tool_name == self.filling_tool.metadata.get_name():
-                return FillEvent(tool_call=tool_call)
-
-        # Otherwise, just response the LLM's response without calling any tools
-        def generator():
-            for chunk in response.message.content:
-                yield chunk
-
-        return StopEvent(result=generator())
+        # Check for immediate tool call
+        is_tool_call = await generator.__anext__()
+        if is_tool_call:
+            full_response = await generator.__anext__()
+            tool_calls = self.llm.get_tool_calls_from_response(full_response)
+            for tool_call in tool_calls:
+                if tool_call.tool_name == self.extractor_tool.metadata.get_name():
+                    return ExtractMissingCellsEvent(tool_call=tool_call)
+                elif tool_call.tool_name == self.query_engine_tool.metadata.get_name():
+                    return FindAnswersEvent(tool_call=tool_call)
+                elif tool_call.tool_name == self.filling_tool.metadata.get_name():
+                    return FillEvent(tool_call=tool_call)
+        # If no tool call, return the generator
+        return StopEvent(result=generator)
 
     @step()
     async def extract_missing_cells(
@@ -308,6 +292,36 @@ class FormFillingWorkflow(Workflow):
         )
         self.memory.put(message)
         return InputEvent(input=self.memory.get(), response=True)
+
+    async def _tool_call_generator(
+        self, chat_history: list[ChatMessage]
+    ) -> AsyncGenerator[ChatMessage | bool, None]:
+        response_stream = await self.llm.astream_chat_with_tools(
+            self.tools, chat_history=chat_history
+        )
+
+        full_response = None
+        yielded_indicator = False
+        async for chunk in response_stream:
+            if "tool_calls" not in chunk.message.additional_kwargs:
+                # Yield a boolean to indicate whether the response is a tool call
+                if not yielded_indicator:
+                    yield False
+                    yielded_indicator = True
+
+                # if not a tool call, yield the chunks!
+                yield chunk
+            elif not yielded_indicator:
+                # Yield the indicator for a tool call
+                yield True
+                yielded_indicator = True
+
+            full_response = chunk
+
+        # Write the full response to memory and yield it
+        if full_response:
+            self.memory.put(full_response.message)
+            yield full_response
 
     # TODO: Implement a _acall_tool method
     def _call_tool(
