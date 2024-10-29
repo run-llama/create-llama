@@ -7,6 +7,7 @@ from typing import AsyncGenerator, List, Optional
 from app.engine.tools.form_filling import CellValue, MissingCell
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolSelection
 from llama_index.core.tools.types import ToolOutput
@@ -18,7 +19,6 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.llms.openai import OpenAI
 from pydantic import Field
 
 
@@ -79,7 +79,7 @@ class FormFillingWorkflow(Workflow):
         query_engine_tool: QueryEngineTool,
         extractor_tool: FunctionTool,
         filling_tool: FunctionTool,
-        llm: Optional[OpenAI] = None,
+        llm: Optional[FunctionCallingLLM] = None,
         timeout: int = 360,
         chat_history: Optional[List[ChatMessage]] = None,
         system_prompt: Optional[str] = None,
@@ -91,14 +91,12 @@ class FormFillingWorkflow(Workflow):
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
         self.tools = [self.query_engine_tool, self.extractor_tool, self.filling_tool]
-        self.tool_mapper = {
-            self.extractor_tool.metadata.get_name(): self.extractor_tool,
-            self.filling_tool.metadata.get_name(): self.filling_tool,
-        }
-        self.llm: OpenAI = llm or Settings.llm
-        if not isinstance(self.llm, OpenAI):
-            raise ValueError("FormFillingWorkflow only supports OpenAI LLM.")
-        self.memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
+        self.llm: FunctionCallingLLM = llm or Settings.llm
+        if not isinstance(self.llm, FunctionCallingLLM):
+            raise ValueError("FormFillingWorkflow only supports FunctionCallingLLM.")
+        self.memory = ChatMemoryBuffer.from_defaults(
+            llm=self.llm, chat_history=self.chat_history
+        )
 
     @step()
     async def start(self, ctx: Context, ev: StartEvent) -> InputEvent:
