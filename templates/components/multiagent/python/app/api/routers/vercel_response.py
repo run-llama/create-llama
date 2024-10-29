@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator, Awaitable, Generator, List
+from typing import AsyncGenerator, Awaitable, List
 
 from aiostream import stream
 from app.api.routers.models import ChatData, Message
@@ -67,11 +67,6 @@ class VercelStreamResponse(StreamingResponse):
                 async for token in result:
                     final_response += str(token.delta)
                     yield self.convert_text(token.delta)
-            elif isinstance(result, Generator):
-                for chunk in result:
-                    chunk_str = str(chunk)
-                    final_response += chunk_str
-                    yield self.convert_text(chunk_str)
             else:
                 if hasattr(result, "response"):
                     content = result.response.message.content
