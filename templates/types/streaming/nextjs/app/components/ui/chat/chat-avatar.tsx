@@ -2,7 +2,7 @@ import { useChatMessage } from "@llamaindex/chat-ui";
 import { User2 } from "lucide-react";
 import Image from "next/image";
 
-export default function ChatMessageAvatar() {
+export function ChatMessageAvatar() {
   const { message } = useChatMessage();
   if (message.role === "user") {
     return (

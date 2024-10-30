@@ -1,8 +1,8 @@
 "use client";
 
 import { ChatMessage, ChatMessages, useChatUI } from "@llamaindex/chat-ui";
+import { ChatMessageAvatar } from "./chat-avatar";
 import { ChatMessageContent } from "./chat-message";
-import ChatMessageAvatar from "./chat-message/chat-avatar";
 import { ChatStarter } from "./chat-starter";
 
 export default function CustomChatMessages() {
