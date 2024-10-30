@@ -1,5 +1,4 @@
 import json
-import os
 import uuid
 from enum import Enum
 from typing import AsyncGenerator, List, Optional
@@ -74,6 +73,11 @@ class FormFillingWorkflow(Workflow):
     3. Fill the missing cells with the answers.
     """
 
+    _default_system_prompt = """
+    You are a helpful assistant who helps fill missing cells in a CSV file.
+    Only use provided data, never make up any information yourself. Fill N/A if the answer is not found.
+    """
+
     def __init__(
         self,
         query_engine_tool: QueryEngineTool,
@@ -85,7 +89,7 @@ class FormFillingWorkflow(Workflow):
         system_prompt: Optional[str] = None,
     ):
         super().__init__(timeout=timeout)
-        self.system_prompt = system_prompt or os.getenv("SYSTEM_PROMPT", "")
+        self.system_prompt = system_prompt or self._default_system_prompt
         self.chat_history = chat_history or []
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
