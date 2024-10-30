@@ -36,7 +36,6 @@ type LlamaCloudConfig = {
 };
 
 export interface LlamaCloudSelectorProps {
-  setRequestData?: React.Dispatch<any>;
   onSelect?: (pipeline: PipelineConfig | undefined) => void;
   defaultPipeline?: PipelineConfig;
   shouldCheckValid?: boolean;
