@@ -1,5 +1,5 @@
 import { icons, LucideIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "../../button";
 import {
   Drawer,
@@ -91,14 +91,17 @@ function TextContent({
 function ProgressContent({
   progress,
   isFinished,
-  progressValue,
   msg,
 }: {
   progress: ProgressData;
   isFinished: boolean;
-  progressValue: number;
   msg?: string;
 }) {
+  const progressValue =
+    progress.total !== 0
+      ? Math.round(((progress.current + 1) / progress.total) * 100)
+      : 0;
+
   return (
     <div className="space-y-2 mt-2">
       {!isFinished && msg && (
@@ -124,15 +127,6 @@ function AgentEventContent({
 }) {
   const { agent, texts, progress } = event;
   const AgentIcon = event.icon;
-  const [progressValue, setProgressValue] = useState(0);
-
-  useEffect(() => {
-    if (progress) {
-      // Add 1 to current_step to match the display value
-      const value = Math.round(((progress.current + 1) / progress.total) * 100);
-      setProgressValue(value);
-    }
-  }, [progress]);
 
   return (
     <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
@@ -158,7 +152,6 @@ function AgentEventContent({
           <ProgressContent
             progress={progress}
             isFinished={isFinished}
-            progressValue={progressValue}
             msg={texts[texts.length - 1]}
           />
         )}
@@ -200,41 +193,17 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
   for (const event of events) {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
-    // Check the event_type first
-    if (event.type === "progress") {
-      try {
-        const progressData = event.data;
-
-        if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
-          lastMergedEvent.progress = progressData;
-          lastMergedEvent.texts.push(event.text);
-        } else {
-          mergedEvents.push({
-            agent: event.agent,
-            texts: [],
-            icon: AgentIcons[event.agent.toLowerCase()] ?? icons.Bot,
-            progress: progressData,
-          });
-        }
-      } catch (e) {
-        console.error(
-          "Failed to parse progress data:",
-          e,
-          "Raw text:",
-          event.text,
-        );
-      }
-      continue;
-    }
-
-    // Handle regular text events
+    const progressData = event.data;
     if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
+      // Update for the last merged event
+      lastMergedEvent.progress = progressData;
       lastMergedEvent.texts.push(event.text);
     } else {
       mergedEvents.push({
         agent: event.agent,
         texts: [event.text],
         icon: AgentIcons[event.agent.toLowerCase()] ?? icons.Bot,
+        progress: progressData,
       });
     }
   }
