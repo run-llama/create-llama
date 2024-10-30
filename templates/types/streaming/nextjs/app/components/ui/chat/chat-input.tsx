@@ -1,8 +1,12 @@
 "use client";
 
-import { ChatInput, useChatUI, useFile } from "@llamaindex/chat-ui";
-import { DocumentPreview } from "../document-preview";
-import UploadImagePreview from "../upload-image-preview";
+import {
+  ChatInput,
+  DocumentPreview,
+  ImagePreview,
+  useChatUI,
+  useFile,
+} from "@llamaindex/chat-ui";
 import { useClientConfig } from "./hooks/use-config";
 import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
@@ -41,10 +45,7 @@ export default function CustomChatInput() {
     >
       <div>
         {imageUrl && (
-          <UploadImagePreview
-            url={imageUrl}
-            onRemove={() => setImageUrl(null)}
-          />
+          <ImagePreview url={imageUrl} onRemove={() => setImageUrl(null)} />
         )}
         {files.length > 0 && (
           <div className="flex gap-4 w-full overflow-auto py-2">
