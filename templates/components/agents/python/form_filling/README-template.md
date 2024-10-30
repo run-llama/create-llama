@@ -13,7 +13,7 @@ poetry install
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
 Make sure you have the `OPENAI_API_KEY` set.
 
-Third, run the development server:
+Second, run the development server:
 
 ```shell
 poetry run python main.py
@@ -37,6 +37,12 @@ The API allows CORS for all origins to simplify development. You can change this
 ```
 ENVIRONMENT=prod poetry run python main.py
 ```
+
+## Use Case: Filling Financial CSV Template
+
+The project already includes the Apple and Tesla financial reports in the [data](./data) directory and a CSV template [sec_10k_template.csv](./sec_10k_template.csv).
+
+You can upload the files to the app and ask it to fill the missing cells in the CSV file.
 
 ## Learn More
 

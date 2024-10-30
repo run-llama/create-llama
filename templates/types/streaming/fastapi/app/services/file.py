@@ -77,7 +77,7 @@ class FileService:
             save_dir=PRIVATE_STORE_PATH,
         )
 
-        # Don't index csv file if csv tools are available
+        # Don't index csv files (they are handled by tools)
         if extension == "csv":
             return document_file
         else:

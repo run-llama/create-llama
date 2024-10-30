@@ -216,7 +216,7 @@ class FormFillingWorkflow(Workflow):
             # Fallback to input that query engine tool is not found so that cannot answer questions
             self.memory.put(
                 ChatMessage(
-                    role=MessageRole.USER,
+                    role=MessageRole.ASSISTANT,
                     content="Extracted missing cells but query engine tool is not found so cannot answer questions. Ask user to upload file or connect to a knowledge base.",
                 )
             )
