@@ -7,7 +7,6 @@ from typing import AsyncGenerator, List, Optional
 from app.engine.index import get_index
 from app.engine.tools import ToolFactory
 from app.engine.tools.form_filling import CellValue, MissingCell
-from app.engine.workflow import FormFillingWorkflow
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
@@ -28,7 +27,7 @@ from pydantic import Field
 
 def create_workflow(
     chat_history: Optional[List[ChatMessage]] = None, **kwargs
-) -> FormFillingWorkflow:
+) -> Workflow:
     index: VectorStoreIndex = get_index()
     if index is None:
         raise ValueError(
