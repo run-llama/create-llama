@@ -7,7 +7,7 @@ import {
   useChatMessage,
 } from "@llamaindex/chat-ui";
 import { JSONValue } from "ai";
-import ChatTools from "./chat-message/chat-tools";
+import ChatTools from "./chat-tools";
 
 export function ChatMessageContent() {
   const { message } = useChatMessage();
