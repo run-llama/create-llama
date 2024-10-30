@@ -205,14 +205,14 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
       try {
         const progressData = event.data;
 
-        if (lastMergedEvent && lastMergedEvent.agent === event.name) {
+        if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
           lastMergedEvent.progress = progressData;
-          lastMergedEvent.texts.push(event.msg);
+          lastMergedEvent.texts.push(event.text);
         } else {
           mergedEvents.push({
-            agent: event.name,
+            agent: event.agent,
             texts: [],
-            icon: AgentIcons[event.name.toLowerCase()] ?? icons.Bot,
+            icon: AgentIcons[event.agent.toLowerCase()] ?? icons.Bot,
             progress: progressData,
           });
         }
@@ -221,20 +221,20 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
           "Failed to parse progress data:",
           e,
           "Raw text:",
-          event.msg,
+          event.text,
         );
       }
       continue;
     }
 
     // Handle regular text events
-    if (lastMergedEvent && lastMergedEvent.agent === event.name) {
-      lastMergedEvent.texts.push(event.msg);
+    if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
+      lastMergedEvent.texts.push(event.text);
     } else {
       mergedEvents.push({
-        agent: event.name,
-        texts: [event.msg],
-        icon: AgentIcons[event.name.toLowerCase()] ?? icons.Bot,
+        agent: event.agent,
+        texts: [event.text],
+        icon: AgentIcons[event.agent.toLowerCase()] ?? icons.Bot,
       });
     }
   }

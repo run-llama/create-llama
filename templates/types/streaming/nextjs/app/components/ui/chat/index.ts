@@ -63,8 +63,8 @@ export type ProgressData = {
 };
 
 export type AgentEventData = {
-  name: string;
-  msg: string;
+  agent: string;
+  text: string;
   type: "text" | "progress";
   data?: ProgressData;
 };
