@@ -1,8 +1,8 @@
 import { useChatMessage, useChatUI } from "@llamaindex/chat-ui";
 import { useMemo } from "react";
-import { ToolData } from "../index";
-import { Artifact, CodeArtifact } from "../widgets/Artifact";
-import { WeatherCard, WeatherData } from "../widgets/WeatherCard";
+import { ToolData } from "./index";
+import { Artifact, CodeArtifact } from "./widgets/Artifact";
+import { WeatherCard, WeatherData } from "./widgets/WeatherCard";
 
 // TODO: If needed, add displaying more tool outputs here
 export default function ChatTools({ data }: { data: ToolData }) {
