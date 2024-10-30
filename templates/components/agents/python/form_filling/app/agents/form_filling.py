@@ -1,11 +1,16 @@
 import json
+import os
 import uuid
 from enum import Enum
 from typing import AsyncGenerator, List, Optional
 
+from app.engine.index import get_index
+from app.engine.tools import ToolFactory
 from app.engine.tools.form_filling import CellValue, MissingCell
+from app.engine.workflow import FormFillingWorkflow
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.indices.vector_store import VectorStoreIndex
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolSelection
@@ -19,6 +24,35 @@ from llama_index.core.workflow import (
     step,
 )
 from pydantic import Field
+
+
+def create_workflow(
+    chat_history: Optional[List[ChatMessage]] = None, **kwargs
+) -> FormFillingWorkflow:
+    index: VectorStoreIndex = get_index()
+    if index is None:
+        raise ValueError(
+            "Index is not found! Please run `poetry run generate` to create an index."
+        )
+    top_k = int(os.getenv("TOP_K", 10))
+    query_engine = index.as_query_engine(similarity_top_k=top_k)
+    query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
+
+    configured_tools = ToolFactory.from_env(map_result=True)
+    extractor_tool = configured_tools.get("extract_questions")
+    filling_tool = configured_tools.get("fill_form")
+
+    if extractor_tool is None or filling_tool is None:
+        raise ValueError("Extractor or filling tool is not found!")
+
+    workflow = FormFillingWorkflow(
+        query_engine_tool=query_engine_tool,
+        extractor_tool=extractor_tool,
+        filling_tool=filling_tool,
+        chat_history=chat_history,
+    )
+
+    return workflow
 
 
 class InputEvent(Event):
@@ -319,7 +353,6 @@ class FormFillingWorkflow(Workflow):
             self.memory.put(full_response.message)
             yield full_response
 
-    # TODO: Implement a _acall_tool method
     def _call_tool(
         self,
         ctx: Context,
