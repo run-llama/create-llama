@@ -10,7 +10,7 @@ import {
   DrawerTrigger,
 } from "../../drawer";
 import { Progress } from "../../progress";
-import { AgentEventData } from "../index";
+import { AgentEventData, ProgressData } from "../index";
 import Markdown from "./markdown";
 
 const AgentIcons: Record<string, LucideIcon> = {
@@ -19,13 +19,6 @@ const AgentIcons: Record<string, LucideIcon> = {
   writer: icons.PenLine,
   reviewer: icons.MessageCircle,
   publisher: icons.BookCheck,
-};
-
-type ProgressData = {
-  progress_id: string;
-  total_steps: number;
-  current_step: number;
-  step_msg: string;
 };
 
 type MergedEvent = {
@@ -99,20 +92,22 @@ function ProgressContent({
   progress,
   isFinished,
   progressValue,
+  msg,
 }: {
   progress: ProgressData;
   isFinished: boolean;
   progressValue: number;
+  msg?: string;
 }) {
   return (
     <div className="space-y-2 mt-2">
-      {!isFinished && progress.step_msg && (
-        <p className="text-sm text-muted-foreground">{progress.step_msg}</p>
+      {!isFinished && msg && (
+        <p className="text-sm text-muted-foreground">{msg}</p>
       )}
       <Progress value={progressValue} className="w-full h-2" />
       <p className="text-sm text-muted-foreground">
-        {isFinished ? "Processed" : "Processing"} {progress.current_step + 1} of{" "}
-        {progress.total_steps} steps...
+        {isFinished ? "Processed" : "Processing"} {progress.current + 1} of{" "}
+        {progress.total} steps...
       </p>
     </div>
   );
@@ -134,9 +129,7 @@ function AgentEventContent({
   useEffect(() => {
     if (progress) {
       // Add 1 to current_step to match the display value
-      const value = Math.round(
-        ((progress.current_step + 1) / progress.total_steps) * 100,
-      );
+      const value = Math.round(((progress.current + 1) / progress.total) * 100);
       setProgressValue(value);
     }
   }, [progress]);
@@ -166,6 +159,7 @@ function AgentEventContent({
             progress={progress}
             isFinished={isFinished}
             progressValue={progressValue}
+            msg={texts[texts.length - 1]}
           />
         )}
       </div>
@@ -207,13 +201,13 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
     // Check the event_type first
-    if (event.event_type === "progress") {
+    if (event.type === "progress") {
       try {
-        const progressData = JSON.parse(event.msg) as ProgressData;
+        const progressData = event.data;
 
         if (lastMergedEvent && lastMergedEvent.agent === event.name) {
           lastMergedEvent.progress = progressData;
-          lastMergedEvent.texts.push(progressData.step_msg);
+          lastMergedEvent.texts.push(event.msg);
         } else {
           mergedEvents.push({
             agent: event.name,

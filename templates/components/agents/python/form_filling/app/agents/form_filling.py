@@ -1,4 +1,3 @@
-import json
 import os
 import uuid
 from enum import Enum
@@ -79,14 +78,16 @@ class AgentRunEvent(Event):
     name: str
     msg: str
     event_type: AgentRunEventType = Field(default=AgentRunEventType.TEXT)
+    data: Optional[dict] = None
 
     def to_response(self) -> dict:
         return {
             "type": "agent",
             "data": {
                 "name": self.name,
-                "event_type": self.event_type.value,
+                "type": self.event_type.value,
                 "msg": self.msg,
+                "data": self.data,
             },
         }
 
@@ -269,16 +270,13 @@ class FormFillingWorkflow(Workflow):
             ctx.write_event_to_stream(
                 AgentRunEvent(
                     name="Researcher",
-                    # TODO: Add typing for the progress message
-                    msg=json.dumps(
-                        {
-                            "progress_id": progress_id,
-                            "total_steps": total_steps,
-                            "current_step": i,
-                            "step_msg": f"Querying for: {cell.question_to_answer}",
-                        }
-                    ),
+                    msg=f"Querying for: {cell.question_to_answer}",
                     event_type=AgentRunEventType.PROGRESS,
+                    data={
+                        "id": progress_id,
+                        "total": total_steps,
+                        "current": i,
+                    },
                 )
             )
             # Call query engine tool directly
