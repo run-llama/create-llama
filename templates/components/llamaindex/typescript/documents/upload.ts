@@ -49,7 +49,11 @@ export async function uploadDocument(
     }
   } else {
     // run the pipeline for other vector store indexes
-    const documents: Document[] = await parseFile(fileBuffer, name, mimeType);
+    const documents: Document[] = await parseFile(
+      fileBuffer,
+      fileMetadata.name,
+      mimeType,
+    );
     documentIds = await runPipeline(index, documents);
   }
 
