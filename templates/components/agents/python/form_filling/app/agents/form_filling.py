@@ -30,12 +30,11 @@ def create_workflow(
 ) -> Workflow:
     index: VectorStoreIndex = get_index()
     if index is None:
-        raise ValueError(
-            "Index is not found! Please run `poetry run generate` to create an index."
-        )
-    top_k = int(os.getenv("TOP_K", 10))
-    query_engine = index.as_query_engine(similarity_top_k=top_k)
-    query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
+        query_engine_tool = None
+    else:
+        top_k = int(os.getenv("TOP_K", 10))
+        query_engine = index.as_query_engine(similarity_top_k=top_k)
+        query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
     configured_tools = ToolFactory.from_env(map_result=True)
     extractor_tool = configured_tools.get("extract_questions")
@@ -212,6 +211,16 @@ class FormFillingWorkflow(Workflow):
             },
         )
         self.memory.put(message)
+
+        if self.query_engine_tool is None:
+            # Fallback to input that query engine tool is not found so that cannot answer questions
+            self.memory.put(
+                ChatMessage(
+                    role=MessageRole.USER,
+                    content="Extracted missing cells but query engine tool is not found so cannot answer questions. Ask user to upload file or connect to a knowledge base.",
+                )
+            )
+            return InputEvent(input=self.memory.get())
 
         # Forward missing cells information to find answers step
         return FindAnswersEvent(missing_cells=missing_cells)
