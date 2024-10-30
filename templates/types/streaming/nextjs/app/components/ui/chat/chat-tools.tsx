@@ -1,11 +1,24 @@
-import { useChatMessage, useChatUI } from "@llamaindex/chat-ui";
+import {
+  getAnnotationData,
+  MessageAnnotation,
+  useChatMessage,
+  useChatUI,
+} from "@llamaindex/chat-ui";
+import { JSONValue, Message } from "ai";
 import { useMemo } from "react";
-import { ToolData } from "./index";
 import { Artifact, CodeArtifact } from "./widgets/Artifact";
 import { WeatherCard, WeatherData } from "./widgets/WeatherCard";
 
+export function ToolAnnotations({ message }: { message: Message }) {
+  const annotations = message.annotations as MessageAnnotation[] | undefined;
+  const toolData = annotations
+    ? (getAnnotationData(annotations, "tools") as unknown as ToolData[])
+    : null;
+  return toolData?.[0] ? <ChatTools data={toolData[0]} /> : null;
+}
+
 // TODO: If needed, add displaying more tool outputs here
-export default function ChatTools({ data }: { data: ToolData }) {
+function ChatTools({ data }: { data: ToolData }) {
   const { messages } = useChatUI();
   const { message } = useChatMessage();
 
@@ -60,3 +73,17 @@ export default function ChatTools({ data }: { data: ToolData }) {
       return null;
   }
 }
+
+type ToolData = {
+  toolCall: {
+    id: string;
+    name: string;
+    input: {
+      [key: string]: JSONValue;
+    };
+  };
+  toolOutput: {
+    output: JSONValue;
+    isError: boolean;
+  };
+};
