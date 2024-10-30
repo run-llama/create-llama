@@ -13,12 +13,6 @@ poetry install
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
 Make sure you have the `OPENAI_API_KEY` set.
 
-Second, generate the embeddings of the documents in the `./data` directory:
-
-```shell
-poetry run generate
-```
-
 Third, run the development server:
 
 ```shell
