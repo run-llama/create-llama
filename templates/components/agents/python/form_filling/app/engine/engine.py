@@ -22,11 +22,17 @@ def get_chat_engine(
     query_engine = index.as_query_engine(similarity_top_k=top_k)
     query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
-    configured_tools = ToolFactory.from_env(map_result=True)  # type: dict[str, list[Any]]
+    configured_tools = ToolFactory.from_env(map_result=True)
+    extractor_tool = configured_tools.get("extract_questions")
+    filling_tool = configured_tools.get("fill_form")
+
+    if extractor_tool is None or filling_tool is None:
+        raise ValueError("Extractor or filling tool is not found!")
+
     workflow = FormFillingWorkflow(
         query_engine_tool=query_engine_tool,
-        extractor_tool=configured_tools.get("extract_questions"),
-        filling_tool=configured_tools.get("fill_form"),
+        extractor_tool=extractor_tool,
+        filling_tool=filling_tool,
         chat_history=chat_history,
     )
 

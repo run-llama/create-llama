@@ -32,7 +32,7 @@ class ExtractMissingCellsEvent(Event):
 
 
 class FindAnswersEvent(Event):
-    tool_call: ToolSelection
+    missing_cells: list[MissingCell]
 
 
 class FillEvent(Event):
@@ -90,7 +90,6 @@ class FormFillingWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
-        self.tools = [self.query_engine_tool, self.extractor_tool, self.filling_tool]
         self.llm: FunctionCallingLLM = llm or Settings.llm
         if not isinstance(self.llm, FunctionCallingLLM):
             raise ValueError("FormFillingWorkflow only supports FunctionCallingLLM.")
@@ -117,11 +116,11 @@ class FormFillingWorkflow(Workflow):
         return InputEvent(input=chat_history)
 
     @step(pass_context=True)
-    async def handle_llm_input(
+    async def handle_llm_input(  # type: ignore
         self,
         ctx: Context,
         ev: InputEvent,
-    ) -> ExtractMissingCellsEvent | FindAnswersEvent | FillEvent | StopEvent:
+    ) -> ExtractMissingCellsEvent | FillEvent | StopEvent:
         """
         Handle an LLM input and decide the next step.
         """
@@ -133,21 +132,20 @@ class FormFillingWorkflow(Workflow):
         is_tool_call = await generator.__anext__()
         if is_tool_call:
             full_response = await generator.__anext__()
-            tool_calls = self.llm.get_tool_calls_from_response(full_response)
+            tool_calls = self.llm.get_tool_calls_from_response(full_response)  # type: ignore
             for tool_call in tool_calls:
                 if tool_call.tool_name == self.extractor_tool.metadata.get_name():
-                    return ExtractMissingCellsEvent(tool_call=tool_call)
-                elif tool_call.tool_name == self.query_engine_tool.metadata.get_name():
-                    return FindAnswersEvent(tool_call=tool_call)
+                    ctx.send_event(ExtractMissingCellsEvent(tool_call=tool_call))
                 elif tool_call.tool_name == self.filling_tool.metadata.get_name():
-                    return FillEvent(tool_call=tool_call)
-        # If no tool call, return the generator
-        return StopEvent(result=generator)
+                    ctx.send_event(FillEvent(tool_call=tool_call))
+        else:
+            # If no tool call, return the generator
+            return StopEvent(result=generator)
 
     @step()
     async def extract_missing_cells(
         self, ctx: Context, ev: ExtractMissingCellsEvent
-    ) -> InputEvent:
+    ) -> InputEvent | FindAnswersEvent:
         """
         Extract missing cells in a CSV file and generate questions to fill them.
         """
@@ -168,7 +166,6 @@ class FormFillingWorkflow(Workflow):
             return InputEvent(input=self.memory.get())
 
         missing_cells = response.raw_output.get("missing_cells", [])
-        ctx.data["missing_cells"] = missing_cells
         message = ChatMessage(
             role=MessageRole.TOOL,
             content=str(missing_cells),
@@ -179,8 +176,8 @@ class FormFillingWorkflow(Workflow):
         )
         self.memory.put(message)
 
-        # send input event back with updated chat history
-        return InputEvent(input=self.memory.get())
+        # Forward missing cells information to find answers step
+        return FindAnswersEvent(missing_cells=missing_cells)
 
     @step()
     async def find_answers(self, ctx: Context, ev: FindAnswersEvent) -> InputEvent:
@@ -193,7 +190,7 @@ class FormFillingWorkflow(Workflow):
                 msg="Finding answers for missing cells",
             )
         )
-        missing_cells = ctx.data.get("missing_cells", None)
+        missing_cells = ev.missing_cells
         # If missing cells information is not found, fallback to other tools
         # It means that the extractor tool has not been called yet
         # Fallback to input
@@ -220,8 +217,7 @@ class FormFillingWorkflow(Workflow):
         # and stream the progress
         progress_id = str(uuid.uuid4())
         total_steps = len(missing_cells)
-        for i, missing_cell in enumerate(missing_cells):
-            cell = MissingCell(**missing_cell)
+        for i, cell in enumerate(missing_cells):
             if cell.question_to_answer is None:
                 continue
             ctx.write_event_to_stream(
@@ -248,15 +244,12 @@ class FormFillingWorkflow(Workflow):
                     value=str(answer),
                 )
             )
-        message = ChatMessage(
-            role=MessageRole.TOOL,
-            content=str(cell_values),
-            additional_kwargs={
-                "tool_call_id": ev.tool_call.tool_id,
-                "name": ev.tool_call.tool_name,
-            },
+        self.memory.put(
+            ChatMessage(
+                role=MessageRole.ASSISTANT,
+                content=str(cell_values),
+            )
         )
-        self.memory.put(message)
         return InputEvent(input=self.memory.get())
 
     @step()
@@ -295,7 +288,8 @@ class FormFillingWorkflow(Workflow):
         self, chat_history: list[ChatMessage]
     ) -> AsyncGenerator[ChatMessage | bool, None]:
         response_stream = await self.llm.astream_chat_with_tools(
-            self.tools, chat_history=chat_history
+            [self.extractor_tool, self.filling_tool],
+            chat_history=chat_history,
         )
 
         full_response = None
