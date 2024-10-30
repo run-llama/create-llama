@@ -2,12 +2,11 @@
 
 import { ChatMessage, ChatMessages, useChatUI } from "@llamaindex/chat-ui";
 import { ChatMessageAvatar } from "./chat-avatar";
-import { ChatMessageContent } from "./chat-message";
+import { ChatMessageContent } from "./chat-message-content";
 import { ChatStarter } from "./chat-starter";
 
 export default function CustomChatMessages() {
-  const { messages, append } = useChatUI();
-
+  const { messages } = useChatUI();
   return (
     <ChatMessages className="shadow-xl rounded-xl">
       <ChatMessages.List>
@@ -18,7 +17,7 @@ export default function CustomChatMessages() {
             isLast={index === messages.length - 1}
           >
             <ChatMessageAvatar />
-            <ChatMessageContent append={append} />
+            <ChatMessageContent />
             <ChatMessage.Actions />
           </ChatMessage>
         ))}
