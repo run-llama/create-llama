@@ -1,8 +1,9 @@
-import { StarterQuestions } from "@llamaindex/chat-ui";
+import { StarterQuestions, useChatUI } from "@llamaindex/chat-ui";
 import { useEffect, useState } from "react";
 import { useClientConfig } from "./hooks/use-config";
 
 export function ChatStarter() {
+  const { append } = useChatUI();
   const { backend } = useClientConfig();
   const [starterQuestions, setStarterQuestions] = useState<string[]>();
 
@@ -20,5 +21,5 @@ export function ChatStarter() {
   }, [starterQuestions, backend]);
 
   if (!starterQuestions?.length) return null;
-  return <StarterQuestions questions={starterQuestions} />;
+  return <StarterQuestions append={append} questions={starterQuestions} />;
 }
