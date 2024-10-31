@@ -1,4 +1,5 @@
-import { StarterQuestions, useChatUI } from "@llamaindex/chat-ui";
+import { useChatUI } from "@llamaindex/chat-ui";
+import { StarterQuestions } from "@llamaindex/chat-ui/widgets";
 import { useEffect, useState } from "react";
 import { useClientConfig } from "./hooks/use-config";
 

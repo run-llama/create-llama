@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  ChatInput,
-  DocumentPreview,
-  ImagePreview,
-  useChatUI,
-  useFile,
-} from "@llamaindex/chat-ui";
+import { ChatInput, useChatUI, useFile } from "@llamaindex/chat-ui";
+import { DocumentPreview, ImagePreview } from "@llamaindex/chat-ui/widgets";
 import { useClientConfig } from "./hooks/use-config";
 import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
