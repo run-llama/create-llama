@@ -6,7 +6,7 @@ import { useClientConfig } from "./hooks/use-config";
 import { LlamaCloudSelector } from "./widgets/LlamaCloudSelector";
 
 export default function CustomChatInput() {
-  const { requestData } = useChatUI();
+  const { requestData, isLoading, input } = useChatUI();
   const { backend } = useClientConfig();
   const {
     imageUrl,
@@ -58,7 +58,9 @@ export default function CustomChatInput() {
         <ChatInput.Field />
         <ChatInput.Upload onUpload={handleUploadFile} />
         <LlamaCloudSelector />
-        <ChatInput.Submit />
+        <ChatInput.Submit
+          disabled={isLoading || (!input.trim() && files.length === 0)}
+        />
       </ChatInput.Form>
     </ChatInput>
   );
