@@ -19,6 +19,17 @@ Second, run the development server:
 poetry run python main.py
 ```
 
+## Use Case: Filling Financial CSV Template
+
+To reproduce the use case, start the [frontend](../frontend/README.md) and follow these steps in the frontend:
+
+1. Upload the Apple and Tesla financial reports from the [data](./data) directory. Just send an empty message.
+2. Upload the CSV file [sec_10k_template.csv](./sec_10k_template.csv) and send the message "Fill the missing cells in the CSV file".
+
+The agent will fill the missing cells by retrieving the information from the uploaded financial reports and return a new CSV file with the filled cells.
+
+### API endpoints
+
 The example provides one streaming API endpoint `/api/chat`.
 You can test the endpoint with the following curl request:
 
@@ -28,7 +39,7 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "What can you do?" }] }'
 ```
 
-You can start editing the API by modifying `app/api/routers/chat.py` or `app/financial_report/workflow.py`. The API auto-updates as you save the files.
+You can start editing the API by modifying `app/api/routers/chat.py` or `app/agents/form_filling.py`. The API auto-updates as you save the files.
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 
@@ -37,12 +48,6 @@ The API allows CORS for all origins to simplify development. You can change this
 ```
 ENVIRONMENT=prod poetry run python main.py
 ```
-
-## Use Case: Filling Financial CSV Template
-
-The project already includes the Apple and Tesla financial reports in the [data](./data) directory and a CSV template [sec_10k_template.csv](./sec_10k_template.csv).
-
-You can upload the files to the app and ask it to fill the missing cells in the CSV file.
 
 ## Learn More
 
