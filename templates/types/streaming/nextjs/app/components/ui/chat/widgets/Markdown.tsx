@@ -1,5 +1,5 @@
-import { Markdown, SourceData } from "@llamaindex/chat-ui";
-import { useClientConfig } from "./hooks/use-config";
+import { Markdown as MarkdownUI, SourceData } from "@llamaindex/chat-ui";
+import { useClientConfig } from "../hooks/use-config";
 
 const preprocessMedia = (content: string) => {
   // Remove `sandbox:` from the beginning of the URL
@@ -7,7 +7,7 @@ const preprocessMedia = (content: string) => {
   return content.replace(/(sandbox|attachment|snt):/g, "");
 };
 
-export function ChatMarkdown({
+export function Markdown({
   content,
   sources,
 }: {
@@ -17,6 +17,10 @@ export function ChatMarkdown({
   const { backend } = useClientConfig();
   const processedContent = preprocessMedia(content);
   return (
-    <Markdown content={processedContent} backend={backend} sources={sources} />
+    <MarkdownUI
+      content={processedContent}
+      backend={backend}
+      sources={sources}
+    />
   );
 }

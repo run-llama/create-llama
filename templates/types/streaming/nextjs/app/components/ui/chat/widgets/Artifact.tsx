@@ -10,9 +10,9 @@ import {
 } from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
-import Markdown from "../chat-message/markdown";
 import { useClientConfig } from "../hooks/use-config";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
+import { Markdown } from "../widgets/Markdown";
 
 // detail information to execute code
 export type CodeArtifact = {

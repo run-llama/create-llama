@@ -3,8 +3,8 @@ import {
   ContentPosition,
   useChatMessage,
 } from "@llamaindex/chat-ui";
-import { ChatMarkdown } from "./chat-markdown";
 import { ToolAnnotations } from "./chat-tools";
+import { Markdown } from "./widgets/Markdown";
 
 export function ChatMessageContent() {
   const { message } = useChatMessage();
@@ -15,9 +15,6 @@ export function ChatMessageContent() {
     },
   ];
   return (
-    <ChatMessage.Content
-      content={customContent}
-      markdownComponent={ChatMarkdown}
-    />
+    <ChatMessage.Content content={customContent} markdownComponent={Markdown} />
   );
 }
