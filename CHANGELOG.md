@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.9
+
+### Patch Changes
+
+- ed59927: Add form filling use case (Python)
+
 ## 0.3.8
 
 ### Patch Changes
