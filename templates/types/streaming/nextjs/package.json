@@ -37,7 +37,7 @@
     "uuid": "^9.0.1",
     "vaul": "^0.9.1",
     "marked": "^14.1.2",
-    "@llamaindex/chat-ui": "0.0.3"
+    "@llamaindex/chat-ui": "0.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
