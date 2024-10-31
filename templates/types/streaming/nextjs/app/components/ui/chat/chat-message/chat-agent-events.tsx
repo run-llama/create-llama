@@ -88,13 +88,7 @@ function TextContent({ agent, steps }: { agent: string; steps: StepData[] }) {
   );
 }
 
-function ProgressContent({
-  step,
-  isFinished,
-}: {
-  step: StepProgress;
-  isFinished: boolean;
-}) {
+function ProgressContent({ step }: { step: StepProgress }) {
   const progressValue =
     step.progress.total !== 0
       ? Math.round(((step.progress.current + 1) / step.progress.total) * 100)
@@ -102,13 +96,12 @@ function ProgressContent({
 
   return (
     <div className="space-y-2 mt-2">
-      {!isFinished && step.text && (
+      {step.text && (
         <p className="text-sm text-muted-foreground">{step.text}</p>
       )}
       <Progress value={progressValue} className="w-full h-2" />
       <p className="text-sm text-muted-foreground">
-        {isFinished ? "Processed" : "Processing"} {step.progress.current + 1} of{" "}
-        {step.progress.total} steps...
+        Processing {step.progress.current + 1} of {step.progress.total} steps...
       </p>
     </div>
   );
@@ -151,8 +144,8 @@ function AgentEventContent({
       {steps.length > 0 && (
         <div className="flex-1">
           <TextContent agent={agent} steps={steps} />
-          {progressStep && (
-            <ProgressContent step={progressStep} isFinished={isFinished} />
+          {progressStep && !isFinished && (
+            <ProgressContent step={progressStep} />
           )}
         </div>
       )}
