@@ -21,18 +21,19 @@ const AgentIcons: Record<string, LucideIcon> = {
   publisher: icons.BookCheck,
 };
 
-type StepData = {
+type StepText = {
   text: string;
 };
 
-type StepProgress = StepData & {
+type StepProgress = {
+  text: string;
   progress: ProgressData;
 };
 
 type MergedEvent = {
   agent: string;
   icon: LucideIcon;
-  steps: Array<StepData | StepProgress>;
+  steps: Array<StepText | StepProgress>;
 };
 
 export function ChatAgentEvents({
@@ -61,29 +62,22 @@ export function ChatAgentEvents({
 
 const MAX_TEXT_LENGTH = 150;
 
-function TextContent({ agent, steps }: { agent: string; steps: StepData[] }) {
+function TextContent({ agent, step }: { agent: string; step: StepText }) {
   return (
     <>
-      <ul className="flex-1 list-decimal space-y-2">
-        {steps.map((step, index) => (
-          <li className="whitespace-break-spaces" key={index}>
-            {step.text.length <= MAX_TEXT_LENGTH && <span>{step.text}</span>}
-            {step.text.length > MAX_TEXT_LENGTH && (
-              <div>
-                <span>{step.text.slice(0, MAX_TEXT_LENGTH)}...</span>
-                <AgentEventDialog
-                  content={step.text}
-                  title={`Agent "${agent}" - Step: ${index + 1}`}
-                >
-                  <span className="font-semibold underline cursor-pointer ml-2">
-                    Show more
-                  </span>
-                </AgentEventDialog>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="whitespace-break-spaces">
+        {step.text.length <= MAX_TEXT_LENGTH && <span>{step.text}</span>}
+        {step.text.length > MAX_TEXT_LENGTH && (
+          <div>
+            <span>{step.text.slice(0, MAX_TEXT_LENGTH)}...</span>
+            <AgentEventDialog content={step.text} title={`Agent "${agent}"`}>
+              <span className="font-semibold underline cursor-pointer ml-2">
+                Show more
+              </span>
+            </AgentEventDialog>
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -116,14 +110,18 @@ function AgentEventContent({
   isLast: boolean;
   isFinished: boolean;
 }) {
-  const { agent, steps: allSteps } = event;
+  const { agent, steps } = event;
   const AgentIcon = event.icon;
+  const textSteps = steps.filter((step) => !("progress" in step));
+  const progressSteps = steps.filter(
+    (step) => "progress" in step,
+  ) as StepProgress[];
   // We only show progress at the last step
-  const lastStep =
-    allSteps.length > 0 ? allSteps[allSteps.length - 1] : undefined;
-  const progressStep =
-    lastStep && "progress" in lastStep ? (lastStep as StepProgress) : undefined;
-  const steps = allSteps.filter((step) => !("progress" in step));
+  // TODO: once we support steps that work in parallel, we need to update this
+  const lastProgressStep =
+    progressSteps.length > 0
+      ? progressSteps[progressSteps.length - 1]
+      : undefined;
 
   return (
     <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
@@ -141,11 +139,17 @@ function AgentEventContent({
         </div>
         <span className="font-bold">{agent}</span>
       </div>
-      {steps.length > 0 && (
+      {textSteps.length > 0 && (
         <div className="flex-1">
-          <TextContent agent={agent} steps={steps} />
-          {progressStep && !isFinished && (
-            <ProgressContent step={progressStep} />
+          <ul className="list-decimal space-y-2">
+            {textSteps.map((step, index) => (
+              <li key={index}>
+                <TextContent agent={agent} step={step} />
+              </li>
+            ))}
+          </ul>
+          {lastProgressStep && !isFinished && (
+            <ProgressContent step={lastProgressStep} />
           )}
         </div>
       )}
@@ -187,13 +191,13 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
     const eventStep = event.data
-      ? {
+      ? ({
           text: event.text,
           progress: event.data,
-        }
-      : {
+        } as StepProgress)
+      : ({
           text: event.text,
-        };
+        } as StepText);
 
     if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
       lastMergedEvent.steps.push(eventStep);
