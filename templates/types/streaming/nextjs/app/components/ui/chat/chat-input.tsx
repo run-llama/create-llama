@@ -122,13 +122,19 @@ export default function ChatInput(
           config={{
             allowedExtensions: ALLOWED_EXTENSIONS,
             disabled: props.isLoading,
+            multiple: true,
           }}
         />
         {process.env.NEXT_PUBLIC_USE_LLAMACLOUD === "true" &&
           props.setRequestData && (
             <LlamaCloudSelector setRequestData={props.setRequestData} />
           )}
-        <Button type="submit" disabled={props.isLoading || !props.input.trim()}>
+        <Button
+          type="submit"
+          disabled={
+            props.isLoading || (!props.input.trim() && files.length === 0)
+          }
+        >
           Send message
         </Button>
       </div>
