@@ -21,11 +21,18 @@ const AgentIcons: Record<string, LucideIcon> = {
   publisher: icons.BookCheck,
 };
 
+type StepData = {
+  text: string;
+};
+
+type StepProgress = StepData & {
+  progress: ProgressData;
+};
+
 type MergedEvent = {
   agent: string;
-  texts: string[];
   icon: LucideIcon;
-  progress?: ProgressData;
+  steps: Array<StepData | StepProgress>;
 };
 
 export function ChatAgentEvents({
@@ -53,64 +60,55 @@ export function ChatAgentEvents({
 }
 
 const MAX_TEXT_LENGTH = 150;
-const MAX_LINES = 3;
 
-function TextContent({
-  texts,
-  maxLength = MAX_TEXT_LENGTH,
-  maxLines = MAX_LINES,
-}: {
-  texts: string[];
-  maxLength?: number;
-  maxLines?: number;
-}) {
+function TextContent({ agent, steps }: { agent: string; steps: StepData[] }) {
   return (
     <>
-      <ul className="list-decimal space-y-2">
-        {texts.slice(0, maxLines).map((text, index) => (
+      <ul className="flex-1 list-decimal space-y-2">
+        {steps.map((step, index) => (
           <li className="whitespace-break-spaces" key={index}>
-            {text.slice(0, maxLength)}
-            {text.length > maxLength && "..."}
+            {step.text.length <= MAX_TEXT_LENGTH && <span>{step.text}</span>}
+            {step.text.length > MAX_TEXT_LENGTH && (
+              <div>
+                <span>{step.text.slice(0, MAX_TEXT_LENGTH)}...</span>
+                <AgentEventDialog
+                  content={step.text}
+                  title={`Agent "${agent}" - Step: ${index + 1}`}
+                >
+                  <span className="font-semibold underline cursor-pointer ml-2">
+                    Show more
+                  </span>
+                </AgentEventDialog>
+              </div>
+            )}
           </li>
         ))}
       </ul>
-      {texts.length > maxLines && (
-        <AgentEventDialog
-          content={texts.map((text) => `\n${text}\n`).join("")}
-          title={`All Steps`}
-        >
-          <span className="font-semibold underline cursor-pointer">
-            Show all
-          </span>
-        </AgentEventDialog>
-      )}
     </>
   );
 }
 
 function ProgressContent({
-  progress,
+  step,
   isFinished,
-  msg,
 }: {
-  progress: ProgressData;
+  step: StepProgress;
   isFinished: boolean;
-  msg?: string;
 }) {
   const progressValue =
-    progress.total !== 0
-      ? Math.round(((progress.current + 1) / progress.total) * 100)
+    step.progress.total !== 0
+      ? Math.round(((step.progress.current + 1) / step.progress.total) * 100)
       : 0;
 
   return (
     <div className="space-y-2 mt-2">
-      {!isFinished && msg && (
-        <p className="text-sm text-muted-foreground">{msg}</p>
+      {!isFinished && step.text && (
+        <p className="text-sm text-muted-foreground">{step.text}</p>
       )}
       <Progress value={progressValue} className="w-full h-2" />
       <p className="text-sm text-muted-foreground">
-        {isFinished ? "Processed" : "Processing"} {progress.current + 1} of{" "}
-        {progress.total} steps...
+        {isFinished ? "Processed" : "Processing"} {step.progress.current + 1} of{" "}
+        {step.progress.total} steps...
       </p>
     </div>
   );
@@ -125,8 +123,14 @@ function AgentEventContent({
   isLast: boolean;
   isFinished: boolean;
 }) {
-  const { agent, texts, progress } = event;
+  const { agent, steps: allSteps } = event;
   const AgentIcon = event.icon;
+  // We only show progress at the last step
+  const lastStep =
+    allSteps.length > 0 ? allSteps[allSteps.length - 1] : undefined;
+  const progressStep =
+    lastStep && "progress" in lastStep ? (lastStep as StepProgress) : undefined;
+  const steps = allSteps.filter((step) => !("progress" in step));
 
   return (
     <div className="flex gap-4 border-b pb-4 items-center fadein-agent">
@@ -144,18 +148,14 @@ function AgentEventContent({
         </div>
         <span className="font-bold">{agent}</span>
       </div>
-      <div className="flex-1">
-        {texts.length > 0 && (
-          <TextContent texts={texts} maxLines={progress ? 1 : MAX_LINES} />
-        )}
-        {progress && (
-          <ProgressContent
-            progress={progress}
-            isFinished={isFinished}
-            msg={texts[texts.length - 1]}
-          />
-        )}
-      </div>
+      {steps.length > 0 && (
+        <div className="flex-1">
+          <TextContent agent={agent} steps={steps} />
+          {progressStep && (
+            <ProgressContent step={progressStep} isFinished={isFinished} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -193,17 +193,22 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
   for (const event of events) {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
-    const progressData = event.data;
+    const eventStep = event.data
+      ? {
+          text: event.text,
+          progress: event.data,
+        }
+      : {
+          text: event.text,
+        };
+
     if (lastMergedEvent && lastMergedEvent.agent === event.agent) {
-      // Update for the last merged event
-      lastMergedEvent.progress = progressData;
-      lastMergedEvent.texts.push(event.text);
+      lastMergedEvent.steps.push(eventStep);
     } else {
       mergedEvents.push({
         agent: event.agent,
-        texts: [event.text],
+        steps: [eventStep],
         icon: AgentIcons[event.agent.toLowerCase()] ?? icons.Bot,
-        progress: progressData,
       });
     }
   }
