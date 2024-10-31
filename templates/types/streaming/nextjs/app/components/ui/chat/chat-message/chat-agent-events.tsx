@@ -63,13 +63,21 @@ export function ChatAgentEvents({
 const MAX_TEXT_LENGTH = 150;
 
 function TextContent({ agent, step }: { agent: string; step: StepText }) {
+  const { displayText, showMore } = useMemo(
+    () => ({
+      displayText: step.text.slice(0, MAX_TEXT_LENGTH),
+      showMore: step.text.length > MAX_TEXT_LENGTH,
+    }),
+    [step.text],
+  );
+
   return (
     <>
       <div className="whitespace-break-spaces">
-        {step.text.length <= MAX_TEXT_LENGTH && <span>{step.text}</span>}
-        {step.text.length > MAX_TEXT_LENGTH && (
+        {!showMore && <span>{step.text}</span>}
+        {showMore && (
           <div>
-            <span>{step.text.slice(0, MAX_TEXT_LENGTH)}...</span>
+            <span>{displayText}...</span>
             <AgentEventDialog content={step.text} title={`Agent "${agent}"`}>
               <span className="font-semibold underline cursor-pointer ml-2">
                 Show more
@@ -190,7 +198,7 @@ function mergeAdjacentEvents(events: AgentEventData[]): MergedEvent[] {
   for (const event of events) {
     const lastMergedEvent = mergedEvents[mergedEvents.length - 1];
 
-    const eventStep = event.data
+    const eventStep: StepText | StepProgress = event.data
       ? ({
           text: event.text,
           progress: event.data,
