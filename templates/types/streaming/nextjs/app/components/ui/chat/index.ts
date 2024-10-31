@@ -56,9 +56,17 @@ export type EventData = {
   title: string;
 };
 
+export type ProgressData = {
+  id: string;
+  total: number;
+  current: number;
+};
+
 export type AgentEventData = {
   agent: string;
   text: string;
+  type: "text" | "progress";
+  data?: ProgressData;
 };
 
 export type ToolData = {

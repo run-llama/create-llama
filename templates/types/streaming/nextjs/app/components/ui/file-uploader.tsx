@@ -12,6 +12,7 @@ export interface FileUploaderProps {
     allowedExtensions?: string[];
     checkExtension?: (extension: string) => string | null;
     disabled: boolean;
+    multiple?: boolean;
   };
   onFileUpload: (file: File) => Promise<void>;
   onFileError?: (errMsg: string) => void;
@@ -26,6 +27,7 @@ export default function FileUploader({
   onFileError,
 }: FileUploaderProps) {
   const [uploading, setUploading] = useState(false);
+  const [remainingFiles, setRemainingFiles] = useState<number>(0);
 
   const inputId = config?.inputId || DEFAULT_INPUT_ID;
   const fileSizeLimit = config?.fileSizeLimit || DEFAULT_FILE_SIZE_LIMIT;
@@ -50,30 +52,51 @@ export default function FileUploader({
   };
 
   const onFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
     setUploading(true);
-    await handleUpload(file);
+
+    await handleUpload(files);
+
     resetInput();
     setUploading(false);
   };
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (files: File[]) => {
     const onFileUploadError = onFileError || window.alert;
-    const fileExtension = file.name.split(".").pop() || "";
-    const extensionFileError = checkExtension(fileExtension);
-    if (extensionFileError) {
-      return onFileUploadError(extensionFileError);
+    // Validate files
+    // If multiple files with image or multiple images
+    if (
+      files.length > 1 &&
+      files.some((file) => file.type.startsWith("image/"))
+    ) {
+      onFileUploadError("Multiple files with image are not supported");
+      return;
     }
 
-    if (isFileSizeExceeded(file)) {
-      return onFileUploadError(
-        `File size exceeded. Limit is ${fileSizeLimit / 1024 / 1024} MB`,
-      );
+    for (const file of files) {
+      const fileExtension = file.name.split(".").pop() || "";
+      const extensionFileError = checkExtension(fileExtension);
+      if (extensionFileError) {
+        onFileUploadError(extensionFileError);
+        return;
+      }
+
+      if (isFileSizeExceeded(file)) {
+        onFileUploadError(
+          `File size exceeded. Limit is ${fileSizeLimit / 1024 / 1024} MB`,
+        );
+        return;
+      }
     }
 
-    await onFileUpload(file);
+    setRemainingFiles(files.length);
+    for (const file of files) {
+      await onFileUpload(file);
+      setRemainingFiles((prev) => prev - 1);
+    }
+    setRemainingFiles(0);
   };
 
   return (
@@ -85,17 +108,25 @@ export default function FileUploader({
         onChange={onFileChange}
         accept={allowedExtensions?.join(",")}
         disabled={config?.disabled || uploading}
+        multiple={config?.multiple}
       />
       <label
         htmlFor={inputId}
         className={cn(
           buttonVariants({ variant: "secondary", size: "icon" }),
-          "cursor-pointer",
+          "cursor-pointer relative",
           uploading && "opacity-50",
         )}
       >
         {uploading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="relative flex items-center justify-center h-full w-full">
+            <Loader2 className="h-6 w-6 animate-spin absolute" />
+            {remainingFiles > 0 && (
+              <span className="text-xs absolute inset-0 flex items-center justify-center">
+                {remainingFiles}
+              </span>
+            )}
+          </div>
         ) : (
           <Paperclip className="-rotate-45 w-4 h-4" />
         )}
