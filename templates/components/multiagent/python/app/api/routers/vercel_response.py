@@ -1,12 +1,11 @@
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator, List
+from typing import AsyncGenerator, Awaitable, List
 
 from aiostream import stream
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
-from app.workflows.single import AgentRunEvent, AgentRunResult
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
@@ -55,8 +54,8 @@ class VercelStreamResponse(StreamingResponse):
         self,
         request: Request,
         chat_data: ChatData,
-        event_handler: AgentRunResult | AsyncGenerator,
-        events: AsyncGenerator[AgentRunEvent, None],
+        event_handler: Awaitable,
+        events: AsyncGenerator,
         verbose: bool = True,
     ):
         # Yield the text response
@@ -64,15 +63,17 @@ class VercelStreamResponse(StreamingResponse):
             result = await event_handler
             final_response = ""
 
-            if isinstance(result, AgentRunResult):
-                for token in result.response.message.content:
-                    final_response += token
-                    yield self.convert_text(token)
-
             if isinstance(result, AsyncGenerator):
                 async for token in result:
-                    final_response += token.delta
+                    final_response += str(token.delta)
                     yield self.convert_text(token.delta)
+            else:
+                if hasattr(result, "response"):
+                    content = result.response.message.content
+                    if content:
+                        for token in content:
+                            final_response += str(token)
+                            yield self.convert_text(token)
 
             # Generate next questions if next question prompt is configured
             question_data = await self._generate_next_questions(
@@ -86,7 +87,7 @@ class VercelStreamResponse(StreamingResponse):
         # Yield the events from the event handler
         async def _event_generator():
             async for event in events:
-                event_response = self._event_to_response(event)
+                event_response = event.to_response()
                 if verbose:
                     logger.debug(event_response)
                 if event_response is not None:
@@ -94,13 +95,6 @@ class VercelStreamResponse(StreamingResponse):
 
         combine = stream.merge(_chat_response_generator(), _event_generator())
         return combine
-
-    @staticmethod
-    def _event_to_response(event: AgentRunEvent) -> dict:
-        return {
-            "type": "agent",
-            "data": {"agent": event.name, "text": event.msg},
-        }
 
     @classmethod
     def convert_text(cls, token: str):
