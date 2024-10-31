@@ -3,7 +3,7 @@ import {
   ContentPosition,
   useChatMessage,
 } from "@llamaindex/chat-ui";
-import {ChatMarkdown} from "./chat-markdown";
+import { ChatMarkdown } from "./chat-markdown";
 import { ToolAnnotations } from "./chat-tools";
 
 export function ChatMessageContent() {
