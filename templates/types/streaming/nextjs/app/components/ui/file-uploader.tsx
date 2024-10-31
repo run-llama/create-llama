@@ -80,14 +80,14 @@ export default function FileUploader({
       const extensionFileError = checkExtension(fileExtension);
       if (extensionFileError) {
         onFileUploadError(extensionFileError);
-        continue;
+        return;
       }
 
       if (isFileSizeExceeded(file)) {
         onFileUploadError(
           `File size exceeded. Limit is ${fileSizeLimit / 1024 / 1024} MB`,
         );
-        continue;
+        return;
       }
     }
 
