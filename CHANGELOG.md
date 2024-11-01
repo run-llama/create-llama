@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.3.10
+
+### Patch Changes
+
+- 9172fed: feat: bump LITS 0.8.2
+- 78ccde7: feat: use llamaindex chat-ui for nextjs frontend
+
 ## 0.3.9
 
 ### Patch Changes
