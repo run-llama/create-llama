@@ -70,7 +70,9 @@ export default function CustomChatInput() {
         <ChatInput.Upload onUpload={handleUploadFile} />
         <LlamaCloudSelector />
         <ChatInput.Submit
-          disabled={isLoading || (!input.trim() && files.length === 0)}
+          disabled={
+            isLoading || (!input.trim() && files.length === 0 && !imageUrl)
+          }
         />
       </ChatInput.Form>
     </ChatInput>
