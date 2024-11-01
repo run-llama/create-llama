@@ -1,5 +1,8 @@
-import { BaseNodePostprocessor } from "@llamaindex/core/postprocessor";
-import { MessageContent, NodeWithScore } from "llamaindex";
+import {
+  BaseNodePostprocessor,
+  MessageContent,
+  NodeWithScore,
+} from "llamaindex";
 
 class NodeCitationProcessor implements BaseNodePostprocessor {
   /**
