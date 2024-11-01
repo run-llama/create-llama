@@ -4,8 +4,8 @@ import {
   getSourceAnnotationData,
   useChatMessage,
 } from "@llamaindex/chat-ui";
-import { ToolAnnotations } from "./chat-tools";
-import { Markdown } from "./widgets/Markdown";
+import { Markdown } from "./custom/markdown";
+import { ToolAnnotations } from "./tools/chat-tools";
 
 export function ChatMessageContent() {
   const { message } = useChatMessage();
