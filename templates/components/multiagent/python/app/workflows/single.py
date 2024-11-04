@@ -132,7 +132,15 @@ class FunctionCallingAgent(Workflow):
 
         tool_calls, response = await self.tool_calls_or_response(chat_history)
         if tool_calls is None:
-            return StopEvent(result=response)
+            if ctx.data["streaming"]:
+                return StopEvent(result=response)
+            else:
+                full_response = await response.__anext__()
+                result = AgentRunResult(
+                    response=full_response,
+                    sources=[],
+                )
+                return StopEvent(result=result)
         else:
             self.memory.put(response.message)
             return ToolCallEvent(tool_calls=tool_calls)
