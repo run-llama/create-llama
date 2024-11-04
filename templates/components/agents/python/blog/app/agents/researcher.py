@@ -42,11 +42,15 @@ def _get_research_tools(**kwargs) -> QueryEngineTool:
     query_engine_tool = _create_query_engine_tool(**kwargs)
     if query_engine_tool is not None:
         tools.append(query_engine_tool)
-    researcher_tool_names = ["duckduckgo", "wikipedia.WikipediaToolSpec"]
+    researcher_tool_names = [
+        "duckduckgo_search",
+        "duckduckgo_image_search",
+        "wikipedia.WikipediaToolSpec",
+    ]
     configured_tools = ToolFactory.from_env(map_result=True)
     for tool_name, tool in configured_tools.items():
         if tool_name in researcher_tool_names:
-            tools.extend(tool)
+            tools.append(tool)
     return tools
 
 

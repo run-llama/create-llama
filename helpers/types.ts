@@ -49,7 +49,7 @@ export type TemplateDataSource = {
 };
 export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
-export type TemplateAgents = "financial_report" | "blog";
+export type TemplateAgents = "financial_report" | "blog" | "form_filling";
 // Config for both file and folder
 export type FileSourceConfig =
   | {

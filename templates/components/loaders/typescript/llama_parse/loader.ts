@@ -2,7 +2,7 @@ import { LlamaParseReader } from "llamaindex";
 import {
   FILE_EXT_TO_READER,
   SimpleDirectoryReader,
-} from "llamaindex/readers/SimpleDirectoryReader";
+} from "llamaindex/readers/index";
 
 export const DATA_DIR = "./data";
 

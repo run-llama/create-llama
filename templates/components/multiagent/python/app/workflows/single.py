@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from enum import Enum
 from typing import Any, AsyncGenerator, List, Optional
 
 from llama_index.core.llms import ChatMessage, ChatResponse
@@ -15,7 +16,7 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class InputEvent(Event):
@@ -26,17 +27,27 @@ class ToolCallEvent(Event):
     tool_calls: list[ToolSelection]
 
 
+class AgentRunEventType(Enum):
+    TEXT = "text"
+    PROGRESS = "progress"
+
+
 class AgentRunEvent(Event):
     name: str
-    _msg: str
+    msg: str
+    event_type: AgentRunEventType = Field(default=AgentRunEventType.TEXT)
+    data: Optional[dict] = None
 
-    @property
-    def msg(self):
-        return self._msg
-
-    @msg.setter
-    def msg(self, value):
-        self._msg = value
+    def to_response(self) -> dict:
+        return {
+            "type": "agent",
+            "data": {
+                "name": self.name,
+                "type": self.event_type.value,
+                "msg": self.msg,
+                "data": self.data,
+            },
+        }
 
 
 class AgentRunResult(BaseModel):

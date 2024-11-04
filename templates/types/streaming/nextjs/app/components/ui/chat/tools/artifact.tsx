@@ -10,7 +10,7 @@ import {
 } from "../../collapsible";
 import { cn } from "../../lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../tabs";
-import Markdown from "../chat-message/markdown";
+import { Markdown } from "../custom/markdown";
 import { useClientConfig } from "../hooks/use-config";
 import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 
@@ -29,12 +29,17 @@ export type CodeArtifact = {
   files?: string[];
 };
 
+type OutputUrl = {
+  url: string;
+  filename: string;
+};
+
 type ArtifactResult = {
   template: string;
   stdout: string[];
   stderr: string[];
   runtimeError?: { name: string; value: string; tracebackRaw: string[] };
-  outputUrls: Array<{ url: string; filename: string }>;
+  outputUrls: OutputUrl[];
   url: string;
 };
 
@@ -272,11 +277,7 @@ function CodeSandboxPreview({ url }: { url: string }) {
   );
 }
 
-function InterpreterOutput({
-  outputUrls,
-}: {
-  outputUrls: Array<{ url: string; filename: string }>;
-}) {
+function InterpreterOutput({ outputUrls }: { outputUrls: OutputUrl[] }) {
   return (
     <ul className="flex flex-col gap-2 mt-4">
       {outputUrls.map((url) => (

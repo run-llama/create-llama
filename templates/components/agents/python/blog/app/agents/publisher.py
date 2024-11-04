@@ -11,11 +11,11 @@ def get_publisher_tools() -> Tuple[List[FunctionTool], str, str]:
     tools = []
     # Get configured tools from the tools.yaml file
     configured_tools = ToolFactory.from_env(map_result=True)
-    if "document_generator" in configured_tools.keys():
-        tools.extend(configured_tools["document_generator"])
+    if "generate_document" in configured_tools.keys():
+        tools.append(configured_tools["generate_document"])
         prompt_instructions = dedent("""
             Normally, reply the blog post content to the user directly. 
-            But if user requested to generate a file, use the document_generator tool to generate the file and reply the link to the file.
+            But if user requested to generate a file, use the generate_document tool to generate the file and reply the link to the file.
         """)
         description = "Expert in publishing the blog post, able to publish the blog post in PDF or HTML format."
     else:
