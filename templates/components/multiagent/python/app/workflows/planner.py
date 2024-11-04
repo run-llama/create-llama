@@ -60,10 +60,9 @@ class PlanEvent(AgentRunEvent):
     event_type: PlanEventType
     plan: Plan
 
-    @property
-    def msg(self) -> str:
-        sub_task_names = ", ".join(task.name for task in self.plan.sub_tasks)
-        return f"Plan {self.event_type.value}: Let's do: {sub_task_names}"
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        msg = ", ".join(task.name for task in kwargs["plan"].sub_tasks)
+        super().__init__(*args, msg=msg, **kwargs)
 
 
 class StructuredPlannerAgent(Workflow):

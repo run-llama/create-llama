@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, AsyncGenerator, List
 
 from app.workflows.planner import StructuredPlannerAgent
 from app.workflows.single import (
@@ -35,12 +35,23 @@ class AgentCallTool(ContextAwareTool):
         )
 
     # overload the acall function with the ctx argument as it's needed for bubbling the events
-    async def acall(self, ctx: Context, input: str) -> ToolOutput:
+    async def acall(self, ctx: Context, input: str) -> ToolOutput:  # type: ignore
         handler = self.agent.run(input=input)
         # bubble all events while running the agent to the calling agent
         async for ev in handler.stream_events():
             if type(ev) is not StopEvent:
                 ctx.write_event_to_stream(ev)
+            else:
+                full_response = None
+                if isinstance(ev.result, AsyncGenerator):
+                    async for sub_ev in ev.result:
+                        full_response = sub_ev.message.content
+                    return ToolOutput(
+                        content=full_response,
+                        tool_name=self.metadata.name,
+                        raw_input={"args": input, "kwargs": {}},
+                        raw_output=full_response,
+                    )
         ret: AgentRunResult = await handler
         response = ret.response.message.content
         return ToolOutput(
@@ -61,6 +72,8 @@ class AgentCallingAgent(FunctionCallingAgent):
     ) -> None:
         agents = agents or []
         tools = [AgentCallTool(agent=agent) for agent in agents]
+        # The agent now are the tools so we cannot share the chat history to the tools to avoid memory conflicts
+        kwargs.pop("chat_history", None)
         super().__init__(*args, name=name, tools=tools, **kwargs)
         # call add_workflows so agents will get detected by llama agents automatically
         self.add_workflows(**{agent.name: agent for agent in agents})
