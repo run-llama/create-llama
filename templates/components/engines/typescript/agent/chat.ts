@@ -1,7 +1,7 @@
 import {
   BaseChatEngine,
   BaseToolWithCall,
-  OpenAIAgent,
+  LLMAgent,
   QueryEngineTool,
 } from "llamaindex";
 import fs from "node:fs/promises";
@@ -42,7 +42,7 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
     tools.push(...(await createTools(toolConfig)));
   }
 
-  const agent = new OpenAIAgent({
+  const agent = new LLMAgent({
     tools,
     systemPrompt: process.env.SYSTEM_PROMPT,
   }) as unknown as BaseChatEngine;
