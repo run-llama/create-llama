@@ -336,6 +336,20 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
           },
         ]
       : []),
+    ...(modelConfig.provider === "huggingface"
+      ? [
+          {
+            name: "EMBEDDING_BACKEND",
+            description:
+              "The backend to use for the Sentence Transformers embedding model, either 'torch', 'onnx', or 'openvino'. Defaults to 'onnx'.",
+          },
+          {
+            name: "EMBEDDING_TRUST_REMOTE_CODE",
+            description:
+              "Whether to trust remote code for the embedding model, required for some models with custom code.",
+          },
+        ]
+      : []),
     ...(modelConfig.provider === "t-systems"
       ? [
           {
