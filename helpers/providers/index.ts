@@ -5,6 +5,7 @@ import { askAnthropicQuestions } from "./anthropic";
 import { askAzureQuestions } from "./azure";
 import { askGeminiQuestions } from "./gemini";
 import { askGroqQuestions } from "./groq";
+import { askHuggingfaceQuestions } from "./huggingface";
 import { askLLMHubQuestions } from "./llmhub";
 import { askMistralQuestions } from "./mistral";
 import { askOllamaQuestions } from "./ollama";
@@ -39,6 +40,7 @@ export async function askModelConfig({
 
     if (framework === "fastapi") {
       choices.push({ title: "T-Systems", value: "t-systems" });
+      choices.push({ title: "Huggingface", value: "huggingface" });
     }
     const { provider } = await prompts(
       {
@@ -75,6 +77,9 @@ export async function askModelConfig({
       break;
     case "t-systems":
       modelConfig = await askLLMHubQuestions({ askModels });
+      break;
+    case "huggingface":
+      modelConfig = await askHuggingfaceQuestions({ askModels });
       break;
     default:
       modelConfig = await askOpenAIQuestions({

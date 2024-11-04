@@ -234,6 +234,21 @@ const getAdditionalDependencies = (
         version: "0.2.4",
       });
       break;
+    case "huggingface":
+      dependencies.push({
+        name: "llama-index-llms-huggingface",
+        version: "^0.3.5",
+      });
+      dependencies.push({
+        name: "llama-index-embeddings-huggingface",
+        version: "^0.3.1",
+      });
+      dependencies.push({
+        name: "optimum",
+        version: "^1.23.3",
+        extras: ["onnxruntime"],
+      });
+      break;
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",
