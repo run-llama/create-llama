@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.3.11
+
+### Patch Changes
+
+- 2b8aaa8: Add support for local models via Hugging Face
+- b9570b2: Fix: use generic LLMAgent instead of OpenAIAgent (adds support for Gemini and Anthropic for Agentic RAG)
+- 1fe21f8: Fix the highlight.js issue with the Next.js static build
+- 00009ae: feat: import pdf css
+
 ## 0.3.10
 
 ### Patch Changes
