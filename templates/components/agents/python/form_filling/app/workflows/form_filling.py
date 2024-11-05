@@ -45,16 +45,16 @@ def create_workflow(
         query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
     configured_tools = ToolFactory.from_env(map_result=True)
-    extractor_tool = configured_tools.get("extract_questions")
-    filling_tool = configured_tools.get("fill_form")
+    extractor_tool = configured_tools.get("extract_questions")  # type: ignore
+    filling_tool = configured_tools.get("fill_form")  # type: ignore
 
     if extractor_tool is None or filling_tool is None:
         raise ValueError("Extractor or filling tool is not found!")
 
     workflow = FormFillingWorkflow(
         query_engine_tool=query_engine_tool,
-        extractor_tool=extractor_tool,
-        filling_tool=filling_tool,
+        extractor_tool=extractor_tool,  # type: ignore
+        filling_tool=filling_tool,  # type: ignore
         chat_history=chat_history,
     )
 
@@ -96,12 +96,12 @@ class FormFillingWorkflow(Workflow):
     You are a helpful assistant who helps fill missing cells in a CSV file.
     Only extract missing cells from CSV files.
     Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
-    If the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
+    If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
     """
 
     def __init__(
         self,
-        query_engine_tool: QueryEngineTool,
+        query_engine_tool: Optional[QueryEngineTool],
         extractor_tool: FunctionTool,
         filling_tool: FunctionTool,
         llm: Optional[FunctionCallingLLM] = None,
@@ -115,6 +115,9 @@ class FormFillingWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
+        self.tools = [self.extractor_tool, self.filling_tool]
+        if self.query_engine_tool is not None:
+            self.tools.append(self.query_engine_tool)  # type: ignore
         self.llm: FunctionCallingLLM = llm or Settings.llm
         if not isinstance(self.llm, FunctionCallingLLM):
             raise ValueError("FormFillingWorkflow only supports FunctionCallingLLM.")
@@ -152,7 +155,7 @@ class FormFillingWorkflow(Workflow):
         chat_history: list[ChatMessage] = ev.input
         response = await chat_with_tools(
             self.llm,
-            [self.extractor_tool, self.filling_tool, self.query_engine_tool],
+            self.tools,
             chat_history,
         )
         is_tool_call = isinstance(response, ToolCallResponse)
