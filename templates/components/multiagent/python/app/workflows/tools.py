@@ -13,12 +13,32 @@ from llama_index.core.tools import (
     ToolSelection,
 )
 from llama_index.core.workflow import Context
+from pydantic import BaseModel, ConfigDict
 
 
 class ContextAwareTool(FunctionTool, ABC):
     @abstractmethod
     async def acall(self, ctx: Context, input: Any) -> ToolOutput:  # type: ignore
         pass
+
+
+class ResponseGenerator(BaseModel):
+    """
+    A response generator from chat_with_tools.
+    """
+
+    generator: AsyncGenerator[ChatResponse | None, None]
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class ToolCallResponse(BaseModel):
+    """
+    A tool call response from chat_with_tools.
+    """
+
+    tool_calls: list[ToolSelection]
+    tool_call_message: ChatMessage
 
 
 async def workflow_step_as_tool(step: Callable) -> FunctionTool:
@@ -133,13 +153,11 @@ async def call_tools(
     return tool_msgs
 
 
-async def tool_calls_or_response(  # type: ignore
+async def chat_with_tools(  # type: ignore
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
     chat_history: list[ChatMessage],
-) -> tuple[
-    list[ToolSelection] | None, AsyncGenerator[ChatMessage, None] | ChatResponse
-]:
+) -> ToolCallResponse | ResponseGenerator:
     """
     Request LLM to call tools or not.
     This function doesn't change the memory.
@@ -147,19 +165,25 @@ async def tool_calls_or_response(  # type: ignore
     generator = _tool_call_generator(llm, tools, chat_history)
     is_tool_call = await generator.__anext__()
     if is_tool_call:
+        # Last chunk is the full response
+        # Wait for the last chunk
+        full_response = None
         async for chunk in generator:
             full_response = chunk
-        tool_calls = llm.get_tool_calls_from_response(full_response)
-        return tool_calls, full_response
+        assert isinstance(full_response, ChatResponse)
+        return ToolCallResponse(
+            tool_calls=llm.get_tool_calls_from_response(full_response),
+            tool_call_message=full_response.message,
+        )
     else:
-        return None, generator
+        return ResponseGenerator(generator=generator)
 
 
 async def _tool_call_generator(
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
     chat_history: list[ChatMessage],
-) -> AsyncGenerator[ChatMessage | bool, None]:
+) -> AsyncGenerator[ChatResponse | bool, None]:
     response_stream = await llm.astream_chat_with_tools(
         tools,
         chat_history=chat_history,
@@ -184,6 +208,13 @@ async def _tool_call_generator(
 
         full_response = chunk
 
-    # Write the full response to memory and yield it
     if full_response:
         yield full_response  # type: ignore
+
+
+def is_calling_different_tools(tool_calls: list[ToolSelection]) -> bool:
+    """
+    Check if the tool calls are from different tools.
+    """
+    tool_names = {tool_call.tool_name for tool_call in tool_calls}
+    return len(tool_names) > 1

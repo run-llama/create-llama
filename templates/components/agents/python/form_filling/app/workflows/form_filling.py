@@ -4,7 +4,12 @@ from typing import Any, Dict, List, Optional
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
-from app.workflows.tools import call_tools, tool_calls_or_response
+from app.workflows.tools import (
+    ToolCallResponse,
+    call_tools,
+    chat_with_tools,
+    is_calling_different_tools,
+)
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
@@ -145,24 +150,18 @@ class FormFillingWorkflow(Workflow):
         Handle an LLM input and decide the next step.
         """
         chat_history: list[ChatMessage] = ev.input
-        tool_calls, generator = await tool_calls_or_response(
+        response = await chat_with_tools(
             self.llm,
             [self.extractor_tool, self.filling_tool, self.query_engine_tool],
             chat_history,
         )
-
-        if tool_calls is None:
-            return StopEvent(result=generator)
-        # Grouping tool calls to the same agent
-        # We need to group them by the agent name
-        tool_groups: Dict[str, List[ToolSelection]] = {}
-        for tool_call in tool_calls:
-            tool_groups.setdefault(tool_call.tool_name, []).append(tool_call)  # type: ignore
-
-        # LLM Input step use the function calling to define the next step
-        # calling different step with tools at the same time is not supported at the moment
-        # add an error message to tell the AI process step by step
-        if len(tool_groups) > 1:
+        is_tool_call = isinstance(response, ToolCallResponse)
+        if not is_tool_call:
+            return StopEvent(result=response.generator)
+        # calling different tools at the same time is not supported at the moment
+        # add an error message to tell the AI to process step by step
+        tool_calls = response.tool_calls
+        if is_calling_different_tools(tool_calls):
             self.memory.put(
                 ChatMessage(
                     role=MessageRole.ASSISTANT,
@@ -170,8 +169,8 @@ class FormFillingWorkflow(Workflow):
                 )
             )
             return InputEvent(input=self.memory.get())
-        self.memory.put(generator.message)
-        tool_name, tool_calls = list(tool_groups.items())[0]
+        self.memory.put(response.tool_call_message)
+        tool_name = tool_calls[0].tool_name
         match tool_name:
             case self.extractor_tool.metadata.name:
                 return ExtractMissingCellsEvent(tool_calls=tool_calls)

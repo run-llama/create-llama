@@ -1,12 +1,17 @@
 import os
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
-from app.workflows.tools import call_tools, tool_calls_or_response
+from app.workflows.tools import (
+    ToolCallResponse,
+    call_tools,
+    chat_with_tools,
+    is_calling_different_tools,
+)
 from llama_index.core import Settings
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -146,7 +151,7 @@ class FinancialReportWorkflow(Workflow):
         chat_history: list[ChatMessage] = ev.input
 
         # Get tool calls
-        tool_calls, response = await tool_calls_or_response(
+        response = await chat_with_tools(
             self.llm,
             [
                 self.query_engine_tool,
@@ -155,37 +160,30 @@ class FinancialReportWorkflow(Workflow):
             ],
             chat_history,
         )
-        if tool_calls is None:
+        is_tool_call = isinstance(response, ToolCallResponse)
+        if not is_tool_call:
             # If no tool call, return the response generator
-            return StopEvent(result=response)
-        else:
-            # Grouping tool calls to the same agent
-            # We need to group them by the agent name
-            tool_groups: Dict[str, List[ToolSelection]] = {}
-            for tool_call in tool_calls:
-                tool_groups.setdefault(tool_call.tool_name, []).append(tool_call)  # type: ignore
-
-            # LLM Input step use the function calling to define the next step
-            # calling different step with tools at the same time is not supported at the moment
-            # add an error message to tell the AI process step by step
-            if len(tool_groups) > 1:
-                self.memory.put(
-                    ChatMessage(
-                        role=MessageRole.ASSISTANT,
-                        content="Cannot call different tools at the same time. Try calling one tool at a time.",
-                    )
+            return StopEvent(result=response.generator)
+        # calling different tools at the same time is not supported at the moment
+        # add an error message to tell the AI to process step by step
+        tool_calls = response.tool_calls
+        if is_calling_different_tools(tool_calls):
+            self.memory.put(
+                ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="Cannot call different tools at the same time. Try calling one tool at a time.",
                 )
-                return InputEvent(input=self.memory.get())
-            if isinstance(response, ChatResponse):
-                self.memory.put(response.message)
-            tool_name, tool_calls = list(tool_groups.items())[0]
-            match tool_name:
-                case self.query_engine_tool.metadata.name:
-                    return ResearchEvent(input=tool_calls)
-                case self.code_interpreter_tool.metadata.name:
-                    return AnalyzeEvent(input=tool_calls)
-                case self.document_generator_tool.metadata.name:
-                    return ReportEvent(input=tool_calls)
+            )
+            return InputEvent(input=self.memory.get())
+        self.memory.put(response.tool_call_message)
+        tool_name = tool_calls[0].tool_name
+        match tool_name:
+            case self.query_engine_tool.metadata.name:
+                return ResearchEvent(input=tool_calls)
+            case self.code_interpreter_tool.metadata.name:
+                return AnalyzeEvent(input=tool_calls)
+            case self.document_generator_tool.metadata.name:
+                return ReportEvent(input=tool_calls)
 
     @step()
     async def research(self, ctx: Context, ev: ResearchEvent) -> AnalyzeEvent:
@@ -246,27 +244,26 @@ class FinancialReportWorkflow(Workflow):
             )
             chat_history.append(ev.input)  # type: ignore
             # Check if the analyst agent needs to call tools
-            tool_calls, response = await tool_calls_or_response(
+            response = await chat_with_tools(
                 self.llm,
                 [self.code_interpreter_tool],
                 chat_history,
             )
-            if tool_calls is None:
+            is_tool_call = isinstance(response, ToolCallResponse)
+            if not is_tool_call:
                 # If no tool call, fallback analyst message to the workflow
                 full_response = ""
-                if isinstance(response, AsyncGenerator):
-                    async for chunk in response.__aiter__():
-                        full_response += chunk.message.content
-                    analyst_msg = ChatMessage(
-                        role=MessageRole.ASSISTANT, content=full_response
-                    )
-                else:
-                    analyst_msg = response.message
+                async for chunk in response.generator:
+                    full_response += chunk.message.content
+                analyst_msg = ChatMessage(
+                    role=MessageRole.ASSISTANT, content=full_response
+                )
                 self.memory.put(analyst_msg)
                 return InputEvent(input=self.memory.get_all())
             else:
                 # Put the tool request message to the memory
-                self.memory.put(response.message)
+                tool_calls = response.tool_calls
+                self.memory.put(response.tool_call_message)
         # Call tools
         tool_messages = await call_tools(
             ctx=ctx,
