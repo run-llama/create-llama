@@ -194,10 +194,7 @@ class FinancialReportWorkflow(Workflow):
                 msg="Starting research",
             )
         )
-        if isinstance(ev.input, list):
-            tool_calls = ev.input
-        else:
-            message = ev.input
+        tool_calls = ev.input
 
         async for response in tool_caller(
             agent_name="Researcher",
