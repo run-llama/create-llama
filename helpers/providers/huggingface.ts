@@ -8,6 +8,13 @@ type ModelData = {
 };
 const EMBEDDING_MODELS: Record<string, ModelData> = {
   "BAAI/bge-small-en-v1.5": { dimensions: 384 },
+  "BAAI/bge-base-en-v1.5": { dimensions: 768 },
+  "BAAI/bge-large-en-v1.5": { dimensions: 1024 },
+  "sentence-transformers/all-MiniLM-L6-v2": { dimensions: 384 },
+  "sentence-transformers/all-mpnet-base-v2": { dimensions: 768 },
+  "intfloat/multilingual-e5-large": { dimensions: 1024 },
+  "mixedbread-ai/mxbai-embed-large-v1": { dimensions: 1024 },
+  "nomic-ai/nomic-embed-text-v1.5": { dimensions: 768 },
 };
 
 const DEFAULT_MODEL = MODELS[0];
