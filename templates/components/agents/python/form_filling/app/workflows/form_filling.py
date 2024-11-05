@@ -1,7 +1,7 @@
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from app.engine.index import get_index
+from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.helpers import AgentRunEvent, tool_caller, tool_calls_or_response
 from llama_index.core import Settings
@@ -21,14 +21,21 @@ from llama_index.core.workflow import (
 
 
 def create_workflow(
-    chat_history: Optional[List[ChatMessage]] = None, **kwargs
+    chat_history: Optional[List[ChatMessage]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    filters: Optional[List[Any]] = None,
 ) -> Workflow:
-    index: VectorStoreIndex = get_index()
+    if params is None:
+        params = {}
+    if filters is None:
+        filters = []
+    index_config = IndexConfig(**params)
+    index: VectorStoreIndex = get_index(config=index_config)
     if index is None:
         query_engine_tool = None
     else:
         top_k = int(os.getenv("TOP_K", 10))
-        query_engine = index.as_query_engine(similarity_top_k=top_k)
+        query_engine = index.as_query_engine(similarity_top_k=top_k, filters=filters)
         query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
 
     configured_tools = ToolFactory.from_env(map_result=True)

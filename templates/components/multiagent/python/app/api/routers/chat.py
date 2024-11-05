@@ -4,6 +4,7 @@ from app.api.routers.models import (
     ChatData,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
+from app.engine.query_filter import generate_filters
 from app.workflows import create_workflow
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
@@ -22,12 +23,13 @@ async def chat(
         last_message_content = data.get_last_message_content()
         messages = data.get_history_messages(include_agent_messages=True)
 
-        # The chat API supports passing private document filters and chat params
-        # but agent workflow does not support them yet
-        # ignore chat params and use all documents for now
-        # TODO: generate filters based on doc_ids
+        doc_ids = data.get_chat_document_ids()
+        filters = generate_filters(doc_ids)
         params = data.data or {}
-        workflow = create_workflow(chat_history=messages, params=params)
+
+        workflow = create_workflow(
+            chat_history=messages, params=params, filters=filters
+        )
 
         event_handler = workflow.run(input=last_message_content, streaming=True)
         return VercelStreamResponse(
