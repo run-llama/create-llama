@@ -3,7 +3,8 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
-from app.workflows.tools import AgentRunEvent, call_tools, tool_calls_or_response
+from app.workflows.events import AgentRunEvent
+from app.workflows.tools import call_tools, tool_calls_or_response
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex

@@ -1,8 +1,8 @@
 import uuid
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Optional
+from typing import Any, AsyncGenerator, Callable
 
+from app.workflows.events import AgentRunEvent, AgentRunEventType
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.tools import (
@@ -12,36 +12,13 @@ from llama_index.core.tools import (
     ToolOutput,
     ToolSelection,
 )
-from llama_index.core.workflow import Context, Event
+from llama_index.core.workflow import Context
 
 
 class ContextAwareTool(FunctionTool, ABC):
     @abstractmethod
     async def acall(self, ctx: Context, input: Any) -> ToolOutput:  # type: ignore
         pass
-
-
-class AgentRunEventType(Enum):
-    TEXT = "text"
-    PROGRESS = "progress"
-
-
-class AgentRunEvent(Event):
-    name: str
-    msg: str
-    event_type: AgentRunEventType = AgentRunEventType.TEXT
-    data: Optional[dict] = None
-
-    def to_response(self) -> dict:
-        return {
-            "type": "agent",
-            "data": {
-                "agent": self.name,
-                "type": self.event_type.value,
-                "text": self.msg,
-                "data": self.data,
-            },
-        }
 
 
 async def workflow_step_as_tool(step: Callable) -> FunctionTool:
