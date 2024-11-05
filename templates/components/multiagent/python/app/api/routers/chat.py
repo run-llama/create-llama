@@ -4,7 +4,7 @@ from app.api.routers.models import (
     ChatData,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
-from app.engine.engine import get_chat_engine
+from app.workflows import create_workflow
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
 chat_router = r = APIRouter()
@@ -27,14 +27,14 @@ async def chat(
         # ignore chat params and use all documents for now
         # TODO: generate filters based on doc_ids
         params = data.data or {}
-        engine = get_chat_engine(chat_history=messages, params=params)
+        workflow = create_workflow(chat_history=messages, params=params)
 
-        event_handler = engine.run(input=last_message_content, streaming=True)
+        event_handler = workflow.run(input=last_message_content, streaming=True)
         return VercelStreamResponse(
             request=request,
             chat_data=data,
             event_handler=event_handler,
-            events=engine.stream_events(),
+            events=workflow.stream_events(),
         )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)

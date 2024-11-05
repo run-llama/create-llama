@@ -1,9 +1,7 @@
-import uuid
 from abc import abstractmethod
-from enum import Enum
-from typing import Any, AsyncGenerator, List, Optional
+from typing import Any, List, Optional
 
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import ChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -18,7 +16,9 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+from .helper import AgentRunEvent, tool_caller
 
 
 class InputEvent(Event):
@@ -27,29 +27,6 @@ class InputEvent(Event):
 
 class ToolCallEvent(Event):
     tool_calls: list[ToolSelection]
-
-
-class AgentRunEventType(Enum):
-    TEXT = "text"
-    PROGRESS = "progress"
-
-
-class AgentRunEvent(Event):
-    name: str
-    msg: str
-    event_type: AgentRunEventType = Field(default=AgentRunEventType.TEXT)
-    data: Optional[dict] = None
-
-    def to_response(self) -> dict:
-        return {
-            "type": "agent",
-            "data": {
-                "agent": self.name,
-                "type": self.event_type.value,
-                "text": self.msg,
-                "data": self.data,
-            },
-        }
 
 
 class AgentRunResult(BaseModel):
@@ -149,149 +126,11 @@ class FunctionCallingAgent(Workflow):
     async def handle_tool_calls(self, ctx: Context, ev: ToolCallEvent) -> InputEvent:
         tool_calls = ev.tool_calls
 
-        tool_caller = self.tool_caller(ctx, tool_calls)
-
-        async for response in tool_caller:
+        generator = tool_caller(self.name, self.tools, ctx, tool_calls)
+        async for response in generator:
             if isinstance(response, AgentRunEvent) and self.write_events:
                 ctx.write_event_to_stream(response)
             else:
                 for msg in response:
                     self.memory.put(msg)
         return InputEvent(input=self.memory.get())
-
-    async def tool_caller(
-        self,
-        ctx: Optional[Context],
-        tool_calls: list[ToolSelection],
-    ) -> AsyncGenerator[AgentRunEvent | list[ChatMessage], None]:
-        tools_by_name = {tool.metadata.get_name(): tool for tool in self.tools}
-        tool_msgs: list[ChatMessage] = []
-
-        # call tools -- safely!
-        # If there are multiple tool calls
-        # Show the progress
-        progress_id = str(uuid.uuid4())
-        total_steps = len(tool_calls)
-        show_progress = total_steps > 1
-        if show_progress:
-            yield AgentRunEvent(
-                name=self.name,
-                msg=f"Making {total_steps} tool calls",
-            )
-        for i, tool_call in enumerate(tool_calls):
-            tool = tools_by_name.get(tool_call.tool_name)
-            additional_kwargs = {
-                "tool_call_id": tool_call.tool_id,
-                "name": tool.metadata.get_name(),
-            }
-            if not tool:
-                tool_msgs.append(
-                    ChatMessage(
-                        role=MessageRole.ASSISTANT,
-                        content=f"Tool {tool_call.tool_name} does not exist",
-                        additional_kwargs=additional_kwargs,
-                    )
-                )
-                continue
-            try:
-                if show_progress:
-                    yield AgentRunEvent(
-                        name=self.name,
-                        msg=f"Calling tool {tool_call.tool_name}, {tool_call.tool_kwargs}",
-                        event_type=AgentRunEventType.PROGRESS,
-                        data={
-                            "id": progress_id,
-                            "total": total_steps,
-                            "current": i,
-                        },
-                    )
-                else:
-                    yield AgentRunEvent(
-                        name=self.name,
-                        msg=f"Calling tool {tool_call.tool_name}, {str(tool_call.tool_kwargs)}",
-                    )
-                if isinstance(tool, ContextAwareTool):
-                    if ctx is None:
-                        raise ValueError("Context is required for context aware tool")
-                    # inject context for calling an context aware tool
-                    response = await tool.acall(ctx=ctx, **tool_call.tool_kwargs)
-                else:
-                    response = await tool.acall(**tool_call.tool_kwargs)  # type: ignore
-                tool_msgs.append(
-                    ChatMessage(
-                        role=MessageRole.TOOL,
-                        content=str(response.raw_output),
-                        additional_kwargs=additional_kwargs,
-                    )
-                )
-            except Exception as e:
-                # Print trace back here
-                tool_msg = ChatMessage(
-                    role=MessageRole.TOOL,
-                    content=f"Error: {str(e)}",
-                    additional_kwargs=additional_kwargs,
-                )
-                yield AgentRunEvent(
-                    name=self.name,
-                    msg=f"Error in tool {tool_call.tool_name}: {str(e)}",
-                )
-                tool_msgs.append(tool_msg)
-        if show_progress:
-            yield AgentRunEvent(
-                name=self.name,
-                msg="Task finished",
-            )
-
-        yield tool_msgs
-
-    async def tool_calls_or_response(
-        self,
-        chat_history: list[ChatMessage],
-    ) -> tuple[
-        list[ToolSelection] | None, AsyncGenerator[ChatMessage, None] | ChatMessage
-    ]:
-        """
-        Request LLM to call tools or not.
-        This function doesn't change the memory.
-        """
-        generator = self.tool_call_generator(chat_history)
-        is_tool_call = await generator.__anext__()
-        if is_tool_call:
-            async for chunk in generator:
-                full_response = chunk
-            tool_calls = self.llm.get_tool_calls_from_response(full_response)  # type: ignore
-            return tool_calls, full_response
-        else:
-            return None, generator
-
-    async def tool_call_generator(
-        self,
-        chat_history: list[ChatMessage],
-    ) -> AsyncGenerator[ChatMessage | bool, None]:
-        response_stream = await self.llm.astream_chat_with_tools(
-            self.tools,
-            chat_history=chat_history,
-            allow_parallel_tool_calls=True,
-        )
-
-        full_response = None
-        yielded_indicator = False
-        async for chunk in response_stream:
-            if "tool_calls" not in chunk.message.additional_kwargs:
-                # Yield a boolean to indicate whether the response is a tool call
-                if not yielded_indicator:
-                    yield False
-                    yielded_indicator = True
-
-                # if not a tool call, yield the chunks!
-                yield chunk  # type: ignore
-            elif not yielded_indicator:
-                # Yield the indicator for a tool call
-                yield True
-                yielded_indicator = True
-
-            full_response = chunk
-
-        # Write the full response to memory and yield it
-        if full_response:
-            yield full_response  # type: ignore
