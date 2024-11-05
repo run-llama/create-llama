@@ -185,9 +185,9 @@ class FinancialReportWorkflow(Workflow):
                 return AnalyzeEvent(input=tool_calls)
             case self.document_generator_tool.metadata.name:
                 return ReportEvent(input=tool_calls)
+            case self.query_engine_tool.metadata.name:
+                return ResearchEvent(input=tool_calls)
             case _:
-                if tool_name == self.query_engine_tool.metadata.name:
-                    return ResearchEvent(input=tool_calls)
                 raise ValueError(f"Unknown tool: {tool_name}")
 
     @step()
