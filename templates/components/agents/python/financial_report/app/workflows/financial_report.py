@@ -5,10 +5,8 @@ from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
 from app.workflows.tools import (
-    ToolCallResponse,
     call_tools,
     chat_with_tools,
-    is_calling_different_tools,
 )
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -159,17 +157,15 @@ class FinancialReportWorkflow(Workflow):
         # Get tool calls
         response = await chat_with_tools(
             self.llm,
-            self.tools,
+            self.tools,  # type: ignore
             chat_history,
         )
-        is_tool_call = isinstance(response, ToolCallResponse)
-        if not is_tool_call:
+        if not response.has_tool_calls():
             # If no tool call, return the response generator
             return StopEvent(result=response.generator)
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
-        tool_calls = response.tool_calls
-        if is_calling_different_tools(tool_calls):
+        if response.is_calling_different_tools():
             self.memory.put(
                 ChatMessage(
                     role=MessageRole.ASSISTANT,
@@ -178,16 +174,15 @@ class FinancialReportWorkflow(Workflow):
             )
             return InputEvent(input=self.memory.get())
         self.memory.put(response.tool_call_message)
-        tool_name = tool_calls[0].tool_name
-        match tool_name:
+        match response.tool_name():
             case self.code_interpreter_tool.metadata.name:
-                return AnalyzeEvent(input=tool_calls)
+                return AnalyzeEvent(input=response.tool_calls)
             case self.document_generator_tool.metadata.name:
-                return ReportEvent(input=tool_calls)
+                return ReportEvent(input=response.tool_calls)
             case self.query_engine_tool.metadata.name:
-                return ResearchEvent(input=tool_calls)
+                return ResearchEvent(input=response.tool_calls)
             case _:
-                raise ValueError(f"Unknown tool: {tool_name}")
+                raise ValueError(f"Unknown tool: {response.tool_name()}")
 
     @step()
     async def research(self, ctx: Context, ev: ResearchEvent) -> AnalyzeEvent:
@@ -231,6 +226,7 @@ class FinancialReportWorkflow(Workflow):
         event_requested_by_workflow_llm = isinstance(ev.input, list)
         # Requested by the workflow LLM Input step, it's a tool call
         if event_requested_by_workflow_llm:
+            # Set the tool calls
             tool_calls = ev.input
         else:
             # Otherwise, it's triggered by the research step
@@ -253,18 +249,16 @@ class FinancialReportWorkflow(Workflow):
                 [self.code_interpreter_tool],
                 chat_history,
             )
-            is_tool_call = isinstance(response, ToolCallResponse)
-            if not is_tool_call:
+            if not response.has_tool_calls():
                 # If no tool call, fallback analyst message to the workflow
-                full_response = ""
-                async for chunk in response.generator:
-                    full_response += chunk.message.content
                 analyst_msg = ChatMessage(
-                    role=MessageRole.ASSISTANT, content=full_response
+                    role=MessageRole.ASSISTANT,
+                    content=await response.full_response(),
                 )
                 self.memory.put(analyst_msg)
-                return InputEvent(input=self.memory.get_all())
+                return InputEvent(input=self.memory.get())
             else:
+                # Set the tool calls and the tool call message to the memory
                 tool_calls = response.tool_calls
                 self.memory.put(response.tool_call_message)
 

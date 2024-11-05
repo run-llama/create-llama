@@ -1,6 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, AsyncGenerator, Callable
+from typing import Any, AsyncGenerator, Callable, Optional
 
 from app.workflows.events import AgentRunEvent, AgentRunEventType
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
@@ -32,13 +32,35 @@ class ResponseGenerator(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class ToolCallResponse(BaseModel):
+class ChatWithToolsResponse(BaseModel):
     """
     A tool call response from chat_with_tools.
     """
 
-    tool_calls: list[ToolSelection]
-    tool_call_message: ChatMessage
+    tool_calls: Optional[list[ToolSelection]]
+    tool_call_message: Optional[ChatMessage]
+    generator: Optional[AsyncGenerator[ChatResponse | None, None]]
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def is_calling_different_tools(self) -> bool:
+        tool_names = {tool_call.tool_name for tool_call in self.tool_calls}
+        return len(tool_names) > 1
+
+    def has_tool_calls(self) -> bool:
+        return self.tool_calls is not None and len(self.tool_calls) > 0
+
+    def tool_name(self) -> str:
+        assert self.has_tool_calls()
+        assert not self.is_calling_different_tools()
+        return self.tool_calls[0].tool_name
+
+    async def full_response(self) -> str:
+        assert self.generator is not None
+        full_response = ""
+        async for chunk in self.generator:
+            full_response += chunk.message.content
+        return full_response
 
 
 async def workflow_step_as_tool(step: Callable) -> FunctionTool:
@@ -157,7 +179,7 @@ async def chat_with_tools(  # type: ignore
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
     chat_history: list[ChatMessage],
-) -> ToolCallResponse | ResponseGenerator:
+) -> ChatWithToolsResponse:
     """
     Request LLM to call tools or not.
     This function doesn't change the memory.
@@ -171,12 +193,17 @@ async def chat_with_tools(  # type: ignore
         async for chunk in generator:
             full_response = chunk
         assert isinstance(full_response, ChatResponse)
-        return ToolCallResponse(
+        return ChatWithToolsResponse(
             tool_calls=llm.get_tool_calls_from_response(full_response),
             tool_call_message=full_response.message,
+            generator=None,
         )
     else:
-        return ResponseGenerator(generator=generator)
+        return ChatWithToolsResponse(
+            tool_calls=None,
+            tool_call_message=None,
+            generator=generator,
+        )
 
 
 async def _tool_call_generator(
@@ -210,11 +237,3 @@ async def _tool_call_generator(
 
     if full_response:
         yield full_response  # type: ignore
-
-
-def is_calling_different_tools(tool_calls: list[ToolSelection]) -> bool:
-    """
-    Check if the tool calls are from different tools.
-    """
-    tool_names = {tool_call.tool_name for tool_call in tool_calls}
-    return len(tool_names) > 1

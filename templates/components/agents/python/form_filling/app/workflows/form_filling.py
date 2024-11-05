@@ -5,10 +5,8 @@ from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
 from app.workflows.tools import (
-    ToolCallResponse,
     call_tools,
     chat_with_tools,
-    is_calling_different_tools,
 )
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -157,13 +155,11 @@ class FormFillingWorkflow(Workflow):
             self.tools,
             chat_history,
         )
-        is_tool_call = isinstance(response, ToolCallResponse)
-        if not is_tool_call:
+        if not response.has_tool_calls():
             return StopEvent(result=response.generator)
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
-        tool_calls = response.tool_calls
-        if is_calling_different_tools(tool_calls):
+        if response.is_calling_different_tools():
             self.memory.put(
                 ChatMessage(
                     role=MessageRole.ASSISTANT,
@@ -172,14 +168,15 @@ class FormFillingWorkflow(Workflow):
             )
             return InputEvent(input=self.memory.get())
         self.memory.put(response.tool_call_message)
-        tool_name = tool_calls[0].tool_name
-        match tool_name:
+        match response.tool_name():
             case self.extractor_tool.metadata.name:
-                return ExtractMissingCellsEvent(tool_calls=tool_calls)
+                return ExtractMissingCellsEvent(tool_calls=response.tool_calls)
             case self.query_engine_tool.metadata.name:
-                return FindAnswersEvent(tool_calls=tool_calls)
+                return FindAnswersEvent(tool_calls=response.tool_calls)
             case self.filling_tool.metadata.name:
-                return FillEvent(tool_calls=tool_calls)
+                return FillEvent(tool_calls=response.tool_calls)
+            case _:
+                raise ValueError(f"Unknown tool: {response.tool_name()}")
 
     @step()
     async def extract_missing_cells(
