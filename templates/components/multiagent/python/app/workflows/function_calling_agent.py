@@ -1,12 +1,11 @@
-from abc import abstractmethod
 from typing import Any, List, Optional
 
+from app.workflows.events import AgentRunEvent
+from app.workflows.tools import ToolCallResponse, call_tools, chat_with_tools
 from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.llms import ChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.settings import Settings
-from llama_index.core.tools import FunctionTool, ToolOutput, ToolSelection
 from llama_index.core.tools.types import BaseTool
 from llama_index.core.workflow import (
     Context,
@@ -16,9 +15,6 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from pydantic import BaseModel
-
-from .helper import AgentRunEvent, tool_caller
 
 
 class InputEvent(Event):
@@ -26,21 +22,15 @@ class InputEvent(Event):
 
 
 class ToolCallEvent(Event):
-    tool_calls: list[ToolSelection]
-
-
-class AgentRunResult(BaseModel):
-    response: ChatResponse
-    sources: list[ToolOutput]
-
-
-class ContextAwareTool(FunctionTool):
-    @abstractmethod
-    async def acall(self, ctx: Context, input: Any) -> ToolOutput:  # type: ignore
-        pass
+    input: ToolCallResponse
 
 
 class FunctionCallingAgent(Workflow):
+    """
+    A simple workflow to request LLM with tools independently.
+    You can share the previous chat history to provide the context for the LLM.
+    """
+
     def __init__(
         self,
         *args: Any,
@@ -52,14 +42,12 @@ class FunctionCallingAgent(Workflow):
         timeout: float = 360.0,
         name: str,
         write_events: bool = True,
-        description: str | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, verbose=verbose, timeout=timeout, **kwargs)  # type: ignore
         self.tools = tools or []
         self.name = name
         self.write_events = write_events
-        self.description = description
 
         if llm is None:
             llm = Settings.llm
@@ -78,26 +66,25 @@ class FunctionCallingAgent(Workflow):
         # clear sources
         self.sources = []
 
+        # set streaming
+        ctx.data["streaming"] = getattr(ev, "streaming", False)
+
         # set system prompt
         if self.system_prompt is not None:
             system_msg = ChatMessage(role="system", content=self.system_prompt)
             self.memory.put(system_msg)
 
-        # set streaming
-        ctx.data["streaming"] = getattr(ev, "streaming", False)
-
         # get user input
         user_input = ev.input
         user_msg = ChatMessage(role="user", content=user_input)
         self.memory.put(user_msg)
+
         if self.write_events:
             ctx.write_event_to_stream(
                 AgentRunEvent(name=self.name, msg=f"Start to work on: {user_input}")
             )
 
-        # get chat history
-        chat_history = self.memory.get()
-        return InputEvent(input=chat_history)
+        return InputEvent(input=self.memory.get())
 
     @step()
     async def handle_llm_input(
@@ -107,30 +94,27 @@ class FunctionCallingAgent(Workflow):
     ) -> ToolCallEvent | StopEvent:
         chat_history = ev.input
 
-        tool_calls, response = await self.tool_calls_or_response(chat_history)
-        if tool_calls is None:
+        response = await chat_with_tools(
+            self.llm,
+            self.tools,
+            chat_history,
+        )
+        is_tool_call = isinstance(response, ToolCallResponse)
+        if not is_tool_call:
             if ctx.data["streaming"]:
                 return StopEvent(result=response)
             else:
-                full_response = await response.__anext__()
-                result = AgentRunResult(
-                    response=full_response,
-                    sources=[],
-                )
-                return StopEvent(result=result)
-        else:
-            self.memory.put(response.message)
-            return ToolCallEvent(tool_calls=tool_calls)
+                full_response = ""
+                async for chunk in response.generator:
+                    full_response += chunk.message.content
+                return StopEvent(result=full_response)
+        return ToolCallEvent(input=response)
 
     @step()
     async def handle_tool_calls(self, ctx: Context, ev: ToolCallEvent) -> InputEvent:
-        tool_calls = ev.tool_calls
-
-        generator = tool_caller(self.name, self.tools, ctx, tool_calls)
-        async for response in generator:
-            if isinstance(response, AgentRunEvent) and self.write_events:
-                ctx.write_event_to_stream(response)
-            else:
-                for msg in response:
-                    self.memory.put(msg)
+        tool_calls = ev.input.tool_calls
+        tool_call_message = ev.input.tool_call_message
+        self.memory.put(tool_call_message)
+        tool_messages = call_tools(self.name, self.tools, ctx, tool_calls)
+        self.memory.put_messages(tool_messages)
         return InputEvent(input=self.memory.get())

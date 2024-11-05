@@ -127,7 +127,6 @@ class FormFillingWorkflow(Workflow):
 
     @step()
     async def start(self, ctx: Context, ev: StartEvent) -> InputEvent:
-        ctx.data["streaming"] = getattr(ev, "streaming", False)
         ctx.data["input"] = ev.input
 
         if self.system_prompt:

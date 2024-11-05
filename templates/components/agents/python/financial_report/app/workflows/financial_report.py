@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
+from app.workflows.function_calling_agent import FunctionCallingAgent
 from app.workflows.tools import (
     ToolCallResponse,
     call_tools,
@@ -43,11 +44,6 @@ def create_workflow(
     configured_tools: Dict[str, FunctionTool] = ToolFactory.from_env(map_result=True)  # type: ignore
     code_interpreter_tool = configured_tools.get("interpret")
     document_generator_tool = configured_tools.get("generate_document")
-
-    if code_interpreter_tool is None or document_generator_tool is None:
-        raise ValueError(
-            "Code interpreter or document generator tool is not configured"
-        )
 
     return FinancialReportWorkflow(
         query_engine_tool=query_engine_tool,
@@ -116,6 +112,18 @@ class FinancialReportWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.code_interpreter_tool = code_interpreter_tool
         self.document_generator_tool = document_generator_tool
+        assert (
+            query_engine_tool is not None
+        ), "Query engine tool is not found. Try run generation script or upload a document file first."
+        assert code_interpreter_tool is not None, "Code interpreter tool is required"
+        assert (
+            document_generator_tool is not None
+        ), "Document generator tool is required"
+        self.tools = [
+            self.query_engine_tool,
+            self.code_interpreter_tool,
+            self.document_generator_tool,
+        ]
         self.llm: FunctionCallingLLM = llm or Settings.llm
         assert isinstance(self.llm, FunctionCallingLLM)
         self.memory = ChatMemoryBuffer.from_defaults(
@@ -124,7 +132,6 @@ class FinancialReportWorkflow(Workflow):
 
     @step()
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
-        ctx.data["streaming"] = getattr(ev, "streaming", False)
         ctx.data["input"] = ev.input
 
         if self.system_prompt:
@@ -153,11 +160,7 @@ class FinancialReportWorkflow(Workflow):
         # Get tool calls
         response = await chat_with_tools(
             self.llm,
-            [
-                self.query_engine_tool,
-                self.code_interpreter_tool,
-                self.document_generator_tool,
-            ],
+            self.tools,
             chat_history,
         )
         is_tool_call = isinstance(response, ToolCallResponse)
@@ -178,12 +181,14 @@ class FinancialReportWorkflow(Workflow):
         self.memory.put(response.tool_call_message)
         tool_name = tool_calls[0].tool_name
         match tool_name:
-            case self.query_engine_tool.metadata.name:
-                return ResearchEvent(input=tool_calls)
             case self.code_interpreter_tool.metadata.name:
                 return AnalyzeEvent(input=tool_calls)
             case self.document_generator_tool.metadata.name:
                 return ReportEvent(input=tool_calls)
+            case _:
+                if tool_name == self.query_engine_tool.metadata.name:
+                    return ResearchEvent(input=tool_calls)
+                raise ValueError(f"Unknown tool: {tool_name}")
 
     @step()
     async def research(self, ctx: Context, ev: ResearchEvent) -> AnalyzeEvent:
@@ -206,12 +211,12 @@ class FinancialReportWorkflow(Workflow):
             tool_calls=tool_calls,
         )
         self.memory.put_messages(tool_messages)
-        # Request to analyze the research result
-        message = ChatMessage(
-            role=MessageRole.ASSISTANT,
-            content="I've finished the research. Please analyze the result.",
+        return AnalyzeEvent(
+            input=ChatMessage(
+                role=MessageRole.ASSISTANT,
+                content="I've finished the research. Please analyze the result.",
+            ),
         )
-        return AnalyzeEvent(input=message)
 
     @step()
     async def analyze(self, ctx: Context, ev: AnalyzeEvent) -> InputEvent:
@@ -228,52 +233,35 @@ class FinancialReportWorkflow(Workflow):
         # Requested by the workflow LLM Input step, it's a tool call
         if event_requested_by_workflow_llm:
             tool_calls = ev.input
+            tool_messages = await call_tools(
+                ctx=ctx,
+                agent_name="Analyst",
+                tools=[self.code_interpreter_tool],
+                tool_calls=tool_calls,  # type: ignore
+            )
+            self.memory.put_messages(tool_messages)
         else:
             # Otherwise, it's triggered by the research step
-            # Use a custom prompt and independent memory for the analyst agent
+            # Use a function calling agent with a custom prompt to avoid memory conflict
             analysis_prompt = """
             You are a financial analyst, you are given a research result and a set of tools to help you.
             Always use the given information, don't make up anything yourself. If there is not enough information, you can asking for more information.
             If you have enough numerical information, it's good to include some charts/visualizations to the report so you can use the code interpreter tool to generate a report.
             """
-            # This is handled by analyst agent
-            # Clone the shared memory to avoid conflicting with the workflow.
             chat_history = self.memory.get()
-            chat_history.append(
-                ChatMessage(role=MessageRole.SYSTEM, content=analysis_prompt)
+            analyst_agent = FunctionCallingAgent(
+                name="Analyst",
+                tools=[self.code_interpreter_tool],
+                system_prompt=analysis_prompt,
+                chat_history=chat_history,
             )
-            chat_history.append(ev.input)  # type: ignore
-            # Check if the analyst agent needs to call tools
-            response = await chat_with_tools(
-                self.llm,
-                [self.code_interpreter_tool],
-                chat_history,
+            response = await analyst_agent.run(
+                input=ev.input.content,  # type: ignore
+                streaming=False,
             )
-            is_tool_call = isinstance(response, ToolCallResponse)
-            if not is_tool_call:
-                # If no tool call, fallback analyst message to the workflow
-                full_response = ""
-                async for chunk in response.generator:
-                    full_response += chunk.message.content
-                analyst_msg = ChatMessage(
-                    role=MessageRole.ASSISTANT, content=full_response
-                )
-                self.memory.put(analyst_msg)
-                return InputEvent(input=self.memory.get_all())
-            else:
-                # Put the tool request message to the memory
-                tool_calls = response.tool_calls
-                self.memory.put(response.tool_call_message)
-        # Call tools
-        tool_messages = await call_tools(
-            ctx=ctx,
-            agent_name="Analyst",
-            tools=[self.code_interpreter_tool],
-            tool_calls=tool_calls,  # type: ignore
-        )
-        self.memory.put_messages(tool_messages)
+            self.memory.put(ChatMessage(role=MessageRole.ASSISTANT, content=response))
 
-        # After the tool calls, fallback to the input with the latest chat history
+        # Fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
 
     @step()
