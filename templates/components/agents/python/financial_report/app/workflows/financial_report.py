@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.events import AgentRunEvent
-from app.workflows.function_calling_agent import FunctionCallingAgent
 from app.workflows.tools import (
     ToolCallResponse,
     call_tools,
@@ -233,33 +232,50 @@ class FinancialReportWorkflow(Workflow):
         # Requested by the workflow LLM Input step, it's a tool call
         if event_requested_by_workflow_llm:
             tool_calls = ev.input
-            tool_messages = await call_tools(
-                ctx=ctx,
-                agent_name="Analyst",
-                tools=[self.code_interpreter_tool],
-                tool_calls=tool_calls,  # type: ignore
-            )
-            self.memory.put_messages(tool_messages)
         else:
             # Otherwise, it's triggered by the research step
-            # Use a function calling agent with a custom prompt to avoid memory conflict
+            # Use a custom prompt and independent memory for the analyst agent
             analysis_prompt = """
             You are a financial analyst, you are given a research result and a set of tools to help you.
             Always use the given information, don't make up anything yourself. If there is not enough information, you can asking for more information.
             If you have enough numerical information, it's good to include some charts/visualizations to the report so you can use the code interpreter tool to generate a report.
             """
+            # This is handled by analyst agent
+            # Clone the shared memory to avoid conflicting with the workflow.
             chat_history = self.memory.get()
-            analyst_agent = FunctionCallingAgent(
-                name="Analyst",
-                tools=[self.code_interpreter_tool],
-                system_prompt=analysis_prompt,
-                chat_history=chat_history,
+            chat_history.append(
+                ChatMessage(role=MessageRole.SYSTEM, content=analysis_prompt)
             )
-            response = await analyst_agent.run(
-                input=ev.input.content,  # type: ignore
-                streaming=False,
+            chat_history.append(ev.input)  # type: ignore
+            # Check if the analyst agent needs to call tools
+            response = await chat_with_tools(
+                self.llm,
+                [self.code_interpreter_tool],
+                chat_history,
             )
-            self.memory.put(ChatMessage(role=MessageRole.ASSISTANT, content=response))
+            is_tool_call = isinstance(response, ToolCallResponse)
+            if not is_tool_call:
+                # If no tool call, fallback analyst message to the workflow
+                full_response = ""
+                async for chunk in response.generator:
+                    full_response += chunk.message.content
+                analyst_msg = ChatMessage(
+                    role=MessageRole.ASSISTANT, content=full_response
+                )
+                self.memory.put(analyst_msg)
+                return InputEvent(input=self.memory.get_all())
+            else:
+                tool_calls = response.tool_calls
+                self.memory.put(response.tool_call_message)
+
+        # Call tools
+        tool_messages = await call_tools(
+            ctx=ctx,
+            agent_name="Analyst",
+            tools=[self.code_interpreter_tool],
+            tool_calls=tool_calls,  # type: ignore
+        )
+        self.memory.put_messages(tool_messages)
 
         # Fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
