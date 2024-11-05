@@ -18,7 +18,7 @@ const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateAgents = ["financial_report", "blog"];
+const templateAgents = ["financial_report", "blog", "form_filling"];
 
 for (const agents of templateAgents) {
   test.describe(`Test multiagent template ${agents} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
@@ -68,6 +68,14 @@ for (const agents of templateAgents) {
     test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
       page,
     }) => {
+      test.skip(
+        agents === "financial_report",
+        "Financial report requires e2b tool, skip this test.",
+      );
+      test.skip(
+        agents === "form_filling" && templateFramework !== "fastapi",
+        "Form filling requires e2b tool, skip this test.",
+      );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);
 
