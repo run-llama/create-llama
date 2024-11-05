@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
-from app.workflows.helpers import AgentRunEvent, tool_caller, tool_calls_or_response
+from app.workflows.tools import AgentRunEvent, call_tools, tool_calls_or_response
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
@@ -193,29 +193,13 @@ class FormFillingWorkflow(Workflow):
             )
         )
         # Call the extract questions tool
-        generator = tool_caller(
+        tool_messages = await call_tools(
             agent_name="Extractor",
             tools=[self.extractor_tool],
             ctx=ctx,
             tool_calls=ev.tool_calls,
         )
-        async for response in generator:
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                for msg in response:
-                    self.memory.put(msg)
-                break
-
-        if self.query_engine_tool is None:
-            # Fallback to input that query engine tool is not found so that cannot answer questions
-            self.memory.put(
-                ChatMessage(
-                    role=MessageRole.ASSISTANT,
-                    content="Extracted missing cells but query engine tool is not found so cannot answer questions. Ask user to upload file or connect to a knowledge base.",
-                )
-            )
+        self.memory.put_messages(tool_messages)
         return InputEvent(input=self.memory.get())
 
     @step()
@@ -229,20 +213,13 @@ class FormFillingWorkflow(Workflow):
                 msg="Finding answers for missing cells",
             )
         )
-        generator = tool_caller(
+        tool_messages = await call_tools(
+            ctx=ctx,
             agent_name="Researcher",
             tools=[self.query_engine_tool],
-            ctx=ctx,
             tool_calls=ev.tool_calls,
         )
-        async for response in generator:
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                for msg in response:
-                    self.memory.put(msg)
-                break
+        self.memory.put_messages(tool_messages)
         return InputEvent(input=self.memory.get())
 
     @step()
@@ -256,18 +233,11 @@ class FormFillingWorkflow(Workflow):
                 msg="Filling missing cells",
             )
         )
-        generator = tool_caller(
+        tool_messages = await call_tools(
             agent_name="Processor",
             tools=[self.filling_tool],
             ctx=ctx,
             tool_calls=ev.tool_calls,
         )
-        async for response in generator:
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                for msg in response:
-                    self.memory.put(msg)
-                break
+        self.memory.put_messages(tool_messages)
         return InputEvent(input=self.memory.get())

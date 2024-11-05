@@ -59,12 +59,13 @@ async def workflow_step_as_tool(step: Callable) -> FunctionTool:
     return tool
 
 
-async def tool_caller(
+async def call_tools(
+    ctx: Context,
     agent_name: str,
     tools: list[BaseTool],
-    ctx: Optional[Context],
     tool_calls: list[ToolSelection],
-) -> AsyncGenerator[AgentRunEvent | list[ChatMessage], None]:
+    emit_agent_events: bool = True,
+) -> list[ChatMessage]:
     tools_by_name = {tool.metadata.get_name(): tool for tool in tools}
     tool_msgs: list[ChatMessage] = []
 
@@ -73,10 +74,12 @@ async def tool_caller(
     progress_id = str(uuid.uuid4())
     total_steps = len(tool_calls)
     show_progress = total_steps > 1
-    if show_progress:
-        yield AgentRunEvent(
-            name=agent_name,
-            msg=f"Making {total_steps} tool calls",
+    if show_progress and emit_agent_events:
+        ctx.write_event_to_stream(
+            AgentRunEvent(
+                name=agent_name,
+                msg=f"Making {total_steps} tool calls",
+            )
         )
     for i, tool_call in enumerate(tool_calls):
         tool = tools_by_name.get(tool_call.tool_name)
@@ -94,21 +97,25 @@ async def tool_caller(
             )
             continue
         try:
-            if show_progress:
-                yield AgentRunEvent(
-                    name=agent_name,
-                    msg=f"Calling tool {tool_call.tool_name}, {tool_call.tool_kwargs}",
-                    event_type=AgentRunEventType.PROGRESS,
-                    data={
-                        "id": progress_id,
-                        "total": total_steps,
-                        "current": i,
-                    },
+            if show_progress and emit_agent_events:
+                ctx.write_event_to_stream(
+                    AgentRunEvent(
+                        name=agent_name,
+                        msg=f"Calling tool {tool_call.tool_name}, {tool_call.tool_kwargs}",
+                        event_type=AgentRunEventType.PROGRESS,
+                        data={
+                            "id": progress_id,
+                            "total": total_steps,
+                            "current": i,
+                        },
+                    )
                 )
             else:
-                yield AgentRunEvent(
-                    name=agent_name,
-                    msg=f"Calling tool {tool_call.tool_name}, {str(tool_call.tool_kwargs)}",
+                ctx.write_event_to_stream(
+                    AgentRunEvent(
+                        name=agent_name,
+                        msg=f"Calling tool {tool_call.tool_name}, {str(tool_call.tool_kwargs)}",
+                    )
                 )
             if isinstance(tool, ContextAwareTool):
                 if ctx is None:
@@ -131,18 +138,22 @@ async def tool_caller(
                 content=f"Error: {str(e)}",
                 additional_kwargs=additional_kwargs,
             )
-            yield AgentRunEvent(
-                name=agent_name,
-                msg=f"Error in tool {tool_call.tool_name}: {str(e)}",
+            ctx.write_event_to_stream(
+                AgentRunEvent(
+                    name=agent_name,
+                    msg=f"Error in tool {tool_call.tool_name}: {str(e)}",
+                )
             )
             tool_msgs.append(tool_msg)
-    if show_progress:
-        yield AgentRunEvent(
-            name=agent_name,
-            msg="Task finished",
+    if show_progress and emit_agent_events:
+        ctx.write_event_to_stream(
+            AgentRunEvent(
+                name=agent_name,
+                msg="Task finished",
+            )
         )
 
-    yield tool_msgs
+    return tool_msgs
 
 
 async def tool_calls_or_response(  # type: ignore

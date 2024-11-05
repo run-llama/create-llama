@@ -3,7 +3,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
-from app.workflows.helper import AgentRunEvent, tool_caller, tool_calls_or_response
+from app.workflows.tools import AgentRunEvent, call_tools, tool_calls_or_response
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
@@ -91,6 +91,7 @@ class FinancialReportWorkflow(Workflow):
     _default_system_prompt = """
     You are a financial analyst who are given a set of tools to help you.
     It's good to using appropriate tools for the user request and always use the information from the tools, don't make up anything yourself.
+    For the query engine tool, you should break down the user request into a list of queries and call the tool with the queries.
     """
 
     def __init__(
@@ -199,20 +200,13 @@ class FinancialReportWorkflow(Workflow):
         )
         tool_calls = ev.input
 
-        async for response in tool_caller(
+        tool_messages = await call_tools(
+            ctx=ctx,
             agent_name="Researcher",
             tools=[self.query_engine_tool],
-            ctx=ctx,
             tool_calls=tool_calls,
-        ):
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                # Update the memory
-                for msg in response:
-                    self.memory.put(msg)
-                break
+        )
+        self.memory.put_messages(tool_messages)
         # Request to analyze the research result
         message = ChatMessage(
             role=MessageRole.ASSISTANT,
@@ -273,26 +267,13 @@ class FinancialReportWorkflow(Workflow):
                 # Put the tool request message to the memory
                 self.memory.put(response.message)
         # Call tools
-        async for response in tool_caller(
+        tool_messages = await call_tools(
+            ctx=ctx,
             agent_name="Analyst",
             tools=[self.code_interpreter_tool],
-            ctx=ctx,
             tool_calls=tool_calls,  # type: ignore
-        ):
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                # If the tools is requested by analysis, we don't need to update the shared memory
-                if event_requested_by_workflow_llm and isinstance(
-                    response, AsyncGenerator
-                ):
-                    async for msg in response.__aiter__():
-                        self.memory.put(msg)
-                else:
-                    for msg in response:
-                        self.memory.put(msg)
-                break
+        )
+        self.memory.put_messages(tool_messages)
 
         # After the tool calls, fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
@@ -302,20 +283,20 @@ class FinancialReportWorkflow(Workflow):
         """
         Generate a report based on the analysis result.
         """
+        ctx.write_event_to_stream(
+            AgentRunEvent(
+                name="Reporter",
+                msg="Starting report generation",
+            )
+        )
         tool_calls = ev.input
-        async for response in tool_caller(
+        tool_messages = await call_tools(
+            ctx=ctx,
             agent_name="Reporter",
             tools=[self.document_generator_tool],
-            ctx=ctx,
             tool_calls=tool_calls,
-        ):
-            if isinstance(response, AgentRunEvent):
-                # Bubble up the response to the stream
-                ctx.write_event_to_stream(response)
-            else:
-                # Update the memory
-                for msg in response:
-                    self.memory.put(msg)
-                break
+        )
+        self.memory.put_messages(tool_messages)
+
         # After the tool calls, fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
