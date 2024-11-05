@@ -1,11 +1,9 @@
 import os
-import uuid
-from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from app.engine.index import get_index
 from app.engine.tools import ToolFactory
-from app.engine.tools.form_filling import CellValue, MissingCell
+from app.workflows.helpers import AgentRunEvent, tool_caller, tool_calls_or_response
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.indices.vector_store import VectorStoreIndex
@@ -20,7 +18,6 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from pydantic import Field
 
 
 def create_workflow(
@@ -57,38 +54,15 @@ class InputEvent(Event):
 
 
 class ExtractMissingCellsEvent(Event):
-    tool_call: ToolSelection
+    tool_calls: list[ToolSelection]
 
 
 class FindAnswersEvent(Event):
-    missing_cells: list[MissingCell]
+    tool_calls: list[ToolSelection]
 
 
 class FillEvent(Event):
-    tool_call: ToolSelection
-
-
-class AgentRunEventType(Enum):
-    TEXT = "text"
-    PROGRESS = "progress"
-
-
-class AgentRunEvent(Event):
-    name: str
-    msg: str
-    event_type: AgentRunEventType = Field(default=AgentRunEventType.TEXT)
-    data: Optional[dict] = None
-
-    def to_response(self) -> dict:
-        return {
-            "type": "agent",
-            "data": {
-                "agent": self.name,
-                "type": self.event_type.value,
-                "text": self.msg,
-                "data": self.data,
-            },
-        }
+    tool_calls: list[ToolSelection]
 
 
 class FormFillingWorkflow(Workflow):
@@ -107,7 +81,9 @@ class FormFillingWorkflow(Workflow):
 
     _default_system_prompt = """
     You are a helpful assistant who helps fill missing cells in a CSV file.
-    Only use provided data, never make up any information yourself. Fill N/A if the answer is not found.
+    Only extract missing cells from CSV files.
+    Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
+    If the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
     """
 
     def __init__(
@@ -151,7 +127,7 @@ class FormFillingWorkflow(Workflow):
         chat_history = self.memory.get()
         return InputEvent(input=chat_history)
 
-    @step(pass_context=True)
+    @step()
     async def handle_llm_input(  # type: ignore
         self,
         ctx: Context,
@@ -161,22 +137,40 @@ class FormFillingWorkflow(Workflow):
         Handle an LLM input and decide the next step.
         """
         chat_history: list[ChatMessage] = ev.input
-        # TODO: Using the helper tool call generator
-        generator = self._tool_call_generator(chat_history)
+        tool_calls, generator = await tool_calls_or_response(
+            self.llm,
+            [self.extractor_tool, self.filling_tool, self.query_engine_tool],
+            chat_history,
+        )
 
-        # Check for immediate tool call
-        is_tool_call = await generator.__anext__()
-        if is_tool_call:
-            full_response = await generator.__anext__()
-            tool_calls = self.llm.get_tool_calls_from_response(full_response)  # type: ignore
-            for tool_call in tool_calls:
-                if tool_call.tool_name == self.extractor_tool.metadata.get_name():
-                    ctx.send_event(ExtractMissingCellsEvent(tool_call=tool_call))
-                elif tool_call.tool_name == self.filling_tool.metadata.get_name():
-                    ctx.send_event(FillEvent(tool_call=tool_call))
-        else:
-            # If no tool call, return the generator
+        if tool_calls is None:
             return StopEvent(result=generator)
+        # Grouping tool calls to the same agent
+        # We need to group them by the agent name
+        tool_groups: Dict[str, List[ToolSelection]] = {}
+        for tool_call in tool_calls:
+            tool_groups.setdefault(tool_call.tool_name, []).append(tool_call)  # type: ignore
+
+        # LLM Input step use the function calling to define the next step
+        # calling different step with tools at the same time is not supported at the moment
+        # add an error message to tell the AI process step by step
+        if len(tool_groups) > 1:
+            self.memory.put(
+                ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="Cannot call different tools at the same time. Try calling one tool at a time.",
+                )
+            )
+            return InputEvent(input=self.memory.get())
+        self.memory.put(generator.message)
+        tool_name, tool_calls = list(tool_groups.items())[0]
+        match tool_name:
+            case self.extractor_tool.metadata.name:
+                return ExtractMissingCellsEvent(tool_calls=tool_calls)
+            case self.query_engine_tool.metadata.name:
+                return FindAnswersEvent(tool_calls=tool_calls)
+            case self.filling_tool.metadata.name:
+                return FillEvent(tool_calls=tool_calls)
 
     @step()
     async def extract_missing_cells(
@@ -192,26 +186,20 @@ class FormFillingWorkflow(Workflow):
             )
         )
         # Call the extract questions tool
-        # TODO: Using the helper tool caller
-        response = self._call_tool(
-            ctx,
+        generator = tool_caller(
             agent_name="Extractor",
-            tool=self.extractor_tool,
-            tool_selection=ev.tool_call,
+            tools=[self.extractor_tool],
+            ctx=ctx,
+            tool_calls=ev.tool_calls,
         )
-        if response.is_error:
-            return InputEvent(input=self.memory.get())
-
-        missing_cells = response.raw_output.get("missing_cells", [])
-        message = ChatMessage(
-            role=MessageRole.TOOL,
-            content=str(missing_cells),
-            additional_kwargs={
-                "tool_call_id": ev.tool_call.tool_id,
-                "name": ev.tool_call.tool_name,
-            },
-        )
-        self.memory.put(message)
+        async for response in generator:
+            if isinstance(response, AgentRunEvent):
+                # Bubble up the response to the stream
+                ctx.write_event_to_stream(response)
+            else:
+                for msg in response:
+                    self.memory.put(msg)
+                break
 
         if self.query_engine_tool is None:
             # Fallback to input that query engine tool is not found so that cannot answer questions
@@ -221,10 +209,7 @@ class FormFillingWorkflow(Workflow):
                     content="Extracted missing cells but query engine tool is not found so cannot answer questions. Ask user to upload file or connect to a knowledge base.",
                 )
             )
-            return InputEvent(input=self.memory.get())
-
-        # Forward missing cells information to find answers step
-        return FindAnswersEvent(missing_cells=missing_cells)
+        return InputEvent(input=self.memory.get())
 
     @step()
     async def find_answers(self, ctx: Context, ev: FindAnswersEvent) -> InputEvent:
@@ -237,63 +222,20 @@ class FormFillingWorkflow(Workflow):
                 msg="Finding answers for missing cells",
             )
         )
-        missing_cells = ev.missing_cells
-        # If missing cells information is not found, fallback to other tools
-        # It means that the extractor tool has not been called yet
-        # Fallback to input
-        if missing_cells is None:
-            ctx.write_event_to_stream(
-                AgentRunEvent(
-                    name="Researcher",
-                    msg="Error: Missing cells information not found. Fallback to other tools.",
-                )
-            )
-            message = ChatMessage(
-                role=MessageRole.TOOL,
-                content="Error: Missing cells information not found.",
-                additional_kwargs={
-                    "tool_call_id": ev.tool_call.tool_id,
-                    "name": ev.tool_call.tool_name,
-                },
-            )
-            self.memory.put(message)
-            return InputEvent(input=self.memory.get())
-
-        cell_values: list[CellValue] = []
-        # Iterate over missing cells and query for the answers
-        # and stream the progress
-        progress_id = str(uuid.uuid4())
-        total_steps = len(missing_cells)
-        for i, cell in enumerate(missing_cells):
-            if cell.question_to_answer is None:
-                continue
-            ctx.write_event_to_stream(
-                AgentRunEvent(
-                    name="Researcher",
-                    msg=f"Querying for: {cell.question_to_answer}",
-                    event_type=AgentRunEventType.PROGRESS,
-                    data={
-                        "id": progress_id,
-                        "total": total_steps,
-                        "current": i,
-                    },
-                )
-            )
-            # Call query engine tool directly
-            answer = await self.query_engine_tool.acall(query=cell.question_to_answer)
-            cell_values.append(
-                CellValue(
-                    row_index=cell.row_index,
-                    column_index=cell.column_index,
-                    value=str(answer),
-                )
-            )
-        self.memory.put(
-            ChatMessage(
-                role=MessageRole.ASSISTANT,
-                content=str(cell_values),
-            )
+        generator = tool_caller(
+            agent_name="Researcher",
+            tools=[self.query_engine_tool],
+            ctx=ctx,
+            tool_calls=ev.tool_calls,
         )
+        async for response in generator:
+            if isinstance(response, AgentRunEvent):
+                # Bubble up the response to the stream
+                ctx.write_event_to_stream(response)
+            else:
+                for msg in response:
+                    self.memory.put(msg)
+                break
         return InputEvent(input=self.memory.get())
 
     @step()
@@ -307,24 +249,18 @@ class FormFillingWorkflow(Workflow):
                 msg="Filling missing cells",
             )
         )
-        # Call the fill cells tool
-        # TODO: Using the helper  tool caller
-        result = self._call_tool(
-            ctx,
+        generator = tool_caller(
             agent_name="Processor",
-            tool=self.filling_tool,
-            tool_selection=ev.tool_call,
+            tools=[self.filling_tool],
+            ctx=ctx,
+            tool_calls=ev.tool_calls,
         )
-        if result.is_error:
-            return InputEvent(input=self.memory.get())
-
-        message = ChatMessage(
-            role=MessageRole.TOOL,
-            content=str(result.raw_output),
-            additional_kwargs={
-                "tool_call_id": ev.tool_call.tool_id,
-                "name": ev.tool_call.tool_name,
-            },
-        )
-        self.memory.put(message)
-        return InputEvent(input=self.memory.get(), response=True)
+        async for response in generator:
+            if isinstance(response, AgentRunEvent):
+                # Bubble up the response to the stream
+                ctx.write_event_to_stream(response)
+            else:
+                for msg in response:
+                    self.memory.put(msg)
+                break
+        return InputEvent(input=self.memory.get())
