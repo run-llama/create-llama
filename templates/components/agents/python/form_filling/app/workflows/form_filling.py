@@ -110,7 +110,8 @@ class FormFillingWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
-        assert self.extractor_tool is not None and self.filling_tool is not None
+        if self.extractor_tool is None or self.filling_tool is None:
+            raise ValueError("Extractor and filling tools are required.")
         self.tools = [self.extractor_tool, self.filling_tool]
         if self.query_engine_tool is not None:
             self.tools.append(self.query_engine_tool)  # type: ignore

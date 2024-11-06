@@ -52,7 +52,8 @@ class FunctionCallingAgent(Workflow):
         if llm is None:
             llm = Settings.llm
         self.llm = llm
-        assert self.llm.metadata.is_function_calling_model
+        if not self.llm.metadata.is_function_calling_model:
+            raise ValueError("The provided LLM must support function calling.")
 
         self.system_prompt = system_prompt
 
