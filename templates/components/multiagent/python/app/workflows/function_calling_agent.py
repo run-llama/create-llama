@@ -115,6 +115,6 @@ class FunctionCallingAgent(Workflow):
         tool_calls = ev.input.tool_calls
         tool_call_message = ev.input.tool_call_message
         self.memory.put(tool_call_message)
-        tool_messages = call_tools(self.name, self.tools, ctx, tool_calls)
+        tool_messages = await call_tools(self.name, self.tools, ctx, tool_calls)
         self.memory.put_messages(tool_messages)
         return InputEvent(input=self.memory.get())
