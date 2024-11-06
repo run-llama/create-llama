@@ -6,6 +6,10 @@ import {
   DocumentGeneratorParams,
 } from "./document-generator";
 import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
+import {
+  ExtractMissingCellsParams,
+  ExtractMissingCellsTool,
+} from "./form-filling";
 import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
@@ -53,6 +57,9 @@ const toolFactory: Record<string, ToolCreator> = {
   },
   document_generator: async (config: unknown) => {
     return [new DocumentGenerator(config as DocumentGeneratorParams)];
+  },
+  form_filling: async (config: unknown) => {
+    return [new ExtractMissingCellsTool(config as ExtractMissingCellsParams)];
   },
 };
 
