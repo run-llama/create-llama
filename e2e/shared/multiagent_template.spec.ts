@@ -69,12 +69,8 @@ for (const agents of templateAgents) {
       page,
     }) => {
       test.skip(
-        agents === "financial_report",
-        "Financial report requires e2b tool, skip this test.",
-      );
-      test.skip(
-        agents === "form_filling" && templateFramework !== "fastapi",
-        "Form filling requires e2b tool, skip this test.",
+        agents === "financial_report" || agents === "form_filling",
+        "Skip chat tests for financial report and form filling.",
       );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);

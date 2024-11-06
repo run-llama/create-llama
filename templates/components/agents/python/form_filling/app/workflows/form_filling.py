@@ -46,9 +46,6 @@ def create_workflow(
     extractor_tool = configured_tools.get("extract_questions")  # type: ignore
     filling_tool = configured_tools.get("fill_form")  # type: ignore
 
-    if extractor_tool is None or filling_tool is None:
-        raise ValueError("Extractor or filling tool is not found!")
-
     workflow = FormFillingWorkflow(
         query_engine_tool=query_engine_tool,
         extractor_tool=extractor_tool,  # type: ignore
@@ -113,6 +110,7 @@ class FormFillingWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
+        assert self.extractor_tool is not None and self.filling_tool is not None
         self.tools = [self.extractor_tool, self.filling_tool]
         if self.query_engine_tool is not None:
             self.tools.append(self.query_engine_tool)  # type: ignore
