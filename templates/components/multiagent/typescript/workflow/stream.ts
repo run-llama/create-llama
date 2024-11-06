@@ -48,15 +48,32 @@ export async function workflowEventsToStreamData(
 
   (async () => {
     for await (const event of events) {
+      console.log("event", event);
       if (event instanceof AgentRunEvent) {
-        const { name, msg } = event.data;
         if ((streamData as any).isClosed) {
           break;
         }
-        streamData.appendMessageAnnotation({
-          type: "agent",
-          data: { agent: name, text: msg },
-        });
+        const eventData = event.data;
+        if (eventData.type === "text") {
+          streamData.appendMessageAnnotation({
+            type: "agent",
+            data: {
+              agent: eventData.name,
+              type: eventData.type,
+              text: eventData.text,
+            },
+          });
+        } else if (eventData.type === "progress") {
+          streamData.appendMessageAnnotation({
+            type: "agent",
+            data: {
+              agent: eventData.name,
+              type: eventData.type,
+              text: eventData.text,
+              data: eventData.data,
+            },
+          });
+        }
       }
     }
   })();
