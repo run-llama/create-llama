@@ -42,9 +42,9 @@ class AgentRunEvent(Event):
         return {
             "type": "agent",
             "data": {
-                "name": self.name,
+                "agent": self.name,
                 "type": self.event_type.value,
-                "msg": self.msg,
+                "text": self.msg,
                 "data": self.data,
             },
         }
