@@ -113,8 +113,12 @@ async def call_tools(
                 ctx,
                 tools_by_name[tool_calls[0].tool_name],
                 tool_calls[0],
-                agent_name,
-                emit_agent_events,
+                lambda msg: ctx.write_event_to_stream(
+                    AgentRunEvent(
+                        name=agent_name,
+                        msg=msg,
+                    )
+                ),
             )
         ]
     # Multiple tool calls, show progress
@@ -139,20 +143,6 @@ async def call_tools(
                 )
             )
             continue
-        if emit_agent_events:
-            ctx.write_event_to_stream(
-                AgentRunEvent(
-                    name=agent_name,
-                    msg=f"Calling tool {tool_call.tool_name}, {tool_call.tool_kwargs}",
-                    event_type=AgentRunEventType.PROGRESS,
-                    data={
-                        "id": progress_id,
-                        "total": total_steps,
-                        "current": i,
-                    },
-                )
-            )
-        # Already emit agent events in the loop, so don't emit again
         tool_msg = await call_tool(
             ctx,
             tool,
