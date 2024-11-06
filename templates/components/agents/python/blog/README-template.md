@@ -8,9 +8,9 @@ This example is using three agents to generate a blog post:
 
 There are three different methods how the agents can interact to reach their goal:
 
-1. [Choreography](./app/examples/choreography.py) - the agents decide themselves to delegate a task to another agent
-1. [Orchestrator](./app/examples/orchestrator.py) - a central orchestrator decides which agent should execute a task
-1. [Explicit Workflow](./app/examples/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
+1. [Choreography](./app/agents/choreography.py) - the agents decide themselves to delegate a task to another agent
+1. [Orchestrator](./app/agents/orchestrator.py) - a central orchestrator decides which agent should execute a task
+1. [Explicit Workflow](./app/agents/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
 
 ## Getting Started
 

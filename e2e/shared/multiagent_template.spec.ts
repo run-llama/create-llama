@@ -18,13 +18,17 @@ const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateAgents = ["financial_report", "blog"];
+const templateAgents = ["financial_report", "blog", "form_filling"];
 
 for (const agents of templateAgents) {
   test.describe(`Test multiagent template ${agents} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
       process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
       "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
+    );
+    test.skip(
+      agents === "form_filling" && templateFramework !== "fastapi",
+      "Form filling is currently only supported with FastAPI.",
     );
     let port: number;
     let externalPort: number;
@@ -68,6 +72,10 @@ for (const agents of templateAgents) {
     test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
       page,
     }) => {
+      test.skip(
+        agents === "financial_report" || agents === "form_filling",
+        "Skip chat tests for financial report and form filling.",
+      );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);
 

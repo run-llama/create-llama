@@ -39,7 +39,7 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "What can you do?" }] }'
 ```
 
-You can start editing the API by modifying `app/api/routers/chat.py` or `app/agents/form_filling.py`. The API auto-updates as you save the files.
+You can start editing the API by modifying `app/api/routers/chat.py` or `app/workflows/form_filling.py`. The API auto-updates as you save the files.
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 
