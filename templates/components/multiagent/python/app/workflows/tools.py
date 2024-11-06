@@ -1,7 +1,7 @@
 import logging
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Callable, Optional
 
 from app.workflows.events import AgentRunEvent, AgentRunEventType
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
@@ -154,7 +154,21 @@ async def call_tools(
             )
         # Already emit agent events in the loop, so don't emit again
         tool_msg = await call_tool(
-            ctx, tool, tool_call, agent_name, emit_agent_events=False
+            ctx,
+            tool,
+            tool_call,
+            event_emitter=lambda msg: ctx.write_event_to_stream(
+                AgentRunEvent(
+                    name=agent_name,
+                    msg=msg,
+                    event_type=AgentRunEventType.PROGRESS,
+                    data={
+                        "id": progress_id,
+                        "total": total_steps,
+                        "current": i,
+                    },
+                )
+            ),
         )
         tool_msgs.append(tool_msg)
     return tool_msgs
@@ -164,15 +178,11 @@ async def call_tool(
     ctx: Context,
     tool: BaseTool,
     tool_call: ToolSelection,
-    agent_name: str,
-    emit_agent_events: bool = True,
+    event_emitter: Optional[Callable[[str], None]],
 ) -> ChatMessage:
-    if emit_agent_events:
-        ctx.write_event_to_stream(
-            AgentRunEvent(
-                name=agent_name,
-                msg=f"Calling tool {tool_call.tool_name}, {str(tool_call.tool_kwargs)}",
-            )
+    if event_emitter:
+        event_emitter(
+            f"Calling tool {tool_call.tool_name}, {str(tool_call.tool_kwargs)}"
         )
     try:
         if isinstance(tool, ContextAwareTool):
@@ -192,13 +202,8 @@ async def call_tool(
         )
     except Exception as e:
         logger.error(f"Got error in tool {tool_call.tool_name}: {str(e)}")
-        if emit_agent_events:
-            ctx.write_event_to_stream(
-                AgentRunEvent(
-                    name=agent_name,
-                    msg=f"Got error in tool {tool_call.tool_name}",
-                )
-            )
+        if event_emitter:
+            event_emitter(f"Got error in tool {tool_call.tool_name}: {str(e)}")
         return ChatMessage(
             role=MessageRole.TOOL,
             content=f"Error: {str(e)}",
