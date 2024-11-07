@@ -1,11 +1,15 @@
 import { initObservability } from "@/app/observability";
-import { StopEvent } from "@llamaindex/core/workflow";
+import { StartEvent } from "@llamaindex/core/workflow";
 import { Message, StreamingTextResponse } from "ai";
-import { ChatResponseChunk } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
+import {
+  isValidMessages,
+  retrieveMessageContent,
+} from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
 import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
+import { AgentInput } from "./workflow/type";
 
 initObservability();
 initSettings();
@@ -17,8 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { messages, data }: { messages: Message[]; data?: any } = body;
-    const userMessage = messages.pop();
-    if (!messages || !userMessage || userMessage.role !== "user") {
+    if (!isValidMessages(messages)) {
       return NextResponse.json(
         {
           error:
@@ -28,14 +31,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const agent = createWorkflow(messages, data);
-    // TODO: fix type in agent.run in LITS
-    const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
-      userMessage.content,
-    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
+    const userMessageContent = retrieveMessageContent(messages);
+    const workflow = await createWorkflow({
+      chatHistory: messages,
+      writeEvents: true,
+    });
+
+    const result = workflow.run(
+      new StartEvent<AgentInput>({
+        input: {
+          message: userMessageContent,
+        },
+      }),
+    );
+
     // convert the workflow events to a vercel AI stream data object
     const agentStreamData = await workflowEventsToStreamData(
-      agent.streamEvents(),
+      workflow.streamEvents(),
     );
     // convert the workflow result to a vercel AI content stream
     const stream = toDataStream(result, {

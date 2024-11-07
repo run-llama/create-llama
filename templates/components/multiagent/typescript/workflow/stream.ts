@@ -48,7 +48,6 @@ export async function workflowEventsToStreamData(
 
   (async () => {
     for await (const event of events) {
-      console.log("event", event);
       if (event instanceof AgentRunEvent) {
         if ((streamData as any).isClosed) {
           break;

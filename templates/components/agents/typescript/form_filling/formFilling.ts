@@ -27,11 +27,15 @@ class FindAnswersEvent extends WorkflowEvent<{
   toolCalls: ToolCall[];
 }> {}
 
+class FillMissingCellsEvent extends WorkflowEvent<{
+  toolCalls: ToolCall[];
+}> {}
+
 const DEFAULT_SYSTEM_PROMPT = `
-You are a helpful assistant who helps fill missing cells in a CSV file.
-Only extract missing cells from CSV files.
+You are a helpful assistant who helps fill missing cells in a CSV file. Only use the local file path for the tools.
 Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
 If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
+You can make multiple tool calls at once but only call with the same tool.
 `;
 
 export class FormFillingWorkflow extends Workflow {
@@ -39,6 +43,7 @@ export class FormFillingWorkflow extends Workflow {
   memory: ChatMemoryBuffer;
   extractorTool: BaseToolWithCall;
   queryEngineTool: BaseToolWithCall;
+  fillMissingCellsTool: BaseToolWithCall;
   systemPrompt?: string;
   writeEvents?: boolean;
 
@@ -47,6 +52,7 @@ export class FormFillingWorkflow extends Workflow {
     chatHistory: ChatMessage[];
     extractorTool: BaseToolWithCall;
     queryEngineTool: BaseToolWithCall;
+    fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
     writeEvents?: boolean;
     verbose?: boolean;
@@ -62,6 +68,7 @@ export class FormFillingWorkflow extends Workflow {
     this.writeEvents = options.writeEvents;
     this.extractorTool = options.extractorTool;
     this.queryEngineTool = options.queryEngineTool;
+    this.fillMissingCellsTool = options.fillMissingCellsTool;
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
       chatHistory: options.chatHistory,
@@ -76,6 +83,7 @@ export class FormFillingWorkflow extends Workflow {
         InputEvent,
         ExtractMissingCellsEvent,
         FindAnswersEvent,
+        FillMissingCellsEvent,
         StopEvent,
       ],
     });
@@ -85,11 +93,13 @@ export class FormFillingWorkflow extends Workflow {
     this.addStep(FindAnswersEvent, this.handleFindAnswers, {
       outputs: InputEvent,
     });
-    // TODO: Add filling CSV step
+    this.addStep(FillMissingCellsEvent, this.handleFillMissingCells, {
+      outputs: InputEvent,
+    });
   }
 
-  private async prepareChatHistory(ctx: Context, ev: StartEvent) {
-    const message = ev.data.input;
+  private async prepareChatHistory(ctx: Context, ev: StartEvent<AgentInput>) {
+    const message = ev.data.input.message;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
@@ -101,14 +111,14 @@ export class FormFillingWorkflow extends Workflow {
 
   private async handleLLMInput(ctx: Context, ev: InputEvent) {
     const chatHistory = ev.data.input;
+
     const toolCallResponse = await chatWithTools(
       this.llm,
-      [this.extractorTool, this.queryEngineTool],
+      [this.extractorTool, this.queryEngineTool, this.fillMissingCellsTool],
       chatHistory,
     );
 
     if (!toolCallResponse.isCallingTool()) {
-      console.log("Not calling tool, returning response");
       this.memory.put({
         role: "assistant",
         content:
@@ -120,7 +130,6 @@ export class FormFillingWorkflow extends Workflow {
     // Put the LLM tool call message into the memory
     // And trigger the next step according to the tool call
     if (toolCallResponse.toolCallMessage) {
-      console.log("Putting tool call message into memory");
       this.memory.put(toolCallResponse.toolCallMessage);
     }
     switch (toolCallResponse.toolName()) {
@@ -130,6 +139,10 @@ export class FormFillingWorkflow extends Workflow {
         });
       case this.queryEngineTool.metadata.name:
         return new FindAnswersEvent({
+          toolCalls: toolCallResponse.toolCalls,
+        });
+      case this.fillMissingCellsTool.metadata.name:
+        return new FillMissingCellsEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
     }
@@ -154,7 +167,6 @@ export class FormFillingWorkflow extends Workflow {
       "CSVExtractor",
     );
     for (const toolMsg of toolMsgs) {
-      console.log("Putting tool response into memory");
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });
@@ -169,7 +181,28 @@ export class FormFillingWorkflow extends Workflow {
       "Researcher",
     );
     for (const toolMsg of toolMsgs) {
-      console.log("Putting tool response into memory");
+      this.memory.put(toolMsg);
+    }
+    return new InputEvent({ input: this.memory.getMessages() });
+  }
+
+  private async handleFillMissingCells(
+    ctx: Context,
+    ev: FillMissingCellsEvent,
+  ) {
+    const { toolCalls } = ev.data;
+
+    if (!this.fillMissingCellsTool) {
+      throw new Error("Fill missing cells tool is not available");
+    }
+
+    const toolMsgs = await callTools(
+      toolCalls,
+      [this.fillMissingCellsTool],
+      ctx,
+      "Processor",
+    );
+    for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });

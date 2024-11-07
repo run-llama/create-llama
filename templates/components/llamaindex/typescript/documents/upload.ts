@@ -18,8 +18,8 @@ export async function uploadDocument(
   // Store file
   const fileMetadata = await storeFile(name, fileBuffer, mimeType);
 
-  // If the file is csv and has codeExecutorTool, we don't need to index the file.
-  if (mimeType === "text/csv" && (await hasCodeExecutorTool())) {
+  // Do not index csv files
+  if (mimeType === "text/csv") {
     return fileMetadata;
   }
   let documentIds: string[] = [];

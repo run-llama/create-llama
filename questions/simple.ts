@@ -52,22 +52,19 @@ export const askSimpleQuestions = async (
   let useLlamaCloud = false;
 
   if (appType !== "extractor") {
-    // TODO: Add TS support for form filling use case
-    if (appType !== "form_filling") {
-      const { language: newLanguage } = await prompts(
-        {
-          type: "select",
-          name: "language",
-          message: "What language do you want to use?",
-          choices: [
-            { title: "Python (FastAPI)", value: "fastapi" },
-            { title: "Typescript (NextJS)", value: "nextjs" },
-          ],
-        },
-        questionHandlers,
-      );
-      language = newLanguage;
-    }
+    const { language: newLanguage } = await prompts(
+      {
+        type: "select",
+        name: "language",
+        message: "What language do you want to use?",
+        choices: [
+          { title: "Python (FastAPI)", value: "fastapi" },
+          { title: "Typescript (NextJS)", value: "nextjs" },
+        ],
+      },
+      questionHandlers,
+    );
+    language = newLanguage;
 
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {

@@ -1,7 +1,8 @@
 import { WorkflowEvent } from "@llamaindex/core/workflow";
+import { MessageContent } from "llamaindex";
 
 export type AgentInput = {
-  message: string;
+  message: string | MessageContent;
   streaming?: boolean;
 };
 

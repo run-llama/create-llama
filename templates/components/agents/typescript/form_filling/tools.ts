@@ -6,7 +6,6 @@ import {
   ChatMessage,
   ChatResponse,
   ChatResponseChunk,
-  LlamaCloudIndex,
   QueryEngineTool,
   ToolCall,
   ToolCallLLM,
@@ -18,56 +17,24 @@ import { getDataSource } from "../engine";
 import { createTools } from "../engine/tools/index";
 import { AgentRunEvent } from "./type";
 
-export const getQueryEngineTools = async (
+export const getQueryEngineTool = async (
   params?: any,
-): Promise<QueryEngineTool[] | null> => {
+): Promise<QueryEngineTool | null> => {
   const topK = process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined;
 
   const index = await getDataSource(params);
   if (!index) {
     return null;
   }
-  // index is LlamaCloudIndex use two query engine tools
-  if (index instanceof LlamaCloudIndex) {
-    return [
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          similarityTopK: topK,
-          retrieval_mode: "files_via_content",
-        }),
-        metadata: {
-          name: "document_retriever",
-          description: `Document retriever that retrieves entire documents from the corpus.
-  ONLY use for research questions that may require searching over entire research reports.
-  Will be slower and more expensive than chunk-level retrieval but may be necessary.`,
-        },
-      }),
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          similarityTopK: topK,
-          retrieval_mode: "chunks",
-        }),
-        metadata: {
-          name: "chunk_retriever",
-          description: `Retrieves a small set of relevant document chunks from the corpus.
-      Use for research questions that want to look up specific facts from the knowledge corpus,
-      and need entire documents.`,
-        },
-      }),
-    ];
-  } else {
-    return [
-      new QueryEngineTool({
-        queryEngine: (index as any).asQueryEngine({
-          similarityTopK: topK,
-        }),
-        metadata: {
-          name: "retriever",
-          description: `Use this tool to retrieve information about the text corpus from the index.`,
-        },
-      }),
-    ];
-  }
+  return new QueryEngineTool({
+    queryEngine: (index as any).asQueryEngine({
+      similarityTopK: topK,
+    }),
+    metadata: {
+      name: "retriever",
+      description: `Use this tool to retrieve information about the text corpus from the index.`,
+    },
+  });
 };
 
 export const getAvailableTools = async () => {
@@ -82,9 +49,9 @@ export const getAvailableTools = async () => {
   if (toolConfig) {
     tools.push(...(await createTools(toolConfig)));
   }
-  const queryEngineTools = await getQueryEngineTools();
-  if (queryEngineTools) {
-    tools.push(...queryEngineTools);
+  const queryEngineTool = await getQueryEngineTool();
+  if (queryEngineTool) {
+    tools.push(queryEngineTool);
   }
 
   return tools;
@@ -108,6 +75,7 @@ export const callTools = async (
   ctx: Context,
   agentName: string,
   writeEvent: boolean = true,
+  // eslint-disable-next-line max-params
 ): Promise<ChatMessage[]> => {
   const toolMsgs: ChatMessage[] = [];
   if (toolCalls.length === 0) {
@@ -167,6 +135,7 @@ export const callSingleTool = async (
       `Calling tool ${toolCall.name} with input: ${JSON.stringify(toolCall.input)}`,
     );
   }
+
   const toolOutput = await callTool(tool, toolCall, {
     log: () => {},
     error: (...args: unknown[]) => {
@@ -189,6 +158,7 @@ export const callSingleTool = async (
     },
     warn: () => {},
   });
+
   return {
     content: JSON.stringify(toolOutput.output),
     role: "tool",
@@ -302,11 +272,13 @@ export const getToolCallsFromResponse = (
     | ChatResponseChunk<ToolCallLLMMessageOptions>,
 ): ToolCall[] => {
   let options;
+
   if ("message" in response) {
     options = response.message.options;
   } else {
     options = response.options;
   }
+
   if (options && "toolCall" in options) {
     return options.toolCall as ToolCall[];
   }

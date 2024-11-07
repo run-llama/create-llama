@@ -1,21 +1,23 @@
 import { JSONSchemaType } from "ajv";
-import fs from "fs/promises";
+import fs from "fs";
 import { BaseTool, Settings, ToolMetadata } from "llamaindex";
+import Papa from "papaparse";
+import path from "path";
+import { saveDocument } from "../../llamaindex/documents/helper";
 
 type ExtractMissingCellsParameter = {
   filePath: string;
 };
 
 export type MissingCell = {
-  row_index: number;
-  column_index: number;
+  rowIndex: number;
+  columnIndex: number;
   question: string;
 };
 
 const CSV_EXTRACTION_PROMPT = `You are a data analyst. You are given a table with missing cells.
 Your task is to identify the missing cells and the questions needed to fill them.
-IMPORTANT: Column indices should be 0-based, where the first data column is index 1 
-(index 0 is typically the row names/index column).
+IMPORTANT: Column indices should be 0-based
 
 # Instructions:
 - Understand the entire content of the table and the topics of the table.
@@ -27,8 +29,8 @@ IMPORTANT: Column indices should be 0-based, where the first data column is inde
 {
   "missing_cells": [
     {
-      "row_index": number,
-      "column_index": number,
+      "rowIndex": number,
+      "columnIndex": number,
       "question": string
     }
   ]
@@ -44,19 +46,19 @@ IMPORTANT: Column indices should be 0-based, where the first data column is inde
 #
 # Your thoughts:
 # - The table is about people's names, ages, and cities.
-# - Row: 1, Column: 1 (Age column), Question: "How old is Mary? Please provide only the numerical answer."
-# - Row: 1, Column: 2 (City column), Question: "In which city does Mary live? Please provide only the city name."
+# - Row: 1, Column: 2 (Age column), Question: "How old is Mary? Please provide only the numerical answer."
+# - Row: 1, Column: 3 (City column), Question: "In which city does Mary live? Please provide only the city name."
 # Your answer:
 # {
 #   "missing_cells": [
 #     {
-#       "row_index": 1,
-#       "column_index": 1,
+#       "rowIndex": 1,
+#       "columnIndex": 2,
 #       "question": "How old is Mary? Please provide only the numerical answer."
 #     },
 #     {
-#       "row_index": 1,
-#       "column_index": 2,
+#       "rowIndex": 1,
+#       "columnIndex": 3,
 #       "question": "In which city does Mary live? Please provide only the city name."
 #     }
 #   ]
@@ -104,18 +106,58 @@ export class ExtractMissingCellsTool
     this.defaultExtractionPrompt = CSV_EXTRACTION_PROMPT;
   }
 
-  async readCsvFile(filePath: string): Promise<string> {
-    const fileContent = await fs.readFile(filePath, "utf8");
-    return fileContent;
+  private readCsvFile(filePath: string): Promise<string[][]> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, "utf8", (err, data) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const parsedData = Papa.parse<string[]>(data, {
+          skipEmptyLines: false,
+        });
+
+        if (parsedData.errors.length) {
+          reject(parsedData.errors);
+          return;
+        }
+
+        // Ensure all rows have the same number of columns as the header
+        const maxColumns = parsedData.data[0].length;
+        const paddedRows = parsedData.data.map((row) => {
+          return [...row, ...Array(maxColumns - row.length).fill("")];
+        });
+
+        resolve(paddedRows);
+      });
+    });
+  }
+
+  private formatToMarkdownTable(data: string[][]): string {
+    if (data.length === 0) return "";
+
+    const maxColumns = data[0].length;
+
+    const headerRow = `| ${data[0].join(" | ")} |`;
+    const separatorRow = `| ${Array(maxColumns).fill("---").join(" | ")} |`;
+
+    const dataRows = data.slice(1).map((row) => {
+      return `| ${row.join(" | ")} |`;
+    });
+
+    return [headerRow, separatorRow, ...dataRows].join("\n");
   }
 
   async call(input: ExtractMissingCellsParameter): Promise<MissingCell[]> {
     const { filePath } = input;
     const tableContent = await this.readCsvFile(filePath);
+
     const prompt = this.defaultExtractionPrompt.replace(
       "{table_content}",
-      tableContent,
+      this.formatToMarkdownTable(tableContent),
     );
+
     const llm = Settings.llm;
     const response = await llm.complete({
       prompt,
@@ -127,4 +169,107 @@ export class ExtractMissingCellsTool
   }
 }
 
-// TODO: Add filling CSV tool
+type FillMissingCellsParameter = {
+  filePath: string;
+  cells: {
+    rowIndex: number;
+    columnIndex: number;
+    answer: string;
+  }[];
+};
+
+const FILL_CELLS_METADATA: ToolMetadata<
+  JSONSchemaType<FillMissingCellsParameter>
+> = {
+  name: "fill_missing_cells",
+  description:
+    "Use this tool to fill missing cells in a CSV file with provided answers.",
+  parameters: {
+    type: "object",
+    properties: {
+      filePath: {
+        type: "string",
+        description: "The path to the CSV file.",
+      },
+      cells: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            rowIndex: { type: "number" },
+            columnIndex: { type: "number" },
+            answer: { type: "string" },
+          },
+          required: ["rowIndex", "columnIndex", "answer"],
+        },
+        description: "Array of cells to fill with their answers",
+      },
+    },
+    required: ["filePath", "cells"],
+  },
+};
+
+export interface FillMissingCellsParams {
+  metadata?: ToolMetadata<JSONSchemaType<FillMissingCellsParameter>>;
+}
+
+export class FillMissingCellsTool
+  implements BaseTool<FillMissingCellsParameter>
+{
+  metadata: ToolMetadata<JSONSchemaType<FillMissingCellsParameter>>;
+
+  constructor(params: FillMissingCellsParams = {}) {
+    this.metadata = params.metadata ?? FILL_CELLS_METADATA;
+  }
+
+  async call(input: FillMissingCellsParameter): Promise<string> {
+    const { filePath, cells } = input;
+
+    // Read the CSV file
+    const fileContent = await new Promise<string>((resolve, reject) => {
+      fs.readFile(filePath, "utf8", (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
+
+    // Parse CSV with PapaParse
+    const parseResult = Papa.parse<string[]>(fileContent, {
+      header: false, // Ensure the header is not treated as a separate object
+      skipEmptyLines: false, // Ensure empty lines are not skipped
+    });
+
+    const rows = parseResult.data;
+
+    // Fill the cells with answers
+    for (const cell of cells) {
+      // Adjust rowIndex to start from 1 for data rows
+      const adjustedRowIndex = cell.rowIndex + 1;
+      if (
+        adjustedRowIndex < rows.length &&
+        cell.columnIndex < rows[adjustedRowIndex].length
+      ) {
+        rows[adjustedRowIndex][cell.columnIndex] = cell.answer;
+      }
+    }
+
+    // Convert back to CSV format
+    const updatedContent = Papa.unparse(rows, {
+      delimiter: parseResult.meta.delimiter,
+    });
+
+    // Use the helper function to write the file
+    const newFileName = filePath.replace(".csv", "-filled.csv");
+    const newFilePath = path.join("output/tools", newFileName);
+
+    const newFileUrl = await saveDocument(newFilePath, updatedContent);
+
+    return (
+      "Successfully filled missing cells in the CSV file. File URL to show to the user: " +
+      newFileUrl
+    );
+  }
+}
