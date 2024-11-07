@@ -176,12 +176,7 @@ export class FormFillingWorkflow extends Workflow {
   private async handleFindAnswers(ctx: Context, ev: FindAnswersEvent) {
     const { toolCalls } = ev.data;
     if (!this.queryEngineTool) {
-      this.memory.put({
-        role: "assistant",
-        content:
-          "No retriever tool available. Please upload a different file or connect to a knowledge base.",
-      } as ChatMessage);
-      return new InputEvent({ input: this.memory.getMessages() });
+      throw new Error("Query engine tool is not available");
     }
     const toolMsgs = await callTools(
       toolCalls,
