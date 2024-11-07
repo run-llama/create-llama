@@ -120,12 +120,16 @@ export class FormFillingWorkflow extends Workflow {
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.isCallingTool()) {
+      return new StopEvent({ result: toolCallResponse.responseGenerator });
+    }
+
+    if (toolCallResponse.isCallingDifferentTools()) {
       this.memory.put({
-        role: "assistant",
+        role: "user",
         content:
           "Calling different tool is not allowed. Please only call one tool at a time.",
       });
-      return new StopEvent({ result: toolCallResponse.responseGenerator });
+      return new InputEvent({ input: this.memory.getMessages() });
     }
 
     // Put the LLM tool call message into the memory
@@ -178,12 +182,20 @@ export class FormFillingWorkflow extends Workflow {
     if (!this.queryEngineTool) {
       throw new Error("Query engine tool is not available");
     }
+    ctx.writeEventToStream(
+      new AgentRunEvent({
+        name: "Researcher",
+        text: "Finding answers",
+        type: "text",
+      }),
+    );
     const toolMsgs = await callTools(
       toolCalls,
       [this.queryEngineTool],
       ctx,
       "Researcher",
     );
+
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
