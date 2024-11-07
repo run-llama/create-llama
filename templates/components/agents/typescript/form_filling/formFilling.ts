@@ -42,7 +42,7 @@ export class FormFillingWorkflow extends Workflow {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
   extractorTool: BaseToolWithCall;
-  queryEngineTool: BaseToolWithCall;
+  queryEngineTool?: BaseToolWithCall;
   fillMissingCellsTool: BaseToolWithCall;
   systemPrompt?: string;
   writeEvents?: boolean;
@@ -51,7 +51,7 @@ export class FormFillingWorkflow extends Workflow {
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
     extractorTool: BaseToolWithCall;
-    queryEngineTool: BaseToolWithCall;
+    queryEngineTool?: BaseToolWithCall;
     fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
     writeEvents?: boolean;
@@ -112,11 +112,12 @@ export class FormFillingWorkflow extends Workflow {
   private async handleLLMInput(ctx: Context, ev: InputEvent) {
     const chatHistory = ev.data.input;
 
-    const toolCallResponse = await chatWithTools(
-      this.llm,
-      [this.extractorTool, this.queryEngineTool, this.fillMissingCellsTool],
-      chatHistory,
-    );
+    const tools = [this.extractorTool, this.fillMissingCellsTool];
+    if (this.queryEngineTool) {
+      tools.push(this.queryEngineTool);
+    }
+
+    const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.isCallingTool()) {
       this.memory.put({
@@ -137,12 +138,12 @@ export class FormFillingWorkflow extends Workflow {
         return new ExtractMissingCellsEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
-      case this.queryEngineTool.metadata.name:
-        return new FindAnswersEvent({
-          toolCalls: toolCallResponse.toolCalls,
-        });
       case this.fillMissingCellsTool.metadata.name:
         return new FillMissingCellsEvent({
+          toolCalls: toolCallResponse.toolCalls,
+        });
+      case this.queryEngineTool?.metadata.name:
+        return new FindAnswersEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
     }
@@ -174,6 +175,14 @@ export class FormFillingWorkflow extends Workflow {
 
   private async handleFindAnswers(ctx: Context, ev: FindAnswersEvent) {
     const { toolCalls } = ev.data;
+    if (!this.queryEngineTool) {
+      this.memory.put({
+        role: "assistant",
+        content:
+          "No retriever tool available. Please upload a different file or connect to a knowledge base.",
+      } as ChatMessage);
+      return new InputEvent({ input: this.memory.getMessages() });
+    }
     const toolMsgs = await callTools(
       toolCalls,
       [this.queryEngineTool],

@@ -1,7 +1,7 @@
 import { Message } from "ai";
 import { ChatMessage, ToolCallLLM } from "llamaindex";
 import { getAnnotations } from "../llamaindex/streaming/annotations";
-import { FormFillingWorkflow } from "./form-filling";
+import { FormFillingWorkflow } from "./formFilling";
 import { getAvailableTools } from "./tools";
 
 const TIMEOUT = 360 * 1000;
@@ -59,9 +59,9 @@ export async function createWorkflow(options: {
     (tool) => tool.metadata.name === "fill_missing_cells",
   );
 
-  if (!extractorTool || !queryEngineTool || !fillMissingCellsTool) {
+  if (!extractorTool || !fillMissingCellsTool) {
     throw new Error(
-      "Expected extract_missing_cells, data_query_engine and fill_missing_cells tools",
+      "Expected extract_missing_cells and fill_missing_cells tools",
     );
   }
 

@@ -1,5 +1,6 @@
 import { JSONValue, Message } from "ai";
 import { MessageContent, MessageContentDetail } from "llamaindex";
+import { UPLOADED_FOLDER } from "../documents/helper";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
@@ -84,6 +85,10 @@ function getFileContent(file: DocumentFile): string {
   const sandboxFilePath = `/tmp/${file.name}`;
   defaultContent += `Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): ${sandboxFilePath}\n`;
 
+  // Include local file path
+  const localFilePath = `${UPLOADED_FOLDER}/${file.name}`;
+  defaultContent += `Local file path (instruction: use for local tool that requires a local path): ${localFilePath}\n`;
+
   return defaultContent;
 }
 
@@ -127,13 +132,10 @@ function retrieveLatestArtifact(messages: Message[]): MessageContentDetail[] {
 }
 
 function convertAnnotations(messages: Message[]): MessageContentDetail[] {
-  // annotations from the last user message that has annotations
-  const annotations: Annotation[] =
-    messages
-      .slice()
-      .reverse()
-      .find((message) => message.role === "user" && message.annotations)
-      ?.annotations?.map(getValidAnnotation) || [];
+  // get all annotations from user messages
+  const annotations: Annotation[] = messages
+    .filter((message) => message.role === "user" && message.annotations)
+    .flatMap((message) => message.annotations?.map(getValidAnnotation) || []);
   if (annotations.length === 0) return [];
 
   const content: MessageContentDetail[] = [];

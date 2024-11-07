@@ -77,14 +77,13 @@ const DEFAULT_METADATA: ToolMetadata<
   JSONSchemaType<ExtractMissingCellsParameter>
 > = {
   name: "extract_missing_cells",
-  description:
-    "Use this tool to extract missing cells in a CSV file and generate questions to fill them. Pass either the path to the CSV file or the content of the CSV file.",
+  description: `Use this tool to extract missing cells in a CSV file and generate questions to fill them. This tool only works with local file path.`,
   parameters: {
     type: "object",
     properties: {
       filePath: {
         type: "string",
-        description: "The path to the CSV file.",
+        description: "The local file path to the CSV file.",
       },
     },
     required: ["filePath"],
@@ -182,14 +181,13 @@ const FILL_CELLS_METADATA: ToolMetadata<
   JSONSchemaType<FillMissingCellsParameter>
 > = {
   name: "fill_missing_cells",
-  description:
-    "Use this tool to fill missing cells in a CSV file with provided answers.",
+  description: `Use this tool to fill missing cells in a CSV file with provided answers. This tool only works with local file path.`,
   parameters: {
     type: "object",
     properties: {
       filePath: {
         type: "string",
-        description: "The path to the CSV file.",
+        description: "The local file path to the CSV file.",
       },
       cells: {
         type: "array",
