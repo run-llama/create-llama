@@ -24,16 +24,6 @@ class ContextAwareTool(FunctionTool, ABC):
         pass
 
 
-class ResponseGenerator(BaseModel):
-    """
-    A response generator from chat_with_tools.
-    """
-
-    generator: AsyncGenerator[ChatResponse | None, None]
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
 class ChatWithToolsResponse(BaseModel):
     """
     A tool call response from chat_with_tools.
