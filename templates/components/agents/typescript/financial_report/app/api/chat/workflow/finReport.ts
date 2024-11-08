@@ -73,7 +73,6 @@ export class FinancialReportWorkflow extends Workflow<
     this.writeEvents = options.writeEvents;
     this.queryEngineTool = options.queryEngineTool;
     this.codeInterpreterTool = options.codeInterpreterTool;
-    console.log("Chat history:", options.chatHistory);
 
     this.documentGeneratorTool = options.documentGeneratorTool;
     this.memory = new ChatMemoryBuffer({
@@ -133,9 +132,12 @@ export class FinancialReportWorkflow extends Workflow<
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
   ) {
+    const message = ev.data;
+
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
+    this.memory.put({ role: "user", content: message });
 
     return new InputEvent({ input: this.memory.getMessages() });
   }

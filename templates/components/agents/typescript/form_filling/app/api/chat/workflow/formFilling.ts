@@ -1,14 +1,17 @@
 import {
   Context,
+  HandlerContext,
   StartEvent,
   StopEvent,
   Workflow,
   WorkflowEvent,
-} from "@llamaindex/core/workflow";
+} from "@llamaindex/workflow";
 import {
   BaseToolWithCall,
   ChatMemoryBuffer,
   ChatMessage,
+  ChatResponseChunk,
+  MessageContent,
   Settings,
   ToolCall,
   ToolCallLLM,
@@ -38,7 +41,11 @@ If there is no query engine tool or the gathered information has many N/A values
 You can make multiple tool calls at once but only call with the same tool.
 `;
 
-export class FormFillingWorkflow extends Workflow {
+export class FormFillingWorkflow extends Workflow<
+  null,
+  string | MessageContent,
+  ChatResponseChunk
+> {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
   extractorTool: BaseToolWithCall;
@@ -75,31 +82,58 @@ export class FormFillingWorkflow extends Workflow {
     });
 
     // Add steps
-    this.addStep(StartEvent<AgentInput>, this.prepareChatHistory, {
-      outputs: InputEvent,
-    });
-    this.addStep(InputEvent, this.handleLLMInput, {
-      outputs: [
-        InputEvent,
-        ExtractMissingCellsEvent,
-        FindAnswersEvent,
-        FillMissingCellsEvent,
-        StopEvent,
-      ],
-    });
-    this.addStep(ExtractMissingCellsEvent, this.handleExtractMissingCells, {
-      outputs: InputEvent,
-    });
-    this.addStep(FindAnswersEvent, this.handleFindAnswers, {
-      outputs: InputEvent,
-    });
-    this.addStep(FillMissingCellsEvent, this.handleFillMissingCells, {
-      outputs: InputEvent,
-    });
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInput>],
+        outputs: [InputEvent],
+      },
+      this.prepareChatHistory.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [InputEvent],
+        outputs: [
+          InputEvent,
+          ExtractMissingCellsEvent,
+          FindAnswersEvent,
+          FillMissingCellsEvent,
+          StopEvent,
+        ],
+      },
+      this.handleLLMInput.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [ExtractMissingCellsEvent],
+        outputs: [InputEvent],
+      },
+      this.handleExtractMissingCells.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [FindAnswersEvent],
+        outputs: [InputEvent],
+      },
+      this.handleFindAnswers.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [FillMissingCellsEvent],
+        outputs: [InputEvent],
+      },
+      this.handleFillMissingCells.bind(this),
+    );
   }
 
-  private async prepareChatHistory(ctx: Context, ev: StartEvent<AgentInput>) {
-    const message = ev.data.input.message;
+  private async prepareChatHistory(
+    ctx: HandlerContext<null>,
+    ev: StartEvent<AgentInput>,
+  ) {
+    const message = ev.data;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
@@ -109,7 +143,7 @@ export class FormFillingWorkflow extends Workflow {
     return new InputEvent({ input: this.memory.getMessages() });
   }
 
-  private async handleLLMInput(ctx: Context, ev: InputEvent) {
+  private async handleLLMInput(ctx: HandlerContext<null>, ev: InputEvent) {
     const chatHistory = ev.data.input;
 
     const tools = [this.extractorTool, this.fillMissingCellsTool];
@@ -150,6 +184,8 @@ export class FormFillingWorkflow extends Workflow {
         return new FindAnswersEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
+      default:
+        throw new Error(`Unknown tool: ${toolCallResponse.toolName()}`);
     }
   }
 
@@ -157,7 +193,7 @@ export class FormFillingWorkflow extends Workflow {
     ctx: Context,
     ev: ExtractMissingCellsEvent,
   ) {
-    ctx.writeEventToStream(
+    ctx.sendEvent(
       new AgentRunEvent({
         name: "CSVExtractor",
         text: "Extracting missing cells",
@@ -182,7 +218,7 @@ export class FormFillingWorkflow extends Workflow {
     if (!this.queryEngineTool) {
       throw new Error("Query engine tool is not available");
     }
-    ctx.writeEventToStream(
+    ctx.sendEvent(
       new AgentRunEvent({
         name: "Researcher",
         text: "Finding answers",
@@ -203,7 +239,7 @@ export class FormFillingWorkflow extends Workflow {
   }
 
   private async handleFillMissingCells(
-    ctx: Context,
+    ctx: HandlerContext<null>,
     ev: FillMissingCellsEvent,
   ) {
     const { toolCalls } = ev.data;
