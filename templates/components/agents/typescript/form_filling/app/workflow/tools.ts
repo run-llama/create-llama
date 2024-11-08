@@ -6,6 +6,7 @@ import {
   ChatMessage,
   ChatResponse,
   ChatResponseChunk,
+  PartialToolCall,
   QueryEngineTool,
   ToolCall,
   ToolCallLLM,
@@ -32,7 +33,7 @@ export const getQueryEngineTool = async (
     }),
     metadata: {
       name: "retriever",
-      description: `Use this tool to retrieve information about the text corpus from the index.`,
+      description: `Use this tool to retrieve information about the provided data.`,
     },
   });
 };
@@ -81,7 +82,7 @@ export const callTools = async (
   if (toolCalls.length === 0) {
     return toolMsgs;
   }
-  if (tools.length === 1) {
+  if (toolCalls.length === 1) {
     return [
       (await callSingleTool(toolCalls[0], tools[0], (msg: string) => {
         if (writeEvent) {
@@ -106,7 +107,6 @@ export const callTools = async (
       throw new Error(`Tool ${toolCall.name} not found`);
     }
     const toolMsg = await callSingleTool(toolCall, tool, (msg: string) => {
-      currentStep++;
       ctx.writeEventToStream(
         new AgentRunEvent({
           name: agentName,
@@ -119,6 +119,7 @@ export const callTools = async (
           },
         }),
       );
+      currentStep++;
     });
     toolMsgs.push(toolMsg as ChatMessage);
   }
@@ -147,10 +148,13 @@ export const callSingleTool = async (
         content: JSON.stringify({
           error: args.join(" "),
         }),
-        role: "tool",
+        role: "user",
         options: {
           toolResult: {
             id: toolCall.id,
+            result: JSON.stringify({
+              error: args.join(" "),
+            }),
             isError: true,
           },
         },
@@ -161,12 +165,12 @@ export const callSingleTool = async (
 
   return {
     content: JSON.stringify(toolOutput.output),
-    role: "tool",
+    role: "user",
     options: {
       toolResult: {
-        id: toolCall.id,
         result: toolOutput.output,
         isError: toolOutput.isError,
+        id: toolCall.id,
       },
     },
   };
@@ -187,12 +191,11 @@ class ChatWithToolsResponse {
     this.responseGenerator = options.responseGenerator;
   }
 
-  isCallingDifferentTool(other: ChatWithToolsResponse) {
-    return (
-      this.toolCalls.length > 0 &&
-      other.toolCalls.length > 0 &&
-      this.toolCalls[0].name !== other.toolCalls[0].name
-    );
+  isCallingDifferentTools() {
+    // toolCalls is have different tool names
+    const toolNames = this.toolCalls.map((toolCall) => toolCall.name);
+    const uniqueToolNames = new Set(toolNames);
+    return uniqueToolNames.size > 1;
   }
 
   isCallingTool() {
@@ -225,6 +228,7 @@ export const chatWithTools = async (
 
     let fullResponse = null;
     let yieldedIndicator = false;
+    const toolCallMap = new Map();
     for await (const chunk of responseStream) {
       const hasToolCalls = chunk.options && "toolCall" in chunk.options;
       if (!hasToolCalls) {
@@ -238,10 +242,31 @@ export const chatWithTools = async (
         yieldedIndicator = true;
       }
 
-      fullResponse = chunk;
+      if (chunk.options && "toolCall" in chunk.options) {
+        for (const toolCall of chunk.options.toolCall as PartialToolCall[]) {
+          if (toolCall.id) {
+            toolCallMap.set(toolCall.id, toolCall);
+          }
+        }
+      }
+
+      if (
+        hasToolCalls &&
+        (chunk.raw as any)?.choices?.[0]?.finish_reason !== null
+      ) {
+        // Update the fullResponse with the tool calls
+        const toolCalls = Array.from(toolCallMap.values());
+        fullResponse = {
+          ...chunk,
+          options: {
+            ...chunk.options,
+            toolCall: toolCalls,
+          },
+        } as ChatResponseChunk<ToolCallLLMMessageOptions>;
+      }
     }
 
-    if (fullResponse?.options && Object.keys(fullResponse.options).length) {
+    if (fullResponse) {
       yield fullResponse;
     }
   };
@@ -250,14 +275,23 @@ export const chatWithTools = async (
   const isToolCall = await generator.next();
 
   if (isToolCall.value) {
-    const fullResponse = await generator.next();
-    const toolCalls = getToolCallsFromResponse(
-      fullResponse.value as ChatResponseChunk<ToolCallLLMMessageOptions>,
-    );
-    return new ChatWithToolsResponse({
-      toolCalls,
-      toolCallMessage: fullResponse.value as unknown as ChatMessage,
-    });
+    // If it's a tool call, we need to wait for the full response
+    let fullResponse = null;
+    for await (const chunk of generator) {
+      fullResponse = chunk;
+    }
+
+    if (fullResponse) {
+      const toolCalls = getToolCallsFromResponse(
+        fullResponse as ChatResponseChunk<ToolCallLLMMessageOptions>,
+      );
+      return new ChatWithToolsResponse({
+        toolCalls,
+        toolCallMessage: fullResponse as unknown as ChatMessage,
+      });
+    } else {
+      throw new Error("Cannot get tool calls from response");
+    }
   }
 
   return new ChatWithToolsResponse({

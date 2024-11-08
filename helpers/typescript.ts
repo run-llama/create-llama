@@ -144,7 +144,7 @@ export const installTSTemplate = async ({
         agents,
       );
 
-      await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
+      await copy("**", path.join(root), {
         parents: true,
         cwd: agentsCodePath,
         rename: assetRelocator,
