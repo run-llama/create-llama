@@ -1,4 +1,4 @@
-import { Context } from "@llamaindex/core/workflow";
+import { HandlerContext } from "@llamaindex/workflow";
 import fs from "fs/promises";
 import {
   BaseToolWithCall,
@@ -70,10 +70,10 @@ export const lookupTools = async (
 /**
  * Call multiple tools and return the tool messages
  */
-export const callTools = async (
+export const callTools = async <T>(
   toolCalls: ToolCall[],
   tools: BaseToolWithCall[],
-  ctx: Context,
+  ctx: HandlerContext<T>,
   agentName: string,
   writeEvent: boolean = true,
   // eslint-disable-next-line max-params
@@ -90,7 +90,7 @@ export const callTools = async (
     return [
       (await callSingleTool(toolCalls[0], tool, (msg: string) => {
         if (writeEvent) {
-          ctx.writeEventToStream(
+          ctx.sendEvent(
             new AgentRunEvent({
               name: agentName,
               text: msg,
@@ -111,7 +111,7 @@ export const callTools = async (
       throw new Error(`Tool ${toolCall.name} not found`);
     }
     const toolMsg = await callSingleTool(toolCall, tool, (msg: string) => {
-      ctx.writeEventToStream(
+      ctx.sendEvent(
         new AgentRunEvent({
           name: agentName,
           text: msg,

@@ -1,7 +1,6 @@
 import { initObservability } from "@/app/observability";
-import { StartEvent, StopEvent } from "@llamaindex/core/workflow";
-import { Message, StreamingTextResponse } from "ai";
-import { ChatResponseChunk } from "llamaindex";
+import { StreamingTextResponse, type Message } from "ai";
+import { MessageContent } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
@@ -9,8 +8,7 @@ import {
   retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
-import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
-import { AgentInput } from "./workflow/type";
+import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 initObservability();
 initSettings();
@@ -38,23 +36,13 @@ export async function POST(request: NextRequest) {
       writeEvents: true,
     });
 
-    const result = workflow.run(
-      new StartEvent<AgentInput>({
-        input: {
-          message: userMessageContent,
-        },
-      }),
-    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
+    const context = workflow.run(userMessageContent as MessageContent);
+    const { stream, streamData } =
+      await createStreamFromWorkflowContext(context);
 
-    // convert the workflow events to a vercel AI stream data object
-    const agentStreamData = await workflowEventsToStreamData(
-      workflow.streamEvents(),
-    );
-    // convert the workflow result to a vercel AI content stream
-    const stream = toDataStream(result, {
-      onFinal: () => agentStreamData.close(),
-    });
-    return new StreamingTextResponse(stream, {}, agentStreamData);
+    // Return using the new Response API
+    // TODO: StreamingTextResponse has been deprecated
+    return new StreamingTextResponse(stream, {}, streamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(

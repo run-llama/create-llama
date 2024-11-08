@@ -1,14 +1,16 @@
 import {
-  Context,
+  HandlerContext,
   StartEvent,
   StopEvent,
   Workflow,
   WorkflowEvent,
-} from "@llamaindex/core/workflow";
+} from "@llamaindex/workflow";
 import {
   BaseToolWithCall,
   ChatMemoryBuffer,
   ChatMessage,
+  ChatResponseChunk,
+  MessageContent,
   Settings,
   ToolCall,
   ToolCallLLM,
@@ -37,7 +39,11 @@ It's good to using appropriate tools for the user request and always use the inf
 For the query engine tool, you should break down the user request into a list of queries and call the tool with the queries.
 `;
 
-export class FinancialReportWorkflow extends Workflow {
+export class FinancialReportWorkflow extends Workflow<
+  null,
+  string | MessageContent,
+  ChatResponseChunk
+> {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
   queryEngineTool: BaseToolWithCall;
@@ -67,6 +73,8 @@ export class FinancialReportWorkflow extends Workflow {
     this.writeEvents = options.writeEvents;
     this.queryEngineTool = options.queryEngineTool;
     this.codeInterpreterTool = options.codeInterpreterTool;
+    console.log("Chat history:", options.chatHistory);
+
     this.documentGeneratorTool = options.documentGeneratorTool;
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
@@ -74,41 +82,65 @@ export class FinancialReportWorkflow extends Workflow {
     });
 
     // Add steps
-    this.addStep(StartEvent<AgentInput>, this.prepareChatHistory, {
-      outputs: InputEvent,
-    });
-    this.addStep(InputEvent, this.handleLLMInput, {
-      outputs: [
-        InputEvent,
-        ResearchEvent,
-        AnalyzeEvent,
-        ReportGenerationEvent,
-        StopEvent,
-      ],
-    });
-    this.addStep(ResearchEvent, this.handleResearch, {
-      outputs: AnalyzeEvent,
-    });
-    this.addStep(AnalyzeEvent, this.handleAnalyze, {
-      outputs: InputEvent,
-    });
-    this.addStep(ReportGenerationEvent, this.handleReportGeneration, {
-      outputs: InputEvent,
-    });
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInput>],
+        outputs: [InputEvent],
+      },
+      this.prepareChatHistory.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [InputEvent],
+        outputs: [
+          InputEvent,
+          ResearchEvent,
+          AnalyzeEvent,
+          ReportGenerationEvent,
+          StopEvent,
+        ],
+      },
+      this.handleLLMInput.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [ResearchEvent],
+        outputs: [AnalyzeEvent],
+      },
+      this.handleResearch.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [AnalyzeEvent],
+        outputs: [InputEvent],
+      },
+      this.handleAnalyze.bind(this),
+    );
+
+    this.addStep(
+      {
+        inputs: [ReportGenerationEvent],
+        outputs: [InputEvent],
+      },
+      this.handleReportGeneration.bind(this),
+    );
   }
 
-  private async prepareChatHistory(ctx: Context, ev: StartEvent<AgentInput>) {
-    const message = ev.data.input.message;
-
+  private async prepareChatHistory(
+    ctx: HandlerContext<null>,
+    ev: StartEvent<AgentInput>,
+  ) {
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
-    this.memory.put({ role: "user", content: message });
 
     return new InputEvent({ input: this.memory.getMessages() });
   }
 
-  private async handleLLMInput(ctx: Context, ev: InputEvent) {
+  private async handleLLMInput(ctx: HandlerContext<null>, ev: InputEvent) {
     const chatHistory = ev.data.input;
 
     const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
@@ -156,8 +188,8 @@ export class FinancialReportWorkflow extends Workflow {
     }
   }
 
-  private async handleResearch(ctx: Context, ev: ResearchEvent) {
-    ctx.writeEventToStream(
+  private async handleResearch(ctx: HandlerContext<null>, ev: ResearchEvent) {
+    ctx.sendEvent(
       new AgentRunEvent({
         name: "Researcher",
         text: "Researching data",
@@ -188,8 +220,8 @@ export class FinancialReportWorkflow extends Workflow {
   /**
    * Analyze a research result or a tool call for code interpreter from the LLM
    */
-  private async handleAnalyze(ctx: Context, ev: AnalyzeEvent) {
-    ctx.writeEventToStream(
+  private async handleAnalyze(ctx: HandlerContext<null>, ev: AnalyzeEvent) {
+    ctx.sendEvent(
       new AgentRunEvent({
         name: "Analyst",
         text: `Starting analysis`,
@@ -251,7 +283,7 @@ export class FinancialReportWorkflow extends Workflow {
   }
 
   private async handleReportGeneration(
-    ctx: Context,
+    ctx: HandlerContext<null>,
     ev: ReportGenerationEvent,
   ) {
     const { toolCalls } = ev.data;

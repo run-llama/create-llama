@@ -1,10 +1,10 @@
 import {
-  Context,
+  HandlerContext,
   StartEvent,
   StopEvent,
   Workflow,
   WorkflowEvent,
-} from "@llamaindex/core/workflow";
+} from "@llamaindex/workflow";
 import {
   BaseToolWithCall,
   ChatMemoryBuffer,
@@ -27,7 +27,15 @@ class ToolCallEvent extends WorkflowEvent<{
   toolCalls: ToolCall[];
 }> {}
 
-export class FunctionCallingAgent extends Workflow {
+type FunctionCallingAgentContextData = {
+  streaming: boolean;
+};
+
+export class FunctionCallingAgent extends Workflow<
+  FunctionCallingAgentContextData,
+  string,
+  string | AsyncGenerator<boolean | ChatResponseChunk<object>>
+> {
   name: string;
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
@@ -64,15 +72,27 @@ export class FunctionCallingAgent extends Workflow {
     this.role = options?.role;
 
     // add steps
-    this.addStep(StartEvent<AgentInput>, this.prepareChatHistory, {
-      outputs: InputEvent,
-    });
-    this.addStep(InputEvent, this.handleLLMInput, {
-      outputs: [ToolCallEvent, StopEvent],
-    });
-    this.addStep(ToolCallEvent, this.handleToolCalls, {
-      outputs: InputEvent,
-    });
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInput>],
+        outputs: [InputEvent],
+      },
+      this.prepareChatHistory,
+    );
+    this.addStep(
+      {
+        inputs: [InputEvent],
+        outputs: [ToolCallEvent, StopEvent],
+      },
+      this.handleLLMInput,
+    );
+    this.addStep(
+      {
+        inputs: [ToolCallEvent],
+        outputs: [InputEvent],
+      },
+      this.handleToolCalls,
+    );
   }
 
   private get chatHistory() {
@@ -80,11 +100,11 @@ export class FunctionCallingAgent extends Workflow {
   }
 
   private async prepareChatHistory(
-    ctx: Context,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: StartEvent<AgentInput>,
   ): Promise<InputEvent> {
-    const { message, streaming } = ev.data.input;
-    ctx.set("streaming", streaming);
+    const { message, streaming } = ev.data;
+    ctx.data.streaming = streaming ?? false;
     this.writeEvent(`Start to work on: ${message}`, ctx);
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
@@ -94,10 +114,10 @@ export class FunctionCallingAgent extends Workflow {
   }
 
   private async handleLLMInput(
-    ctx: Context,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: InputEvent,
   ): Promise<StopEvent<string | AsyncGenerator> | ToolCallEvent> {
-    if (ctx.get("streaming")) {
+    if (ctx.data.streaming) {
       return await this.handleLLMInputStream(ctx, ev);
     }
 
@@ -112,11 +132,11 @@ export class FunctionCallingAgent extends Workflow {
       return new ToolCallEvent({ toolCalls });
     }
     this.writeEvent("Finished task", ctx);
-    return new StopEvent({ result: result.message.content.toString() });
+    return new StopEvent(result.message.content.toString());
   }
 
   private async handleLLMInputStream(
-    context: Context,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: InputEvent,
   ): Promise<StopEvent<AsyncGenerator> | ToolCallEvent> {
     const { llm, tools, memory } = this;
@@ -163,12 +183,12 @@ export class FunctionCallingAgent extends Workflow {
       return new ToolCallEvent({ toolCalls });
     }
 
-    this.writeEvent("Finished task", context);
-    return new StopEvent({ result: generator });
+    this.writeEvent("Finished task", ctx);
+    return new StopEvent(generator);
   }
 
   private async handleToolCalls(
-    ctx: Context,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: ToolCallEvent,
   ): Promise<InputEvent> {
     const { toolCalls } = ev.data;
@@ -207,11 +227,12 @@ export class FunctionCallingAgent extends Workflow {
     return new InputEvent({ input: this.memory.getMessages() });
   }
 
-  private writeEvent(msg: string, context: Context) {
+  private writeEvent(
+    msg: string,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
+  ) {
     if (!this.writeEvents) return;
-    context.writeEventToStream({
-      data: new AgentRunEvent({ name: this.name, msg }),
-    });
+    ctx.sendEvent(new AgentRunEvent({ name: this.name, text: msg }));
   }
 
   private checkToolCallSupport() {

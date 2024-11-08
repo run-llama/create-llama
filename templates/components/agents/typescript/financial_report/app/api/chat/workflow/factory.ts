@@ -1,4 +1,3 @@
-import { WorkflowEvent } from "@llamaindex/core/workflow";
 import { Message } from "ai";
 import { ChatMessage, ToolCallLLM } from "llamaindex";
 import { getAnnotations } from "../llamaindex/streaming/annotations";
@@ -6,10 +5,6 @@ import { FinancialReportWorkflow } from "./finReport";
 import { getAvailableTools } from "./tools";
 
 const TIMEOUT = 360 * 1000;
-
-class ResearchEvent extends WorkflowEvent<{ input: string }> {}
-class AnalyzeEvent extends WorkflowEvent<{ input: string }> {}
-class ReportEvent extends WorkflowEvent<{ input: string }> {}
 
 const prepareChatHistory = (chatHistory: Message[]): ChatMessage[] => {
   // By default, the chat history only contains the assistant and user messages

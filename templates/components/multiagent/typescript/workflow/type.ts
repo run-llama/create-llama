@@ -1,4 +1,4 @@
-import { WorkflowEvent } from "@llamaindex/core/workflow";
+import { WorkflowEvent } from "@llamaindex/workflow";
 import { MessageContent } from "llamaindex";
 
 export type AgentInput = {

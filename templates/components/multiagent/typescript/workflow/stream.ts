@@ -1,70 +1,68 @@
-import { StopEvent } from "@llamaindex/core/workflow";
+import { StopEvent, WorkflowContext } from "@llamaindex/workflow";
 import {
-  createCallbacksTransformer,
   createStreamDataTransformer,
   StreamData,
   trimStartOfStreamHelper,
-  type AIStreamCallbacksAndOptions,
 } from "ai";
-import { ChatResponseChunk } from "llamaindex";
+import { ChatResponseChunk, MessageContent } from "llamaindex";
 import { AgentRunEvent } from "./type";
 
-export function toDataStream(
-  result: Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>,
-  callbacks?: AIStreamCallbacksAndOptions,
-) {
-  return toReadableStream(result)
-    .pipeThrough(createCallbacksTransformer(callbacks))
-    .pipeThrough(createStreamDataTransformer());
-}
-
-function toReadableStream(
-  result: Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>,
-) {
+export async function createStreamFromWorkflowContext(
+  context: WorkflowContext<
+    MessageContent,
+    ChatResponseChunk,
+    unknown | undefined
+  >,
+): Promise<{ stream: ReadableStream<string>; streamData: StreamData }> {
   const trimStartOfStream = trimStartOfStreamHelper();
-  return new ReadableStream<string>({
-    start(controller) {
-      controller.enqueue(""); // Kickstart the stream
-    },
-    async pull(controller): Promise<void> {
-      const stopEvent = await result;
-      const generator = stopEvent.data.result;
-      const { value, done } = await generator.next();
-      if (done) {
-        controller.close();
-        return;
-      }
+  const streamData = new StreamData();
+  const encoder = new TextEncoder();
 
-      const text = trimStartOfStream(value.delta ?? "");
-      if (text) controller.enqueue(text);
+  const mainStream = new ReadableStream({
+    async start(controller) {
+      // Kickstart the stream by sending an empty string
+      controller.enqueue(encoder.encode(""));
+
+      for await (const event of context) {
+        if (event instanceof StopEvent) {
+          const chunkGenerator = event.data
+            .result as AsyncGenerator<ChatResponseChunk>;
+
+          for await (const chunk of chunkGenerator) {
+            const text = trimStartOfStream(chunk.delta ?? "");
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
+
+            if ((chunk.raw as any)?.choices?.[0]?.finish_reason !== null) {
+              streamData.close();
+              controller.close();
+              return;
+            }
+          }
+        }
+
+        if (event instanceof AgentRunEvent) {
+          streamData.appendMessageAnnotation(transformAgentRunEvent(event));
+        }
+      }
     },
   });
+
+  return {
+    stream: mainStream.pipeThrough(createStreamDataTransformer()),
+    streamData,
+  };
 }
 
-export async function workflowEventsToStreamData(
-  events: AsyncIterable<AgentRunEvent>,
-): Promise<StreamData> {
-  const streamData = new StreamData();
-
-  (async () => {
-    for await (const event of events) {
-      if (!(event instanceof AgentRunEvent) || (streamData as any).isClosed) {
-        continue;
-      }
-
-      const annotationData = {
-        agent: event.data.name,
-        type: event.data.type,
-        text: event.data.text,
-        ...(event.data.type === "progress" && { data: event.data.data }),
-      } as const;
-
-      streamData.appendMessageAnnotation({
-        type: "agent",
-        data: annotationData,
-      });
-    }
-  })();
-
-  return streamData;
+function transformAgentRunEvent(event: AgentRunEvent) {
+  return {
+    type: "agent",
+    data: {
+      agent: event.data.name,
+      type: event.data.type,
+      text: event.data.text,
+      ...(event.data.type === "progress" && { data: event.data.data }),
+    },
+  };
 }
