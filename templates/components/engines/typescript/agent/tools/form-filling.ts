@@ -240,6 +240,12 @@ export class FillMissingCellsTool
       skipEmptyLines: false, // Ensure empty lines are not skipped
     });
 
+    if (parseResult.errors.length) {
+      throw new Error(
+        "Failed to parse CSV file: " + parseResult.errors[0].message,
+      );
+    }
+
     const rows = parseResult.data;
 
     // Fill the cells with answers

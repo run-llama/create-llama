@@ -40,7 +40,7 @@ For the query engine tool, you should break down the user request into a list of
 export class FinancialReportWorkflow extends Workflow {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
-  queryEngineTools: BaseToolWithCall[];
+  queryEngineTool: BaseToolWithCall;
   codeInterpreterTool: BaseToolWithCall;
   documentGeneratorTool: BaseToolWithCall;
   systemPrompt?: string;
@@ -49,7 +49,7 @@ export class FinancialReportWorkflow extends Workflow {
   constructor(options: {
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
-    queryEngineTools: BaseToolWithCall[];
+    queryEngineTool: BaseToolWithCall;
     codeInterpreterTool: BaseToolWithCall;
     documentGeneratorTool: BaseToolWithCall;
     systemPrompt?: string;
@@ -65,7 +65,7 @@ export class FinancialReportWorkflow extends Workflow {
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.writeEvents = options.writeEvents;
-    this.queryEngineTools = options.queryEngineTools;
+    this.queryEngineTool = options.queryEngineTool;
     this.codeInterpreterTool = options.codeInterpreterTool;
     this.documentGeneratorTool = options.documentGeneratorTool;
     this.memory = new ChatMemoryBuffer({
@@ -112,8 +112,8 @@ export class FinancialReportWorkflow extends Workflow {
     const chatHistory = ev.data.input;
 
     const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
-    if (this.queryEngineTools) {
-      tools.push(...this.queryEngineTools);
+    if (this.queryEngineTool) {
+      tools.push(this.queryEngineTool);
     }
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
@@ -169,7 +169,7 @@ export class FinancialReportWorkflow extends Workflow {
 
     const toolMsgs = await callTools(
       toolCalls,
-      this.queryEngineTools,
+      [this.queryEngineTool],
       ctx,
       "Researcher",
     );
@@ -197,7 +197,7 @@ export class FinancialReportWorkflow extends Workflow {
     );
     // Request by workflow LLM, input is a list of tool calls
     let toolCalls: ToolCall[] = [];
-    if (ev.data.input instanceof Array) {
+    if (Array.isArray(ev.data.input)) {
       toolCalls = ev.data.input;
     } else {
       // Requested by Researcher, input is a ChatMessage

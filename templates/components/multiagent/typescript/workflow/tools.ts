@@ -83,8 +83,12 @@ export const callTools = async (
     return toolMsgs;
   }
   if (toolCalls.length === 1) {
+    const tool = tools.find((tool) => tool.metadata.name === toolCalls[0].name);
+    if (!tool) {
+      throw new Error(`Tool ${toolCalls[0].name} not found`);
+    }
     return [
-      (await callSingleTool(toolCalls[0], tools[0], (msg: string) => {
+      (await callSingleTool(toolCalls[0], tool, (msg: string) => {
         if (writeEvent) {
           ctx.writeEventToStream(
             new AgentRunEvent({
