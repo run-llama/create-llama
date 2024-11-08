@@ -1,4 +1,4 @@
-import { Context } from "@llamaindex/workflow";
+import { Context } from "@llamaindex/core/workflow";
 import fs from "fs/promises";
 import {
   BaseToolWithCall,

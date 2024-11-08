@@ -1,6 +1,7 @@
 import { initObservability } from "@/app/observability";
-import { StartEvent } from "@llamaindex/core/workflow";
+import { StartEvent, StopEvent } from "@llamaindex/core/workflow";
 import { Message, StreamingTextResponse } from "ai";
+import { ChatResponseChunk } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
           message: userMessageContent,
         },
       }),
-    );
+    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
 
     // convert the workflow events to a vercel AI stream data object
     const agentStreamData = await workflowEventsToStreamData(
