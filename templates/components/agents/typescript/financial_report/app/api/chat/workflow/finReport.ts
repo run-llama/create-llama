@@ -235,7 +235,6 @@ export class FinancialReportWorkflow extends Workflow {
     }
 
     // Call the tools
-    console.log("Calling tools", toolCalls);
     const toolMsgs = await callTools(
       toolCalls,
       [this.codeInterpreterTool],
