@@ -65,7 +65,7 @@ export class FinancialReportWorkflow extends Workflow<
       timeout: options?.timeout ?? 360,
     });
 
-    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
+    this.llm = options.llm ?? Settings.llm;
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }
@@ -213,8 +213,8 @@ export class FinancialReportWorkflow extends Workflow<
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      toolCalls,
       tools: this.queryEngineTools,
+      toolCalls,
       ctx,
       agentName: "Researcher",
     });
@@ -280,8 +280,8 @@ export class FinancialReportWorkflow extends Workflow<
 
     // Call the tools
     const toolMsgs = await callTools({
-      toolCalls,
       tools: [this.codeInterpreterTool],
+      toolCalls,
       ctx,
       agentName: "Analyst",
     });
@@ -301,8 +301,8 @@ export class FinancialReportWorkflow extends Workflow<
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      toolCalls,
       tools: [this.documentGeneratorTool],
+      toolCalls,
       ctx,
       agentName: "Reporter",
     });

@@ -213,8 +213,8 @@ export class FormFillingWorkflow extends Workflow<
     );
     const { toolCalls } = ev.data;
     const toolMsgs = await callTools({
-      toolCalls,
       tools: [this.extractorTool],
+      toolCalls,
       ctx,
       agentName: "CSVExtractor",
     });
@@ -240,8 +240,8 @@ export class FormFillingWorkflow extends Workflow<
       }),
     );
     const toolMsgs = await callTools({
-      toolCalls,
       tools: this.queryEngineTools,
+      toolCalls,
       ctx,
       agentName: "Researcher",
     });
@@ -259,8 +259,8 @@ export class FormFillingWorkflow extends Workflow<
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      toolCalls,
       tools: [this.fillMissingCellsTool],
+      toolCalls,
       ctx,
       agentName: "Processor",
     });
