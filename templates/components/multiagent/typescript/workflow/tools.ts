@@ -237,7 +237,11 @@ export const chatWithTools = async (
   tools: BaseToolWithCall[],
   messages: ChatMessage[],
 ): Promise<ChatWithToolsResponse> => {
-  const responseGenerator = async function* () {
+  const responseGenerator = async function* (): AsyncGenerator<
+    boolean | ChatResponseChunk,
+    void,
+    unknown
+  > {
     const responseStream = await llm.chat({ messages, tools, stream: true });
 
     let fullResponse = null;
@@ -276,7 +280,7 @@ export const chatWithTools = async (
             ...chunk.options,
             toolCall: toolCalls,
           },
-        } as ChatResponseChunk<ToolCallLLMMessageOptions>;
+        };
       }
     }
 
@@ -296,12 +300,15 @@ export const chatWithTools = async (
     }
 
     if (fullResponse) {
-      const toolCalls = getToolCallsFromResponse(
-        fullResponse as ChatResponseChunk<ToolCallLLMMessageOptions>,
-      );
+      const responseChunk = fullResponse as ChatResponseChunk;
+      const toolCalls = getToolCallsFromResponse(responseChunk);
       return new ChatWithToolsResponse({
         toolCalls,
-        toolCallMessage: fullResponse as unknown as ChatMessage,
+        toolCallMessage: {
+          options: responseChunk.options,
+          role: "assistant",
+          content: "",
+        },
       });
     } else {
       throw new Error("Cannot get tool calls from response");
