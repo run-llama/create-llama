@@ -26,10 +26,6 @@ for (const agents of templateAgents) {
       process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
       "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
     );
-    test.skip(
-      agents === "form_filling" && templateFramework === "express",
-      "Form filling is not supported with Express.",
-    );
     let port: number;
     let externalPort: number;
     let cwd: string;
