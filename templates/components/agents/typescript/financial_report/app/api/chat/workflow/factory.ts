@@ -7,7 +7,6 @@ const TIMEOUT = 360 * 1000;
 export async function createWorkflow(options: {
   chatHistory: ChatMessage[];
   llm?: ToolCallLLM;
-  writeEvents?: boolean;
 }) {
   const tools = await getAvailableTools();
   const queryEngineTools = tools.filter((tool) =>
@@ -32,7 +31,6 @@ export async function createWorkflow(options: {
     codeInterpreterTool,
     documentGeneratorTool,
     llm: options.llm,
-    writeEvents: options.writeEvents,
     timeout: TIMEOUT,
   });
 }

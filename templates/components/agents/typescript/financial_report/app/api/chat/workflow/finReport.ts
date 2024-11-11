@@ -49,7 +49,6 @@ export class FinancialReportWorkflow extends Workflow<
   codeInterpreterTool: BaseToolWithCall;
   documentGeneratorTool: BaseToolWithCall;
   systemPrompt?: string;
-  writeEvents?: boolean;
 
   constructor(options: {
     llm?: ToolCallLLM;
@@ -58,7 +57,6 @@ export class FinancialReportWorkflow extends Workflow<
     codeInterpreterTool: BaseToolWithCall;
     documentGeneratorTool: BaseToolWithCall;
     systemPrompt?: string;
-    writeEvents?: boolean;
     verbose?: boolean;
     timeout?: number;
   }) {
@@ -72,7 +70,6 @@ export class FinancialReportWorkflow extends Workflow<
       throw new Error("LLM is not a ToolCallLLM");
     }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
-    this.writeEvents = options.writeEvents;
     this.queryEngineTools = options.queryEngineTools;
     this.codeInterpreterTool = options.codeInterpreterTool;
 

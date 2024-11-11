@@ -59,7 +59,6 @@ export class FormFillingWorkflow extends Workflow<
     queryEngineTools?: BaseToolWithCall[];
     fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
-    writeEvents?: boolean;
     verbose?: boolean;
     timeout?: number;
   }) {
