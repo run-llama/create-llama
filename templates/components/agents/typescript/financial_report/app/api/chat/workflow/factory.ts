@@ -19,12 +19,6 @@ export async function createWorkflow(options: {
     (tool) => tool.metadata.name === "interpreter",
   );
 
-  if (!documentGeneratorTool || !codeInterpreterTool || !queryEngineTools) {
-    throw new Error(
-      "These tools are required: document_generator, code_interpreter, retriever",
-    );
-  }
-
   return new FinancialReportWorkflow({
     chatHistory: options.chatHistory,
     queryEngineTools,

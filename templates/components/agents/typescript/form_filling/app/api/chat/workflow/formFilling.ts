@@ -75,6 +75,13 @@ export class FormFillingWorkflow extends Workflow<
     this.extractorTool = options.extractorTool;
     this.queryEngineTools = options.queryEngineTools;
     this.fillMissingCellsTool = options.fillMissingCellsTool;
+    if (!options.fillMissingCellsTool) {
+      throw new Error("Fill missing cells tool is required");
+    }
+    if (!options.extractorTool) {
+      throw new Error("Extractor tool is required");
+    }
+
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
       chatHistory: options.chatHistory,

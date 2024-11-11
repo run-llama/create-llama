@@ -73,6 +73,15 @@ export class FinancialReportWorkflow extends Workflow<
     this.queryEngineTools = options.queryEngineTools;
     this.codeInterpreterTool = options.codeInterpreterTool;
 
+    if (!options.queryEngineTools?.length) {
+      throw new Error("Query engine tools array must not be empty");
+    }
+    if (!options.codeInterpreterTool) {
+      throw new Error("Code interpreter tool is required");
+    }
+    if (!options.documentGeneratorTool) {
+      throw new Error("Document generator tool is required");
+    }
     this.documentGeneratorTool = options.documentGeneratorTool;
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
@@ -264,7 +273,9 @@ export class FinancialReportWorkflow extends Workflow<
         return new InputEvent({
           input: this.memory.getMessages(),
         });
-      } else toolCalls = toolCallResponse.toolCalls;
+      } else {
+        toolCalls = toolCallResponse.toolCalls;
+      }
     }
 
     // Call the tools
