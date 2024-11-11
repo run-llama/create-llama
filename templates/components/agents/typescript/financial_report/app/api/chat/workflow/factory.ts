@@ -49,8 +49,8 @@ export async function createWorkflow(options: {
   const chatHistoryWithAgentMessages = prepareChatHistory(options.chatHistory);
 
   const tools = await getAvailableTools();
-  const queryEngineTool = tools.find((tool) =>
-    tool.metadata.name.startsWith("retriever"),
+  const queryEngineTools = tools.filter((tool) =>
+    tool.metadata.name.includes("retriever"),
   );
   const documentGeneratorTool = tools.find(
     (tool) => tool.metadata.name === "document_generator",
@@ -59,7 +59,7 @@ export async function createWorkflow(options: {
     (tool) => tool.metadata.name === "interpreter",
   );
 
-  if (!documentGeneratorTool || !codeInterpreterTool || !queryEngineTool) {
+  if (!documentGeneratorTool || !codeInterpreterTool || !queryEngineTools) {
     throw new Error(
       "These tools are required: document_generator, code_interpreter, retriever",
     );
@@ -67,7 +67,7 @@ export async function createWorkflow(options: {
 
   return new FinancialReportWorkflow({
     chatHistory: chatHistoryWithAgentMessages,
-    queryEngineTool: queryEngineTool,
+    queryEngineTools,
     codeInterpreterTool,
     documentGeneratorTool,
     llm: options.llm,

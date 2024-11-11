@@ -34,8 +34,8 @@ class FillMissingCellsEvent extends WorkflowEvent<{
 
 const DEFAULT_SYSTEM_PROMPT = `
 You are a helpful assistant who helps fill missing cells in a CSV file.
-Only use the information from the query engine tool - don't make up any information yourself. Fill N/A if an answer is not found.
-If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
+Only use the information from the retriever tool - don't make up any information yourself. Fill N/A if an answer is not found.
+If there is no retriever tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
 You can make multiple tool calls at once but only call with the same tool.
 Only use the local file path for the tools.
 `;
@@ -48,7 +48,7 @@ export class FormFillingWorkflow extends Workflow<
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
   extractorTool: BaseToolWithCall;
-  queryEngineTool?: BaseToolWithCall;
+  queryEngineTools?: BaseToolWithCall[];
   fillMissingCellsTool: BaseToolWithCall;
   systemPrompt?: string;
 
@@ -56,7 +56,7 @@ export class FormFillingWorkflow extends Workflow<
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
     extractorTool: BaseToolWithCall;
-    queryEngineTool?: BaseToolWithCall;
+    queryEngineTools?: BaseToolWithCall[];
     fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
     writeEvents?: boolean;
@@ -71,7 +71,7 @@ export class FormFillingWorkflow extends Workflow<
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.extractorTool = options.extractorTool;
-    this.queryEngineTool = options.queryEngineTool;
+    this.queryEngineTools = options.queryEngineTools;
     this.fillMissingCellsTool = options.fillMissingCellsTool;
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
@@ -144,8 +144,8 @@ export class FormFillingWorkflow extends Workflow<
     const chatHistory = ev.data.input;
 
     const tools = [this.extractorTool, this.fillMissingCellsTool];
-    if (this.queryEngineTool) {
-      tools.push(this.queryEngineTool);
+    if (this.queryEngineTools) {
+      tools.push(...this.queryEngineTools);
     }
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
@@ -178,11 +178,15 @@ export class FormFillingWorkflow extends Workflow<
         return new FillMissingCellsEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
-      case this.queryEngineTool?.metadata.name:
-        return new FindAnswersEvent({
-          toolCalls: toolCallResponse.toolCalls,
-        });
       default:
+        if (
+          this.queryEngineTools &&
+          this.queryEngineTools.some((tool) => tool.metadata.name === toolName)
+        ) {
+          return new FindAnswersEvent({
+            toolCalls: toolCallResponse.toolCalls,
+          });
+        }
         throw new Error(`Unknown tool: ${toolName}`);
     }
   }
@@ -216,7 +220,7 @@ export class FormFillingWorkflow extends Workflow<
     ev: FindAnswersEvent,
   ) {
     const { toolCalls } = ev.data;
-    if (!this.queryEngineTool) {
+    if (!this.queryEngineTools) {
       throw new Error("Query engine tool is not available");
     }
     ctx.sendEvent(
@@ -228,7 +232,7 @@ export class FormFillingWorkflow extends Workflow<
     );
     const toolMsgs = await callTools({
       toolCalls,
-      tools: [this.queryEngineTool],
+      tools: this.queryEngineTools,
       ctx,
       agentName: "Researcher",
     });

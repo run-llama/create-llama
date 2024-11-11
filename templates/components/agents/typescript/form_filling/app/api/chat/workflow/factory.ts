@@ -51,8 +51,8 @@ export async function createWorkflow(options: {
   const extractorTool = tools.find(
     (tool) => tool.metadata.name === "extract_missing_cells",
   );
-  const queryEngineTool = tools.find(
-    (tool) => tool.metadata.name === "retriever",
+  const queryEngineTools = tools.filter((tool) =>
+    tool.metadata.name.includes("retriever"),
   );
   const fillMissingCellsTool = tools.find(
     (tool) => tool.metadata.name === "fill_missing_cells",
@@ -67,7 +67,7 @@ export async function createWorkflow(options: {
   const formFilling = new FormFillingWorkflow({
     chatHistory: enhancedChatHistory,
     extractorTool,
-    queryEngineTool,
+    queryEngineTools,
     fillMissingCellsTool,
     llm: options.llm,
     timeout: TIMEOUT,

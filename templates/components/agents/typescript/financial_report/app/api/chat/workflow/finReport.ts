@@ -45,7 +45,7 @@ export class FinancialReportWorkflow extends Workflow<
 > {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
-  queryEngineTool: BaseToolWithCall;
+  queryEngineTools: BaseToolWithCall[];
   codeInterpreterTool: BaseToolWithCall;
   documentGeneratorTool: BaseToolWithCall;
   systemPrompt?: string;
@@ -54,7 +54,7 @@ export class FinancialReportWorkflow extends Workflow<
   constructor(options: {
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
-    queryEngineTool: BaseToolWithCall;
+    queryEngineTools: BaseToolWithCall[];
     codeInterpreterTool: BaseToolWithCall;
     documentGeneratorTool: BaseToolWithCall;
     systemPrompt?: string;
@@ -70,7 +70,7 @@ export class FinancialReportWorkflow extends Workflow<
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.writeEvents = options.writeEvents;
-    this.queryEngineTool = options.queryEngineTool;
+    this.queryEngineTools = options.queryEngineTools;
     this.codeInterpreterTool = options.codeInterpreterTool;
 
     this.documentGeneratorTool = options.documentGeneratorTool;
@@ -145,8 +145,8 @@ export class FinancialReportWorkflow extends Workflow<
     const chatHistory = ev.data.input;
 
     const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
-    if (this.queryEngineTool) {
-      tools.push(this.queryEngineTool);
+    if (this.queryEngineTools) {
+      tools.push(...this.queryEngineTools);
     }
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
@@ -179,11 +179,15 @@ export class FinancialReportWorkflow extends Workflow<
         return new ReportGenerationEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
-      case this.queryEngineTool?.metadata.name:
-        return new ResearchEvent({
-          toolCalls: toolCallResponse.toolCalls,
-        });
       default:
+        if (
+          this.queryEngineTools &&
+          this.queryEngineTools.some((tool) => tool.metadata.name === toolName)
+        ) {
+          return new ResearchEvent({
+            toolCalls: toolCallResponse.toolCalls,
+          });
+        }
         throw new Error(`Unknown tool: ${toolName}`);
     }
   }
