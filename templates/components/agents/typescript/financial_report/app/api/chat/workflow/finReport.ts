@@ -157,7 +157,7 @@ export class FinancialReportWorkflow extends Workflow<
 
     if (toolCallResponse.hasMultipleTools()) {
       this.memory.put({
-        role: "user",
+        role: "assistant",
         content:
           "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });

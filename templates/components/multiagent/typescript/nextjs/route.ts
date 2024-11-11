@@ -3,6 +3,7 @@ import { StreamingTextResponse, type Message } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
+  convertToChatHistory,
   isValidMessages,
   retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data?: any } = body;
+    const { messages }: { messages: Message[]; data?: any } = body;
     if (!isValidMessages(messages)) {
       return NextResponse.json(
         {
@@ -29,10 +30,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const chatHistory = convertToChatHistory(messages);
     const userMessageContent = retrieveMessageContent(messages);
-    const workflow = await createWorkflow({
-      chatHistory: messages,
-    });
+
+    const workflow = await createWorkflow({ chatHistory });
 
     const context = workflow.run({
       message: userMessageContent,

@@ -1,5 +1,10 @@
 import { JSONValue, Message } from "ai";
-import { ChatMessage, MessageContent, MessageContentDetail } from "llamaindex";
+import {
+  ChatMessage,
+  MessageContent,
+  MessageContentDetail,
+  MessageType,
+} from "llamaindex";
 import { UPLOADED_FOLDER } from "../documents/helper";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
@@ -81,12 +86,21 @@ export function retrieveAgentHistoryMessage(
 }
 
 export function convertToChatHistory(messages: Message[]): ChatMessage[] {
+  if (!messages || !Array.isArray(messages)) {
+    return [];
+  }
   const agentHistory = retrieveAgentHistoryMessage(messages);
   if (agentHistory) {
     const previousMessages = messages.slice(0, -1);
-    return [...previousMessages, agentHistory] as ChatMessage[];
+    return [...previousMessages, agentHistory].map((msg) => ({
+      role: msg.role as MessageType,
+      content: msg.content,
+    }));
   }
-  return messages as ChatMessage[];
+  return messages.map((msg) => ({
+    role: msg.role as MessageType,
+    content: msg.content,
+  }));
 }
 
 function getFileContent(file: DocumentFile): string {
