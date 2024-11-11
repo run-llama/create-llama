@@ -68,6 +68,9 @@ export class FinancialReportWorkflow extends Workflow<
     });
 
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
+    if (!(this.llm instanceof ToolCallLLM)) {
+      throw new Error("LLM is not a ToolCallLLM");
+    }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.writeEvents = options.writeEvents;
     this.queryEngineTools = options.queryEngineTools;

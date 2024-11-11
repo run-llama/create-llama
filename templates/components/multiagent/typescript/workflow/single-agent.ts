@@ -61,6 +61,9 @@ export class FunctionCallingAgent extends Workflow<
     });
     this.name = options?.name;
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
+    if (!(this.llm instanceof ToolCallLLM)) {
+      throw new Error("LLM is not a ToolCallLLM");
+    }
     this.checkToolCallSupport();
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,

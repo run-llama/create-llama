@@ -69,6 +69,9 @@ export class FormFillingWorkflow extends Workflow<
     });
 
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
+    if (!(this.llm instanceof ToolCallLLM)) {
+      throw new Error("LLM is not a ToolCallLLM");
+    }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.extractorTool = options.extractorTool;
     this.queryEngineTools = options.queryEngineTools;

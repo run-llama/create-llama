@@ -1,5 +1,5 @@
 import { JSONValue, Message } from "ai";
-import { MessageContent, MessageContentDetail } from "llamaindex";
+import { ChatMessage, MessageContent, MessageContentDetail } from "llamaindex";
 import { UPLOADED_FOLDER } from "../documents/helper";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
@@ -57,6 +57,36 @@ export function retrieveMessageContent(messages: Message[]): MessageContent {
     ...retrieveLatestArtifact(messages),
     ...convertAnnotations(messages),
   ];
+}
+
+export function retrieveAgentHistoryMessage(
+  messages: Message[],
+  maxAgentMessages = 10,
+): ChatMessage | null {
+  const agentAnnotations = getAnnotations<{ agent: string; text: string }>(
+    messages,
+    { role: "assistant", type: "agent" },
+  ).slice(-maxAgentMessages);
+
+  if (agentAnnotations.length > 0) {
+    const messageContent =
+      "Here is the previous conversation of agents:\n" +
+      agentAnnotations.map((annotation) => annotation.data.text).join("\n");
+    return {
+      role: "assistant",
+      content: messageContent,
+    };
+  }
+  return null;
+}
+
+export function convertToChatHistory(messages: Message[]): ChatMessage[] {
+  const agentHistory = retrieveAgentHistoryMessage(messages);
+  if (agentHistory) {
+    const previousMessages = messages.slice(0, -1);
+    return [...previousMessages, agentHistory] as ChatMessage[];
+  }
+  return messages as ChatMessage[];
 }
 
 function getFileContent(file: DocumentFile): string {
