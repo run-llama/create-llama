@@ -38,7 +38,7 @@ export const getQueryEngineTool = async (
   });
 };
 
-export const getAvailableTools = async () => {
+export const getAvailableTools = async (): Promise<BaseToolWithCall[]> => {
   const configFile = path.join("config", "tools.json");
   let toolConfig: any;
   const tools: BaseToolWithCall[] = [];
@@ -70,14 +70,19 @@ export const lookupTools = async (
 /**
  * Call multiple tools and return the tool messages
  */
-export const callTools = async <T>(
-  toolCalls: ToolCall[],
-  tools: BaseToolWithCall[],
-  ctx: HandlerContext<T>,
-  agentName: string,
-  writeEvent: boolean = true,
-  // eslint-disable-next-line max-params
-): Promise<ChatMessage[]> => {
+export const callTools = async <T>({
+  tools,
+  toolCalls,
+  ctx,
+  agentName,
+  writeEvent = true,
+}: {
+  toolCalls: ToolCall[];
+  tools: BaseToolWithCall[];
+  ctx: HandlerContext<T>;
+  agentName: string;
+  writeEvent?: boolean;
+}): Promise<ChatMessage[]> => {
   const toolMsgs: ChatMessage[] = [];
   if (toolCalls.length === 0) {
     return toolMsgs;
@@ -88,17 +93,21 @@ export const callTools = async <T>(
       throw new Error(`Tool ${toolCalls[0].name} not found`);
     }
     return [
-      (await callSingleTool(toolCalls[0], tool, (msg: string) => {
-        if (writeEvent) {
-          ctx.sendEvent(
-            new AgentRunEvent({
-              name: agentName,
-              text: msg,
-              type: "text",
-            }),
-          );
-        }
-      })) as ChatMessage,
+      await callSingleTool(
+        tool,
+        toolCalls[0],
+        writeEvent
+          ? (msg: string) => {
+              ctx.sendEvent(
+                new AgentRunEvent({
+                  name: agentName,
+                  text: msg,
+                  type: "text",
+                }),
+              );
+            }
+          : undefined,
+      ),
     ];
   }
   // Multiple tool calls, show events in progress
@@ -110,7 +119,7 @@ export const callTools = async <T>(
     if (!tool) {
       throw new Error(`Tool ${toolCall.name} not found`);
     }
-    const toolMsg = await callSingleTool(toolCall, tool, (msg: string) => {
+    const toolMsg = await callSingleTool(tool, toolCall, (msg: string) => {
       ctx.sendEvent(
         new AgentRunEvent({
           name: agentName,
@@ -125,16 +134,16 @@ export const callTools = async <T>(
       );
       currentStep++;
     });
-    toolMsgs.push(toolMsg as ChatMessage);
+    toolMsgs.push(toolMsg);
   }
   return toolMsgs;
 };
 
 export const callSingleTool = async (
-  toolCall: ToolCall,
   tool: BaseToolWithCall,
-  eventEmitter: (msg: string) => void,
-) => {
+  toolCall: ToolCall,
+  eventEmitter?: (msg: string) => void,
+): Promise<ChatMessage> => {
   if (eventEmitter) {
     eventEmitter(
       `Calling tool ${toolCall.name} with input: ${JSON.stringify(toolCall.input)}`,
@@ -195,22 +204,20 @@ class ChatWithToolsResponse {
     this.responseGenerator = options.responseGenerator;
   }
 
-  isCallingDifferentTools() {
-    // toolCalls is have different tool names
-    const toolNames = this.toolCalls.map((toolCall) => toolCall.name);
-    const uniqueToolNames = new Set(toolNames);
+  hasMultipleTools() {
+    const uniqueToolNames = new Set(this.getToolNames());
     return uniqueToolNames.size > 1;
   }
 
-  isCallingTool() {
+  hasToolCall() {
     return this.toolCalls.length > 0;
   }
 
-  toolName() {
-    return this.toolCalls[0].name;
+  getToolNames() {
+    return this.toolCalls.map((toolCall) => toolCall.name);
   }
 
-  async asFullResponse() {
+  async asFullResponse(): Promise<ChatMessage> {
     if (!this.responseGenerator) {
       throw new Error("No response generator");
     }
@@ -218,7 +225,10 @@ class ChatWithToolsResponse {
     for await (const chunk of this.responseGenerator) {
       fullResponse += chunk.content;
     }
-    return fullResponse;
+    return {
+      role: "assistant",
+      content: fullResponse,
+    };
   }
 }
 
@@ -226,7 +236,7 @@ export const chatWithTools = async (
   llm: ToolCallLLM,
   tools: BaseToolWithCall[],
   messages: ChatMessage[],
-) => {
+): Promise<ChatWithToolsResponse> => {
   const responseGenerator = async function* () {
     const responseStream = await llm.chat({ messages, tools, stream: true });
 

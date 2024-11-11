@@ -151,11 +151,11 @@ export class FinancialReportWorkflow extends Workflow<
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
-    if (!toolCallResponse.isCallingTool()) {
+    if (!toolCallResponse.hasToolCall()) {
       return new StopEvent({ result: toolCallResponse.responseGenerator });
     }
 
-    if (toolCallResponse.isCallingDifferentTools()) {
+    if (toolCallResponse.hasMultipleTools()) {
       this.memory.put({
         role: "user",
         content:
@@ -169,7 +169,8 @@ export class FinancialReportWorkflow extends Workflow<
     if (toolCallResponse.toolCallMessage) {
       this.memory.put(toolCallResponse.toolCallMessage);
     }
-    switch (toolCallResponse.toolName()) {
+    const toolName = toolCallResponse.getToolNames()[0];
+    switch (toolName) {
       case this.codeInterpreterTool.metadata.name:
         return new AnalyzeEvent({
           input: toolCallResponse.toolCalls,
@@ -178,14 +179,12 @@ export class FinancialReportWorkflow extends Workflow<
         return new ReportGenerationEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
+      case this.queryEngineTool?.metadata.name:
+        return new ResearchEvent({
+          toolCalls: toolCallResponse.toolCalls,
+        });
       default:
-        // IF the tool name start with "retriever", it's a research tool
-        if (toolCallResponse.toolName().startsWith("retriever")) {
-          return new ResearchEvent({
-            toolCalls: toolCallResponse.toolCalls,
-          });
-        }
-        throw new Error(`Unknown tool: ${toolCallResponse.toolName()}`);
+        throw new Error(`Unknown tool: ${toolName}`);
     }
   }
 
@@ -256,11 +255,8 @@ export class FinancialReportWorkflow extends Workflow<
         newChatHistory as ChatMessage[],
       );
 
-      if (!toolCallResponse.isCallingTool()) {
-        this.memory.put({
-          role: "assistant",
-          content: await toolCallResponse.asFullResponse(),
-        });
+      if (!toolCallResponse.hasToolCall()) {
+        this.memory.put(await toolCallResponse.asFullResponse());
         return new InputEvent({
           input: this.memory.getMessages(),
         });

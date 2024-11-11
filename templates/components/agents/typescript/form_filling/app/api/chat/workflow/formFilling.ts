@@ -150,11 +150,11 @@ export class FormFillingWorkflow extends Workflow<
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
-    if (!toolCallResponse.isCallingTool()) {
+    if (!toolCallResponse.hasToolCall()) {
       return new StopEvent({ result: toolCallResponse.responseGenerator });
     }
 
-    if (toolCallResponse.isCallingDifferentTools()) {
+    if (toolCallResponse.hasMultipleTools()) {
       this.memory.put({
         role: "user",
         content:
@@ -168,7 +168,8 @@ export class FormFillingWorkflow extends Workflow<
     if (toolCallResponse.toolCallMessage) {
       this.memory.put(toolCallResponse.toolCallMessage);
     }
-    switch (toolCallResponse.toolName()) {
+    const toolName = toolCallResponse.getToolNames()[0];
+    switch (toolName) {
       case this.extractorTool.metadata.name:
         return new ExtractMissingCellsEvent({
           toolCalls: toolCallResponse.toolCalls,
@@ -182,7 +183,7 @@ export class FormFillingWorkflow extends Workflow<
           toolCalls: toolCallResponse.toolCalls,
         });
       default:
-        throw new Error(`Unknown tool: ${toolCallResponse.toolName()}`);
+        throw new Error(`Unknown tool: ${toolName}`);
     }
   }
 
@@ -198,12 +199,12 @@ export class FormFillingWorkflow extends Workflow<
       }),
     );
     const { toolCalls } = ev.data;
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      [this.extractorTool],
+      tools: [this.extractorTool],
       ctx,
-      "CSVExtractor",
-    );
+      agentName: "CSVExtractor",
+    });
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
@@ -225,12 +226,12 @@ export class FormFillingWorkflow extends Workflow<
         type: "text",
       }),
     );
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      [this.queryEngineTool],
+      tools: [this.queryEngineTool],
       ctx,
-      "Researcher",
-    );
+      agentName: "Researcher",
+    });
 
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
@@ -248,12 +249,12 @@ export class FormFillingWorkflow extends Workflow<
       throw new Error("Fill missing cells tool is not available");
     }
 
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      [this.fillMissingCellsTool],
+      tools: [this.fillMissingCellsTool],
       ctx,
-      "Processor",
-    );
+      agentName: "Processor",
+    });
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
