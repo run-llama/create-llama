@@ -19,6 +19,9 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.1.0",
     "@types/papaparse": "^5.3.15",
+    "@llamaindex/core": "^0.4.5",
+    "@llamaindex/workflow": "^0.0.3",
+    "@llamaindex/chat-ui": "0.0.5",
     "ai": "3.3.42",
     "ajv": "^8.12.0",
     "class-variance-authority": "^0.7.0",
@@ -38,8 +41,7 @@
     "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
     "vaul": "^0.9.1",
-    "marked": "^14.1.2",
-    "@llamaindex/chat-ui": "0.0.5"
+    "marked": "^14.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
