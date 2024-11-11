@@ -60,7 +60,7 @@ export class FunctionCallingAgent extends Workflow<
       timeout: options?.timeout ?? 360,
     });
     this.name = options?.name;
-    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
+    this.llm = options.llm ?? Settings.llm;
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }

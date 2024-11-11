@@ -36,6 +36,7 @@ IMPORTANT: Column indices should be 0-based
   ]
 }
 - If there are no missing cells, return an empty array.
+- The answer is only the JSON object, nothing else and don't wrap it inside markdown code block.
 
 # Example:
 # |    | Name | Age | City |
