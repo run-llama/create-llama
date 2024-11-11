@@ -3,11 +3,13 @@ import {
   ContentPosition,
   getSourceAnnotationData,
   useChatMessage,
+  useChatUI,
 } from "@llamaindex/chat-ui";
 import { Markdown } from "./custom/markdown";
 import { ToolAnnotations } from "./tools/chat-tools";
 
 export function ChatMessageContent() {
+  const { isLoading, append } = useChatUI();
   const { message } = useChatMessage();
   const customContent = [
     {
@@ -26,5 +28,11 @@ export function ChatMessageContent() {
       component: <ToolAnnotations message={message} />,
     },
   ];
-  return <ChatMessage.Content content={customContent} />;
+  return (
+    <ChatMessage.Content
+      content={customContent}
+      isLoading={isLoading}
+      append={append}
+    />
+  );
 }
