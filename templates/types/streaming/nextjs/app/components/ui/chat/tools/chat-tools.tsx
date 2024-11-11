@@ -1,16 +1,16 @@
 import {
   getAnnotationData,
-  Message,
   MessageAnnotation,
+  Message as RawMessage,
   useChatMessage,
   useChatUI,
 } from "@llamaindex/chat-ui";
-import { Message as AiMessage, JSONValue } from "ai";
+import { JSONValue, Message } from "ai";
 import { useMemo } from "react";
 import { Artifact, CodeArtifact } from "./artifact";
 import { WeatherCard, WeatherData } from "./weather-card";
 
-export function ToolAnnotations({ message }: { message: Message }) {
+export function ToolAnnotations({ message }: { message: RawMessage }) {
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   const toolData = annotations
     ? (getAnnotationData(annotations, "tools") as unknown as ToolData[])
@@ -27,7 +27,7 @@ function ChatTools({ data }: { data: ToolData }) {
   const artifactVersionMap = useMemo(() => {
     const map = new Map<string, number | undefined>();
     let versionIndex = 1;
-    (messages as AiMessage[]).forEach((m) => {
+    (messages as Message[]).forEach((m) => {
       m.annotations?.forEach((annotation: any) => {
         if (
           typeof annotation === "object" &&
@@ -67,7 +67,7 @@ function ChatTools({ data }: { data: ToolData }) {
       return (
         <Artifact
           artifact={toolOutput.output as CodeArtifact}
-          version={artifactVersionMap.get((message as AiMessage).id)}
+          version={artifactVersionMap.get((message as Message).id)}
         />
       );
     default:
