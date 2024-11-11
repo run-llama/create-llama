@@ -158,7 +158,7 @@ export class FormFillingWorkflow extends Workflow<
       this.memory.put({
         role: "user",
         content:
-          "Calling different tool is not allowed. Please only call one tool at a time.",
+          "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });
       return new InputEvent({ input: this.memory.getMessages() });
     }

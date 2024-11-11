@@ -19,12 +19,12 @@ import { getDataSource } from "../engine";
 import { createTools } from "../engine/tools/index";
 import { AgentRunEvent } from "./type";
 
-export const getQueryEngineTools = async (
-  params?: any,
-): Promise<QueryEngineTool[] | null> => {
+export const getQueryEngineTools = async (): Promise<
+  QueryEngineTool[] | null
+> => {
   const topK = process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined;
 
-  const index = await getDataSource(params);
+  const index = await getDataSource();
   if (!index) {
     return null;
   }
@@ -59,7 +59,7 @@ export const getQueryEngineTools = async (
   } else {
     return [
       new QueryEngineTool({
-        queryEngine: (index as any).asQueryEngine({
+        queryEngine: index.asQueryEngine({
           similarityTopK: topK,
         }),
         metadata: {

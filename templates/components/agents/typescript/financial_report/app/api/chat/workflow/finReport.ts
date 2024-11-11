@@ -159,7 +159,7 @@ export class FinancialReportWorkflow extends Workflow<
       this.memory.put({
         role: "user",
         content:
-          "Calling different tool is not allowed. Please only call one tool at a time.",
+          "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });
       return new InputEvent({ input: this.memory.getMessages() });
     }
@@ -205,7 +205,7 @@ export class FinancialReportWorkflow extends Workflow<
 
     const toolMsgs = await callTools(
       toolCalls,
-      [this.queryEngineTool],
+      this.queryEngineTools,
       ctx,
       "Researcher",
     );
@@ -288,10 +288,6 @@ export class FinancialReportWorkflow extends Workflow<
     ev: ReportGenerationEvent,
   ) {
     const { toolCalls } = ev.data;
-
-    if (!this.documentGeneratorTool) {
-      throw new Error("Document generator tool is not available");
-    }
 
     const toolMsgs = await callTools(
       toolCalls,
