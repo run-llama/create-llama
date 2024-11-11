@@ -162,7 +162,10 @@ export class ExtractMissingCellsTool
       prompt,
     });
     const rawAnswer = response.text;
-    const answer = JSON.parse(rawAnswer) as MissingCell[];
+    const parsedResponse = JSON.parse(rawAnswer) as {
+      missing_cells: MissingCell[];
+    };
+    const answer = parsedResponse.missing_cells;
 
     return answer;
   }
@@ -266,7 +269,8 @@ export class FillMissingCellsTool
     });
 
     // Use the helper function to write the file
-    const newFileName = filePath.replace(".csv", "-filled.csv");
+    const parsedPath = path.parse(filePath);
+    const newFileName = `${parsedPath.name}-filled${parsedPath.ext}`;
     const newFilePath = path.join("output/tools", newFileName);
 
     const newFileUrl = await saveDocument(newFilePath, updatedContent);
