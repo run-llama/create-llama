@@ -1,6 +1,5 @@
 import { initObservability } from "@/app/observability";
 import { StreamingTextResponse, type Message } from "ai";
-import { MessageContent } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
@@ -33,10 +32,12 @@ export async function POST(request: NextRequest) {
     const userMessageContent = retrieveMessageContent(messages);
     const workflow = await createWorkflow({
       chatHistory: messages,
-      writeEvents: true,
     });
 
-    const context = workflow.run(userMessageContent as MessageContent);
+    const context = workflow.run({
+      message: userMessageContent,
+      streaming: true,
+    });
     const { stream, streamData } =
       await createStreamFromWorkflowContext(context);
 

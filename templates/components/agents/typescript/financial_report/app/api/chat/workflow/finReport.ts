@@ -10,7 +10,6 @@ import {
   ChatMemoryBuffer,
   ChatMessage,
   ChatResponseChunk,
-  MessageContent,
   Settings,
   ToolCall,
   ToolCallLLM,
@@ -41,7 +40,7 @@ For the query engine tool, you should break down the user request into a list of
 
 export class FinancialReportWorkflow extends Workflow<
   null,
-  string | MessageContent,
+  AgentInput,
   ChatResponseChunk
 > {
   llm: ToolCallLLM;
@@ -132,7 +131,7 @@ export class FinancialReportWorkflow extends Workflow<
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
   ) {
-    const message = ev.data;
+    const { message } = ev.data;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });

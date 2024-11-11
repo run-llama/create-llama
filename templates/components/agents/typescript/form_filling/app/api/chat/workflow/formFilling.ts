@@ -1,5 +1,4 @@
 import {
-  Context,
   HandlerContext,
   StartEvent,
   StopEvent,
@@ -11,7 +10,6 @@ import {
   ChatMemoryBuffer,
   ChatMessage,
   ChatResponseChunk,
-  MessageContent,
   Settings,
   ToolCall,
   ToolCallLLM,
@@ -35,15 +33,16 @@ class FillMissingCellsEvent extends WorkflowEvent<{
 }> {}
 
 const DEFAULT_SYSTEM_PROMPT = `
-You are a helpful assistant who helps fill missing cells in a CSV file. Only use the local file path for the tools.
-Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
+You are a helpful assistant who helps fill missing cells in a CSV file.
+Only use the information from the query engine tool - don't make up any information yourself. Fill N/A if an answer is not found.
 If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
 You can make multiple tool calls at once but only call with the same tool.
+Only use the local file path for the tools.
 `;
 
 export class FormFillingWorkflow extends Workflow<
   null,
-  string | MessageContent,
+  AgentInput,
   ChatResponseChunk
 > {
   llm: ToolCallLLM;
@@ -52,7 +51,6 @@ export class FormFillingWorkflow extends Workflow<
   queryEngineTool?: BaseToolWithCall;
   fillMissingCellsTool: BaseToolWithCall;
   systemPrompt?: string;
-  writeEvents?: boolean;
 
   constructor(options: {
     llm?: ToolCallLLM;
@@ -72,7 +70,6 @@ export class FormFillingWorkflow extends Workflow<
 
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
-    this.writeEvents = options.writeEvents;
     this.extractorTool = options.extractorTool;
     this.queryEngineTool = options.queryEngineTool;
     this.fillMissingCellsTool = options.fillMissingCellsTool;
@@ -133,7 +130,7 @@ export class FormFillingWorkflow extends Workflow<
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
   ) {
-    const message = ev.data;
+    const { message } = ev.data;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
@@ -190,7 +187,7 @@ export class FormFillingWorkflow extends Workflow<
   }
 
   private async handleExtractMissingCells(
-    ctx: Context,
+    ctx: HandlerContext<null>,
     ev: ExtractMissingCellsEvent,
   ) {
     ctx.sendEvent(
@@ -213,7 +210,10 @@ export class FormFillingWorkflow extends Workflow<
     return new InputEvent({ input: this.memory.getMessages() });
   }
 
-  private async handleFindAnswers(ctx: Context, ev: FindAnswersEvent) {
+  private async handleFindAnswers(
+    ctx: HandlerContext<null>,
+    ev: FindAnswersEvent,
+  ) {
     const { toolCalls } = ev.data;
     if (!this.queryEngineTool) {
       throw new Error("Query engine tool is not available");

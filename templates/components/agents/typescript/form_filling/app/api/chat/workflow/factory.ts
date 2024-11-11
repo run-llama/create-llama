@@ -44,7 +44,6 @@ const prepareChatHistory = (chatHistory: Message[]): ChatMessage[] => {
 export async function createWorkflow(options: {
   chatHistory: Message[];
   llm?: ToolCallLLM;
-  writeEvents?: boolean;
 }) {
   const enhancedChatHistory = prepareChatHistory(options.chatHistory);
 
@@ -71,7 +70,6 @@ export async function createWorkflow(options: {
     queryEngineTool,
     fillMissingCellsTool,
     llm: options.llm,
-    writeEvents: options.writeEvents,
     timeout: TIMEOUT,
   });
 
