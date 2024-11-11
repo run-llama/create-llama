@@ -156,7 +156,7 @@ export class ExtractMissingCellsTool
       tableContent = await this.readCsvFile(filePath);
     } catch (error) {
       throw new Error(
-        `Failed to read CSV file: ${error.message}. Make sure that you are reading a local file path (not a sandbox path).`,
+        `Failed to read CSV file. Make sure that you are reading a local file path (not a sandbox path).`,
       );
     }
 

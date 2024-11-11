@@ -65,7 +65,7 @@ export class FinancialReportWorkflow extends Workflow<
       timeout: options?.timeout ?? 360,
     });
 
-    this.llm = options.llm ?? Settings.llm;
+    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }
@@ -212,12 +212,12 @@ export class FinancialReportWorkflow extends Workflow<
 
     const { toolCalls } = ev.data;
 
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      this.queryEngineTools,
+      tools: this.queryEngineTools,
       ctx,
-      "Researcher",
-    );
+      agentName: "Researcher",
+    });
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
@@ -279,12 +279,12 @@ export class FinancialReportWorkflow extends Workflow<
     }
 
     // Call the tools
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      [this.codeInterpreterTool],
+      tools: [this.codeInterpreterTool],
       ctx,
-      "Analyst",
-    );
+      agentName: "Analyst",
+    });
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
@@ -300,12 +300,12 @@ export class FinancialReportWorkflow extends Workflow<
   ) {
     const { toolCalls } = ev.data;
 
-    const toolMsgs = await callTools(
+    const toolMsgs = await callTools({
       toolCalls,
-      [this.documentGeneratorTool],
+      tools: [this.documentGeneratorTool],
       ctx,
-      "Reporter",
-    );
+      agentName: "Reporter",
+    });
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }

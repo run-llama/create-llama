@@ -67,7 +67,7 @@ export class FormFillingWorkflow extends Workflow<
       timeout: options?.timeout ?? 360,
     });
 
-    this.llm = options.llm ?? Settings.llm;
+    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }

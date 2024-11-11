@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
       message: userMessageContent,
       streaming: true,
     });
-    const { stream, streamData } =
+    const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
 
     // Return using the new Response API
     // TODO: StreamingTextResponse has been deprecated
-    return new StreamingTextResponse(stream, {}, streamData);
+    return new StreamingTextResponse(stream, {}, dataStream);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(
