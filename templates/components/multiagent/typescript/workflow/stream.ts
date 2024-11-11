@@ -13,9 +13,9 @@ export async function createStreamFromWorkflowContext(
     ChatResponseChunk,
     unknown | undefined
   >,
-): Promise<{ stream: ReadableStream<string>; streamData: StreamData }> {
+): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
   const trimStartOfStream = trimStartOfStreamHelper();
-  const streamData = new StreamData();
+  const dataStream = new StreamData();
   const encoder = new TextEncoder();
 
   const mainStream = new ReadableStream({
@@ -24,26 +24,29 @@ export async function createStreamFromWorkflowContext(
       controller.enqueue(encoder.encode(""));
 
       for await (const event of context) {
+        // Handle for StopEvent
         if (event instanceof StopEvent) {
-          const chunkGenerator = event.data
+          const generator = event.data
             .result as AsyncGenerator<ChatResponseChunk>;
 
-          for await (const chunk of chunkGenerator) {
+          for await (const chunk of generator) {
             const text = trimStartOfStream(chunk.delta ?? "");
             if (text) {
               controller.enqueue(encoder.encode(text));
             }
 
+            // Check if the chunk has a finish flag
             if ((chunk.raw as any)?.choices?.[0]?.finish_reason !== null) {
-              streamData.close();
+              // Also close the data stream
+              dataStream.close();
               controller.close();
               return;
             }
           }
         }
-
+        // Handle for AgentRunEvent
         if (event instanceof AgentRunEvent) {
-          streamData.appendMessageAnnotation(transformAgentRunEvent(event));
+          dataStream.appendMessageAnnotation(transformAgentRunEvent(event));
         }
       }
     },
@@ -51,7 +54,7 @@ export async function createStreamFromWorkflowContext(
 
   return {
     stream: mainStream.pipeThrough(createStreamDataTransformer()),
-    streamData,
+    dataStream,
   };
 }
 
