@@ -258,10 +258,6 @@ export class FormFillingWorkflow extends Workflow<
   ) {
     const { toolCalls } = ev.data;
 
-    if (!this.fillMissingCellsTool) {
-      throw new Error("Fill missing cells tool is not available");
-    }
-
     const toolMsgs = await callTools({
       toolCalls,
       tools: [this.fillMissingCellsTool],

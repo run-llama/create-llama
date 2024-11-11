@@ -151,7 +151,14 @@ export class ExtractMissingCellsTool
 
   async call(input: ExtractMissingCellsParameter): Promise<MissingCell[]> {
     const { filePath } = input;
-    const tableContent = await this.readCsvFile(filePath);
+    let tableContent: string[][];
+    try {
+      tableContent = await this.readCsvFile(filePath);
+    } catch (error) {
+      throw new Error(
+        `Failed to read CSV file: ${error.message}. Make sure that you are reading a local file path (not a sandbox path).`,
+      );
+    }
 
     const prompt = this.defaultExtractionPrompt.replace(
       "{table_content}",
@@ -166,6 +173,11 @@ export class ExtractMissingCellsTool
     const parsedResponse = JSON.parse(rawAnswer) as {
       missing_cells: MissingCell[];
     };
+    if (!parsedResponse.missing_cells) {
+      throw new Error(
+        "The answer is not in the correct format. There should be a missing_cells array.",
+      );
+    }
     const answer = parsedResponse.missing_cells;
 
     return answer;
