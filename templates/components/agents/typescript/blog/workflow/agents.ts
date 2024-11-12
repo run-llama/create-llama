@@ -1,16 +1,16 @@
 import { ChatMessage } from "llamaindex";
+import { getTool } from "../engine/tools";
 import { FunctionCallingAgent } from "./single-agent";
-import { getQueryEngineTools, lookupTools } from "./tools";
+import { getQueryEngineTools } from "./tools";
 
 export const createResearcher = async (chatHistory: ChatMessage[]) => {
   const queryEngineTools = await getQueryEngineTools();
-  const tools = (
-    await lookupTools([
-      "wikipedia_tool",
-      "duckduckgo_search",
-      "image_generator",
-    ])
-  ).concat(queryEngineTools ? queryEngineTools : []);
+  const tools = [
+    await getTool("wikipedia_tool"),
+    await getTool("duckduckgo_search"),
+    await getTool("image_generator"),
+    ...(queryEngineTools ? queryEngineTools : []),
+  ].filter((tool) => tool !== undefined);
 
   return new FunctionCallingAgent({
     name: "researcher",
@@ -78,17 +78,17 @@ Example:
 };
 
 export const createPublisher = async (chatHistory: ChatMessage[]) => {
-  const tools = await lookupTools(["document_generator"]);
+  const tool = await getTool("document_generator");
   let systemPrompt = `You are an expert in publishing blog posts. You are given a task to publish a blog post. 
 If the writer says that there was an error, you should reply with the error and not publish the post.`;
-  if (tools.length > 0) {
+  if (tool) {
     systemPrompt = `${systemPrompt}. 
 If the user requests to generate a file, use the document_generator tool to generate the file and reply with the link to the file.
 Otherwise, simply return the content of the post.`;
   }
   return new FunctionCallingAgent({
     name: "publisher",
-    tools: tools,
+    tools: tool ? [tool] : [],
     systemPrompt: systemPrompt,
     chatHistory,
   });

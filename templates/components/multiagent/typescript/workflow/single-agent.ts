@@ -1,176 +1,95 @@
-import {
-  HandlerContext,
-  StartEvent,
-  StopEvent,
-  Workflow,
-  WorkflowEvent,
-} from "@llamaindex/workflow";
-import {
-  BaseToolWithCall,
-  ChatMemoryBuffer,
-  ChatMessage,
-  ChatResponseChunk,
-  Settings,
-  ToolCall,
-  ToolCallLLM,
-} from "llamaindex";
-import { callTools, chatWithTools } from "./tools";
-import { AgentInput, AgentRunEvent } from "./type";
+import { ChatMessage } from "llamaindex";
+import { getTool } from "../engine/tools";
+import { FunctionCallingAgent } from "./single-agent";
+import { getQueryEngineTools } from "./tools";
 
-class InputEvent extends WorkflowEvent<{
-  input: ChatMessage[];
-}> {}
+export const createResearcher = async (chatHistory: ChatMessage[]) => {
+  const queryEngineTools = await getQueryEngineTools();
+  const tools = [
+    await getTool("wikipedia_tool"),
+    await getTool("duckduckgo_search"),
+    await getTool("image_generator"),
+    ...(queryEngineTools ? queryEngineTools : []),
+  ].filter((tool) => tool !== undefined);
 
-class ToolCallEvent extends WorkflowEvent<{
-  toolCalls: ToolCall[];
-}> {}
+  return new FunctionCallingAgent({
+    name: "researcher",
+    tools: tools,
+    systemPrompt: `You are a researcher agent. You are given a research task.
+            
+If the conversation already includes the information and there is no new request for additional information from the user, you should return the appropriate content to the writer.
+Otherwise, you must use tools to retrieve information or images needed for the task.
 
-type FunctionCallingAgentContextData = {
-  streaming: boolean;
+It's normal for the task to include some ambiguity. You must always think carefully about the context of the user's request to understand what are the main content needs to be retrieved.
+Example:
+    Request: "Create a blog post about the history of the internet, write in English and publish in PDF format."
+    ->Though: The main content is "history of the internet", while "write in English and publish in PDF format" is a requirement for other agents.
+    Your task: Look for information in English about the history of the Internet.
+    This is not your task: Create a blog post or look for how to create a PDF.
+
+    Next request: "Publish the blog post in HTML format."
+    ->Though: User just asking for a format change, the previous content is still valid.
+    Your task: Return the previous content of the post to the writer. No need to do any research.
+    This is not your task: Look for how to create an HTML file.
+
+If you use the tools but don't find any related information, please return "I didn't find any new information for {the topic}." along with the content you found. Don't try to make up information yourself.
+If the request doesn't need any new information because it was in the conversation history, please return "The task doesn't need any new information. Please reuse the existing content in the conversation history.
+`,
+    chatHistory,
+  });
 };
 
-export type FunctionCallingAgentInput = AgentInput & {
-  displayName: string;
+export const createWriter = (chatHistory: ChatMessage[]) => {
+  return new FunctionCallingAgent({
+    name: "writer",
+    systemPrompt: `You are an expert in writing blog posts.
+You are given the task of writing a blog post based on research content provided by the researcher agent. Do not invent any information yourself. 
+It's important to read the entire conversation history to write the blog post accurately.
+If you receive a review from the reviewer, update the post according to the feedback and return the new post content.
+If the content is not valid (e.g., broken link, broken image, etc.), do not use it.
+It's normal for the task to include some ambiguity, so you must define the user's initial request to write the post correctly.
+If you update the post based on the reviewer's feedback, first explain what changes you made to the post, then provide the new post content. Do not include the reviewer's comments.
+Example:
+    Task: "Here is the information I found about the history of the internet: 
+    Create a blog post about the history of the internet, write in English, and publish in PDF format."
+    -> Your task: Use the research content {...} to write a blog post in English.
+    -> This is not your task: Create a PDF
+    Please note that a localhost link is acceptable, but dummy links like "example.com" or "your-website.com" are not valid.`,
+    chatHistory,
+  });
 };
 
-export class FunctionCallingAgent extends Workflow<
-  FunctionCallingAgentContextData,
-  FunctionCallingAgentInput,
-  string | AsyncGenerator<boolean | ChatResponseChunk<object>>
-> {
-  name: string;
-  llm: ToolCallLLM;
-  memory: ChatMemoryBuffer;
-  tools: BaseToolWithCall[];
-  systemPrompt?: string;
-  writeEvents: boolean;
-  role?: string;
+export const createReviewer = (chatHistory: ChatMessage[]) => {
+  return new FunctionCallingAgent({
+    name: "reviewer",
+    systemPrompt: `You are an expert in reviewing blog posts.
+You are given a task to review a blog post. As a reviewer, it's important that your review aligns with the user's request. Please focus on the user's request when reviewing the post.
+Review the post for logical inconsistencies, ask critical questions, and provide suggestions for improvement.
+Furthermore, proofread the post for grammar and spelling errors.
+Only if the post is good enough for publishing should you return 'The post is good.' In all other cases, return your review.
+It's normal for the task to include some ambiguity, so you must define the user's initial request to review the post correctly.
+Please note that a localhost link is acceptable, but dummy links like "example.com" or "your-website.com" are not valid.
+Example:
+    Task: "Create a blog post about the history of the internet, write in English and publish in PDF format."
+    -> Your task: Review whether the main content of the post is about the history of the internet and if it is written in English.
+    -> This is not your task: Create blog post, create PDF, write in English.`,
+    chatHistory,
+  });
+};
 
-  constructor(options: {
-    name: string;
-    llm?: ToolCallLLM;
-    chatHistory?: ChatMessage[];
-    tools?: BaseToolWithCall[];
-    systemPrompt?: string;
-    writeEvents?: boolean;
-    role?: string;
-    verbose?: boolean;
-    timeout?: number;
-  }) {
-    super({
-      verbose: options?.verbose ?? false,
-      timeout: options?.timeout ?? 360,
-    });
-    this.name = options?.name;
-    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
-    if (!(this.llm instanceof ToolCallLLM)) {
-      throw new Error("LLM is not a ToolCallLLM");
-    }
-    this.memory = new ChatMemoryBuffer({
-      llm: this.llm,
-      chatHistory: options.chatHistory,
-    });
-    this.tools = options?.tools ?? [];
-    this.systemPrompt = options.systemPrompt;
-    this.writeEvents = options?.writeEvents ?? true;
-    this.role = options?.role;
-
-    // add steps
-    this.addStep(
-      {
-        inputs: [StartEvent<AgentInput>],
-        outputs: [InputEvent],
-      },
-      this.prepareChatHistory.bind(this),
-    );
-    this.addStep(
-      {
-        inputs: [InputEvent],
-        outputs: [ToolCallEvent, StopEvent],
-      },
-      this.handleLLMInput.bind(this),
-    );
-    this.addStep(
-      {
-        inputs: [ToolCallEvent],
-        outputs: [InputEvent],
-      },
-      this.handleToolCalls.bind(this),
-    );
+export const createPublisher = async (chatHistory: ChatMessage[]) => {
+  const tool = await getTool("document_generator");
+  let systemPrompt = `You are an expert in publishing blog posts. You are given a task to publish a blog post. 
+If the writer says that there was an error, you should reply with the error and not publish the post.`;
+  if (tool) {
+    systemPrompt = `${systemPrompt}. 
+If the user requests to generate a file, use the document_generator tool to generate the file and reply with the link to the file.
+Otherwise, simply return the content of the post.`;
   }
-
-  private get chatHistory() {
-    return this.memory.getMessages();
-  }
-
-  private async prepareChatHistory(
-    ctx: HandlerContext<FunctionCallingAgentContextData>,
-    ev: StartEvent<AgentInput>,
-  ): Promise<InputEvent> {
-    const { message, streaming } = ev.data;
-    ctx.data.streaming = streaming ?? false;
-    this.writeEvent(`Start to work on: ${message}`, ctx);
-    if (this.systemPrompt) {
-      this.memory.put({ role: "system", content: this.systemPrompt });
-    }
-    this.memory.put({ role: "user", content: message });
-    return new InputEvent({ input: this.chatHistory });
-  }
-
-  private async handleLLMInput(
-    ctx: HandlerContext<FunctionCallingAgentContextData>,
-    ev: InputEvent,
-  ): Promise<StopEvent<string | AsyncGenerator> | ToolCallEvent> {
-    const toolCallResponse = await chatWithTools(
-      this.llm,
-      this.tools,
-      this.chatHistory,
-    );
-    if (toolCallResponse.toolCallMessage) {
-      this.memory.put(toolCallResponse.toolCallMessage);
-    }
-
-    if (toolCallResponse.hasToolCall()) {
-      return new ToolCallEvent({ toolCalls: toolCallResponse.toolCalls });
-    }
-
-    if (ctx.data.streaming) {
-      if (!toolCallResponse.responseGenerator) {
-        throw new Error("No streaming response");
-      }
-      return new StopEvent(toolCallResponse.responseGenerator);
-    }
-
-    const fullResponse = await toolCallResponse.asFullResponse();
-    this.memory.put(fullResponse);
-    return new StopEvent(fullResponse.content.toString());
-  }
-
-  private async handleToolCalls(
-    ctx: HandlerContext<FunctionCallingAgentContextData>,
-    ev: ToolCallEvent,
-  ): Promise<InputEvent> {
-    const { toolCalls } = ev.data;
-
-    const toolMsgs = await callTools({
-      tools: this.tools,
-      toolCalls,
-      ctx,
-      agentName: this.name,
-    });
-
-    for (const msg of toolMsgs) {
-      this.memory.put(msg);
-    }
-
-    return new InputEvent({ input: this.memory.getMessages() });
-  }
-
-  private writeEvent(
-    msg: string,
-    ctx: HandlerContext<FunctionCallingAgentContextData>,
-  ) {
-    if (!this.writeEvents) return;
-    ctx.sendEvent(new AgentRunEvent({ agent: this.name, text: msg }));
-  }
-}
+  return new FunctionCallingAgent({
+    name: "publisher",
+    tools: tool ? [tool] : [],
+    systemPrompt: systemPrompt,
+    chatHistory,
+  });
+};
