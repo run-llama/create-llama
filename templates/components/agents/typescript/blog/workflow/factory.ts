@@ -1,19 +1,21 @@
 import {
-  Context,
+  HandlerContext,
   StartEvent,
   StopEvent,
   Workflow,
   WorkflowEvent,
-} from "@llamaindex/core/workflow";
-import { Message } from "ai";
+} from "@llamaindex/workflow";
 import { ChatMessage, ChatResponseChunk, Settings } from "llamaindex";
-import { getAnnotations } from "../llamaindex/streaming/annotations";
 import {
   createPublisher,
   createResearcher,
   createReviewer,
   createWriter,
 } from "./agents";
+import {
+  FunctionCallingAgent,
+  FunctionCallingAgentInput,
+} from "./single-agent";
 import { AgentInput, AgentRunEvent } from "./type";
 
 const TIMEOUT = 360 * 1000;
@@ -27,74 +29,65 @@ class WriteEvent extends WorkflowEvent<{
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 class PublishEvent extends WorkflowEvent<{ input: string }> {}
 
-const prepareChatHistory = (chatHistory: Message[]): ChatMessage[] => {
-  // By default, the chat history only contains the assistant and user messages
-  // all the agents messages are stored in annotation data which is not visible to the LLM
+export class BlogContext {
+  task: string;
+  attempts: number;
+  result: string;
 
-  const MAX_AGENT_MESSAGES = 10;
-  const agentAnnotations = getAnnotations<{ agent: string; text: string }>(
-    chatHistory,
-    { role: "assistant", type: "agent" },
-  ).slice(-MAX_AGENT_MESSAGES);
-
-  const agentMessages = agentAnnotations
-    .map(
-      (annotation) =>
-        `\n<${annotation.data.agent}>\n${annotation.data.text}\n</${annotation.data.agent}>`,
-    )
-    .join("\n");
-
-  const agentContent = agentMessages
-    ? "Here is the previous conversation of agents:\n" + agentMessages
-    : "";
-
-  if (agentContent) {
-    const agentMessage: ChatMessage = {
-      role: "assistant",
-      content: agentContent,
-    };
-    return [
-      ...chatHistory.slice(0, -1),
-      agentMessage,
-      chatHistory.slice(-1)[0],
-    ] as ChatMessage[];
+  constructor(task?: string, attempts?: number, result?: string) {
+    this.task = task ?? "";
+    this.attempts = attempts ?? 0;
+    this.result = result ?? "";
   }
-  return chatHistory as ChatMessage[];
-};
+}
 
-export const createWorkflow = (messages: Message[], params?: any) => {
-  const chatHistoryWithAgentMessages = prepareChatHistory(messages);
+export const createWorkflow = ({
+  chatHistory,
+  params,
+}: {
+  chatHistory: ChatMessage[];
+  params?: any;
+}) => {
   const runAgent = async (
-    context: Context,
-    agent: Workflow,
-    input: AgentInput,
+    context: HandlerContext<BlogContext>,
+    agent: FunctionCallingAgent,
+    input: FunctionCallingAgentInput,
   ) => {
-    const run = agent.run(new StartEvent({ input }));
-    for await (const event of agent.streamEvents()) {
-      if (event.data instanceof AgentRunEvent) {
-        context.writeEventToStream(event.data);
+    const agentContext = agent.run(input, {
+      streaming: input.streaming ?? false,
+    });
+    for await (const event of agentContext) {
+      if (event instanceof AgentRunEvent) {
+        context.sendEvent(event);
+      }
+      if (event instanceof StopEvent) {
+        return event;
       }
     }
-    return await run;
+    return null;
   };
 
-  const start = async (context: Context, ev: StartEvent) => {
-    context.set("task", ev.data.input);
-
-    const chatHistoryStr = chatHistoryWithAgentMessages
+  const start = async (
+    context: HandlerContext<BlogContext>,
+    ev: StartEvent<AgentInput>,
+  ) => {
+    const chatHistoryStr = chatHistory
       .map((msg) => `${msg.role}: ${msg.content}`)
       .join("\n");
 
     // Decision-making process
-    const decision = await decideWorkflow(ev.data.input, chatHistoryStr);
+    const decision = await decideWorkflow(
+      ev.data.message.toString(),
+      chatHistoryStr,
+    );
 
     if (decision !== "publish") {
       return new ResearchEvent({
-        input: `Research for this task: ${ev.data.input}`,
+        input: `Research for this task: ${ev.data.message.toString()}`,
       });
     } else {
       return new PublishEvent({
-        input: `Publish content based on the chat history\n${chatHistoryStr}\n\n and task: ${ev.data.input}`,
+        input: `Publish content based on the chat history\n${chatHistoryStr}\n\n and task: ${ev.data.message.toString()}`,
       });
     }
   };
@@ -120,31 +113,35 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     return decision === "publish" ? "publish" : "research";
   };
 
-  const research = async (context: Context, ev: ResearchEvent) => {
-    const researcher = await createResearcher(
-      chatHistoryWithAgentMessages,
-      params,
-    );
+  const research = async (
+    context: HandlerContext<BlogContext>,
+    ev: ResearchEvent,
+  ) => {
+    const researcher = await createResearcher(chatHistory, params);
     const researchRes = await runAgent(context, researcher, {
+      displayName: "Researcher",
       message: ev.data.input,
     });
-    const researchResult = researchRes.data.result;
+    const researchResult = researchRes?.data;
+
     return new WriteEvent({
-      input: `Write a blog post given this task: ${context.get("task")} using this research content: ${researchResult}`,
+      input: `Write a blog post given this task: ${context.data.task} using this research content: ${researchResult}`,
       isGood: false,
     });
   };
 
-  const write = async (context: Context, ev: WriteEvent) => {
-    const writer = createWriter(chatHistoryWithAgentMessages);
-
-    context.set("attempts", context.get("attempts", 0) + 1);
-    const tooManyAttempts = context.get("attempts") > MAX_ATTEMPTS;
+  const write = async (
+    context: HandlerContext<BlogContext>,
+    ev: WriteEvent,
+  ) => {
+    const writer = createWriter(chatHistory);
+    context.data.attempts = context.data.attempts + 1;
+    const tooManyAttempts = context.data.attempts > MAX_ATTEMPTS;
     if (tooManyAttempts) {
-      context.writeEventToStream(
+      context.sendEvent(
         new AgentRunEvent({
           name: "writer",
-          msg: `Too many attempts (${MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.`,
+          text: `Too many attempts (${MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.`,
         }),
       );
     }
@@ -154,6 +151,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
       // stream the final content
       const result = await runAgent(context, writer, {
         message: `Based on the reviewer's feedback, refine the post and return only the final version of the post. Here's the current version: ${ev.data.input}`,
+        displayName: "Writer",
         streaming: true,
       });
       return result as unknown as StopEvent<AsyncGenerator<ChatResponseChunk>>;
@@ -161,24 +159,32 @@ Decision (respond with either 'not_publish' or 'publish'):`;
 
     const writeRes = await runAgent(context, writer, {
       message: ev.data.input,
+      displayName: "Writer",
+      streaming: false,
     });
-    const writeResult = writeRes.data.result;
-    context.set("result", writeResult); // store the last result
+    const writeResult = writeRes?.data;
+    context.data.result = writeResult; // store the last result
+
     return new ReviewEvent({ input: writeResult });
   };
 
-  const review = async (context: Context, ev: ReviewEvent) => {
-    const reviewer = createReviewer(chatHistoryWithAgentMessages);
-    const reviewRes = await reviewer.run(
-      new StartEvent<AgentInput>({ input: { message: ev.data.input } }),
-    );
-    const reviewResult = reviewRes.data.result;
-    const oldContent = context.get("result");
-    const postIsGood = reviewResult.toLowerCase().includes("post is good");
-    context.writeEventToStream(
+  const review = async (
+    context: HandlerContext<BlogContext>,
+    ev: ReviewEvent,
+  ) => {
+    const reviewer = createReviewer(chatHistory);
+    const reviewResult = (await runAgent(context, reviewer, {
+      message: ev.data.input,
+      displayName: "Reviewer",
+      streaming: false,
+    })) as unknown as StopEvent<string>;
+    const reviewResultStr = reviewResult.data;
+    const oldContent = context.data.result;
+    const postIsGood = reviewResultStr.toLowerCase().includes("post is good");
+    context.sendEvent(
       new AgentRunEvent({
         name: "reviewer",
-        msg: `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
+        text: `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
           postIsGood ? " for publication." : "."
         }`,
       }),
@@ -205,11 +211,15 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     });
   };
 
-  const publish = async (context: Context, ev: PublishEvent) => {
-    const publisher = await createPublisher(chatHistoryWithAgentMessages);
+  const publish = async (
+    context: HandlerContext<BlogContext>,
+    ev: PublishEvent,
+  ) => {
+    const publisher = await createPublisher(chatHistory);
 
     const publishResult = await runAgent(context, publisher, {
       message: `${ev.data.input}`,
+      displayName: "Publisher",
       streaming: true,
     });
     return publishResult as unknown as StopEvent<
@@ -217,14 +227,51 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     >;
   };
 
-  const workflow = new Workflow({ timeout: TIMEOUT, validate: true });
-  workflow.addStep(StartEvent, start, {
-    outputs: [ResearchEvent, PublishEvent],
-  });
-  workflow.addStep(ResearchEvent, research, { outputs: WriteEvent });
-  workflow.addStep(WriteEvent, write, { outputs: [ReviewEvent, StopEvent] });
-  workflow.addStep(ReviewEvent, review, { outputs: WriteEvent });
-  workflow.addStep(PublishEvent, publish, { outputs: StopEvent });
+  const workflow: Workflow<
+    BlogContext,
+    AgentInput,
+    string | AsyncGenerator<boolean | ChatResponseChunk>
+  > = new Workflow();
+
+  workflow.addStep(
+    {
+      inputs: [StartEvent<AgentInput>],
+      outputs: [ResearchEvent, PublishEvent],
+    },
+    start,
+  );
+
+  workflow.addStep(
+    {
+      inputs: [ResearchEvent],
+      outputs: [WriteEvent],
+    },
+    research,
+  );
+
+  workflow.addStep(
+    {
+      inputs: [WriteEvent],
+      outputs: [ReviewEvent, StopEvent<AsyncGenerator<ChatResponseChunk>>],
+    },
+    write,
+  );
+
+  workflow.addStep(
+    {
+      inputs: [ReviewEvent],
+      outputs: [WriteEvent],
+    },
+    review,
+  );
+
+  workflow.addStep(
+    {
+      inputs: [PublishEvent],
+      outputs: [StopEvent],
+    },
+    publish,
+  );
 
   return workflow;
 };

@@ -31,9 +31,13 @@ type FunctionCallingAgentContextData = {
   streaming: boolean;
 };
 
+export type FunctionCallingAgentInput = AgentInput & {
+  displayName: string;
+};
+
 export class FunctionCallingAgent extends Workflow<
   FunctionCallingAgentContextData,
-  string,
+  FunctionCallingAgentInput,
   string | AsyncGenerator<boolean | ChatResponseChunk<object>>
 > {
   name: string;
@@ -60,7 +64,7 @@ export class FunctionCallingAgent extends Workflow<
       timeout: options?.timeout ?? 360,
     });
     this.name = options?.name;
-    this.llm = options.llm ?? Settings.llm;
+    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }
@@ -80,21 +84,21 @@ export class FunctionCallingAgent extends Workflow<
         inputs: [StartEvent<AgentInput>],
         outputs: [InputEvent],
       },
-      this.prepareChatHistory,
+      this.prepareChatHistory.bind(this),
     );
     this.addStep(
       {
         inputs: [InputEvent],
         outputs: [ToolCallEvent, StopEvent],
       },
-      this.handleLLMInput,
+      this.handleLLMInput.bind(this),
     );
     this.addStep(
       {
         inputs: [ToolCallEvent],
         outputs: [InputEvent],
       },
-      this.handleToolCalls,
+      this.handleToolCalls.bind(this),
     );
   }
 
