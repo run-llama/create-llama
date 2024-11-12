@@ -85,7 +85,7 @@ export class FinancialReportWorkflow extends Workflow<
         inputs: [StartEvent<AgentInput>],
         outputs: [InputEvent],
       },
-      this.prepareChatHistory.bind(this),
+      this.prepareChatHistory,
     );
 
     this.addStep(
@@ -99,7 +99,7 @@ export class FinancialReportWorkflow extends Workflow<
           StopEvent,
         ],
       },
-      this.handleLLMInput.bind(this),
+      this.handleLLMInput,
     );
 
     this.addStep(
@@ -107,7 +107,7 @@ export class FinancialReportWorkflow extends Workflow<
         inputs: [ResearchEvent],
         outputs: [AnalyzeEvent],
       },
-      this.handleResearch.bind(this),
+      this.handleResearch,
     );
 
     this.addStep(
@@ -115,7 +115,7 @@ export class FinancialReportWorkflow extends Workflow<
         inputs: [AnalyzeEvent],
         outputs: [InputEvent],
       },
-      this.handleAnalyze.bind(this),
+      this.handleAnalyze,
     );
 
     this.addStep(
@@ -123,14 +123,14 @@ export class FinancialReportWorkflow extends Workflow<
         inputs: [ReportGenerationEvent],
         outputs: [InputEvent],
       },
-      this.handleReportGeneration.bind(this),
+      this.handleReportGeneration,
     );
   }
 
-  private async prepareChatHistory(
+  prepareChatHistory = async (
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
-  ) {
+  ): Promise<InputEvent> => {
     const { message } = ev.data;
 
     if (this.systemPrompt) {
@@ -139,9 +139,18 @@ export class FinancialReportWorkflow extends Workflow<
     this.memory.put({ role: "user", content: message });
 
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 
-  private async handleLLMInput(ctx: HandlerContext<null>, ev: InputEvent) {
+  handleLLMInput = async (
+    ctx: HandlerContext<null>,
+    ev: InputEvent,
+  ): Promise<
+    | InputEvent
+    | ResearchEvent
+    | AnalyzeEvent
+    | ReportGenerationEvent
+    | StopEvent
+  > => {
     const chatHistory = ev.data.input;
 
     const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
@@ -190,9 +199,12 @@ export class FinancialReportWorkflow extends Workflow<
         }
         throw new Error(`Unknown tool: ${toolName}`);
     }
-  }
+  };
 
-  private async handleResearch(ctx: HandlerContext<null>, ev: ResearchEvent) {
+  handleResearch = async (
+    ctx: HandlerContext<null>,
+    ev: ResearchEvent,
+  ): Promise<AnalyzeEvent> => {
     ctx.sendEvent(
       new AgentRunEvent({
         agent: "Researcher",
@@ -219,12 +231,15 @@ export class FinancialReportWorkflow extends Workflow<
           "I have finished researching the data, please analyze the data.",
       },
     });
-  }
+  };
 
   /**
    * Analyze a research result or a tool call for code interpreter from the LLM
    */
-  private async handleAnalyze(ctx: HandlerContext<null>, ev: AnalyzeEvent) {
+  handleAnalyze = async (
+    ctx: HandlerContext<null>,
+    ev: AnalyzeEvent,
+  ): Promise<InputEvent> => {
     ctx.sendEvent(
       new AgentRunEvent({
         agent: "Analyst",
@@ -283,12 +298,12 @@ export class FinancialReportWorkflow extends Workflow<
     return new InputEvent({
       input: this.memory.getMessages(),
     });
-  }
+  };
 
-  private async handleReportGeneration(
+  handleReportGeneration = async (
     ctx: HandlerContext<null>,
     ev: ReportGenerationEvent,
-  ) {
+  ): Promise<InputEvent> => {
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
@@ -301,5 +316,5 @@ export class FinancialReportWorkflow extends Workflow<
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 }

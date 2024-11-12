@@ -87,7 +87,7 @@ export class FormFillingWorkflow extends Workflow<
         inputs: [StartEvent<AgentInput>],
         outputs: [InputEvent],
       },
-      this.prepareChatHistory.bind(this),
+      this.prepareChatHistory,
     );
 
     this.addStep(
@@ -101,7 +101,7 @@ export class FormFillingWorkflow extends Workflow<
           StopEvent,
         ],
       },
-      this.handleLLMInput.bind(this),
+      this.handleLLMInput,
     );
 
     this.addStep(
@@ -109,7 +109,7 @@ export class FormFillingWorkflow extends Workflow<
         inputs: [ExtractMissingCellsEvent],
         outputs: [InputEvent],
       },
-      this.handleExtractMissingCells.bind(this),
+      this.handleExtractMissingCells,
     );
 
     this.addStep(
@@ -117,7 +117,7 @@ export class FormFillingWorkflow extends Workflow<
         inputs: [FindAnswersEvent],
         outputs: [InputEvent],
       },
-      this.handleFindAnswers.bind(this),
+      this.handleFindAnswers,
     );
 
     this.addStep(
@@ -125,14 +125,14 @@ export class FormFillingWorkflow extends Workflow<
         inputs: [FillMissingCellsEvent],
         outputs: [InputEvent],
       },
-      this.handleFillMissingCells.bind(this),
+      this.handleFillMissingCells,
     );
   }
 
-  private async prepareChatHistory(
+  prepareChatHistory = async (
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
-  ) {
+  ): Promise<InputEvent> => {
     const { message } = ev.data;
 
     if (this.systemPrompt) {
@@ -141,9 +141,18 @@ export class FormFillingWorkflow extends Workflow<
     this.memory.put({ role: "user", content: message });
 
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 
-  private async handleLLMInput(ctx: HandlerContext<null>, ev: InputEvent) {
+  handleLLMInput = async (
+    ctx: HandlerContext<null>,
+    ev: InputEvent,
+  ): Promise<
+    | InputEvent
+    | ExtractMissingCellsEvent
+    | FindAnswersEvent
+    | FillMissingCellsEvent
+    | StopEvent
+  > => {
     const chatHistory = ev.data.input;
 
     const tools = [this.extractorTool, this.fillMissingCellsTool];
@@ -192,12 +201,12 @@ export class FormFillingWorkflow extends Workflow<
         }
         throw new Error(`Unknown tool: ${toolName}`);
     }
-  }
+  };
 
-  private async handleExtractMissingCells(
+  handleExtractMissingCells = async (
     ctx: HandlerContext<null>,
     ev: ExtractMissingCellsEvent,
-  ) {
+  ): Promise<InputEvent> => {
     ctx.sendEvent(
       new AgentRunEvent({
         agent: "CSVExtractor",
@@ -216,12 +225,12 @@ export class FormFillingWorkflow extends Workflow<
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 
-  private async handleFindAnswers(
+  handleFindAnswers = async (
     ctx: HandlerContext<null>,
     ev: FindAnswersEvent,
-  ) {
+  ): Promise<InputEvent> => {
     const { toolCalls } = ev.data;
     if (!this.queryEngineTools) {
       throw new Error("Query engine tool is not available");
@@ -244,12 +253,12 @@ export class FormFillingWorkflow extends Workflow<
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 
-  private async handleFillMissingCells(
+  handleFillMissingCells = async (
     ctx: HandlerContext<null>,
     ev: FillMissingCellsEvent,
-  ) {
+  ): Promise<InputEvent> => {
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
@@ -262,5 +271,5 @@ export class FormFillingWorkflow extends Workflow<
       this.memory.put(toolMsg);
     }
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 }
