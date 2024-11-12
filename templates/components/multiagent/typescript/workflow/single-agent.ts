@@ -171,6 +171,6 @@ export class FunctionCallingAgent extends Workflow<
     ctx: HandlerContext<FunctionCallingAgentContextData>,
   ) {
     if (!this.writeEvents) return;
-    ctx.sendEvent(new AgentRunEvent({ name: this.name, text: msg }));
+    ctx.sendEvent(new AgentRunEvent({ agent: this.name, text: msg }));
   }
 }

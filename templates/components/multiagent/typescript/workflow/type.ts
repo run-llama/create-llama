@@ -17,13 +17,13 @@ export type ProgressEventData = {
 export type AgentRunEventData = ProgressEventData;
 
 export class AgentRunEvent extends WorkflowEvent<{
-  name: string;
+  agent: string;
   text: string;
   type: AgentRunEventType;
   data?: AgentRunEventData;
 }> {
   constructor(options: {
-    name: string;
+    agent: string;
     text: string;
     type?: AgentRunEventType;
     data?: AgentRunEventData;

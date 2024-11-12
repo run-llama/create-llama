@@ -56,11 +56,6 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
 function transformAgentRunEvent(event: AgentRunEvent) {
   return {
     type: "agent",
-    data: {
-      agent: event.data.name,
-      type: event.data.type,
-      text: event.data.text,
-      ...(event.data.type === "progress" && { data: event.data.data }),
-    },
+    data: event.data,
   };
 }

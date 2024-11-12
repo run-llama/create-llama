@@ -195,7 +195,7 @@ export class FinancialReportWorkflow extends Workflow<
   private async handleResearch(ctx: HandlerContext<null>, ev: ResearchEvent) {
     ctx.sendEvent(
       new AgentRunEvent({
-        name: "Researcher",
+        agent: "Researcher",
         text: "Researching data",
         type: "text",
       }),
@@ -227,7 +227,7 @@ export class FinancialReportWorkflow extends Workflow<
   private async handleAnalyze(ctx: HandlerContext<null>, ev: AnalyzeEvent) {
     ctx.sendEvent(
       new AgentRunEvent({
-        name: "Analyst",
+        agent: "Analyst",
         text: `Starting analysis`,
       }),
     );

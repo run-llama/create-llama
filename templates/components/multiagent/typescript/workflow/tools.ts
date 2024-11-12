@@ -133,7 +133,7 @@ export const callTools = async <T>({
           ? (msg: string) => {
               ctx.sendEvent(
                 new AgentRunEvent({
-                  name: agentName,
+                  agent: agentName,
                   text: msg,
                   type: "text",
                 }),
@@ -155,7 +155,7 @@ export const callTools = async <T>({
     const toolMsg = await callSingleTool(tool, toolCall, (msg: string) => {
       ctx.sendEvent(
         new AgentRunEvent({
-          name: agentName,
+          agent: agentName,
           text: msg,
           type: "progress",
           data: {

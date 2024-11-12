@@ -200,7 +200,7 @@ export class FormFillingWorkflow extends Workflow<
   ) {
     ctx.sendEvent(
       new AgentRunEvent({
-        name: "CSVExtractor",
+        agent: "CSVExtractor",
         text: "Extracting missing cells",
         type: "text",
       }),
@@ -228,7 +228,7 @@ export class FormFillingWorkflow extends Workflow<
     }
     ctx.sendEvent(
       new AgentRunEvent({
-        name: "Researcher",
+        agent: "Researcher",
         text: "Finding answers",
         type: "text",
       }),

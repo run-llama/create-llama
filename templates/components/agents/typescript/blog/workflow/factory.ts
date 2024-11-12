@@ -137,7 +137,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     if (tooManyAttempts) {
       context.sendEvent(
         new AgentRunEvent({
-          name: "writer",
+          agent: "writer",
           text: `Too many attempts (${MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.`,
         }),
       );
@@ -180,7 +180,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     const postIsGood = reviewResultStr.toLowerCase().includes("post is good");
     context.sendEvent(
       new AgentRunEvent({
-        name: "reviewer",
+        agent: "reviewer",
         text: `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
           postIsGood ? " for publication." : "."
         }`,
