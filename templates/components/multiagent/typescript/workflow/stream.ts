@@ -29,8 +29,6 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
         // get next event from workflow context
         const { value: event, done } =
           await context[Symbol.asyncIterator]().next();
-        console.log("event", event);
-        // handle the workflow event - if it returns a generator, set it as the new generator
         generator = handleEvent(event, dataStream);
       }
 
