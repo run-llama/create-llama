@@ -19,6 +19,11 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
   const encoder = new TextEncoder();
   let generator: AsyncGenerator<ChatResponseChunk> | undefined;
 
+  const closeStreams = (controller: ReadableStreamDefaultController) => {
+    controller.close();
+    dataStream.close();
+  };
+
   const mainStream = new ReadableStream({
     async start(controller) {
       // Kickstart the stream by sending an empty string
@@ -29,13 +34,16 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
         // get next event from workflow context
         const { value: event, done } =
           await context[Symbol.asyncIterator]().next();
+        if (done) {
+          closeStreams(controller);
+          return;
+        }
         generator = handleEvent(event, dataStream);
       }
 
       const { value: chunk, done } = await generator.next();
       if (done) {
-        controller.close();
-        dataStream.close();
+        closeStreams(controller);
         return;
       }
       const text = trimStartOfStream(chunk.delta ?? "");

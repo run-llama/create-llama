@@ -9,12 +9,10 @@ import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { messages, data }: { messages: Message[]; data?: any } = req.body;
-    const userMessage = messages.pop();
-    if (!messages || !userMessage || userMessage.role !== "user") {
+    const { messages }: { messages: Message[] } = req.body;
+    if (!messages || messages.length === 0) {
       return res.status(400).json({
-        error:
-          "messages are required in the request body and the last message must be from the user",
+        error: "messages are required in the request body",
       });
     }
     const chatHistory = convertToChatHistory(messages);
