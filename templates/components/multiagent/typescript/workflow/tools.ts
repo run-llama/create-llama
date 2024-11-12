@@ -1,5 +1,4 @@
 import { HandlerContext } from "@llamaindex/workflow";
-import fs from "fs/promises";
 import {
   BaseToolWithCall,
   callTool,
@@ -14,9 +13,7 @@ import {
   ToolCallLLMMessageOptions,
 } from "llamaindex";
 import crypto from "node:crypto";
-import path from "path";
 import { getDataSource } from "../engine";
-import { createTools } from "../engine/tools/index";
 import { AgentRunEvent } from "./type";
 
 export const getQueryEngineTools = async (): Promise<
@@ -69,35 +66,6 @@ export const getQueryEngineTools = async (): Promise<
       }),
     ];
   }
-};
-
-export const getAvailableTools = async (): Promise<BaseToolWithCall[]> => {
-  const configFile = path.join("config", "tools.json");
-  let toolConfig: any;
-  const tools: BaseToolWithCall[] = [];
-  try {
-    toolConfig = JSON.parse(await fs.readFile(configFile, "utf8"));
-  } catch (e) {
-    console.info(`Could not read ${configFile} file. Using no tools.`);
-  }
-  if (toolConfig) {
-    tools.push(...(await createTools(toolConfig)));
-  }
-  const queryEngineTools = await getQueryEngineTools();
-  if (queryEngineTools) {
-    tools.push(...queryEngineTools);
-  }
-
-  return tools;
-};
-
-export const lookupTools = async (
-  toolNames: string[],
-): Promise<BaseToolWithCall[]> => {
-  const availableTools = await getAvailableTools();
-  return availableTools.filter((tool) =>
-    toolNames.includes(tool.metadata.name),
-  );
 };
 
 /**

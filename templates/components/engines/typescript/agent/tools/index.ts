@@ -1,5 +1,7 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
 import {
   DocumentGenerator,
@@ -81,4 +83,20 @@ async function createLocalTools(
   }
 
   return tools;
+}
+
+export async function getConfiguredTools(
+  configPath?: string,
+): Promise<BaseToolWithCall[]> {
+  const configFile = path.join(configPath ?? "config", "tools.json");
+  const toolConfig = JSON.parse(await fs.readFile(configFile, "utf8"));
+  const tools = await createTools(toolConfig);
+  return tools;
+}
+
+export async function getTool(
+  toolName: string,
+): Promise<BaseToolWithCall | undefined> {
+  const tools = await getConfiguredTools();
+  return tools.find((tool) => tool.metadata.name === toolName);
 }

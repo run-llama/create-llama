@@ -34,7 +34,6 @@
     "@types/cors": "^2.8.16",
     "@types/express": "^4.17.21",
     "@types/node": "^20.9.5",
-    "@llamaindex/core": "^0.4.5",
     "@llamaindex/workflow": "^0.0.3",
     "@types/papaparse": "^5.3.15",
     "concurrently": "^8.2.2",
