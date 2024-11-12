@@ -1,4 +1,4 @@
-import { Message, StreamingTextResponse } from "ai";
+import { Message, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import {
   convertToChatHistory,
@@ -28,7 +28,7 @@ export const chat = async (req: Request, res: Response) => {
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
 
-    return new StreamingTextResponse(stream, {}, dataStream);
+    return streamToResponse(stream, res, {}, dataStream);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({

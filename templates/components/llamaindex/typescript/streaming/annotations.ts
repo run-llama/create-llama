@@ -64,7 +64,25 @@ export function retrieveMessageContent(messages: Message[]): MessageContent {
   ];
 }
 
-export function retrieveAgentHistoryMessage(
+export function convertToChatHistory(messages: Message[]): ChatMessage[] {
+  if (!messages || !Array.isArray(messages)) {
+    return [];
+  }
+  const agentHistory = retrieveAgentHistoryMessage(messages);
+  if (agentHistory) {
+    const previousMessages = messages.slice(0, -1);
+    return [...previousMessages, agentHistory].map((msg) => ({
+      role: msg.role as MessageType,
+      content: msg.content,
+    }));
+  }
+  return messages.map((msg) => ({
+    role: msg.role as MessageType,
+    content: msg.content,
+  }));
+}
+
+function retrieveAgentHistoryMessage(
   messages: Message[],
   maxAgentMessages = 10,
 ): ChatMessage | null {
@@ -83,24 +101,6 @@ export function retrieveAgentHistoryMessage(
     };
   }
   return null;
-}
-
-export function convertToChatHistory(messages: Message[]): ChatMessage[] {
-  if (!messages || !Array.isArray(messages)) {
-    return [];
-  }
-  const agentHistory = retrieveAgentHistoryMessage(messages);
-  if (agentHistory) {
-    const previousMessages = messages.slice(0, -1);
-    return [...previousMessages, agentHistory].map((msg) => ({
-      role: msg.role as MessageType,
-      content: msg.content,
-    }));
-  }
-  return messages.map((msg) => ({
-    role: msg.role as MessageType,
-    content: msg.content,
-  }));
 }
 
 function getFileContent(file: DocumentFile): string {

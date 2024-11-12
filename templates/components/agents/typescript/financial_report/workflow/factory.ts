@@ -1,5 +1,5 @@
 import { ChatMessage, ToolCallLLM } from "llamaindex";
-import { FinancialReportWorkflow } from "./finReport";
+import { FinancialReportWorkflow } from "./fin-report";
 import { getAvailableTools } from "./tools";
 
 const TIMEOUT = 360 * 1000;

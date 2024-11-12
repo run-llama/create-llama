@@ -1,5 +1,5 @@
 import { ChatMessage, ToolCallLLM } from "llamaindex";
-import { FormFillingWorkflow } from "./formFilling";
+import { FormFillingWorkflow } from "./form-filling";
 import { getAvailableTools } from "./tools";
 
 const TIMEOUT = 360 * 1000;
