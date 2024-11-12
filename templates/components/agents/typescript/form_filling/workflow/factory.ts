@@ -19,6 +19,13 @@ export async function createWorkflow(options: {
     (tool) => tool.metadata.name === "fill_missing_cells",
   );
 
+  if (!extractorTool) {
+    throw new Error("Extractor tool not found");
+  }
+  if (!fillMissingCellsTool) {
+    throw new Error("Fill missing cells tool not found");
+  }
+
   const formFilling = new FormFillingWorkflow({
     chatHistory: options.chatHistory,
     extractorTool,

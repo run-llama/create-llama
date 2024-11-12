@@ -75,12 +75,6 @@ export class FormFillingWorkflow extends Workflow<
     this.extractorTool = options.extractorTool;
     this.queryEngineTools = options.queryEngineTools;
     this.fillMissingCellsTool = options.fillMissingCellsTool;
-    if (!options.fillMissingCellsTool) {
-      throw new Error("Fill missing cells tool is required");
-    }
-    if (!options.extractorTool) {
-      throw new Error("Extractor tool is required");
-    }
 
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
@@ -160,7 +154,7 @@ export class FormFillingWorkflow extends Workflow<
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.hasToolCall()) {
-      return new StopEvent({ result: toolCallResponse.responseGenerator });
+      return new StopEvent(toolCallResponse.responseGenerator);
     }
 
     if (toolCallResponse.hasMultipleTools()) {

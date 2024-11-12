@@ -4,15 +4,11 @@ import {
   createStreamDataTransformer,
   trimStartOfStreamHelper,
 } from "ai";
-import { ChatResponseChunk, MessageContent } from "llamaindex";
+import { ChatResponseChunk } from "llamaindex";
 import { AgentRunEvent } from "./type";
 
-export async function createStreamFromWorkflowContext(
-  context: WorkflowContext<
-    MessageContent,
-    ChatResponseChunk,
-    unknown | undefined
-  >,
+export async function createStreamFromWorkflowContext<Input, Output, Context>(
+  context: WorkflowContext<Input, Output, Context>,
 ): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
   const trimStartOfStream = trimStartOfStreamHelper();
   const dataStream = new StreamData();
@@ -26,8 +22,7 @@ export async function createStreamFromWorkflowContext(
       for await (const event of context) {
         // Handle for StopEvent
         if (event instanceof StopEvent) {
-          const generator = event.data
-            .result as AsyncGenerator<ChatResponseChunk>;
+          const generator = event.data as AsyncGenerator<ChatResponseChunk>;
 
           for await (const chunk of generator) {
             const text = trimStartOfStream(chunk.delta ?? "");

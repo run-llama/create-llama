@@ -65,7 +65,7 @@ export class FinancialReportWorkflow extends Workflow<
       timeout: options?.timeout ?? 360,
     });
 
-    this.llm = options.llm ?? Settings.llm;
+    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
     if (!(this.llm instanceof ToolCallLLM)) {
       throw new Error("LLM is not a ToolCallLLM");
     }
@@ -73,15 +73,6 @@ export class FinancialReportWorkflow extends Workflow<
     this.queryEngineTools = options.queryEngineTools;
     this.codeInterpreterTool = options.codeInterpreterTool;
 
-    if (!options.queryEngineTools?.length) {
-      throw new Error("Query engine tools array must not be empty");
-    }
-    if (!options.codeInterpreterTool) {
-      throw new Error("Code interpreter tool is required");
-    }
-    if (!options.documentGeneratorTool) {
-      throw new Error("Document generator tool is required");
-    }
     this.documentGeneratorTool = options.documentGeneratorTool;
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
@@ -161,7 +152,7 @@ export class FinancialReportWorkflow extends Workflow<
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.hasToolCall()) {
-      return new StopEvent({ result: toolCallResponse.responseGenerator });
+      return new StopEvent(toolCallResponse.responseGenerator);
     }
 
     if (toolCallResponse.hasMultipleTools()) {

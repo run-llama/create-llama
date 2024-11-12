@@ -1,19 +1,16 @@
 import { ChatMessage } from "llamaindex";
 import { FunctionCallingAgent } from "./single-agent";
-import { getQueryEngineTool, lookupTools } from "./tools";
+import { getQueryEngineTools, lookupTools } from "./tools";
 
-export const createResearcher = async (
-  chatHistory: ChatMessage[],
-  params?: any,
-) => {
-  const queryEngineTool = await getQueryEngineTool(params);
+export const createResearcher = async (chatHistory: ChatMessage[]) => {
+  const queryEngineTools = await getQueryEngineTools();
   const tools = (
     await lookupTools([
       "wikipedia_tool",
       "duckduckgo_search",
       "image_generator",
     ])
-  ).concat(queryEngineTool ? [queryEngineTool] : []);
+  ).concat(queryEngineTools ? queryEngineTools : []);
 
   return new FunctionCallingAgent({
     name: "researcher",
@@ -39,6 +36,7 @@ If you use the tools but don't find any related information, please return "I di
 If the request doesn't need any new information because it was in the conversation history, please return "The task doesn't need any new information. Please reuse the existing content in the conversation history.
 `,
     chatHistory,
+    writeEvents: true,
   });
 };
 
@@ -59,6 +57,7 @@ Example:
     -> This is not your task: Create a PDF
     Please note that a localhost link is acceptable, but dummy links like "example.com" or "your-website.com" are not valid.`,
     chatHistory,
+    writeEvents: true,
   });
 };
 
@@ -77,6 +76,7 @@ Example:
     -> Your task: Review whether the main content of the post is about the history of the internet and if it is written in English.
     -> This is not your task: Create blog post, create PDF, write in English.`,
     chatHistory,
+    writeEvents: true,
   });
 };
 
@@ -94,5 +94,6 @@ Otherwise, simply return the content of the post.`;
     tools: tools,
     systemPrompt: systemPrompt,
     chatHistory,
+    writeEvents: true,
   });
 };

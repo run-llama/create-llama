@@ -3,6 +3,7 @@ import {
   StartEvent,
   StopEvent,
   Workflow,
+  WorkflowContext,
   WorkflowEvent,
 } from "@llamaindex/workflow";
 import { ChatMessage, ChatResponseChunk, Settings } from "llamaindex";
@@ -29,17 +30,11 @@ class WriteEvent extends WorkflowEvent<{
 class ReviewEvent extends WorkflowEvent<{ input: string }> {}
 class PublishEvent extends WorkflowEvent<{ input: string }> {}
 
-export class BlogContext {
+type BlogContext = {
   task: string;
   attempts: number;
   result: string;
-
-  constructor(task?: string, attempts?: number, result?: string) {
-    this.task = task ?? "";
-    this.attempts = attempts ?? 0;
-    this.result = result ?? "";
-  }
-}
+};
 
 export const createWorkflow = ({
   chatHistory,
@@ -83,11 +78,11 @@ export const createWorkflow = ({
 
     if (decision !== "publish") {
       return new ResearchEvent({
-        input: `Research for this task: ${ev.data.message.toString()}`,
+        input: `Research for this task: ${JSON.stringify(context.data.task)}`,
       });
     } else {
       return new PublishEvent({
-        input: `Publish content based on the chat history\n${chatHistoryStr}\n\n and task: ${ev.data.message.toString()}`,
+        input: `Publish content based on the chat history\n${chatHistoryStr}\n\n and task: ${context.data.task}`,
       });
     }
   };
@@ -117,7 +112,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     context: HandlerContext<BlogContext>,
     ev: ResearchEvent,
   ) => {
-    const researcher = await createResearcher(chatHistory, params);
+    const researcher = await createResearcher(chatHistory);
     const researchRes = await runAgent(context, researcher, {
       displayName: "Researcher",
       message: ev.data.input,
@@ -125,7 +120,9 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     const researchResult = researchRes?.data;
 
     return new WriteEvent({
-      input: `Write a blog post given this task: ${context.data.task} using this research content: ${researchResult}`,
+      input: `Write a blog post given this task: ${JSON.stringify(
+        context.data.task,
+      )} using this research content: ${researchResult}`,
       isGood: false,
     });
   };
@@ -272,6 +269,21 @@ Decision (respond with either 'not_publish' or 'publish'):`;
     },
     publish,
   );
+
+  // Overload run method to initialize the context
+  workflow.run = function (
+    input: AgentInput,
+  ): WorkflowContext<
+    AgentInput,
+    string | AsyncGenerator<boolean | ChatResponseChunk>,
+    BlogContext
+  > {
+    return Workflow.prototype.run.call(workflow, new StartEvent(input), {
+      task: input.message.toString(),
+      attempts: 0,
+      result: "",
+    });
+  };
 
   return workflow;
 };

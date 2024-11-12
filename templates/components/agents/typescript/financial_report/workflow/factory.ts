@@ -18,6 +18,15 @@ export async function createWorkflow(options: {
   const codeInterpreterTool = tools.find(
     (tool) => tool.metadata.name === "interpreter",
   );
+  if (!queryEngineTools?.length) {
+    throw new Error("Query engine tools array must not be empty");
+  }
+  if (!documentGeneratorTool) {
+    throw new Error("Document generator tool not found");
+  }
+  if (!codeInterpreterTool) {
+    throw new Error("Code interpreter tool not found");
+  }
 
   return new FinancialReportWorkflow({
     chatHistory: options.chatHistory,

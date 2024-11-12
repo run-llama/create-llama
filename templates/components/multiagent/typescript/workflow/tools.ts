@@ -225,12 +225,12 @@ export const callSingleTool = async (
 class ChatWithToolsResponse {
   toolCalls: ToolCall[];
   toolCallMessage?: ChatMessage;
-  responseGenerator?: AsyncGenerator<ChatMessage>;
+  responseGenerator?: AsyncGenerator<ChatResponseChunk>;
 
   constructor(options: {
     toolCalls: ToolCall[];
     toolCallMessage?: ChatMessage;
-    responseGenerator?: AsyncGenerator<ChatMessage>;
+    responseGenerator?: AsyncGenerator<ChatResponseChunk>;
   }) {
     this.toolCalls = options.toolCalls;
     this.toolCallMessage = options.toolCallMessage;
@@ -256,7 +256,7 @@ class ChatWithToolsResponse {
     }
     let fullResponse = "";
     for await (const chunk of this.responseGenerator) {
-      fullResponse += chunk.content;
+      fullResponse += chunk.delta;
     }
     return {
       role: "assistant",
@@ -350,7 +350,7 @@ export const chatWithTools = async (
 
   return new ChatWithToolsResponse({
     toolCalls: [],
-    responseGenerator: generator as AsyncGenerator<ChatMessage>,
+    responseGenerator: generator as AsyncGenerator<ChatResponseChunk>,
   });
 };
 
