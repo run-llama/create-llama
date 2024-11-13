@@ -7,7 +7,6 @@ import { getOnline } from "./helpers/is-online";
 import { isWriteable } from "./helpers/is-writeable";
 import { makeDir } from "./helpers/make-dir";
 
-import fs from "fs";
 import terminalLink from "terminal-link";
 import type { InstallTemplateArgs, TemplateObservability } from "./helpers";
 import { installTemplate } from "./helpers";
@@ -92,11 +91,10 @@ export async function createApp({
 
   if (frontend) {
     // install backend
-    const backendRoot = path.join(root, "backend");
-    await makeDir(backendRoot);
-    await installTemplate({ ...args, root: backendRoot, backend: true });
+    await makeDir(root);
+    await installTemplate({ ...args, root: root, backend: true });
     // install frontend
-    const frontendRoot = path.join(root, "frontend");
+    const frontendRoot = path.join(root, ".frontend");
     await makeDir(frontendRoot);
     await installTemplate({
       ...args,
@@ -105,11 +103,6 @@ export async function createApp({
       customApiPath: `http://localhost:${externalPort ?? 8000}/api/chat`,
       backend: false,
     });
-    // copy readme for fullstack
-    await fs.promises.copyFile(
-      path.join(templatesDir, "README-fullstack.md"),
-      path.join(root, "README.md"),
-    );
   } else {
     await installTemplate({ ...args, backend: true });
   }
