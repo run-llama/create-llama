@@ -244,6 +244,7 @@ export class FinancialReportWorkflow extends Workflow<
       new AgentRunEvent({
         agent: "Analyst",
         text: `Starting analysis`,
+        type: "text",
       }),
     );
     // Request by workflow LLM, input is a list of tool calls

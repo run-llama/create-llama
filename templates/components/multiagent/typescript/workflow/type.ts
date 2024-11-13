@@ -21,16 +21,4 @@ export class AgentRunEvent extends WorkflowEvent<{
   text: string;
   type: AgentRunEventType;
   data?: AgentRunEventData;
-}> {
-  constructor(options: {
-    agent: string;
-    text: string;
-    type?: AgentRunEventType;
-    data?: AgentRunEventData;
-  }) {
-    super({
-      ...options,
-      type: options.type || "text",
-    });
-  }
-}
+}> {}

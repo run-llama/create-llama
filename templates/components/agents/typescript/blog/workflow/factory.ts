@@ -139,6 +139,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
         new AgentRunEvent({
           agent: "writer",
           text: `Too many attempts (${MAX_ATTEMPTS}) to write the blog post. Proceeding with the current version.`,
+          type: "text",
         }),
       );
     }
@@ -184,6 +185,7 @@ Decision (respond with either 'not_publish' or 'publish'):`;
         text: `The post is ${postIsGood ? "" : "not "}good enough for publishing. Sending back to the writer${
           postIsGood ? " for publication." : "."
         }`,
+        type: "text",
       }),
     );
     if (postIsGood) {
