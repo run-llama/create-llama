@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.3.12
+
+### Patch Changes
+
+- 6edea6a: Optimize generated workflow code for Python
+- 8431b78: Optimize Typescript multi-agent code
+- 8431b78: Add form filling use case (Typescript)
+
 ## 0.3.11
 
 ### Patch Changes
