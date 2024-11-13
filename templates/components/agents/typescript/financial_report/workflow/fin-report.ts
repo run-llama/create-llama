@@ -280,6 +280,7 @@ export class FinancialReportWorkflow extends Workflow<
           input: this.memory.getMessages(),
         });
       } else {
+        this.memory.put(toolCallResponse.toolCallMessage);
         toolCalls = toolCallResponse.toolCalls;
       }
     }
