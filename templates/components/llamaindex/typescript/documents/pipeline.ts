@@ -3,8 +3,10 @@ import {
   IngestionPipeline,
   Settings,
   SimpleNodeParser,
+  storageContextFromDefaults,
   VectorStoreIndex,
 } from "llamaindex";
+import { STORAGE_CACHE_DIR } from "../../engine/shared";
 
 export async function runPipeline(
   currentIndex: VectorStoreIndex | null,
@@ -28,11 +30,16 @@ export async function runPipeline(
     return documents.map((document) => document.id_);
   } else {
     // Initialize a new index with the documents
-    const newIndex = await VectorStoreIndex.fromDocuments(documents);
-    newIndex.storageContext.docStore.persist();
     console.log(
       "Got empty index, created new index with the uploaded documents",
     );
+    const storageContext = await storageContextFromDefaults({
+      persistDir: STORAGE_CACHE_DIR,
+    });
+    const newIndex = await VectorStoreIndex.fromDocuments(documents, {
+      storageContext,
+    });
+    newIndex.storageContext.docStore.persist(STORAGE_CACHE_DIR);
     return documents.map((document) => document.id_);
   }
 }
