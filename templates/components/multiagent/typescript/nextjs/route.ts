@@ -1,11 +1,14 @@
 import { initObservability } from "@/app/observability";
-import { StopEvent } from "@llamaindex/core/workflow";
-import { Message, StreamingTextResponse } from "ai";
-import { ChatResponseChunk } from "llamaindex";
+import { StreamingTextResponse, type Message } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
+import {
+  convertToChatHistory,
+  isValidMessages,
+  retrieveMessageContent,
+} from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
-import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
+import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 initObservability();
 initSettings();
@@ -16,9 +19,8 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data?: any } = body;
-    const userMessage = messages.pop();
-    if (!messages || !userMessage || userMessage.role !== "user") {
+    const { messages }: { messages: Message[]; data?: any } = body;
+    if (!isValidMessages(messages)) {
       return NextResponse.json(
         {
           error:
@@ -28,20 +30,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const agent = createWorkflow(messages, data);
-    // TODO: fix type in agent.run in LITS
-    const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
-      userMessage.content,
-    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
-    // convert the workflow events to a vercel AI stream data object
-    const agentStreamData = await workflowEventsToStreamData(
-      agent.streamEvents(),
-    );
-    // convert the workflow result to a vercel AI content stream
-    const stream = toDataStream(result, {
-      onFinal: () => agentStreamData.close(),
+    const chatHistory = convertToChatHistory(messages);
+    const userMessageContent = retrieveMessageContent(messages);
+
+    const workflow = await createWorkflow({ chatHistory });
+
+    const context = workflow.run({
+      message: userMessageContent,
+      streaming: true,
     });
-    return new StreamingTextResponse(stream, {}, agentStreamData);
+    const { stream, dataStream } =
+      await createStreamFromWorkflowContext(context);
+
+    // Return the two streams in one response
+    return new StreamingTextResponse(stream, {}, dataStream);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(

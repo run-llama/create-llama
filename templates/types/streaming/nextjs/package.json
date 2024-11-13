@@ -18,6 +18,7 @@
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.1.0",
+    "@llamaindex/chat-ui": "0.0.7",
     "ai": "3.3.42",
     "ajv": "^8.12.0",
     "class-variance-authority": "^0.7.0",
@@ -29,6 +30,7 @@
     "llamaindex": "0.8.2",
     "lucide-react": "^0.294.0",
     "next": "^14.2.4",
+    "papaparse": "^5.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "supports-color": "^8.1.1",
@@ -36,14 +38,15 @@
     "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
     "vaul": "^0.9.1",
-    "marked": "^14.1.2",
-    "@llamaindex/chat-ui": "0.0.7"
+    "marked": "^14.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "@types/uuid": "^9.0.8",
+    "@llamaindex/workflow": "^0.0.3",
+    "@types/papaparse": "^5.3.15",
     "autoprefixer": "^10.4.16",
     "cross-env": "^7.0.3",
     "eslint": "^8.55.0",

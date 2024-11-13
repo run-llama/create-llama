@@ -1,36 +1,34 @@
-import { StopEvent } from "@llamaindex/core/workflow";
 import { Message, streamToResponse } from "ai";
 import { Request, Response } from "express";
-import { ChatResponseChunk } from "llamaindex";
+import {
+  convertToChatHistory,
+  retrieveMessageContent,
+} from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
-import { toDataStream, workflowEventsToStreamData } from "./workflow/stream";
+import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { messages, data }: { messages: Message[]; data?: any } = req.body;
-    const userMessage = messages.pop();
-    if (!messages || !userMessage || userMessage.role !== "user") {
+    const { messages }: { messages: Message[] } = req.body;
+    if (!messages || messages.length === 0) {
       return res.status(400).json({
-        error:
-          "messages are required in the request body and the last message must be from the user",
+        error: "messages are required in the request body",
       });
     }
+    const chatHistory = convertToChatHistory(messages);
+    const userMessageContent = retrieveMessageContent(messages);
 
-    const agent = createWorkflow(messages, data);
-    const result = agent.run<AsyncGenerator<ChatResponseChunk>>(
-      userMessage.content,
-    ) as unknown as Promise<StopEvent<AsyncGenerator<ChatResponseChunk>>>;
+    const workflow = await createWorkflow({ chatHistory });
 
-    // convert the workflow events to a vercel AI stream data object
-    const agentStreamData = await workflowEventsToStreamData(
-      agent.streamEvents(),
-    );
-    // convert the workflow result to a vercel AI content stream
-    const stream = toDataStream(result, {
-      onFinal: () => agentStreamData.close(),
+    const context = workflow.run({
+      message: userMessageContent,
+      streaming: true,
     });
 
-    return streamToResponse(stream, res, {}, agentStreamData);
+    const { stream, dataStream } =
+      await createStreamFromWorkflowContext(context);
+
+    return streamToResponse(stream, res, {}, dataStream);
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({

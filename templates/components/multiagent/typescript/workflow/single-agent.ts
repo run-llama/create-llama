@@ -1,22 +1,21 @@
 import {
-  Context,
+  HandlerContext,
   StartEvent,
   StopEvent,
   Workflow,
   WorkflowEvent,
-} from "@llamaindex/core/workflow";
+} from "@llamaindex/workflow";
 import {
   BaseToolWithCall,
   ChatMemoryBuffer,
   ChatMessage,
-  ChatResponse,
   ChatResponseChunk,
+  QueryEngineTool,
   Settings,
   ToolCall,
   ToolCallLLM,
-  ToolCallLLMMessageOptions,
-  callTool,
 } from "llamaindex";
+import { callTools, chatWithTools } from "./tools";
 import { AgentInput, AgentRunEvent } from "./type";
 
 class InputEvent extends WorkflowEvent<{
@@ -27,11 +26,23 @@ class ToolCallEvent extends WorkflowEvent<{
   toolCalls: ToolCall[];
 }> {}
 
-export class FunctionCallingAgent extends Workflow {
+type FunctionCallingAgentContextData = {
+  streaming: boolean;
+};
+
+export type FunctionCallingAgentInput = AgentInput & {
+  displayName: string;
+};
+
+export class FunctionCallingAgent extends Workflow<
+  FunctionCallingAgentContextData,
+  FunctionCallingAgentInput,
+  string | AsyncGenerator<boolean | ChatResponseChunk<object>>
+> {
   name: string;
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
-  tools: BaseToolWithCall[];
+  tools: BaseToolWithCall[] | QueryEngineTool[];
   systemPrompt?: string;
   writeEvents: boolean;
   role?: string;
@@ -53,7 +64,9 @@ export class FunctionCallingAgent extends Workflow {
     });
     this.name = options?.name;
     this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
-    this.checkToolCallSupport();
+    if (!(this.llm instanceof ToolCallLLM)) {
+      throw new Error("LLM is not a ToolCallLLM");
+    }
     this.memory = new ChatMemoryBuffer({
       llm: this.llm,
       chatHistory: options.chatHistory,
@@ -64,175 +77,103 @@ export class FunctionCallingAgent extends Workflow {
     this.role = options?.role;
 
     // add steps
-    this.addStep(StartEvent<AgentInput>, this.prepareChatHistory, {
-      outputs: InputEvent,
-    });
-    this.addStep(InputEvent, this.handleLLMInput, {
-      outputs: [ToolCallEvent, StopEvent],
-    });
-    this.addStep(ToolCallEvent, this.handleToolCalls, {
-      outputs: InputEvent,
-    });
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInput>],
+        outputs: [InputEvent],
+      },
+      this.prepareChatHistory,
+    );
+    this.addStep(
+      {
+        inputs: [InputEvent],
+        outputs: [ToolCallEvent, StopEvent],
+      },
+      this.handleLLMInput,
+    );
+    this.addStep(
+      {
+        inputs: [ToolCallEvent],
+        outputs: [InputEvent],
+      },
+      this.handleToolCalls,
+    );
   }
 
   private get chatHistory() {
     return this.memory.getMessages();
   }
 
-  private async prepareChatHistory(
-    ctx: Context,
+  prepareChatHistory = async (
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: StartEvent<AgentInput>,
-  ): Promise<InputEvent> {
-    const { message, streaming } = ev.data.input;
-    ctx.set("streaming", streaming);
+  ): Promise<InputEvent> => {
+    const { message, streaming } = ev.data;
+    ctx.data.streaming = streaming ?? false;
     this.writeEvent(`Start to work on: ${message}`, ctx);
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
     this.memory.put({ role: "user", content: message });
     return new InputEvent({ input: this.chatHistory });
-  }
+  };
 
-  private async handleLLMInput(
-    ctx: Context,
+  handleLLMInput = async (
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: InputEvent,
-  ): Promise<StopEvent<string | AsyncGenerator> | ToolCallEvent> {
-    if (ctx.get("streaming")) {
-      return await this.handleLLMInputStream(ctx, ev);
+  ): Promise<StopEvent<string | AsyncGenerator> | ToolCallEvent> => {
+    const toolCallResponse = await chatWithTools(
+      this.llm,
+      this.tools,
+      this.chatHistory,
+    );
+    if (toolCallResponse.toolCallMessage) {
+      this.memory.put(toolCallResponse.toolCallMessage);
     }
 
-    const result = await this.llm.chat({
-      messages: this.chatHistory,
-      tools: this.tools,
-    });
-    this.memory.put(result.message);
-
-    const toolCalls = this.getToolCallsFromResponse(result);
-    if (toolCalls.length) {
-      return new ToolCallEvent({ toolCalls });
+    if (toolCallResponse.hasToolCall()) {
+      return new ToolCallEvent({ toolCalls: toolCallResponse.toolCalls });
     }
-    this.writeEvent("Finished task", ctx);
-    return new StopEvent({ result: result.message.content.toString() });
-  }
 
-  private async handleLLMInputStream(
-    context: Context,
-    ev: InputEvent,
-  ): Promise<StopEvent<AsyncGenerator> | ToolCallEvent> {
-    const { llm, tools, memory } = this;
-    const llmArgs = { messages: this.chatHistory, tools };
-
-    const responseGenerator = async function* () {
-      const responseStream = await llm.chat({ ...llmArgs, stream: true });
-
-      let fullResponse = null;
-      let yieldedIndicator = false;
-      for await (const chunk of responseStream) {
-        const hasToolCalls = chunk.options && "toolCall" in chunk.options;
-        if (!hasToolCalls) {
-          if (!yieldedIndicator) {
-            yield false;
-            yieldedIndicator = true;
-          }
-          yield chunk;
-        } else if (!yieldedIndicator) {
-          yield true;
-          yieldedIndicator = true;
-        }
-
-        fullResponse = chunk;
+    if (ctx.data.streaming) {
+      if (!toolCallResponse.responseGenerator) {
+        throw new Error("No streaming response");
       }
-
-      if (fullResponse?.options && Object.keys(fullResponse.options).length) {
-        memory.put({
-          role: "assistant",
-          content: "",
-          options: fullResponse.options,
-        });
-        yield fullResponse;
-      }
-    };
-
-    const generator = responseGenerator();
-    const isToolCall = await generator.next();
-    if (isToolCall.value) {
-      const fullResponse = await generator.next();
-      const toolCalls = this.getToolCallsFromResponse(
-        fullResponse.value as ChatResponseChunk<ToolCallLLMMessageOptions>,
-      );
-      return new ToolCallEvent({ toolCalls });
+      return new StopEvent(toolCallResponse.responseGenerator);
     }
 
-    this.writeEvent("Finished task", context);
-    return new StopEvent({ result: generator });
-  }
+    const fullResponse = await toolCallResponse.asFullResponse();
+    this.memory.put(fullResponse);
+    return new StopEvent(fullResponse.content.toString());
+  };
 
-  private async handleToolCalls(
-    ctx: Context,
+  handleToolCalls = async (
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: ToolCallEvent,
-  ): Promise<InputEvent> {
+  ): Promise<InputEvent> => {
     const { toolCalls } = ev.data;
 
-    const toolMsgs: ChatMessage[] = [];
-
-    for (const call of toolCalls) {
-      const targetTool = this.tools.find(
-        (tool) => tool.metadata.name === call.name,
-      );
-      // TODO: make logger optional in callTool in framework
-      const toolOutput = await callTool(targetTool, call, {
-        log: () => {},
-        error: (...args: unknown[]) => {
-          console.error(`[Tool ${call.name} Error]:`, ...args);
-        },
-        warn: () => {},
-      });
-      toolMsgs.push({
-        content: JSON.stringify(toolOutput.output),
-        role: "user",
-        options: {
-          toolResult: {
-            result: toolOutput.output,
-            isError: toolOutput.isError,
-            id: call.id,
-          },
-        },
-      });
-    }
+    const toolMsgs = await callTools({
+      tools: this.tools,
+      toolCalls,
+      ctx,
+      agentName: this.name,
+    });
 
     for (const msg of toolMsgs) {
       this.memory.put(msg);
     }
 
     return new InputEvent({ input: this.memory.getMessages() });
-  }
+  };
 
-  private writeEvent(msg: string, context: Context) {
+  writeEvent = (
+    msg: string,
+    ctx: HandlerContext<FunctionCallingAgentContextData>,
+  ) => {
     if (!this.writeEvents) return;
-    context.writeEventToStream({
-      data: new AgentRunEvent({ name: this.name, msg }),
-    });
-  }
-
-  private checkToolCallSupport() {
-    const { supportToolCall } = this.llm as ToolCallLLM;
-    if (!supportToolCall) throw new Error("LLM does not support tool calls");
-  }
-
-  private getToolCallsFromResponse(
-    response:
-      | ChatResponse<ToolCallLLMMessageOptions>
-      | ChatResponseChunk<ToolCallLLMMessageOptions>,
-  ): ToolCall[] {
-    let options;
-    if ("message" in response) {
-      options = response.message.options;
-    } else {
-      options = response.options;
-    }
-    if (options && "toolCall" in options) {
-      return options.toolCall as ToolCall[];
-    }
-    return [];
-  }
+    ctx.sendEvent(
+      new AgentRunEvent({ agent: this.name, text: msg, type: "text" }),
+    );
+  };
 }
