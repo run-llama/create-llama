@@ -1,1 +1,1 @@
-export const STORAGE_CACHE_DIR = "./cache";
+export const STORAGE_CACHE_DIR = process.env.STORAGE_CACHE_DIR;

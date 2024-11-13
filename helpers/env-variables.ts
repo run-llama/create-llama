@@ -217,7 +217,13 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
         },
       ];
     default:
-      return [];
+      return [
+        {
+          name: "STORAGE_CACHE_DIR",
+          description: "The directory to store the local storage cache.",
+          value: ".cache",
+        },
+      ];
   }
 };
 

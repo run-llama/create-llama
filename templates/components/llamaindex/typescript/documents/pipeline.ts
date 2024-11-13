@@ -7,8 +7,6 @@ import {
   VectorStoreIndex,
 } from "llamaindex";
 
-const DEFAULT_CACHE_DIR = ".cache";
-
 export async function runPipeline(
   currentIndex: VectorStoreIndex | null,
   documents: Document[],
@@ -34,14 +32,17 @@ export async function runPipeline(
     console.log(
       "Got empty index, created new index with the uploaded documents",
     );
-
+    const persistDir = process.env.STORAGE_CACHE_DIR;
+    if (!persistDir) {
+      throw new Error("STORAGE_CACHE_DIR environment variable is required!");
+    }
     const storageContext = await storageContextFromDefaults({
-      persistDir: DEFAULT_CACHE_DIR,
+      persistDir,
     });
     const newIndex = await VectorStoreIndex.fromDocuments(documents, {
       storageContext,
     });
-    newIndex.storageContext.docStore.persist(DEFAULT_CACHE_DIR);
+    await newIndex.storageContext.docStore.persist();
     return documents.map((document) => document.id_);
   }
 }
