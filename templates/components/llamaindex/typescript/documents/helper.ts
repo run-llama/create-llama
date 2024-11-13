@@ -13,7 +13,7 @@ const MIME_TYPE_TO_EXT: Record<string, string> = {
     "docx",
 };
 
-const UPLOADED_FOLDER = "output/uploaded";
+export const UPLOADED_FOLDER = "output/uploaded";
 
 export async function storeAndParseFile(
   name: string,

@@ -1,5 +1,11 @@
 import { JSONValue, Message } from "ai";
-import { MessageContent, MessageContentDetail } from "llamaindex";
+import {
+  ChatMessage,
+  MessageContent,
+  MessageContentDetail,
+  MessageType,
+} from "llamaindex";
+import { UPLOADED_FOLDER } from "../documents/helper";
 
 export type DocumentFileType = "csv" | "pdf" | "txt" | "docx";
 
@@ -58,6 +64,45 @@ export function retrieveMessageContent(messages: Message[]): MessageContent {
   ];
 }
 
+export function convertToChatHistory(messages: Message[]): ChatMessage[] {
+  if (!messages || !Array.isArray(messages)) {
+    return [];
+  }
+  const agentHistory = retrieveAgentHistoryMessage(messages);
+  if (agentHistory) {
+    const previousMessages = messages.slice(0, -1);
+    return [...previousMessages, agentHistory].map((msg) => ({
+      role: msg.role as MessageType,
+      content: msg.content,
+    }));
+  }
+  return messages.map((msg) => ({
+    role: msg.role as MessageType,
+    content: msg.content,
+  }));
+}
+
+function retrieveAgentHistoryMessage(
+  messages: Message[],
+  maxAgentMessages = 10,
+): ChatMessage | null {
+  const agentAnnotations = getAnnotations<{ agent: string; text: string }>(
+    messages,
+    { role: "assistant", type: "agent" },
+  ).slice(-maxAgentMessages);
+
+  if (agentAnnotations.length > 0) {
+    const messageContent =
+      "Here is the previous conversation of agents:\n" +
+      agentAnnotations.map((annotation) => annotation.data.text).join("\n");
+    return {
+      role: "assistant",
+      content: messageContent,
+    };
+  }
+  return null;
+}
+
 function getFileContent(file: DocumentFile): string {
   let defaultContent = `=====File: ${file.name}=====\n`;
   // Include file URL if it's available
@@ -83,6 +128,10 @@ function getFileContent(file: DocumentFile): string {
   // Include sandbox file paths
   const sandboxFilePath = `/tmp/${file.name}`;
   defaultContent += `Sandbox file path (instruction: only use sandbox path for artifact or code interpreter tool): ${sandboxFilePath}\n`;
+
+  // Include local file path
+  const localFilePath = `${UPLOADED_FOLDER}/${file.name}`;
+  defaultContent += `Local file path (instruction: use for local tool that requires a local path): ${localFilePath}\n`;
 
   return defaultContent;
 }
@@ -127,13 +176,10 @@ function retrieveLatestArtifact(messages: Message[]): MessageContentDetail[] {
 }
 
 function convertAnnotations(messages: Message[]): MessageContentDetail[] {
-  // annotations from the last user message that has annotations
-  const annotations: Annotation[] =
-    messages
-      .slice()
-      .reverse()
-      .find((message) => message.role === "user" && message.annotations)
-      ?.annotations?.map(getValidAnnotation) || [];
+  // get all annotations from user messages
+  const annotations: Annotation[] = messages
+    .filter((message) => message.role === "user" && message.annotations)
+    .flatMap((message) => message.annotations?.map(getValidAnnotation) || []);
   if (annotations.length === 0) return [];
 
   const content: MessageContentDetail[] = [];
