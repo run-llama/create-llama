@@ -13,7 +13,6 @@ from app.observability import init_observability
 from app.settings import init_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -34,28 +33,26 @@ if environment == "dev":
         allow_headers=["*"],
     )
 
-    # Redirect to documentation page when accessing base URL
-    @app.get("/")
-    async def redirect_to_docs():
-        return RedirectResponse(url="/docs")
 
-
-def mount_static_files(directory, path):
+def mount_static_files(directory, path, html=False):
     if os.path.exists(directory):
         logger.info(f"Mounting static files '{directory}' at '{path}'")
         app.mount(
             path,
-            StaticFiles(directory=directory, check_dir=False),
+            StaticFiles(directory=directory, check_dir=False, html=html),
             name=f"{directory}-static",
         )
 
+
+app.include_router(api_router, prefix="/api")
 
 # Mount the data files to serve the file viewer
 mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
+# Mount static files from the frontend
+mount_static_files("static", "/", html=True)
 
-app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     app_host = os.getenv("APP_HOST", "0.0.0.0")

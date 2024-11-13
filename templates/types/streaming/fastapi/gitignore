@@ -3,3 +3,4 @@ storage
 .env
 output
 .frontend/
+static/
