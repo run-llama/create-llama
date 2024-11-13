@@ -1,11 +1,19 @@
 import { BaseToolWithCall } from "llamaindex";
 import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
 import {
   DocumentGenerator,
   DocumentGeneratorParams,
 } from "./document-generator";
 import { DuckDuckGoSearchTool, DuckDuckGoToolParams } from "./duckduckgo";
+import {
+  ExtractMissingCellsParams,
+  ExtractMissingCellsTool,
+  FillMissingCellsParams,
+  FillMissingCellsTool,
+} from "./form-filling";
 import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
@@ -54,6 +62,12 @@ const toolFactory: Record<string, ToolCreator> = {
   document_generator: async (config: unknown) => {
     return [new DocumentGenerator(config as DocumentGeneratorParams)];
   },
+  form_filling: async (config: unknown) => {
+    return [
+      new ExtractMissingCellsTool(config as ExtractMissingCellsParams),
+      new FillMissingCellsTool(config as FillMissingCellsParams),
+    ];
+  },
 };
 
 async function createLocalTools(
@@ -69,4 +83,20 @@ async function createLocalTools(
   }
 
   return tools;
+}
+
+export async function getConfiguredTools(
+  configPath?: string,
+): Promise<BaseToolWithCall[]> {
+  const configFile = path.join(configPath ?? "config", "tools.json");
+  const toolConfig = JSON.parse(await fs.readFile(configFile, "utf8"));
+  const tools = await createTools(toolConfig);
+  return tools;
+}
+
+export async function getTool(
+  toolName: string,
+): Promise<BaseToolWithCall | undefined> {
+  const tools = await getConfiguredTools();
+  return tools.find((tool) => tool.metadata.name === toolName);
 }

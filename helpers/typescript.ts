@@ -136,17 +136,20 @@ export const installTSTemplate = async ({
     // Copy agents use case code for multiagent template
     if (agents) {
       console.log("\nCopying agent:", agents, "\n");
+      const useCasePath = path.join(compPath, "agents", "typescript", agents);
+      const agentsCodePath = path.join(useCasePath, "workflow");
 
-      const agentsCodePath = path.join(
-        compPath,
-        "agents",
-        "typescript",
-        agents,
-      );
-
+      // Copy agent codes
       await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
         parents: true,
         cwd: agentsCodePath,
+        rename: assetRelocator,
+      });
+
+      // Copy use case files to project root
+      await copy("*.*", path.join(root), {
+        parents: true,
+        cwd: useCasePath,
         rename: assetRelocator,
       });
     } else {
