@@ -42,8 +42,7 @@ export async function POST(request: NextRequest) {
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
 
-    // Return using the new Response API
-    // TODO: StreamingTextResponse has been deprecated
+    // Return the two streams in one response
     return new StreamingTextResponse(stream, {}, dataStream);
   } catch (error) {
     console.error("[LlamaIndex]", error);

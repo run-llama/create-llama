@@ -146,11 +146,11 @@ export const installTSTemplate = async ({
         rename: assetRelocator,
       });
 
-      // Copy attachments for form filling agent
-      const attachmentPath = path.join(useCasePath, "attachments");
-      await copy("**", path.join(root), {
+      // Copy use case files to project root
+      await copy("*.*", path.join(root), {
         parents: true,
-        cwd: attachmentPath,
+        cwd: useCasePath,
+        rename: assetRelocator,
       });
     } else {
       console.log(
