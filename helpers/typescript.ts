@@ -58,11 +58,9 @@ export const installTSTemplate = async ({
       console.log("\nUsing static site generation\n");
     } else {
       if (vectorDb === "milvus") {
-        nextConfigJson.serverComponentsExternalPackages =
-          nextConfigJson.serverComponentsExternalPackages ?? [];
-        nextConfigJson.serverComponentsExternalPackages.push(
-          "@zilliz/milvus2-sdk-node",
-        );
+        nextConfigJson.serverExternalPackages =
+          nextConfigJson.serverExternalPackages ?? [];
+        nextConfigJson.serverExternalPackages.push("@zilliz/milvus2-sdk-node");
       }
     }
     await fs.writeFile(
