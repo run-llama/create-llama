@@ -87,11 +87,11 @@ function getArtifactVersion(
   let versionIndex = 1;
   for (const m of messages) {
     const toolData = m.annotations
-      ? getAnnotationData(m.annotations, "tools")
+      ? (getAnnotationData(m.annotations, "tools") as unknown as ToolData[])
       : null;
 
-    if (toolData?.some((t: any) => t.toolCall.name === "artifact")) {
-      if (m.id === messageId) {
+    if (toolData?.some((t) => t.toolCall.name === "artifact")) {
+      if ("id" in m && m.id === messageId) {
         return versionIndex;
       }
       versionIndex++;
