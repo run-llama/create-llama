@@ -1,6 +1,4 @@
-import argparse
 import os
-from typing import Optional
 
 
 def check_npm_installed():
@@ -34,19 +32,3 @@ def dev():
     """
     print("===> Starting the development server")
     os.system("poetry run python main.py")
-
-
-def main(command: Optional[str]):
-    if command == "build":
-        build()
-    elif command == "dev":
-        dev()
-    else:
-        raise ValueError(f"Invalid command: {command}")
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("command", type=str, nargs="?")
-    args = parser.parse_args()
-    main(args.command)

@@ -91,10 +91,11 @@ export async function createApp({
 
   if (frontend) {
     // install backend
-    await makeDir(root);
     await installTemplate({ ...args, root: root, backend: true });
     // install frontend
-    const frontendRoot = path.join(root, ".frontend");
+    // TODO: Update Express to serve static files from frontend
+    const frontendFolder = framework === "fastapi" ? ".frontend" : "frontend";
+    const frontendRoot = path.join(root, frontendFolder);
     await makeDir(frontendRoot);
     await installTemplate({
       ...args,
