@@ -9,9 +9,9 @@ import { DATA_DIR } from "../../chat/engine/loader";
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { slug: string[] } },
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  const slug = params.slug;
+  const slug = (await params).slug;
 
   if (!slug) {
     return NextResponse.json({ detail: "Missing file slug" }, { status: 400 });
@@ -21,7 +21,7 @@ export async function GET(
     return NextResponse.json({ detail: "Invalid file path" }, { status: 400 });
   }
 
-  const [folder, ...pathTofile] = params.slug; // data, file.pdf
+  const [folder, ...pathTofile] = slug; // data, file.pdf
   const allowedFolders = ["data", "output"];
 
   if (!allowedFolders.includes(folder)) {
