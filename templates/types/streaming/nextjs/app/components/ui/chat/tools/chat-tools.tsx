@@ -1,50 +1,40 @@
 import {
-  getAnnotationData,
+  Message,
   MessageAnnotation,
-  useChatMessage,
+  getAnnotationData,
   useChatUI,
 } from "@llamaindex/chat-ui";
-import { JSONValue, Message } from "ai";
+import { JSONValue } from "ai";
 import { useMemo } from "react";
 import { Artifact, CodeArtifact } from "./artifact";
 import { WeatherCard, WeatherData } from "./weather-card";
 
 export function ToolAnnotations({ message }: { message: Message }) {
+  // TODO: This is a bit of a hack to get the artifact version. better to generate the version in the tool call and
+  // store it in CodeArtifact
+  const { messages } = useChatUI();
+  const artifactVersion = useMemo(
+    () => getArtifactVersion(messages, message),
+    [messages, message],
+  );
+  // Get the tool data from the message annotations
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   const toolData = annotations
     ? (getAnnotationData(annotations, "tools") as unknown as ToolData[])
     : null;
-  return toolData?.[0] ? <ChatTools data={toolData[0]} /> : null;
+  return toolData?.[0] ? (
+    <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />
+  ) : null;
 }
 
 // TODO: Used to render outputs of tools. If needed, add more renderers here.
-function ChatTools({ data }: { data: ToolData }) {
-  const { messages } = useChatUI();
-  const { message } = useChatMessage();
-
-  // build a map of message id to artifact version
-  const artifactVersionMap = useMemo(() => {
-    const map = new Map<string, number | undefined>();
-    let versionIndex = 1;
-    messages.forEach((m) => {
-      m.annotations?.forEach((annotation: any) => {
-        if (
-          typeof annotation === "object" &&
-          annotation != null &&
-          "type" in annotation &&
-          annotation.type === "tools"
-        ) {
-          const data = annotation.data as ToolData;
-          if (data?.toolCall?.name === "artifact") {
-            map.set(m.id, versionIndex);
-            versionIndex++;
-          }
-        }
-      });
-    });
-    return map;
-  }, [messages]);
-
+function ChatTools({
+  data,
+  artifactVersion,
+}: {
+  data: ToolData;
+  artifactVersion: number | undefined;
+}) {
   if (!data) return null;
   const { toolCall, toolOutput } = data;
 
@@ -66,7 +56,7 @@ function ChatTools({ data }: { data: ToolData }) {
       return (
         <Artifact
           artifact={toolOutput.output as CodeArtifact}
-          version={artifactVersionMap.get(message.id)}
+          version={artifactVersion}
         />
       );
     default:
@@ -87,3 +77,25 @@ type ToolData = {
     isError: boolean;
   };
 };
+
+function getArtifactVersion(
+  messages: Message[],
+  message: Message,
+): number | undefined {
+  const messageId = "id" in message ? message.id : undefined;
+  if (!messageId) return undefined;
+  let versionIndex = 1;
+  for (const m of messages) {
+    const toolData = m.annotations
+      ? (getAnnotationData(m.annotations, "tools") as unknown as ToolData[])
+      : null;
+
+    if (toolData?.some((t) => t.toolCall.name === "artifact")) {
+      if ("id" in m && m.id === messageId) {
+        return versionIndex;
+      }
+      versionIndex++;
+    }
+  }
+  return undefined;
+}

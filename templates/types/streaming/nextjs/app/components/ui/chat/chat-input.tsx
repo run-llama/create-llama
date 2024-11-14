@@ -1,7 +1,7 @@
 "use client";
 
 import { ChatInput, useChatUI, useFile } from "@llamaindex/chat-ui";
-import { DocumentPreview, ImagePreview } from "@llamaindex/chat-ui/widgets";
+import { DocumentInfo, ImagePreview } from "@llamaindex/chat-ui/widgets";
 import { LlamaCloudSelector } from "./custom/llama-cloud-selector";
 import { useClientConfig } from "./hooks/use-config";
 
@@ -56,9 +56,10 @@ export default function CustomChatInput() {
         {files.length > 0 && (
           <div className="flex gap-4 w-full overflow-auto py-2">
             {files.map((file) => (
-              <DocumentPreview
+              <DocumentInfo
                 key={file.id}
-                file={file}
+                document={{ url: file.url, sources: [] }}
+                className="mb-2 mt-2"
                 onRemove={() => removeDoc(file)}
               />
             ))}
