@@ -34,7 +34,7 @@ export async function createApp({
   communityProjectConfig,
   llamapack,
   vectorDb,
-  externalPort,
+  port,
   postInstallAction,
   dataSources,
   tools,
@@ -80,7 +80,7 @@ export async function createApp({
     communityProjectConfig,
     llamapack,
     vectorDb,
-    externalPort,
+    port,
     postInstallAction,
     dataSources,
     tools,
@@ -101,7 +101,7 @@ export async function createApp({
       ...args,
       root: frontendRoot,
       framework: "nextjs",
-      customApiPath: `http://localhost:${externalPort ?? 8000}/api/chat`,
+      customApiPath: `http://localhost:${port ?? 8000}/api/chat`,
       backend: false,
     });
   } else {

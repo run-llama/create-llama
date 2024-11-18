@@ -21,8 +21,10 @@ def build():
         "\n[bold]Installing frontend dependencies. It might take a while...[/bold]"
     )
     os.system("cd .frontend && npm i")
+
     rich.print("\n[bold]Building the frontend[/bold]")
     os.system("cd .frontend && npm run build")
+
     os.system("mkdir -p static && rm -rf static/* && cp -r .frontend/out/* static")
     rich.print(
         "\n[bold]Built frontend successfully![/bold]"

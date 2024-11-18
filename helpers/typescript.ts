@@ -241,7 +241,10 @@ export const installTSTemplate = async ({
     vectorDb,
   });
 
-  if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
+  if (
+    backend &&
+    (postInstallAction === "runApp" || postInstallAction === "dependencies")
+  ) {
     await installTSDependencies(packageJson, packageManager, isOnline);
   }
 

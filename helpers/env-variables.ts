@@ -553,7 +553,7 @@ export const createBackendEnvFile = async (
     | "framework"
     | "dataSources"
     | "template"
-    | "externalPort"
+    | "port"
     | "tools"
     | "observability"
   >,
@@ -570,7 +570,7 @@ export const createBackendEnvFile = async (
     ...getModelEnvs(opts.modelConfig),
     ...getEngineEnvs(),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework),
-    ...getFrameworkEnvs(opts.framework, opts.externalPort),
+    ...getFrameworkEnvs(opts.framework, opts.port),
     ...getToolEnvs(opts.tools),
     ...getTemplateEnvs(opts.template),
     ...getObservabilityEnvs(opts.observability),

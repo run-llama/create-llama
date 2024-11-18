@@ -1,26 +1,28 @@
 import { ChildProcess, SpawnOptions, spawn } from "child_process";
-import path from "path";
 import { TemplateFramework } from "./types";
 
 const createProcess = (
   command: string,
   args: string[],
   options: SpawnOptions,
-) => {
-  return spawn(command, args, {
-    ...options,
-    shell: true,
-  })
-    .on("exit", function (code) {
-      if (code !== 0) {
-        console.log(`Child process exited with code=${code}`);
-        process.exit(1);
-      }
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    spawn(command, args, {
+      ...options,
+      shell: true,
     })
-    .on("error", function (err) {
-      console.log("Error when running chill process: ", err);
-      process.exit(1);
-    });
+      .on("exit", function (code) {
+        if (code !== 0) {
+          console.log(`Child process exited with code=${code}`);
+          reject(code);
+        }
+        resolve();
+      })
+      .on("error", function (err) {
+        console.log("Error when running child process: ", err);
+        reject(err);
+      });
+  });
 };
 
 export function runReflexApp(
@@ -50,6 +52,21 @@ export function runFastAPIApp(appPath: string, port: number) {
   });
 }
 
+export function buildFrontend(appPath: string, framework: TemplateFramework) {
+  const packageManager = framework === "fastapi" ? "poetry" : "npm";
+  if (framework === "express") {
+    return createProcess(packageManager, ["run", "build"], {
+      stdio: "inherit",
+      cwd: appPath,
+    });
+  } else {
+    return createProcess(packageManager, ["run", "build"], {
+      stdio: "inherit",
+      cwd: appPath,
+    });
+  }
+}
+
 export function runTSApp(appPath: string, port: number) {
   return createProcess("npm", ["run", "dev"], {
     stdio: "inherit",
@@ -65,35 +82,30 @@ export async function runApp(
   framework: TemplateFramework,
   port?: number,
   externalPort?: number,
-): Promise<any> {
+): Promise<void> {
+  // Setup cleanup
   const processes: ChildProcess[] = [];
-
-  // Callback to kill all sub processes if the main process is killed
   process.on("exit", () => {
     console.log("Killing app processes...");
     processes.forEach((p) => p.kill());
   });
 
-  // Default sub app paths
-  const backendPath = path.join(appPath, "backend");
-  const frontendPath = path.join(appPath, "frontend");
-
-  if (template === "extractor") {
-    processes.push(runReflexApp(appPath, port, externalPort));
-  }
-  if (template === "streaming" || template === "multiagent") {
-    if (framework === "fastapi" || framework === "express") {
-      const backendRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
-      if (frontend) {
-        processes.push(backendRunner(backendPath, externalPort || 8000));
-        processes.push(runTSApp(frontendPath, port || 3000));
-      } else {
-        processes.push(backendRunner(appPath, externalPort || 8000));
-      }
-    } else if (framework === "nextjs") {
-      processes.push(runTSApp(appPath, port || 3000));
+  try {
+    // Build frontend first if needed
+    if (frontend && (template === "streaming" || template === "multiagent")) {
+      await buildFrontend(appPath, framework);
     }
-  }
 
-  return Promise.all(processes);
+    // Then start the server
+    if (template === "extractor") {
+      await runReflexApp(appPath, port, externalPort);
+    } else if (template === "streaming" || template === "multiagent") {
+      const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
+      const defaultPort = framework === "nextjs" ? 3000 : 8000;
+      await appRunner(appPath, port || defaultPort);
+    }
+  } catch (error) {
+    console.error("Failed to run app:", error);
+    throw error;
+  }
 }

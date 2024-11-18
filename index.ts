@@ -333,7 +333,7 @@ async function run(): Promise<void> {
     ...answers,
     appPath: resolvedProjectPath,
     packageManager,
-    externalPort: options.externalPort,
+    port: options.port,
   });
 
   if (answers.postInstallAction === "VSCode") {
