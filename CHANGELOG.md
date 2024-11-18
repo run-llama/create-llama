@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.3.14
+
+### Patch Changes
+
+- 00f0b3a: fix: dont include user message in chat history
+- 4663dec: chore: bump react19 rc
+- 44b34fb: chore: update eslint 9, nextjs 15, react 19
+- 6925676: feat: use latest chat UI
+
 ## 0.3.13
 
 ### Patch Changes
