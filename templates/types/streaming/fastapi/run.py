@@ -8,9 +8,9 @@ def check_package_manager():
     Check for available package managers and return the preferred one.
     Returns 'pnpm' if installed, falls back to 'npm'.
     """
-    if os.system("pnpm --version > /dev/null 2>&1") == 0:
+    if os.system("pnpm --version") == 0:
         return "pnpm"
-    if os.system("npm --version > /dev/null 2>&1") == 0:
+    if os.system("npm --version") == 0:
         return "npm"
     raise SystemError(
         "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
