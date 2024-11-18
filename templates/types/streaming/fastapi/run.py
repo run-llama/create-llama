@@ -3,27 +3,32 @@ import os
 import rich
 
 
-def check_npm_installed():
+def check_package_manager():
     """
-    Check if npm is installed on the system.
+    Check for available package managers and return the preferred one.
+    Returns 'pnpm' if installed, falls back to 'npm'.
     """
-    if os.system("npm --version > /dev/null 2>&1") != 0:
-        raise SystemError("npm is not installed. Please install Node.js and npm first.")
+    if os.system("pnpm --version > /dev/null 2>&1") == 0:
+        return "pnpm"
+    if os.system("npm --version > /dev/null 2>&1") == 0:
+        return "npm"
+    raise SystemError(
+        "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
+    )
 
 
 def build():
     """
     Build the frontend and copy the static files to the backend.
     """
-    check_npm_installed()
-    # Show in bold (using rich library)
+    package_manager = check_package_manager()
     rich.print(
-        "\n[bold]Installing frontend dependencies. It might take a while...[/bold]"
+        f"\n[bold]Installing frontend dependencies using {package_manager}. It might take a while...[/bold]"
     )
-    os.system("cd .frontend && pnpm i")
+    os.system(f"cd .frontend && {package_manager} i")
 
     rich.print("\n[bold]Building the frontend[/bold]")
-    os.system("cd .frontend && pnpm build")
+    os.system(f"cd .frontend && {package_manager} run build")
 
     os.system("mkdir -p static && rm -rf static/* && cp -r .frontend/out/* static")
     rich.print(
