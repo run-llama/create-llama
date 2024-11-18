@@ -90,8 +90,6 @@ export async function runCreateLlama({
     ...dataSourceArgs,
     "--vector-db",
     vectorDb,
-    "--open-ai-key",
-    process.env.OPENAI_API_KEY,
     "--use-pnpm",
     "--port",
     port,
@@ -103,8 +101,6 @@ export async function runCreateLlama({
     tools ?? "none",
     "--observability",
     "none",
-    "--llama-cloud-key",
-    process.env.LLAMA_CLOUD_API_KEY,
   ];
 
   if (templateUI) {
