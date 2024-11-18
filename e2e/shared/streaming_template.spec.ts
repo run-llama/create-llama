@@ -35,7 +35,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
   }
 
   let port: number;
-  let externalPort: number;
   let cwd: string;
   let name: string;
   let appProcess: ChildProcess;
@@ -44,7 +43,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
 
   test.beforeAll(async () => {
     port = Math.floor(Math.random() * 10000) + 10000;
-    externalPort = port + 1;
     cwd = await createTestDir();
     const result = await runCreateLlama({
       cwd,
@@ -53,7 +51,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
       dataSource,
       vectorDb,
       port,
-      externalPort,
       postInstallAction: templatePostInstallAction,
       templateUI,
       appType,
@@ -102,7 +99,7 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
     test.skip(templatePostInstallAction !== "runApp");
     test.skip(templateFramework === "nextjs");
     const response = await request.post(
-      `http://localhost:${externalPort}/api/chat/request`,
+      `http://localhost:${port}/api/chat/request`,
       {
         data: {
           messages: [
