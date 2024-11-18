@@ -1,5 +1,6 @@
 import { blue, green } from "picocolors";
 import prompts from "prompts";
+import { isCI } from ".";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
 import { EXAMPLE_FILE } from "../helpers/datasources";
 import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
@@ -386,7 +387,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
 
   // Ask for LlamaCloud API key when using a LlamaCloud index or LlamaParse
   if (isUsingLlamaCloud || program.useLlamaParse) {
-    if (!program.llamaCloudKey) {
+    if (!program.llamaCloudKey && !isCI) {
       // if already set, don't ask again
       // Ask for LlamaCloud API key
       const { llamaCloudKey } = await prompts(

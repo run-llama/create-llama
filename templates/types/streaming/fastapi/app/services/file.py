@@ -242,13 +242,11 @@ class FileService:
         except ImportError as e:
             raise ValueError("LlamaCloudFileService is not found") from e
 
-        project_id = index._get_project_id()
-        pipeline_id = index._get_pipeline_id()
         # LlamaCloudIndex is a managed index so we can directly use the files
         upload_file = (file_name, BytesIO(file_data))
         doc_id = LLamaCloudFileService.add_file_to_pipeline(
-            project_id,
-            pipeline_id,
+            index.project.id,
+            index.pipeline.id,
             upload_file,
             custom_metadata={},
         )
