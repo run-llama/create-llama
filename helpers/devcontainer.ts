@@ -15,8 +15,8 @@ function renderDevcontainerContent(
   if (frontend) {
     devcontainerJson.postCreateCommand =
       framework === "fastapi"
-        ? "cd backend && poetry install && cd ../frontend && npm install"
-        : "cd backend && npm install && cd ../frontend && npm install";
+        ? "poetry install && poetry run build"
+        : "npm install";
   } else {
     devcontainerJson.postCreateCommand =
       framework === "fastapi" ? "poetry install" : "npm install";

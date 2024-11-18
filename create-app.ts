@@ -89,13 +89,12 @@ export async function createApp({
     agents,
   };
 
-  if (frontend) {
-    // install backend
-    await installTemplate({ ...args, root: root, backend: true });
+  // Install backend
+  await installTemplate({ ...args, backend: true });
+
+  if (frontend && framework === "fastapi") {
     // install frontend
-    // TODO: Update Express to serve static files from frontend
-    const frontendFolder = framework === "fastapi" ? ".frontend" : "frontend";
-    const frontendRoot = path.join(root, frontendFolder);
+    const frontendRoot = path.join(root, ".frontend");
     await makeDir(frontendRoot);
     await installTemplate({
       ...args,
@@ -104,8 +103,6 @@ export async function createApp({
       customApiPath: `http://localhost:${port ?? 8000}/api/chat`,
       backend: false,
     });
-  } else {
-    await installTemplate({ ...args, backend: true });
   }
 
   await writeDevcontainer(root, templatesDir, framework, frontend);

@@ -20,10 +20,10 @@ def build():
     rich.print(
         "\n[bold]Installing frontend dependencies. It might take a while...[/bold]"
     )
-    os.system("cd .frontend && npm i")
+    os.system("cd .frontend && pnpm i")
 
     rich.print("\n[bold]Building the frontend[/bold]")
-    os.system("cd .frontend && npm run build")
+    os.system("cd .frontend && pnpm build")
 
     os.system("mkdir -p static && rm -rf static/* && cp -r .frontend/out/* static")
     rich.print(

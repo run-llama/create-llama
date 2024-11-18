@@ -54,17 +54,10 @@ export function runFastAPIApp(appPath: string, port: number) {
 
 export function buildFrontend(appPath: string, framework: TemplateFramework) {
   const packageManager = framework === "fastapi" ? "poetry" : "npm";
-  if (framework === "express") {
-    return createProcess(packageManager, ["run", "build"], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-  } else {
-    return createProcess(packageManager, ["run", "build"], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-  }
+  return createProcess(packageManager, ["run", "build"], {
+    stdio: "inherit",
+    cwd: appPath,
+  });
 }
 
 export function runTSApp(appPath: string, port: number) {
