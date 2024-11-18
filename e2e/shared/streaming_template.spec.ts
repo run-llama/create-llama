@@ -22,7 +22,7 @@ const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
 
-const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
+const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
 const userMessage =
   dataSource !== "--no-files" ? "Physical standard for letters" : "Hello";
 
