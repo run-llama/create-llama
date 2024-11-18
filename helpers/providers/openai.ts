@@ -3,6 +3,7 @@ import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
+import { isCI } from "../../questions";
 import { questionHandlers } from "../../questions/utils";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
@@ -30,7 +31,7 @@ export async function askOpenAIQuestions({
     },
   };
 
-  if (!config.apiKey) {
+  if (!config.apiKey && !isCI) {
     const { key } = await prompts(
       {
         type: "text",
