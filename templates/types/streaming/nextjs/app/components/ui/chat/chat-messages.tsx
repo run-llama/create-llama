@@ -12,7 +12,7 @@ export default function CustomChatMessages() {
       <ChatMessages.List>
         {messages.map((message, index) => (
           <ChatMessage
-            key={message.id}
+            key={index}
             message={message}
             isLast={index === messages.length - 1}
           >

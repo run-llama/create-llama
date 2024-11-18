@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.13
+
+### Patch Changes
+
+- 282eaa0: Ensure that the index and document store are created when uploading a file with no available index.
+
 ## 0.3.12
 
 ### Patch Changes

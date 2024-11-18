@@ -12,7 +12,8 @@
     "format:write": "prettier --ignore-unknown --write .",
     "build": "tsup index.ts --format esm --dts",
     "start": "node dist/index.js",
-    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\""
+    "dev": "concurrently \"tsup index.ts --format esm --dts --watch\" \"nodemon --watch dist/index.js\"",
+    "lint": "eslint ."
   },
   "dependencies": {
     "ai": "3.3.42",
@@ -34,10 +35,11 @@
     "@types/cors": "^2.8.16",
     "@types/express": "^4.17.21",
     "@types/node": "^20.9.5",
+    "typescript-eslint": "^8.14.0",
     "@llamaindex/workflow": "^0.0.3",
     "@types/papaparse": "^5.3.15",
     "concurrently": "^8.2.2",
-    "eslint": "^8.54.0",
+    "eslint": "^9.14.0",
     "eslint-config-prettier": "^8.10.0",
     "nodemon": "^3.0.1",
     "prettier": "^3.2.5",

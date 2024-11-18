@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import cors from "cors";
 import "dotenv/config";
 import express, { Express, Request, Response } from "express";
