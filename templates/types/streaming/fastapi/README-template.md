@@ -21,10 +21,16 @@ Second, generate the embeddings of the documents in the `./data` directory (if t
 poetry run generate
 ```
 
-Third, run the development server:
+Third, if you want to use the app with a chat UI, you will need to build the frontend once. If not, you can skip this step:
 
 ```
-python main.py
+poetry run build
+```
+
+Finally, run the app:
+
+```
+poetry run dev
 ```
 
 The example provides two different API endpoints:
@@ -50,7 +56,7 @@ curl --location 'localhost:8000/api/chat/request' \
 
 You can start editing the API endpoints by modifying `app/api/routers/chat.py`. The endpoints auto-update as you save the file. You can delete the endpoint you're not using.
 
-Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
+If you have built the frontend, open [http://localhost:8000](http://localhost:8000) in your browser to access the chat UI. If not, open [http://localhost:8000/docs](http://localhost:8000/docs) to view the Swagger UI documentation for the API.
 
 The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
 
