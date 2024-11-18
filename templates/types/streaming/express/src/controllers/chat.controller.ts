@@ -32,7 +32,7 @@ export const chat = async (req: Request, res: Response) => {
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
-    const chatHistory: ChatMessage[] = messages as ChatMessage[];
+    const chatHistory: ChatMessage[] = messages.slice(0, -1) as ChatMessage[];
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await Settings.withCallbackManager(callbackManager, () => {
