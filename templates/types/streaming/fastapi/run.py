@@ -1,5 +1,7 @@
 import os
 
+import rich
+
 
 def check_npm_installed():
     """
@@ -14,21 +16,24 @@ def build():
     Build the frontend and copy the static files to the backend.
     """
     check_npm_installed()
-    print("\n===> Installing frontend dependencies. It might take a while...")
+    # Show in bold (using rich library)
+    rich.print(
+        "\n[bold]Installing frontend dependencies. It might take a while...[/bold]"
+    )
     os.system("cd .frontend && npm i")
-    print("\n===> Building the frontend")
+    rich.print("\n[bold]Building the frontend[/bold]")
     os.system("cd .frontend && npm run build")
     os.system("mkdir -p static && rm -rf static/* && cp -r .frontend/out/* static")
-    print(
-        "\n===> Built frontend successfully!"
-        "\n     Run: 'poetry run dev' to start the server"
-        "\n     Don't forget to update the .env file!"
+    rich.print(
+        "\n[bold]Built frontend successfully![/bold]"
+        "\n[bold]Run: 'poetry run dev' to start the app[/bold]"
+        "\n[bold]Don't forget to update the .env file![/bold]"
     )
 
 
 def dev():
     """
-    Start fastapi server.
+    Start fastapi app.
     """
-    print("===> Starting the development server")
+    rich.print("\n[bold]Starting app[/bold]")
     os.system("poetry run python main.py")

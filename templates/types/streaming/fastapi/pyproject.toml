@@ -18,6 +18,7 @@ python-dotenv = "^1.0.0"
 aiostream = "^0.5.2"
 cachetools = "^5.3.3"
 llama-index = "^0.11.17"
+rich = "^13.9.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
