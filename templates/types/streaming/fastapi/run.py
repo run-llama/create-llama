@@ -81,7 +81,7 @@ def dev():
     """
     rich.print("\n[bold]Starting app[/bold]")
     try:
-        run(["poetry", "run", "python", "main.py"], check=True, shell=True)
+        run(["poetry", "run", "python", "main.py"], check=True)
     except KeyboardInterrupt:
         rich.print("\n[bold yellow]Shutting down...[/bold yellow]")
         return
