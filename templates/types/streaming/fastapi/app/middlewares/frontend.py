@@ -23,8 +23,13 @@ class FrontendProxyMiddleware:
         self.excluded_paths = excluded_paths
         self.frontend_endpoint = frontend_endpoint
 
-    async def _request_frontend(self, request: Request, path: str):
-        async with httpx.AsyncClient() as client:
+    async def _request_frontend(
+        self,
+        request: Request,
+        path: str,
+        timeout: float = 60.0,
+    ):
+        async with httpx.AsyncClient(timeout=timeout) as client:
             url = f"{self.frontend_endpoint}/{path}"
             if request.query_params:
                 url = f"{url}?{request.query_params}"
