@@ -1,4 +1,4 @@
-import { ChildProcess, SpawnOptions, spawn } from "child_process";
+import { SpawnOptions, spawn } from "child_process";
 import { TemplateFramework } from "./types";
 
 const createProcess = (
@@ -43,18 +43,18 @@ export function runReflexApp(
   });
 }
 
-export function runFastAPIApp(appPath: string, port: number) {
-  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
-
-  return createProcess("poetry", commandArgs, {
+export function buildFrontend(appPath: string, framework: TemplateFramework) {
+  const packageManager = framework === "fastapi" ? "poetry" : "npm";
+  return createProcess(packageManager, ["run", "build"], {
     stdio: "inherit",
     cwd: appPath,
   });
 }
 
-export function buildFrontend(appPath: string, framework: TemplateFramework) {
-  const packageManager = framework === "fastapi" ? "poetry" : "npm";
-  return createProcess(packageManager, ["run", "build"], {
+export function runFastAPIApp(appPath: string, port: number) {
+  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
+
+  return createProcess("poetry", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
   });
@@ -76,20 +76,13 @@ export async function runApp(
   port?: number,
   externalPort?: number,
 ): Promise<void> {
-  // Setup cleanup
-  const processes: ChildProcess[] = [];
-  process.on("exit", () => {
-    console.log("Killing app processes...");
-    processes.forEach((p) => p.kill());
-  });
-
   try {
-    // Build frontend first if needed
+    // Build frontend if needed
     if (frontend && (template === "streaming" || template === "multiagent")) {
       await buildFrontend(appPath, framework);
     }
 
-    // Then start the server
+    // Start the app
     if (template === "extractor") {
       await runReflexApp(appPath, port, externalPort);
     } else if (template === "streaming" || template === "multiagent") {
