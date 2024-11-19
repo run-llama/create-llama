@@ -7,8 +7,9 @@ readme = "README.md"
 
 [tool.poetry.scripts]
 generate = "app.engine.generate:generate_datasource"
-build = "run:build"
-dev = "run:dev"
+dev = "run:dev" # Starts the app in dev mode
+prod = "run:prod" # Starts the app in prod mode
+build = "run:build" # Builds the frontend assets and copies them to the static directory
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -22,6 +23,7 @@ rich = "^13.9.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
+psutil = "^6.1.0"
 
 [build-system]
 requires = ["poetry-core"]

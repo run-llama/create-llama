@@ -2,5 +2,4 @@ __pycache__
 storage
 .env
 output
-.frontend/
 static/

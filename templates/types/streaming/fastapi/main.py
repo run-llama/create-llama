@@ -9,6 +9,7 @@ import os
 
 import uvicorn
 from app.api.routers import api_router
+from app.middlewares.frontend import FrontendProxyMiddleware
 from app.observability import init_observability
 from app.settings import init_settings
 from fastapi import FastAPI
@@ -22,16 +23,6 @@ init_observability()
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
 logger = logging.getLogger("uvicorn")
-
-if environment == "dev":
-    logger.warning("Running in development mode - allowing CORS for all origins")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 
 
 def mount_static_files(directory, path, html=False):
@@ -50,8 +41,20 @@ app.include_router(api_router, prefix="/api")
 mount_static_files(DATA_DIR, "/api/files/data")
 # Mount the output files from tools
 mount_static_files("output", "/api/files/output")
-# Mount static files from the frontend
-mount_static_files("static", "/", html=True)
+
+if environment == "dev":
+    app.add_middleware(
+        FrontendProxyMiddleware,
+        excluded_paths=set(route.path for route in app.router.routes),
+    )
+    logger.warning("Running in development mode - allowing CORS for all origins")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 if __name__ == "__main__":
