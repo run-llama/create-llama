@@ -52,11 +52,10 @@ export function buildFrontend(appPath: string, framework: TemplateFramework) {
 }
 
 export function runFastAPIApp(appPath: string, port: number) {
-  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
-
-  return createProcess("poetry", commandArgs, {
+  return createProcess("poetry", ["run", "dev"], {
     stdio: "inherit",
     cwd: appPath,
+    env: { ...process.env, APP_PORT: `${port}` },
   });
 }
 
