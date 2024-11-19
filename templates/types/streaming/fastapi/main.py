@@ -49,7 +49,9 @@ if environment == "dev":
         app.add_middleware(
             FrontendProxyMiddleware,
             frontend_endpoint=frontend_endpoint,
-            excluded_paths=set(route.path for route in app.router.routes),
+            excluded_paths=set(
+                route.path for route in app.routes if hasattr(route, "path")
+            ),
         )
     else:
         logger.warning("No frontend endpoint - starting API server only")
