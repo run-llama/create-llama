@@ -35,15 +35,12 @@ export function buildFrontend(appPath: string, framework: TemplateFramework) {
 }
 
 export function runReflexApp(appPath: string, port: number) {
-  const backendPort = port + 1;
   const commandArgs = [
     "run",
     "reflex",
     "run",
     "--frontend-port",
     port.toString(),
-    "--backend-port",
-    backendPort.toString(),
   ];
   return createProcess("poetry", commandArgs, {
     stdio: "inherit",
