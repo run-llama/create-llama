@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 from shutil import which
-from subprocess import DEVNULL, CalledProcessError, run
+from subprocess import CalledProcessError, run
 
 import rich
 
@@ -15,10 +15,18 @@ def check_package_manager() -> str:
     Returns:
         str: The name of the available package manager ('pnpm' or 'npm')
     """
-    if which("pnpm") is not None:
-        return "pnpm"
-    if which("npm") is not None:
-        return "npm"
+    # On Windows, we need to check for .cmd extensions
+    pnpm_cmds = ["pnpm", "pnpm.cmd"]
+    npm_cmds = ["npm", "npm.cmd"]
+
+    for cmd in pnpm_cmds:
+        if which(cmd) is not None:
+            return cmd
+
+    for cmd in npm_cmds:
+        if which(cmd) is not None:
+            return cmd
+
     raise SystemError(
         "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
     )
@@ -39,7 +47,8 @@ def build():
         rich.print(
             f"\n[bold]Installing frontend dependencies using {package_manager}. It might take a while...[/bold]"
         )
-        run([package_manager, "install"], cwd=frontend_dir, check=True, stderr=DEVNULL)
+        # Simple command execution without shell=True or capture_output
+        run([package_manager, "install"], cwd=frontend_dir, check=True)
 
         rich.print("\n[bold]Building the frontend[/bold]")
         run([package_manager, "run", "build"], cwd=frontend_dir, check=True)
@@ -70,7 +79,7 @@ def dev():
     """
     rich.print("\n[bold]Starting app[/bold]")
     try:
-        run(["poetry", "run", "python", "main.py"], check=True)
+        run(["poetry", "run", "python", "main.py"], check=True, shell=True)
     except KeyboardInterrupt:
         rich.print("\n[bold yellow]Shutting down...[/bold yellow]")
         return
