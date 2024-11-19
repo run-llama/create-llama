@@ -15,8 +15,9 @@ const createProcess = (
         if (code !== 0) {
           console.log(`Child process exited with code=${code}`);
           reject(code);
+        } else {
+          resolve();
         }
-        resolve();
       })
       .on("error", function (err) {
         console.log("Error when running child process: ", err);
