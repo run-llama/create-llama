@@ -13,19 +13,21 @@ def check_package_manager() -> str:
     Raises SystemError if neither is installed.
 
     Returns:
-        str: The name of the available package manager ('pnpm' or 'npm')
+        str: The full path to the available package manager executable
     """
     # On Windows, we need to check for .cmd extensions
     pnpm_cmds = ["pnpm", "pnpm.cmd"]
     npm_cmds = ["npm", "npm.cmd"]
 
     for cmd in pnpm_cmds:
-        if which(cmd) is not None:
-            return cmd
+        cmd_path = which(cmd)
+        if cmd_path is not None:
+            return cmd_path
 
     for cmd in npm_cmds:
-        if which(cmd) is not None:
-            return cmd
+        cmd_path = which(cmd)
+        if cmd_path is not None:
+            return cmd_path
 
     raise SystemError(
         "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
@@ -45,9 +47,9 @@ def build():
     try:
         package_manager = check_package_manager()
         rich.print(
-            f"\n[bold]Installing frontend dependencies using {package_manager}. It might take a while...[/bold]"
+            f"\n[bold]Installing frontend dependencies using {Path(package_manager).name}. It might take a while...[/bold]"
         )
-        # Simple command execution without shell=True or capture_output
+        # Use the full path to the package manager
         run([package_manager, "install"], cwd=frontend_dir, check=True)
 
         rich.print("\n[bold]Building the frontend[/bold]")
