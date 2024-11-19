@@ -27,7 +27,6 @@ for (const agents of templateAgents) {
       "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
     );
     let port: number;
-    let externalPort: number;
     let cwd: string;
     let name: string;
     let appProcess: ChildProcess;
@@ -36,7 +35,6 @@ for (const agents of templateAgents) {
 
     test.beforeAll(async () => {
       port = Math.floor(Math.random() * 10000) + 10000;
-      externalPort = port + 1;
       cwd = await createTestDir();
       const result = await runCreateLlama({
         cwd,
@@ -45,7 +43,6 @@ for (const agents of templateAgents) {
         dataSource,
         vectorDb,
         port,
-        externalPort,
         postInstallAction: templatePostInstallAction,
         templateUI,
         appType,

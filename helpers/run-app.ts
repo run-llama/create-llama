@@ -25,27 +25,26 @@ const createProcess = (
   });
 };
 
-export function runReflexApp(
-  appPath: string,
-  frontendPort?: number,
-  backendPort?: number,
-) {
-  const commandArgs = ["run", "reflex", "run"];
-  if (frontendPort) {
-    commandArgs.push("--frontend-port", frontendPort.toString());
-  }
-  if (backendPort) {
-    commandArgs.push("--backend-port", backendPort.toString());
-  }
-  return createProcess("poetry", commandArgs, {
+export function buildFrontend(appPath: string, framework: TemplateFramework) {
+  const packageManager = framework === "fastapi" ? "poetry" : "npm";
+  return createProcess(packageManager, ["run", "build"], {
     stdio: "inherit",
     cwd: appPath,
   });
 }
 
-export function buildFrontend(appPath: string, framework: TemplateFramework) {
-  const packageManager = framework === "fastapi" ? "poetry" : "npm";
-  return createProcess(packageManager, ["run", "build"], {
+export function runReflexApp(appPath: string, port: number) {
+  const backendPort = port + 1;
+  const commandArgs = [
+    "run",
+    "reflex",
+    "run",
+    "--frontend-port",
+    port.toString(),
+    "--backend-port",
+    backendPort.toString(),
+  ];
+  return createProcess("poetry", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
   });
@@ -73,7 +72,6 @@ export async function runApp(
   frontend: boolean,
   framework: TemplateFramework,
   port?: number,
-  externalPort?: number,
 ): Promise<void> {
   try {
     // Build frontend if needed
@@ -82,13 +80,14 @@ export async function runApp(
     }
 
     // Start the app
-    if (template === "extractor") {
-      await runReflexApp(appPath, port, externalPort);
-    } else if (template === "streaming" || template === "multiagent") {
-      const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
-      const defaultPort = framework === "nextjs" ? 3000 : 8000;
-      await appRunner(appPath, port || defaultPort);
-    }
+    const defaultPort = framework === "nextjs" ? 3000 : 8000;
+    const appRunner =
+      template === "extractor"
+        ? runReflexApp
+        : framework === "fastapi"
+          ? runFastAPIApp
+          : runTSApp;
+    await appRunner(appPath, port || defaultPort);
   } catch (error) {
     console.error("Failed to run app:", error);
     throw error;

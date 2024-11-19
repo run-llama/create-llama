@@ -38,7 +38,6 @@ if (
         dataSource: "--example-file",
         vectorDb: "none",
         port: frontendPort,
-        externalPort: backendPort,
         postInstallAction: "runApp",
       });
       name = result.projectName;

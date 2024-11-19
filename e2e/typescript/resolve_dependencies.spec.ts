@@ -56,7 +56,6 @@ test.describe("Test resolve TS dependencies", () => {
       dataSource: dataSource,
       vectorDb: vectorDb,
       port: 3000,
-      externalPort: 8000,
       postInstallAction: "none",
       templateUI: undefined,
       appType: templateFramework === "nextjs" ? "" : "--no-frontend",

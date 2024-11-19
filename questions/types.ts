@@ -2,7 +2,7 @@ import { InstallAppArgs } from "../create-app";
 
 export type QuestionResults = Omit<
   InstallAppArgs,
-  "appPath" | "packageManager" | "externalPort"
+  "appPath" | "packageManager"
 >;
 
 export type PureQuestionArgs = {

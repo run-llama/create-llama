@@ -137,13 +137,6 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--external-port <external>",
-    `
-
-  Select external port.
-`,
-  )
-  .option(
     "--post-install-action <action>",
     `
 
@@ -368,7 +361,6 @@ Please check ${cyan(
       answers.frontend,
       answers.framework,
       options.port,
-      options.externalPort,
     );
   }
 }

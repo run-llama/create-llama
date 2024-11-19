@@ -25,7 +25,6 @@ export type RunCreateLlamaOptions = {
   dataSource: string;
   vectorDb: TemplateVectorDB;
   port: number;
-  externalPort?: number;
   postInstallAction: TemplatePostInstallAction;
   templateUI?: TemplateUI;
   appType?: AppType;
@@ -44,7 +43,6 @@ export async function runCreateLlama({
   dataSource,
   vectorDb,
   port,
-  externalPort,
   postInstallAction,
   templateUI,
   appType,
@@ -101,10 +99,6 @@ export async function runCreateLlama({
     "none",
   ];
 
-  if (externalPort) {
-    commandArgs.push("--external-port", externalPort);
-  }
-
   if (templateUI) {
     commandArgs.push("--ui", templateUI);
   }
@@ -144,9 +138,7 @@ export async function runCreateLlama({
 
   // Wait for app to start
   if (postInstallAction === "runApp") {
-    const portsToWait = externalPort ? [port, externalPort] : [port];
-
-    await waitPorts(portsToWait);
+    await waitPorts([port]);
   } else if (postInstallAction === "dependencies") {
     await waitForProcess(appProcess, 1000 * 60); // wait 1 min for dependencies to be resolved
   } else {
