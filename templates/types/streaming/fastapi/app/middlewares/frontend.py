@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Set
 
 import httpx
@@ -14,10 +13,15 @@ class FrontendProxyMiddleware:
     Proxy requests to the frontend development server
     """
 
-    def __init__(self, app, excluded_paths: Set[str]):
+    def __init__(
+        self,
+        app,
+        frontend_endpoint: str,
+        excluded_paths: Set[str],
+    ):
         self.app = app
         self.excluded_paths = excluded_paths
-        self.frontend_endpoint = os.getenv("FRONTEND_ENDPOINT", "http://localhost:3000")
+        self.frontend_endpoint = frontend_endpoint
 
     async def _request_frontend(self, request: Request, path: str):
         async with httpx.AsyncClient() as client:

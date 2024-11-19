@@ -16,7 +16,7 @@ Make sure you have the `OPENAI_API_KEY` set.
 Second, run the development server:
 
 ```shell
-poetry run python main.py
+poetry run dev
 ```
 
 ## Use Case: Filling Financial CSV Template
@@ -43,10 +43,10 @@ You can start editing the API by modifying `app/api/routers/chat.py` or `app/wor
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 
-The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
+The API allows CORS for all origins to simplify development. For **production**, you should run:
 
 ```
-ENVIRONMENT=prod poetry run python main.py
+poetry run prod
 ```
 
 ## Learn More

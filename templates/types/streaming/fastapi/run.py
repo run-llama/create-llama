@@ -1,4 +1,5 @@
 import asyncio
+import os
 import shutil
 import socket
 from asyncio.subprocess import Process
@@ -6,10 +7,15 @@ from pathlib import Path
 from shutil import which
 from subprocess import CalledProcessError, run
 
+import dotenv
 import rich
 
-FRONTEND_DIR = Path(".frontend")
+dotenv.load_dotenv()
+
+
+FRONTEND_DIR = Path(os.getenv("FRONTEND_DIR", ".frontend"))
 DEFAULT_FRONTEND_PORT = 3000
+STATIC_DIR = Path(os.getenv("STATIC_DIR", "static"))
 
 
 def build():
@@ -50,8 +56,7 @@ def dev():
 
 
 def prod():
-    # TODO: Implement production mode
-    raise NotImplementedError("Production mode is not implemented yet")
+    asyncio.run(start_production_server())
 
 
 async def start_development_servers():
@@ -65,18 +70,31 @@ async def start_development_servers():
     rich.print("\n[bold]Starting development servers[/bold]")
 
     try:
-        frontend_process, frontend_port = await _run_frontend()
-        frontend_endpoint = f"http://localhost:{frontend_port}"
-        backend_process = await _run_backend(frontend_endpoint)
+        processes = []
+        if _is_frontend_included():
+            frontend_process, frontend_port = await _run_frontend()
+            processes.append(frontend_process)
+            backend_process = await _run_backend(
+                envs={
+                    "ENVIRONMENT": "dev",
+                    "FRONTEND_ENDPOINT": f"http://localhost:{frontend_port}",
+                },
+            )
+            processes.append(backend_process)
+        else:
+            backend_process = await _run_backend(
+                envs={"ENVIRONMENT": "dev"},
+            )
+            processes.append(backend_process)
 
         try:
             # Wait for processes to complete
-            await asyncio.gather(frontend_process.wait(), backend_process.wait())
+            await asyncio.gather(*[process.wait() for process in processes])
         except (asyncio.CancelledError, KeyboardInterrupt):
             rich.print("\n[bold yellow]Shutting down...[/bold yellow]")
         finally:
             # Terminate both processes
-            for process in (frontend_process, backend_process):
+            for process in processes:
                 process.terminate()
                 try:
                     await asyncio.wait_for(process.wait(), timeout=5)
@@ -85,6 +103,28 @@ async def start_development_servers():
 
     except Exception as e:
         raise SystemError(f"Failed to start development servers: {str(e)}") from e
+
+
+async def start_production_server():
+    if _is_frontend_included():
+        is_frontend_built = (FRONTEND_DIR / "out" / "index.html").exists()
+        is_frontend_static_dir_exists = STATIC_DIR.exists()
+        if not is_frontend_built or not is_frontend_static_dir_exists:
+            build()
+
+    try:
+        process = await _run_backend(
+            envs={"ENVIRONMENT": "prod"},
+        )
+        await process.wait()
+    except Exception as e:
+        raise SystemError(f"Failed to start production server: {str(e)}") from e
+    finally:
+        process.terminate()
+        try:
+            await asyncio.wait_for(process.wait(), timeout=5)
+        except asyncio.TimeoutError:
+            process.kill()
 
 
 async def _run_frontend(
@@ -117,7 +157,6 @@ async def _run_frontend(
     for _ in range(timeout):
         await asyncio.sleep(1)
         # Check if the frontend is accessible (port is open) or frontend_process is running
-        print("Return code:", frontend_process.returncode)
         if frontend_process.returncode is not None:
             raise RuntimeError("Could not start frontend dev server")
         if not _is_bindable_port(port):
@@ -128,7 +167,9 @@ async def _run_frontend(
     raise TimeoutError(f"Frontend dev server failed to start within {timeout} seconds")
 
 
-async def _run_backend(frontend_endpoint: str) -> Process:
+async def _run_backend(
+    envs: dict[str, str | None] = {},
+) -> Process:
     """
     Start the backend development server.
 
@@ -137,6 +178,8 @@ async def _run_backend(frontend_endpoint: str) -> Process:
     Returns:
         Process: The backend process
     """
+    # Merge environment variables
+    envs = {**os.environ, **(envs or {})}
     rich.print("\n[bold]Starting backend FastAPI server...[/bold]")
     poetry_executable = _get_poetry_executable()
     return await asyncio.create_subprocess_exec(
@@ -144,7 +187,7 @@ async def _run_backend(frontend_endpoint: str) -> Process:
         "run",
         "python",
         "main.py",
-        env={"FRONTEND_ENDPOINT": frontend_endpoint},
+        env=envs,
     )
 
 
@@ -225,3 +268,8 @@ def _find_free_port(start_port: int) -> int:
         if _is_bindable_port(port):
             return port
     raise SystemError("No free port found")
+
+
+def _is_frontend_included() -> bool:
+    """Check if the app has frontend"""
+    return FRONTEND_DIR.exists()

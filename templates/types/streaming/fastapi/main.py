@@ -1,5 +1,5 @@
 # flake8: noqa: E402
-from app.config import DATA_DIR
+from app.config import DATA_DIR, STATIC_DIR
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +14,7 @@ from app.observability import init_observability
 from app.settings import init_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -43,10 +44,20 @@ mount_static_files(DATA_DIR, "/api/files/data")
 mount_static_files("output", "/api/files/output")
 
 if environment == "dev":
-    app.add_middleware(
-        FrontendProxyMiddleware,
-        excluded_paths=set(route.path for route in app.router.routes),
-    )
+    frontend_endpoint = os.getenv("FRONTEND_ENDPOINT")
+    if frontend_endpoint:
+        app.add_middleware(
+            FrontendProxyMiddleware,
+            frontend_endpoint=frontend_endpoint,
+            excluded_paths=set(route.path for route in app.router.routes),
+        )
+    else:
+        logger.warning("No frontend endpoint - starting API server only")
+
+        @app.get("/")
+        async def redirect_to_docs():
+            return RedirectResponse(url="/docs")
+
     logger.warning("Running in development mode - allowing CORS for all origins")
     app.add_middleware(
         CORSMiddleware,
@@ -55,7 +66,9 @@ if environment == "dev":
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+else:
+    # Mount the frontend static files (production)
+    mount_static_files(STATIC_DIR, "/", html=True)
 
 if __name__ == "__main__":
     app_host = os.getenv("APP_HOST", "0.0.0.0")

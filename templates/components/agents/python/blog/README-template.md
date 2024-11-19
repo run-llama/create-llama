@@ -32,7 +32,7 @@ poetry run generate
 Third, run the development server:
 
 ```shell
-poetry run python main.py
+poetry run dev
 ```
 
 Per default, the example is using the explicit workflow. You can change the example by setting the `EXAMPLE_TYPE` environment variable to `choreography` or `orchestrator`.
@@ -49,10 +49,10 @@ You can start editing the API by modifying `app/api/routers/chat.py` or `app/exa
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
 
-The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
+The API allows CORS for all origins to simplify development. For **production**, you should run:
 
 ```
-ENVIRONMENT=prod poetry run python main.py
+poetry run prod
 ```
 
 ## Learn More
