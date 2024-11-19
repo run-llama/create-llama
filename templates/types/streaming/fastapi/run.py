@@ -1,13 +1,15 @@
 import asyncio
 import shutil
-import time
+import socket
 from asyncio.subprocess import Process
 from pathlib import Path
 from shutil import which
 from subprocess import CalledProcessError, run
 
-import psutil
 import rich
+
+FRONTEND_DIR = Path(".frontend")
+DEFAULT_FRONTEND_PORT = 3000
 
 
 def build():
@@ -17,25 +19,20 @@ def build():
     Raises:
         SystemError: If any build step fails
     """
-    frontend_dir = Path(".frontend")
     static_dir = Path("static")
 
     try:
         package_manager = _get_node_package_manager()
-        rich.print(
-            f"\n[bold]Installing frontend dependencies using {Path(package_manager).name}. It might take a while...[/bold]"
-        )
-        # Use the full path to the package manager
-        run([package_manager, "install"], cwd=frontend_dir, check=True)
+        _install_frontend_dependencies()
 
         rich.print("\n[bold]Building the frontend[/bold]")
-        run([package_manager, "run", "build"], cwd=frontend_dir, check=True)
+        run([package_manager, "run", "build"], cwd=FRONTEND_DIR, check=True)
 
         if static_dir.exists():
             shutil.rmtree(static_dir)
         static_dir.mkdir(exist_ok=True)
 
-        shutil.copytree(frontend_dir / "out", static_dir, dirs_exist_ok=True)
+        shutil.copytree(FRONTEND_DIR / "out", static_dir, dirs_exist_ok=True)
 
         rich.print(
             "\n[bold]Built frontend successfully![/bold]"
@@ -90,28 +87,45 @@ async def start_development_servers():
         raise SystemError(f"Failed to start development servers: {str(e)}") from e
 
 
-async def _run_frontend() -> tuple[Process, int]:
+async def _run_frontend(
+    port: int = DEFAULT_FRONTEND_PORT,
+    timeout: int = 5,
+) -> tuple[Process, int]:
     """
     Start the frontend development server and return its process and port.
 
     Returns:
         tuple[Process, int]: The frontend process and the port it's running on
     """
+    # Install dependencies
+    _install_frontend_dependencies()
+
+    port = _find_free_port(start_port=DEFAULT_FRONTEND_PORT)
     package_manager = _get_node_package_manager()
     frontend_process = await asyncio.create_subprocess_exec(
         package_manager,
         "run",
         "dev",
-        cwd=".frontend",
+        "-p",
+        str(port),
+        cwd=FRONTEND_DIR,
     )
     rich.print(
-        f"[bold]Waiting for frontend to start, process id: {frontend_process.pid}[/bold]"
+        f"\n[bold]Waiting for frontend to start, port: {port}, process id: {frontend_process.pid}[/bold]"
     )
-    frontend_port = await _get_process_port(frontend_process.pid)
-    rich.print(
-        f"\n[bold green]Frontend dev server running on port {frontend_port}[/bold green]"
-    )
-    return frontend_process, frontend_port
+    # Block until the frontend is accessible
+    for _ in range(timeout):
+        await asyncio.sleep(1)
+        # Check if the frontend is accessible (port is open) or frontend_process is running
+        print("Return code:", frontend_process.returncode)
+        if frontend_process.returncode is not None:
+            raise RuntimeError("Could not start frontend dev server")
+        if not _is_bindable_port(port):
+            rich.print(
+                f"\n[bold green]Frontend dev server is running on port {port}[/bold green]"
+            )
+            return frontend_process, port
+    raise TimeoutError(f"Frontend dev server failed to start within {timeout} seconds")
 
 
 async def _run_backend(frontend_endpoint: str) -> Process:
@@ -123,6 +137,7 @@ async def _run_backend(frontend_endpoint: str) -> Process:
     Returns:
         Process: The backend process
     """
+    rich.print("\n[bold]Starting backend FastAPI server...[/bold]")
     poetry_executable = _get_poetry_executable()
     return await asyncio.create_subprocess_exec(
         poetry_executable,
@@ -131,6 +146,14 @@ async def _run_backend(frontend_endpoint: str) -> Process:
         "main.py",
         env={"FRONTEND_ENDPOINT": frontend_endpoint},
     )
+
+
+def _install_frontend_dependencies():
+    package_manager = _get_node_package_manager()
+    rich.print(
+        f"\n[bold]Installing frontend dependencies using {Path(package_manager).name}. It might take a while...[/bold]"
+    )
+    run([package_manager, "install"], cwd=".frontend", check=True)
 
 
 def _get_node_package_manager() -> str:
@@ -162,6 +185,14 @@ def _get_node_package_manager() -> str:
 
 
 def _get_poetry_executable() -> str:
+    """
+    Check for available Poetry executables and return the preferred one.
+    Returns 'poetry' if installed, falls back to 'poetry.cmd'.
+    Raises SystemError if neither is installed.
+
+    Returns:
+        str: The full path to the available Poetry executable
+    """
     poetry_cmds = ["poetry", "poetry.cmd"]
     for cmd in poetry_cmds:
         cmd_path = which(cmd)
@@ -170,47 +201,27 @@ def _get_poetry_executable() -> str:
     raise SystemError("Poetry is not installed. Please install Poetry first.")
 
 
-async def _get_process_port(pid: int, timeout: int = 30) -> int:
-    """
-    Get the port number that a process or its children are listening on.
-    Specifically for Node.js frontend development servers.
-
-    Args:
-        pid: Process ID to check
-        timeout: Maximum time to wait for port detection in seconds
-
-    Returns:
-        int: The port number the process is listening on
-
-    Raises:
-        TimeoutError: If no port is detected within the timeout period
-        ProcessLookupError: If the process doesn't exist
-    """
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
+def _is_bindable_port(port: int) -> bool:
+    """Check if a port is available by attempting to connect to it."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            # Get the parent process and all its children
-            parent = psutil.Process(pid)
-            processes = [parent] + parent.children(recursive=True)
+            # Try to connect to the port
+            s.connect(("localhost", port))
+            # If we can connect, port is in use
+            return False
+        except ConnectionRefusedError:
+            # Connection refused means port is available
+            return True
+        except socket.error:
+            # Other socket errors also likely mean port is available
+            return True
 
-            # Check each process for listening ports
-            for process in processes:
-                try:
-                    connections = process.connections()
-                    # Look for listening TCP connections
-                    for conn in connections:
-                        if conn.status == "LISTEN":
-                            return conn.laddr.port
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
 
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            raise ProcessLookupError(f"Process {pid} not found or access denied")
-
-        # Wait a bit before checking again
-        await asyncio.sleep(0.5)
-
-    raise TimeoutError(
-        f"Could not detect port for process {pid} within {timeout} seconds"
-    )
+def _find_free_port(start_port: int) -> int:
+    """
+    Find a free port starting from the given port number.
+    """
+    for port in range(start_port, 65535):
+        if _is_bindable_port(port):
+            return port
+    raise SystemError("No free port found")
