@@ -20,6 +20,7 @@ interface Dependency {
   name: string;
   version?: string;
   extras?: string[];
+  constraints?: Record<string, string>;
 }
 
 const getAdditionalDependencies = (
@@ -51,6 +52,9 @@ const getAdditionalDependencies = (
       dependencies.push({
         name: "llama-index-vector-stores-pinecone",
         version: "^0.2.1",
+        constraints: {
+          python: ">=3.11,<3.12",
+        },
       });
       break;
     }
@@ -76,6 +80,9 @@ const getAdditionalDependencies = (
       dependencies.push({
         name: "llama-index-vector-stores-qdrant",
         version: "^0.3.0",
+        constraints: {
+          python: ">=3.11,<3.12",
+        },
       });
       break;
     }
@@ -279,14 +286,19 @@ const mergePoetryDependencies = (
     value.version = dependency.version ?? value.version;
     value.extras = dependency.extras ?? value.extras;
 
+    // Merge constraints if they exist
+    if (dependency.constraints) {
+      value = { ...value, ...dependency.constraints };
+    }
+
     if (value.version === undefined) {
       throw new Error(
         `Dependency "${dependency.name}" is missing attribute "version"!`,
       );
     }
 
-    // Serialize separately only if extras are provided
-    if (value.extras && value.extras.length > 0) {
+    // Serialize as object if there are any additional properties
+    if (Object.keys(value).length > 1) {
       existingDependencies[dependency.name] = value;
     } else {
       // Otherwise, serialize just the version string
