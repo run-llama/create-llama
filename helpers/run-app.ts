@@ -59,13 +59,14 @@ export function runTSApp(appPath: string, port: number) {
 export async function runApp(
   appPath: string,
   template: string,
-  frontend: boolean,
   framework: TemplateFramework,
   port?: number,
 ): Promise<void> {
   try {
     // Start the app
-    const defaultPort = framework === "nextjs" ? 3000 : 8000;
+    const defaultPort =
+      framework === "nextjs" || template === "extractor" ? 3000 : 8000;
+
     const appRunner =
       template === "extractor"
         ? runReflexApp

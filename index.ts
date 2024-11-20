@@ -355,13 +355,7 @@ Please check ${cyan(
     }
   } else if (answers.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
-    await runApp(
-      root,
-      answers.template,
-      answers.frontend,
-      answers.framework,
-      options.port,
-    );
+    await runApp(root, answers.template, answers.framework, options.port);
   }
 }
 
