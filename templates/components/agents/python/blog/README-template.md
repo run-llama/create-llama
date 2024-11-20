@@ -47,9 +47,9 @@ curl --location 'localhost:8000/api/chat' \
 
 You can start editing the API by modifying `app/api/routers/chat.py` or `app/examples/workflow.py`. The API auto-updates as you save the files.
 
-Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
+Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
 
-The API allows CORS for all origins to simplify development. For **production**, you should run:
+To start the app in **production**, run:
 
 ```
 poetry run prod

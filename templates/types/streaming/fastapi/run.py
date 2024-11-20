@@ -42,7 +42,7 @@ def build():
 
         rich.print(
             "\n[bold]Built frontend successfully![/bold]"
-            "\n[bold]Run: 'poetry run dev' to start the app[/bold]"
+            "\n[bold]Run: 'poetry run prod' to start the app[/bold]"
             "\n[bold]Don't forget to update the .env file![/bold]"
         )
     except CalledProcessError as e:

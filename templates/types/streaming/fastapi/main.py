@@ -13,7 +13,6 @@ from app.middlewares.frontend import FrontendProxyMiddleware
 from app.observability import init_observability
 from app.settings import init_settings
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -59,15 +58,6 @@ if environment == "dev":
         @app.get("/")
         async def redirect_to_docs():
             return RedirectResponse(url="/docs")
-
-    logger.warning("Running in development mode - allowing CORS for all origins")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 else:
     # Mount the frontend static files (production)
     mount_static_files(STATIC_DIR, "/", html=True)

@@ -52,7 +52,7 @@ curl --location 'localhost:8000/api/chat/request' \
 
 You can start editing the API endpoints by modifying `app/api/routers/chat.py`. The endpoints auto-update as you save the file. You can delete the endpoint you're not using.
 
-The API allows CORS for all origins to simplify development. For **production**, you should run:
+To start the app in **production**, run:
 
 ```
 poetry run prod
