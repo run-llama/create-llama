@@ -51,7 +51,6 @@ export const copyVSCodeSettings = async (
   root: string,
   templatesDir: string,
 ) => {
-  // Create .vscode folder
   const vscodeDir = path.join(root, ".vscode");
   await copy("vscode_settings.json", vscodeDir, {
     cwd: templatesDir,
