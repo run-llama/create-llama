@@ -43,7 +43,7 @@ You can start editing the API by modifying `app/api/routers/chat.py` or `app/wor
 
 Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
 
-To start the app in **production**, run:
+To start the app optimized for **production**, run:
 
 ```
 poetry run prod
