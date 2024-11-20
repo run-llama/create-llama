@@ -60,10 +60,12 @@ class NextQuestionSuggestion:
             return None
 
     @classmethod
-    def _extract_questions(cls, text: str) -> List[str]:
+    def _extract_questions(cls, text: str) -> List[str] | None:
         content_match = re.search(r"```(.*?)```", text, re.DOTALL)
-        content = content_match.group(1) if content_match else ""
-        return content.strip().split("\n")
+        content = content_match.group(1) if content_match else None
+        if not content:
+            return None
+        return [q.strip() for q in content.split("\n") if q.strip()]
 
     @classmethod
     async def suggest_next_questions(

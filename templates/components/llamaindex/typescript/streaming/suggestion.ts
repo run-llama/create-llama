@@ -27,7 +27,7 @@ export async function generateNextQuestions(conversation: ChatMessage[]) {
 }
 
 // TODO: instead of parsing the LLM's result we can use structured predict, once LITS supports it
-function extractQuestions(text: string): string[] {
+function extractQuestions(text: string): string[] | null {
   // Extract the text inside the triple backticks
   // @ts-ignore
   const contentMatch = text.match(/```(.*?)```/s);
@@ -39,5 +39,5 @@ function extractQuestions(text: string): string[] {
     .map((question) => question.trim())
     .filter((question) => question !== "");
 
-  return questions;
+  return questions.length > 0 ? questions : null;
 }
