@@ -26,14 +26,6 @@ const createProcess = (
   });
 };
 
-export function buildFrontend(appPath: string, framework: TemplateFramework) {
-  const packageManager = framework === "fastapi" ? "poetry" : "npm";
-  return createProcess(packageManager, ["run", "build"], {
-    stdio: "inherit",
-    cwd: appPath,
-  });
-}
-
 export function runReflexApp(appPath: string, port: number) {
   const commandArgs = [
     "run",
@@ -72,11 +64,6 @@ export async function runApp(
   port?: number,
 ): Promise<void> {
   try {
-    // Build frontend if needed
-    if (frontend && (template === "streaming" || template === "multiagent")) {
-      await buildFrontend(appPath, framework);
-    }
-
     // Start the app
     const defaultPort = framework === "nextjs" ? 3000 : 8000;
     const appRunner =
