@@ -10,9 +10,9 @@ import { makeDir } from "./helpers/make-dir";
 import terminalLink from "terminal-link";
 import type { InstallTemplateArgs, TemplateObservability } from "./helpers";
 import { installTemplate } from "./helpers";
-import { writeDevcontainer } from "./helpers/devcontainer";
 import { templatesDir } from "./helpers/dir";
 import { toolsRequireConfig } from "./helpers/tools";
+import { configVSCode } from "./helpers/vscode";
 
 export type InstallAppArgs = Omit<
   InstallTemplateArgs,
@@ -105,7 +105,7 @@ export async function createApp({
     });
   }
 
-  await writeDevcontainer(root, templatesDir, framework, frontend);
+  await configVSCode(root, templatesDir, framework);
 
   process.chdir(root);
   if (tryGitInit(root)) {

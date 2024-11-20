@@ -61,6 +61,9 @@ export const assetRelocator = (name: string) => {
     case "README-template.md": {
       return "README.md";
     }
+    case "vscode_settings.json": {
+      return "settings.json";
+    }
     default: {
       return name;
     }

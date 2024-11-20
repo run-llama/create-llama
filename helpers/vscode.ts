@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { assetRelocator, copy } from "./copy";
 import { TemplateFramework } from "./types";
 
 function renderDevcontainerContent(
@@ -29,7 +30,6 @@ export const writeDevcontainer = async (
   root: string,
   templatesDir: string,
   framework: TemplateFramework,
-  frontend: boolean,
 ) => {
   const devcontainerDir = path.join(root, ".devcontainer");
   if (fs.existsSync(devcontainerDir)) {
@@ -45,4 +45,27 @@ export const writeDevcontainer = async (
     path.join(devcontainerDir, "devcontainer.json"),
     devcontainerContent,
   );
+};
+
+export const copyVSCodeSettings = async (
+  root: string,
+  templatesDir: string,
+) => {
+  // Create .vscode folder
+  const vscodeDir = path.join(root, ".vscode");
+  await copy("vscode_settings.json", vscodeDir, {
+    cwd: templatesDir,
+    rename: assetRelocator,
+  });
+};
+
+export const configVSCode = async (
+  root: string,
+  templatesDir: string,
+  framework: TemplateFramework,
+) => {
+  await writeDevcontainer(root, templatesDir, framework);
+  if (framework === "fastapi") {
+    await copyVSCodeSettings(root, templatesDir);
+  }
 };
