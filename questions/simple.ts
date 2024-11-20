@@ -131,7 +131,7 @@ const convertAnswers = async (
   > = {
     rag: {
       template: "streaming",
-      tools: getTools(["duckduckgo"]),
+      tools: getTools(["wikipedia.WikipediaToolSpec"]),
       frontend: true,
       dataSources: [EXAMPLE_FILE],
     },

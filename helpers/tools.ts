@@ -65,7 +65,7 @@ export const supportedTools: Tool[] = [
         version: "^6.3.5",
       },
     ],
-    supportedFrameworks: ["fastapi", "nextjs", "express"],
+    supportedFrameworks: ["fastapi"], // TODO: Re-enable this tool once the duck-duck-scrape TypeScript library works again
     type: ToolType.LOCAL,
     envVars: [
       {
