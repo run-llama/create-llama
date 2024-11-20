@@ -62,7 +62,7 @@ export const supportedTools: Tool[] = [
     dependencies: [
       {
         name: "duckduckgo-search",
-        version: "6.1.7",
+        version: "^6.3.5",
       },
     ],
     supportedFrameworks: ["fastapi", "nextjs", "express"],
