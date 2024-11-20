@@ -1,4 +1,4 @@
-import { blue, green } from "picocolors";
+import { blue } from "picocolors";
 import prompts from "prompts";
 import { isCI } from ".";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
@@ -123,24 +123,17 @@ export const askProQuestions = async (program: QuestionArgs) => {
   }
 
   if (
-    (program.framework === "express" || program.framework === "fastapi") &&
+    program.framework === "fastapi" &&
     (program.template === "streaming" || program.template === "multiagent")
   ) {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       const styledNextJS = blue("NextJS");
-      const styledBackend = green(
-        program.framework === "express"
-          ? "Express "
-          : program.framework === "fastapi"
-            ? "FastAPI (Python) "
-            : "",
-      );
       const { frontend } = await prompts({
         onState: onPromptState,
         type: "toggle",
         name: "frontend",
-        message: `Would you like to generate a ${styledNextJS} frontend for your ${styledBackend}backend?`,
+        message: `Would you like to generate a ${styledNextJS} frontend for your FastAPI backend?`,
         initial: false,
         active: "Yes",
         inactive: "No",

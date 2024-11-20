@@ -7,7 +7,6 @@ import { getOnline } from "./helpers/is-online";
 import { isWriteable } from "./helpers/is-writeable";
 import { makeDir } from "./helpers/make-dir";
 
-import fs from "fs";
 import terminalLink from "terminal-link";
 import type { InstallTemplateArgs, TemplateObservability } from "./helpers";
 import { installTemplate } from "./helpers";
@@ -35,7 +34,7 @@ export async function createApp({
   communityProjectConfig,
   llamapack,
   vectorDb,
-  externalPort,
+  port,
   postInstallAction,
   dataSources,
   tools,
@@ -81,7 +80,7 @@ export async function createApp({
     communityProjectConfig,
     llamapack,
     vectorDb,
-    externalPort,
+    port,
     postInstallAction,
     dataSources,
     tools,
@@ -90,28 +89,20 @@ export async function createApp({
     agents,
   };
 
-  if (frontend) {
-    // install backend
-    const backendRoot = path.join(root, "backend");
-    await makeDir(backendRoot);
-    await installTemplate({ ...args, root: backendRoot, backend: true });
+  // Install backend
+  await installTemplate({ ...args, backend: true });
+
+  if (frontend && framework === "fastapi") {
     // install frontend
-    const frontendRoot = path.join(root, "frontend");
+    const frontendRoot = path.join(root, ".frontend");
     await makeDir(frontendRoot);
     await installTemplate({
       ...args,
       root: frontendRoot,
       framework: "nextjs",
-      customApiPath: `http://localhost:${externalPort ?? 8000}/api/chat`,
+      customApiPath: `http://localhost:${port ?? 8000}/api/chat`,
       backend: false,
     });
-    // copy readme for fullstack
-    await fs.promises.copyFile(
-      path.join(templatesDir, "README-fullstack.md"),
-      path.join(root, "README.md"),
-    );
-  } else {
-    await installTemplate({ ...args, backend: true });
   }
 
   await writeDevcontainer(root, templatesDir, framework, frontend);

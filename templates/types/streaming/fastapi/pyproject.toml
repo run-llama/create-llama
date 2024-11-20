@@ -7,6 +7,9 @@ readme = "README.md"
 
 [tool.poetry.scripts]
 generate = "app.engine.generate:generate_datasource"
+dev = "run:dev" # Starts the app in dev mode
+prod = "run:prod" # Starts the app in prod mode
+build = "run:build" # Builds the frontend assets and copies them to the static directory
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"
@@ -16,6 +19,7 @@ python-dotenv = "^1.0.0"
 aiostream = "^0.5.2"
 cachetools = "^5.3.3"
 llama-index = "^0.11.17"
+rich = "^13.9.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"

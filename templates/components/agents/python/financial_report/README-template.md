@@ -21,7 +21,7 @@ poetry run generate
 Third, run the development server:
 
 ```shell
-poetry run python main.py
+poetry run dev
 ```
 
 The example provides one streaming API endpoint `/api/chat`.
@@ -35,12 +35,12 @@ curl --location 'localhost:8000/api/chat' \
 
 You can start editing the API by modifying `app/api/routers/chat.py` or `app/workflows/financial_report.py`. The API auto-updates as you save the files.
 
-Open [http://localhost:8000/docs](http://localhost:8000/docs) with your browser to see the Swagger UI of the API.
+Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
 
-The API allows CORS for all origins to simplify development. You can change this behavior by setting the `ENVIRONMENT` environment variable to `prod`:
+To start the app in **production**, run:
 
 ```
-ENVIRONMENT=prod poetry run python main.py
+poetry run prod
 ```
 
 ## Learn More

@@ -1,40 +1,39 @@
-import { ChildProcess, SpawnOptions, spawn } from "child_process";
-import path from "path";
+import { SpawnOptions, spawn } from "child_process";
 import { TemplateFramework } from "./types";
 
 const createProcess = (
   command: string,
   args: string[],
   options: SpawnOptions,
-) => {
-  return spawn(command, args, {
-    ...options,
-    shell: true,
-  })
-    .on("exit", function (code) {
-      if (code !== 0) {
-        console.log(`Child process exited with code=${code}`);
-        process.exit(1);
-      }
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    spawn(command, args, {
+      ...options,
+      shell: true,
     })
-    .on("error", function (err) {
-      console.log("Error when running chill process: ", err);
-      process.exit(1);
-    });
+      .on("exit", function (code) {
+        if (code !== 0) {
+          console.log(`Child process exited with code=${code}`);
+          reject(code);
+        } else {
+          resolve();
+        }
+      })
+      .on("error", function (err) {
+        console.log("Error when running child process: ", err);
+        reject(err);
+      });
+  });
 };
 
-export function runReflexApp(
-  appPath: string,
-  frontendPort?: number,
-  backendPort?: number,
-) {
-  const commandArgs = ["run", "reflex", "run"];
-  if (frontendPort) {
-    commandArgs.push("--frontend-port", frontendPort.toString());
-  }
-  if (backendPort) {
-    commandArgs.push("--backend-port", backendPort.toString());
-  }
+export function runReflexApp(appPath: string, port: number) {
+  const commandArgs = [
+    "run",
+    "reflex",
+    "run",
+    "--frontend-port",
+    port.toString(),
+  ];
   return createProcess("poetry", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
@@ -42,11 +41,10 @@ export function runReflexApp(
 }
 
 export function runFastAPIApp(appPath: string, port: number) {
-  const commandArgs = ["run", "uvicorn", "main:app", "--port=" + port];
-
-  return createProcess("poetry", commandArgs, {
+  return createProcess("poetry", ["run", "dev"], {
     stdio: "inherit",
     cwd: appPath,
+    env: { ...process.env, APP_PORT: `${port}` },
   });
 }
 
@@ -61,39 +59,23 @@ export function runTSApp(appPath: string, port: number) {
 export async function runApp(
   appPath: string,
   template: string,
-  frontend: boolean,
   framework: TemplateFramework,
   port?: number,
-  externalPort?: number,
-): Promise<any> {
-  const processes: ChildProcess[] = [];
+): Promise<void> {
+  try {
+    // Start the app
+    const defaultPort =
+      framework === "nextjs" || template === "extractor" ? 3000 : 8000;
 
-  // Callback to kill all sub processes if the main process is killed
-  process.on("exit", () => {
-    console.log("Killing app processes...");
-    processes.forEach((p) => p.kill());
-  });
-
-  // Default sub app paths
-  const backendPath = path.join(appPath, "backend");
-  const frontendPath = path.join(appPath, "frontend");
-
-  if (template === "extractor") {
-    processes.push(runReflexApp(appPath, port, externalPort));
+    const appRunner =
+      template === "extractor"
+        ? runReflexApp
+        : framework === "fastapi"
+          ? runFastAPIApp
+          : runTSApp;
+    await appRunner(appPath, port || defaultPort);
+  } catch (error) {
+    console.error("Failed to run app:", error);
+    throw error;
   }
-  if (template === "streaming" || template === "multiagent") {
-    if (framework === "fastapi" || framework === "express") {
-      const backendRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
-      if (frontend) {
-        processes.push(backendRunner(backendPath, externalPort || 8000));
-        processes.push(runTSApp(frontendPath, port || 3000));
-      } else {
-        processes.push(backendRunner(appPath, externalPort || 8000));
-      }
-    } else if (framework === "nextjs") {
-      processes.push(runTSApp(appPath, port || 3000));
-    }
-  }
-
-  return Promise.all(processes);
 }

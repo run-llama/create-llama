@@ -25,7 +25,6 @@ export type RunCreateLlamaOptions = {
   dataSource: string;
   vectorDb: TemplateVectorDB;
   port: number;
-  externalPort: number;
   postInstallAction: TemplatePostInstallAction;
   templateUI?: TemplateUI;
   appType?: AppType;
@@ -44,7 +43,6 @@ export async function runCreateLlama({
   dataSource,
   vectorDb,
   port,
-  externalPort,
   postInstallAction,
   templateUI,
   appType,
@@ -93,8 +91,6 @@ export async function runCreateLlama({
     "--use-pnpm",
     "--port",
     port,
-    "--external-port",
-    externalPort,
     "--post-install-action",
     postInstallAction,
     "--tools",
@@ -142,12 +138,7 @@ export async function runCreateLlama({
 
   // Wait for app to start
   if (postInstallAction === "runApp") {
-    await checkAppHasStarted(
-      appType === "--frontend",
-      templateFramework,
-      port,
-      externalPort,
-    );
+    await waitPorts([port]);
   } else if (postInstallAction === "dependencies") {
     await waitForProcess(appProcess, 1000 * 60); // wait 1 min for dependencies to be resolved
   } else {
@@ -165,19 +156,6 @@ export async function createTestDir() {
   const cwd = path.join(__dirname, "cache", crypto.randomUUID());
   await mkdir(cwd, { recursive: true });
   return cwd;
-}
-
-// eslint-disable-next-line max-params
-async function checkAppHasStarted(
-  frontend: boolean,
-  framework: TemplateFramework,
-  port: number,
-  externalPort: number,
-) {
-  const portsToWait = frontend
-    ? [port, externalPort]
-    : [framework === "nextjs" ? port : externalPort];
-  await waitPorts(portsToWait);
 }
 
 async function waitPorts(ports: number[]): Promise<void> {

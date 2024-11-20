@@ -137,13 +137,6 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--external-port <external>",
-    `
-
-  Select external port.
-`,
-  )
-  .option(
     "--post-install-action <action>",
     `
 
@@ -333,7 +326,7 @@ async function run(): Promise<void> {
     ...answers,
     appPath: resolvedProjectPath,
     packageManager,
-    externalPort: options.externalPort,
+    port: options.port,
   });
 
   if (answers.postInstallAction === "VSCode") {
@@ -362,14 +355,7 @@ Please check ${cyan(
     }
   } else if (answers.postInstallAction === "runApp") {
     console.log(`Running app in ${root}...`);
-    await runApp(
-      root,
-      answers.template,
-      answers.frontend,
-      answers.framework,
-      options.port,
-      options.externalPort,
-    );
+    await runApp(root, answers.template, answers.framework, options.port);
   }
 }
 

@@ -22,7 +22,7 @@ const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
 
-const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
+const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
 const userMessage =
   dataSource !== "--no-files" ? "Physical standard for letters" : "Hello";
 
@@ -35,7 +35,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
   }
 
   let port: number;
-  let externalPort: number;
   let cwd: string;
   let name: string;
   let appProcess: ChildProcess;
@@ -44,7 +43,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
 
   test.beforeAll(async () => {
     port = Math.floor(Math.random() * 10000) + 10000;
-    externalPort = port + 1;
     cwd = await createTestDir();
     const result = await runCreateLlama({
       cwd,
@@ -53,7 +51,6 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
       dataSource,
       vectorDb,
       port,
-      externalPort,
       postInstallAction: templatePostInstallAction,
       templateUI,
       appType,
@@ -68,8 +65,11 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
     const dirExists = fs.existsSync(path.join(cwd, name));
     expect(dirExists).toBeTruthy();
   });
+
   test("Frontend should have a title", async ({ page }) => {
-    test.skip(templatePostInstallAction !== "runApp");
+    test.skip(
+      templatePostInstallAction !== "runApp" || templateFramework === "express",
+    );
     await page.goto(`http://localhost:${port}`);
     await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
   });
@@ -77,7 +77,9 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
   test("Frontend should be able to submit a message and receive a response", async ({
     page,
   }) => {
-    test.skip(templatePostInstallAction !== "runApp");
+    test.skip(
+      templatePostInstallAction !== "runApp" || templateFramework === "express",
+    );
     await page.goto(`http://localhost:${port}`);
     await page.fill("form textarea", userMessage);
     const [response] = await Promise.all([
@@ -102,7 +104,7 @@ test.describe(`Test streaming template ${templateFramework} ${dataSource} ${temp
     test.skip(templatePostInstallAction !== "runApp");
     test.skip(templateFramework === "nextjs");
     const response = await request.post(
-      `http://localhost:${externalPort}/api/chat/request`,
+      `http://localhost:${port}/api/chat/request`,
       {
         data: {
           messages: [

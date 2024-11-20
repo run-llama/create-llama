@@ -96,7 +96,7 @@ export interface InstallTemplateArgs {
   communityProjectConfig?: CommunityProjectConfig;
   llamapack?: string;
   vectorDb?: TemplateVectorDB;
-  externalPort?: number;
+  port?: number;
   postInstallAction?: TemplatePostInstallAction;
   tools?: Tool[];
   observability?: TemplateObservability;

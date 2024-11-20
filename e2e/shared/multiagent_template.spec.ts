@@ -16,7 +16,7 @@ const templateFramework: TemplateFramework = process.env.FRAMEWORK
 const dataSource: string = "--example-file";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = templateFramework === "nextjs" ? "" : "--frontend";
+const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
 const userMessage = "Write a blog post about physical standards for letters";
 const templateAgents = ["financial_report", "blog", "form_filling"];
 
@@ -27,7 +27,6 @@ for (const agents of templateAgents) {
       "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
     );
     let port: number;
-    let externalPort: number;
     let cwd: string;
     let name: string;
     let appProcess: ChildProcess;
@@ -36,7 +35,6 @@ for (const agents of templateAgents) {
 
     test.beforeAll(async () => {
       port = Math.floor(Math.random() * 10000) + 10000;
-      externalPort = port + 1;
       cwd = await createTestDir();
       const result = await runCreateLlama({
         cwd,
@@ -45,7 +43,6 @@ for (const agents of templateAgents) {
         dataSource,
         vectorDb,
         port,
-        externalPort,
         postInstallAction: templatePostInstallAction,
         templateUI,
         appType,
@@ -61,6 +58,10 @@ for (const agents of templateAgents) {
     });
 
     test("Frontend should have a title", async ({ page }) => {
+      test.skip(
+        templatePostInstallAction !== "runApp" ||
+          templateFramework === "express",
+      );
       await page.goto(`http://localhost:${port}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
     });
@@ -69,7 +70,10 @@ for (const agents of templateAgents) {
       page,
     }) => {
       test.skip(
-        agents === "financial_report" || agents === "form_filling",
+        templatePostInstallAction !== "runApp" ||
+          agents === "financial_report" ||
+          agents === "form_filling" ||
+          templateFramework === "express",
         "Skip chat tests for financial report and form filling.",
       );
       await page.goto(`http://localhost:${port}`);

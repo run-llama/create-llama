@@ -20,8 +20,7 @@ if (
   dataSource === "--example-file"
 ) {
   test.describe("Test extractor template", async () => {
-    let frontendPort: number;
-    let backendPort: number;
+    let appPort: number;
     let name: string;
     let appProcess: ChildProcess;
     let cwd: string;
@@ -29,16 +28,14 @@ if (
     // Create extractor app
     test.beforeAll(async () => {
       cwd = await createTestDir();
-      frontendPort = Math.floor(Math.random() * 10000) + 10000;
-      backendPort = frontendPort + 1;
+      appPort = Math.floor(Math.random() * 10000) + 10000;
       const result = await runCreateLlama({
         cwd,
         templateType: "extractor",
         templateFramework: "fastapi",
         dataSource: "--example-file",
         vectorDb: "none",
-        port: frontendPort,
-        externalPort: backendPort,
+        port: appPort,
         postInstallAction: "runApp",
       });
       name = result.projectName;
@@ -54,7 +51,7 @@ if (
       expect(dirExists).toBeTruthy();
     });
     test("Frontend should have a title", async ({ page }) => {
-      await page.goto(`http://localhost:${frontendPort}`);
+      await page.goto(`http://localhost:${appPort}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
         timeout: 2000 * 60,
       });
