@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.3.15
+
+### Patch Changes
+
+- fc5b266: Improve DX for Python template (use one deployment instead of two)
+- f8f97d2: Add support for python 3.13
+
 ## 0.3.14
 
 ### Patch Changes
