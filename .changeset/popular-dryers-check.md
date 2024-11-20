@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Simplify the code of the FastAPI fullstack app
+Improve DX for Python template (use one deployment instead of two)
