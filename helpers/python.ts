@@ -525,6 +525,9 @@ export const installPythonTemplate = async ({
       addOnDependencies.push({
         name: "llama-index-callbacks-arize-phoenix",
         version: "^0.2.1",
+        constraints: {
+          python: ">=3.11,<3.13",
+        },
       });
     }
 
