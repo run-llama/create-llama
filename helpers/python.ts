@@ -53,7 +53,7 @@ const getAdditionalDependencies = (
         name: "llama-index-vector-stores-pinecone",
         version: "^0.2.1",
         constraints: {
-          python: ">=3.11,<3.12",
+          python: ">=3.11,<3.13",
         },
       });
       break;
@@ -81,7 +81,7 @@ const getAdditionalDependencies = (
         name: "llama-index-vector-stores-qdrant",
         version: "^0.3.0",
         constraints: {
-          python: ">=3.11,<3.12",
+          python: ">=3.11,<3.13",
         },
       });
       break;
