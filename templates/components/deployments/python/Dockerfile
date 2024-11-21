@@ -1,4 +1,19 @@
-FROM python:3.11 as build
+# ====================================
+# Build the frontend
+# ====================================
+FROM node:20 AS frontend
+
+WORKDIR /app/frontend
+
+COPY .frontend /app/frontend
+
+RUN npm install && npm run build
+
+
+# ====================================
+# Backend
+# ====================================
+FROM python:3.11 AS build
 
 WORKDIR /app
 
@@ -19,8 +34,15 @@ COPY ./pyproject.toml ./poetry.lock* /app/
 RUN poetry install --no-root --no-cache --only main
 
 # ====================================
-FROM build as release
+# Release
+# ====================================
+FROM build AS release
+
+COPY --from=frontend /app/frontend/out /app/static
 
 COPY . .
 
-CMD ["python", "main.py"]
+# Remove frontend code
+RUN rm -rf .frontend
+
+CMD ["poetry", "run", "prod"]

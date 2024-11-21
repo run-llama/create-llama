@@ -591,13 +591,6 @@ export const createFrontendEnvFile = async (
 ) => {
   const defaultFrontendEnvs = [
     {
-      name: "NEXT_PUBLIC_CHAT_API",
-      description: "The backend API for chat endpoint.",
-      value: opts.customApiPath
-        ? opts.customApiPath
-        : "http://localhost:8000/api/chat",
-    },
-    {
       name: "NEXT_PUBLIC_USE_LLAMACLOUD",
       description: "Let's the user change indexes in LlamaCloud projects",
       value: opts.vectorDb === "llamacloud" ? "true" : "false",
