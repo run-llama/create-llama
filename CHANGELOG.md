@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.3.16
+
+### Patch Changes
+
+- 8b371d8: Set pydantic version to <2.10 to avoid incompatibility with llama-index.
+- 30fe269: Deactive duckduckgo tool for TS
+- 30fe269: Replace DuckDuckGo by Wikipedia tool for agentic template
+
 ## 0.3.15
 
 ### Patch Changes
