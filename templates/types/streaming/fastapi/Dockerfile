@@ -45,4 +45,6 @@ COPY . .
 # Remove frontend code
 RUN rm -rf .frontend
 
+EXPOSE 8000
+
 CMD ["poetry", "run", "prod"]

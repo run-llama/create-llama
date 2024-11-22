@@ -548,9 +548,4 @@ export const installPythonTemplate = async ({
   if (postInstallAction === "runApp" || postInstallAction === "dependencies") {
     installPythonDependencies();
   }
-
-  // Copy deployment files for python
-  await copy("**", root, {
-    cwd: path.join(compPath, "deployments", "python"),
-  });
 };

@@ -11,7 +11,7 @@ fly login
 Then, run this command and follow the prompts to deploy the app.:
 
 ```shell
-fly launch --internal-port 8000
+fly launch
 ```
 
 And to open the app in your browser:

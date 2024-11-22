@@ -62,7 +62,7 @@ fly login
 Then, run this command and follow the prompts to deploy the app.:
 
 ```shell
-fly launch --internal-port 8000
+fly launch
 ```
 
 - Note: Make sure all the needed environment variables in the [.env](.env) file (e.g. `OPENAI_API_KEY`) are set.
