@@ -13,6 +13,12 @@ import {
 
 import { TSYSTEMS_LLMHUB_API_URL } from "./providers/llmhub";
 
+const DEFAULT_SYSTEM_PROMPT =
+  "You are a helpful assistant who helps users with their questions.";
+
+const DATA_SOURCES_PROMPT =
+  "You have access to a knowledge base, use query engine tool to retrieve the facts to answer the user question.";
+
 export type EnvVar = {
   name?: string;
   description?: string;
@@ -449,9 +455,6 @@ const getSystemPromptEnv = (
   dataSources?: TemplateDataSource[],
   template?: TemplateType,
 ): EnvVar[] => {
-  const defaultSystemPrompt =
-    "You are a helpful assistant who helps users with their questions.";
-
   const systemPromptEnv: EnvVar[] = [];
   // build tool system prompt by merging all tool system prompts
   // multiagent template doesn't need system prompt
@@ -466,9 +469,12 @@ const getSystemPromptEnv = (
       }
     });
 
-    const systemPrompt = toolSystemPrompt
-      ? `\"${toolSystemPrompt}\"`
-      : defaultSystemPrompt;
+    const systemPrompt =
+      "'" +
+      DEFAULT_SYSTEM_PROMPT +
+      (dataSources?.length ? `\n${DATA_SOURCES_PROMPT}` : "") +
+      (toolSystemPrompt ? `\n${toolSystemPrompt}` : "") +
+      "'";
 
     systemPromptEnv.push({
       name: "SYSTEM_PROMPT",
