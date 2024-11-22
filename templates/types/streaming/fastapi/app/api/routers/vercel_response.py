@@ -53,17 +53,27 @@ class VercelStreamResponse(StreamingResponse):
         # Merge the chat response generator and the event generator
         combine = stream.merge(chat_response_generator, event_generator)
         is_stream_started = False
-        async with combine.stream() as streamer:
-            async for output in streamer:
-                if not is_stream_started:
-                    is_stream_started = True
-                    # Stream a blank message to start displaying the response in the UI
-                    yield cls.convert_text("")
+        try:
+            async with combine.stream() as streamer:
+                async for output in streamer:
+                    if await request.is_disconnected():
+                        break
 
-                yield output
+                    if not is_stream_started:
+                        is_stream_started = True
+                        # Stream a blank message to start displaying the response in the UI
+                        yield cls.convert_text("")
 
-                if await request.is_disconnected():
-                    break
+                    yield output
+        except Exception:
+            logger.exception("Error in stream response")
+            error_message = (
+                "An error occurred while processing your request. Please try again."
+            )
+            yield cls.convert_text(error_message)
+        finally:
+            # Ensure event handler is marked as done even if connection breaks
+            event_handler.is_done = True
 
     @classmethod
     async def _event_generator(cls, event_handler: EventCallbackHandler):
