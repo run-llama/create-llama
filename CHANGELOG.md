@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.3.17
+
+### Patch Changes
+
+- 28c8808: Add fly.io deployment
+- 0a7dfcf: Generate NEXT_PUBLIC_CHAT_API for NextJS backend to specify alternative backend
+
 ## 0.3.16
 
 ### Patch Changes
