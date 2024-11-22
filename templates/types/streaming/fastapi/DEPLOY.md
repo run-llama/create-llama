@@ -5,7 +5,7 @@
 First, install [flyctl](https://fly.io/docs/flyctl/install/) and then authenticate with your Fly.io account:
 
 ```shell
-fly login
+fly auth login
 ```
 
 Then, run this command and follow the prompts to deploy the app.:
