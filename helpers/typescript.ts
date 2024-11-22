@@ -247,11 +247,6 @@ export const installTSTemplate = async ({
   ) {
     await installTSDependencies(packageJson, packageManager, isOnline);
   }
-
-  // Copy deployment files for typescript
-  await copy("**", root, {
-    cwd: path.join(compPath, "deployments", "typescript"),
-  });
 };
 
 async function updatePackageJson({

@@ -58,39 +58,9 @@ To start the app optimized for **production**, run:
 poetry run prod
 ```
 
-## Using Docker
+## Deployments
 
-1. Build an image for the FastAPI app:
-
-```
-docker build -t <your_backend_image_name> .
-```
-
-2. Generate embeddings:
-
-Parse the data and generate the vector embeddings if the `./data` folder exists - otherwise, skip this step:
-
-```
-docker run \
-  --rm \
-  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
-  -v $(pwd)/config:/app/config \
-  -v $(pwd)/data:/app/data \ # Use your local folder to read the data
-  -v $(pwd)/storage:/app/storage \ # Use your file system to store the vector database
-  <your_backend_image_name> \
-  poetry run generate
-```
-
-3. Start the API:
-
-```
-docker run \
-  -v $(pwd)/.env:/app/.env \ # Use ENV variables and configuration from your file-system
-  -v $(pwd)/config:/app/config \
-  -v $(pwd)/storage:/app/storage \ # Use your file system to store gea vector database
-  -p 8000:8000 \
-  <your_backend_image_name>
-```
+For production deployments, check the [DEPLOY.md](DEPLOY.md) file.
 
 ## Learn More
 
