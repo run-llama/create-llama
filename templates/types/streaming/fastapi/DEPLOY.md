@@ -32,7 +32,7 @@ fly console --machine <machine_id> --command "poetry run generate"
 
 Where `machine_id` is the ID of the machine where the app is running. You can show the running machines with the `fly machines` command.
 
-> **Note**: Using documents will make the app stateful. As Fly.io is a stateless app, you will need a vector database to store the embeddings of the documents. This applies also for document uploads by the user.
+> **Note**: Using documents will make the app stateful. As Fly.io is a stateless app, you should use [LlamaCloud](https://docs.cloud.llamaindex.ai/llamacloud/getting_started) or a vector database to store the embeddings of the documents. This applies also for document uploads by the user.
 
 ### Using Docker
 
