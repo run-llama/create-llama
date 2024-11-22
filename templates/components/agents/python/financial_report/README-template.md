@@ -45,21 +45,7 @@ poetry run prod
 
 ## Deployments
 
-### Deploy to [Fly.io](https://fly.io/):
-
-First, check out the [flyctl installation guide](https://fly.io/docs/flyctl/install/) and install it to your machine then authenticate with your Fly.io account:
-
-```shell
-fly login
-```
-
-Then, run this command and follow the prompts to deploy the app.:
-
-```shell
-fly launch
-```
-
-- Note: Make sure all the needed environment variables in the [.env](.env) file (e.g. `OPENAI_API_KEY`) are set.
+For production deployments, check the [DEPLOY.md](DEPLOY.md) file.
 
 ## Learn More
 
