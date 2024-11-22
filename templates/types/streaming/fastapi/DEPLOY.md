@@ -22,7 +22,7 @@ fly apps open
 
 > **Note**: The app will use the values from the `.env` file by default to simplify the deployment. Make sure all the needed environment variables in the [.env](.env) file are set. For production environments, you should not use the `.env` file, but [set the variables in Fly.io](https://fly.io/docs/rails/the-basics/configuration/) instead.
 
-#### Custom documents
+#### Documents
 
 If you're having documents in the `./data` folder, run the following command to generate vector embeddings of the documents:
 
@@ -31,6 +31,8 @@ fly console --machine <machine_id> --command "poetry run generate"
 ```
 
 Where `machine_id` is the ID of the machine where the app is running. You can show the running machines with the `fly machines` command.
+
+> **Note**: Using documents will make the app stateful. As Fly.io is a stateless app, you will need a vector database to store the embeddings of the documents. This applies also for document uploads by the user.
 
 ### Using Docker
 
@@ -53,7 +55,7 @@ docker run \
 
 Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
 
-#### Custom documents
+#### Documents
 
 If you're having documents in the `./data` folder, run the following command to generate vector embeddings of the documents:
 
