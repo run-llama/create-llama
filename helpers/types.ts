@@ -89,7 +89,6 @@ export interface InstallTemplateArgs {
   framework: TemplateFramework;
   ui: TemplateUI;
   dataSources: TemplateDataSource[];
-  customApiPath?: string;
   modelConfig: ModelConfig;
   llamaCloudKey?: string;
   useLlamaParse?: boolean;

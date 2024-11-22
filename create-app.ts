@@ -16,7 +16,7 @@ import { toolsRequireConfig } from "./helpers/tools";
 
 export type InstallAppArgs = Omit<
   InstallTemplateArgs,
-  "appName" | "root" | "isOnline" | "customApiPath"
+  "appName" | "root" | "isOnline" | "port"
 > & {
   appPath: string;
   frontend: boolean;
@@ -34,7 +34,6 @@ export async function createApp({
   communityProjectConfig,
   llamapack,
   vectorDb,
-  port,
   postInstallAction,
   dataSources,
   tools,
@@ -80,7 +79,6 @@ export async function createApp({
     communityProjectConfig,
     llamapack,
     vectorDb,
-    port,
     postInstallAction,
     dataSources,
     tools,
@@ -100,7 +98,6 @@ export async function createApp({
       ...args,
       root: frontendRoot,
       framework: "nextjs",
-      customApiPath: `http://localhost:${port ?? 8000}/api/chat`,
       backend: false,
     });
   }

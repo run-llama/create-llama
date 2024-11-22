@@ -225,7 +225,6 @@ export const installTemplate = async (
   } else {
     // this is a frontend for a full-stack app, create .env file with model information
     await createFrontendEnvFile(props.root, {
-      customApiPath: props.customApiPath,
       vectorDb: props.vectorDb,
     });
   }

@@ -407,6 +407,13 @@ const getFrameworkEnvs = (
       ],
     );
   }
+  if (framework === "nextjs") {
+    result.push({
+      name: "NEXT_PUBLIC_CHAT_API",
+      description:
+        "The API for the chat endpoint. Set when using a custom backend (e.g. Express). Use full URL like http://localhost:8000/api/chat",
+    });
+  }
   return result;
 };
 
@@ -585,18 +592,10 @@ export const createBackendEnvFile = async (
 export const createFrontendEnvFile = async (
   root: string,
   opts: {
-    customApiPath?: string;
     vectorDb?: TemplateVectorDB;
   },
 ) => {
   const defaultFrontendEnvs = [
-    {
-      name: "NEXT_PUBLIC_CHAT_API",
-      description: "The backend API for chat endpoint.",
-      value: opts.customApiPath
-        ? opts.customApiPath
-        : "http://localhost:8000/api/chat",
-    },
     {
       name: "NEXT_PUBLIC_USE_LLAMACLOUD",
       description: "Let's the user change indexes in LlamaCloud projects",
