@@ -58,7 +58,9 @@ To start the app optimized for **production**, run:
 poetry run prod
 ```
 
-## Using Docker
+## Deployments
+
+### Deploy locally with Docker
 
 1. Build an image for the FastAPI app:
 
@@ -67,8 +69,6 @@ docker build -t <your_backend_image_name> .
 ```
 
 2. Generate embeddings:
-
-Parse the data and generate the vector embeddings if the `./data` folder exists - otherwise, skip this step:
 
 ```
 docker run \
@@ -92,8 +92,6 @@ docker run \
   <your_backend_image_name>
 ```
 
-## Deployments
-
 ### Deploy to [Fly.io](https://fly.io/):
 
 First, check out the [flyctl installation guide](https://fly.io/docs/flyctl/install/) and install it to your machine then authenticate with your Fly.io account:
@@ -108,7 +106,18 @@ Then, run this command and follow the prompts to deploy the app.:
 fly launch --internal-port 8000
 ```
 
-- Note: Make sure all the needed environment variables in the [.env](.env) file (e.g. `OPENAI_API_KEY`) are set.
+- Notes:
+  The deployment will use the values from the `.env` file by default. Make sure all the needed environment variables in the [.env](.env) file (e.g. `OPENAI_API_KEY`) are set.
+
+  To override the values, you can use the environment variables setting in the Fly.io dashboard or using the `fly set` command. For more information, check out the [Environment Configuration](https://fly.io/docs/rails/the-basics/configuration/).
+
+After the app started successfully, you might need to execute the `generate` command remotely to generate embeddings of the documents in the `./data` directory (if this folder exists - otherwise, skip this step):
+
+```
+fly console --machine <machine_id> --command "poetry run generate"
+```
+
+Where `machine_id` is the ID of the machine where the app is running. You can show the running machines with the `fly machines` command.
 
 ## Learn More
 
