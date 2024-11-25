@@ -3,18 +3,13 @@ import {
   WorkflowContext,
   WorkflowEvent,
 } from "@llamaindex/workflow";
-import {
-  StreamData,
-  createStreamDataTransformer,
-  trimStartOfStreamHelper,
-} from "ai";
+import { StreamData, createStreamDataTransformer } from "ai";
 import { ChatResponseChunk } from "llamaindex";
 import { AgentRunEvent } from "./type";
 
 export async function createStreamFromWorkflowContext<Input, Output, Context>(
   context: WorkflowContext<Input, Output, Context>,
 ): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
-  const trimStartOfStream = trimStartOfStreamHelper();
   const dataStream = new StreamData();
   const encoder = new TextEncoder();
   let generator: AsyncGenerator<ChatResponseChunk> | undefined;
@@ -46,15 +41,16 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
         closeStreams(controller);
         return;
       }
-      const text = trimStartOfStream(chunk.delta ?? "");
-      if (text) {
-        controller.enqueue(encoder.encode(text));
+      if (chunk.delta) {
+        controller.enqueue(encoder.encode(chunk.delta));
       }
     },
   });
 
   return {
-    stream: mainStream.pipeThrough(createStreamDataTransformer()),
+    stream: mainStream
+      .pipeThrough(createStreamDataTransformer())
+      .pipeThrough(new TextDecoderStream()),
     dataStream,
   };
 }
