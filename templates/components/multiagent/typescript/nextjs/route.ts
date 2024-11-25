@@ -1,6 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { LlamaIndexAdapter, parseDataStreamPart, type Message } from "ai";
-import { EngineResponse } from "llamaindex";
+import { LlamaIndexAdapter, type Message } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
@@ -42,8 +41,7 @@ export async function POST(request: NextRequest) {
     });
     const { stream, dataStream: data } =
       await createStreamFromWorkflowContext(context);
-    const streamIterable = streamToAsyncIterable(stream);
-    return LlamaIndexAdapter.toDataStreamResponse(streamIterable, { data });
+    return LlamaIndexAdapter.toDataStreamResponse(stream, { data });
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(
@@ -55,26 +53,4 @@ export async function POST(request: NextRequest) {
       },
     );
   }
-}
-
-function streamToAsyncIterable(stream: ReadableStream<string>) {
-  const streamIterable: AsyncIterable<EngineResponse> = {
-    [Symbol.asyncIterator]() {
-      const reader = stream.getReader();
-      return {
-        async next() {
-          const { done, value } = await reader.read();
-          if (done) {
-            return { done: true, value: undefined };
-          }
-          const delta = parseDataStreamPart(value)?.value.toString() || "";
-          return {
-            done: false,
-            value: { delta } as unknown as EngineResponse,
-          };
-        },
-      };
-    },
-  };
-  return streamIterable;
 }

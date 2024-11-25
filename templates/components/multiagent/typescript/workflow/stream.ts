@@ -3,13 +3,17 @@ import {
   WorkflowContext,
   WorkflowEvent,
 } from "@llamaindex/workflow";
-import { StreamData, createStreamDataTransformer } from "ai";
-import { ChatResponseChunk } from "llamaindex";
+import {
+  StreamData,
+  createStreamDataTransformer,
+  parseDataStreamPart,
+} from "ai";
+import { ChatResponseChunk, EngineResponse } from "llamaindex";
 import { AgentRunEvent } from "./type";
 
 export async function createStreamFromWorkflowContext<Input, Output, Context>(
   context: WorkflowContext<Input, Output, Context>,
-): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
+): Promise<{ stream: AsyncIterable<EngineResponse>; dataStream: StreamData }> {
   const dataStream = new StreamData();
   const encoder = new TextEncoder();
   let generator: AsyncGenerator<ChatResponseChunk> | undefined;
@@ -47,10 +51,14 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
     },
   });
 
+  const stream = mainStream
+    .pipeThrough(createStreamDataTransformer())
+    .pipeThrough(new TextDecoderStream());
+
+  const streamIterable = streamToAsyncIterable(stream);
+
   return {
-    stream: mainStream
-      .pipeThrough(createStreamDataTransformer())
-      .pipeThrough(new TextDecoderStream()),
+    stream: streamIterable,
     dataStream,
   };
 }
@@ -70,4 +78,26 @@ function handleEvent(
       data: event.data,
     });
   }
+}
+
+function streamToAsyncIterable(stream: ReadableStream<string>) {
+  const streamIterable: AsyncIterable<EngineResponse> = {
+    [Symbol.asyncIterator]() {
+      const reader = stream.getReader();
+      return {
+        async next() {
+          const { done, value } = await reader.read();
+          if (done) {
+            return { done: true, value: undefined };
+          }
+          const delta = parseDataStreamPart(value)?.value.toString() || "";
+          return {
+            done: false,
+            value: { delta } as unknown as EngineResponse,
+          };
+        },
+      };
+    },
+  };
+  return streamIterable;
 }
