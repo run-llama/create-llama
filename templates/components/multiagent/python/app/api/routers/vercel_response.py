@@ -19,6 +19,7 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+    ERROR_PREFIX = "3:"
 
     def __init__(self, request: Request, chat_data: ChatData, *args, **kwargs):
         self.request = request
