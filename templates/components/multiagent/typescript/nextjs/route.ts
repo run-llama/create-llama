@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       message: userMessageContent,
       streaming: true,
     });
-    const { stream, dataStream: data } =
+    const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
-    return LlamaIndexAdapter.toDataStreamResponse(stream, { data });
+    return LlamaIndexAdapter.toDataStreamResponse(stream, { data: dataStream });
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(
