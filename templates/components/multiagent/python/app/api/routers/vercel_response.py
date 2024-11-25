@@ -42,8 +42,7 @@ class VercelStreamResponse(StreamingResponse):
 
                     yield output
         except asyncio.CancelledError:
-            logger.info("Stopping workflow")
-            await event_handler.cancel_run()
+            logger.warning("Workflow has been cancelled!")
         except Exception as e:
             logger.error(
                 f"Unexpected error in content_generator: {str(e)}", exc_info=True
@@ -52,6 +51,7 @@ class VercelStreamResponse(StreamingResponse):
                 "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
             )
         finally:
+            await event_handler.cancel_run()
             logger.info("The stream has been stopped!")
 
     def _create_stream(
