@@ -63,19 +63,17 @@ export const chat = async (req: Request, res: Response) => {
       data: vercelStreamData,
       callbacks: { onCompletion },
     });
-    // TODO: move to LlamaIndexAdapter
-    const reader = streamResponse.body?.getReader();
-    function read() {
-      reader?.read().then(({ done, value }: { done: boolean; value?: any }) => {
+    if (streamResponse.body) {
+      const reader = streamResponse.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
         if (done) {
           res.end();
           return;
         }
         res.write(value);
-        read();
-      });
+      }
     }
-    read();
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({
