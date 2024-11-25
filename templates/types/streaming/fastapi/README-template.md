@@ -15,7 +15,7 @@ Then check the parameters that have been pre-configured in the `.env` file in th
 
 If you are using any tools or data sources, you can update their config files in the `config` folder.
 
-Second, generate the embeddings of the documents in the `./data` directory (if this folder exists - otherwise, skip this step):
+Second, generate the embeddings of the documents in the `./data` directory:
 
 ```
 poetry run generate

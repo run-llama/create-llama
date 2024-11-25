@@ -131,7 +131,7 @@ const convertAnswers = async (
   > = {
     rag: {
       template: "streaming",
-      tools: getTools(["wikipedia.WikipediaToolSpec"]),
+      tools: getTools(["weather"]),
       frontend: true,
       dataSources: [EXAMPLE_FILE],
     },
