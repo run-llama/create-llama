@@ -47,6 +47,9 @@ class VercelStreamResponse(StreamingResponse):
             logger.error(
                 f"Unexpected error in content_generator: {str(e)}", exc_info=True
             )
+            yield self.convert_error(
+                "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
+            )
         finally:
             logger.info("The stream has been stopped!")
 
@@ -106,6 +109,11 @@ class VercelStreamResponse(StreamingResponse):
     def convert_data(cls, data: dict):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
+
+    @classmethod
+    def convert_error(cls, error: str):
+        error_str = json.dumps(error)
+        return f"{cls.ERROR_PREFIX}{error_str}\n"
 
     @staticmethod
     async def _generate_next_questions(chat_history: List[Message], response: str):

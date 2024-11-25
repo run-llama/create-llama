@@ -22,6 +22,7 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+    ERROR_PREFIX = "3:"
 
     def __init__(
         self,
@@ -67,10 +68,9 @@ class VercelStreamResponse(StreamingResponse):
                     yield output
         except Exception:
             logger.exception("Error in stream response")
-            error_message = (
-                "An error occurred while processing your request. Please try again."
+            yield cls.convert_error(
+                "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
             )
-            yield cls.convert_text(error_message)
         finally:
             # Ensure event handler is marked as done even if connection breaks
             event_handler.is_done = True
@@ -140,6 +140,11 @@ class VercelStreamResponse(StreamingResponse):
     def convert_data(cls, data: dict):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
+
+    @classmethod
+    def convert_error(cls, error: str):
+        error_str = json.dumps(error)
+        return f"{cls.ERROR_PREFIX}{error_str}\n"
 
     @staticmethod
     def _process_response_nodes(
