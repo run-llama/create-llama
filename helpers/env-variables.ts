@@ -17,7 +17,7 @@ const DEFAULT_SYSTEM_PROMPT =
   "You are a helpful assistant who helps users with their questions.";
 
 const DATA_SOURCES_PROMPT =
-  "You have access to a knowledge base, use query engine tool to retrieve the facts to answer the user question.";
+  "You have access to a knowledge base including the facts that you should start with to find the answer for the user question. Use the query engine tool to retrieve the facts from the knowledge base.";
 
 export type EnvVar = {
   name?: string;
