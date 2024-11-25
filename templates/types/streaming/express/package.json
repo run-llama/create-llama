@@ -16,7 +16,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "ai": "3.3.42",
+    "ai": "4.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "duck-duck-scrape": "^2.2.5",

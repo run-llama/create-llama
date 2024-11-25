@@ -43,7 +43,7 @@ export const chat = async (req: Request, res: Response) => {
       });
     });
 
-    const onFinal = (content: string) => {
+    const onCompletion = (content: string) => {
       chatHistory.push({ role: "assistant", content: content });
       generateNextQuestions(chatHistory)
         .then((questions: string[]) => {
@@ -59,7 +59,7 @@ export const chat = async (req: Request, res: Response) => {
         });
     };
 
-    const stream = LlamaIndexAdapter.toDataStream(response, { onFinal });
+    const stream = LlamaIndexAdapter.toDataStream(response, { onCompletion });
     return streamToResponse(stream, res, {}, vercelStreamData);
   } catch (error) {
     console.error("[LlamaIndex]", error);
