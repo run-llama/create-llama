@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Improve system prompt and change agentic default tool to weather
+Show streaming errors in Python, optimize system prompts for tool usage and set the weather tool as default for the Agentic RAG use case
