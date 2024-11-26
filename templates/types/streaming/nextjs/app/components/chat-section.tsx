@@ -15,7 +15,13 @@ export default function ChatSection() {
     api: `${backend}/api/chat`,
     onError: (error: unknown) => {
       if (!(error instanceof Error)) throw error;
-      alert(JSON.parse(error.message).detail);
+      let errorMessage: string;
+      try {
+        errorMessage = JSON.parse(error.message).detail;
+      } catch (e) {
+        errorMessage = error.message;
+      }
+      alert(errorMessage);
     },
   });
   return (

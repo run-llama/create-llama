@@ -8,7 +8,7 @@ First, install the dependencies:
 npm install
 ```
 
-Second, generate the embeddings of the documents in the `./data` directory (if this folder exists - otherwise, skip this step):
+Second, generate the embeddings of the documents in the `./data` directory:
 
 ```
 npm run generate

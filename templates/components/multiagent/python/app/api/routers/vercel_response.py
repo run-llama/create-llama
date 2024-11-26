@@ -19,6 +19,7 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+    ERROR_PREFIX = "3:"
 
     def __init__(self, request: Request, chat_data: ChatData, *args, **kwargs):
         self.request = request
@@ -41,13 +42,16 @@ class VercelStreamResponse(StreamingResponse):
 
                     yield output
         except asyncio.CancelledError:
-            logger.info("Stopping workflow")
-            await event_handler.cancel_run()
+            logger.warning("Workflow has been cancelled!")
         except Exception as e:
             logger.error(
                 f"Unexpected error in content_generator: {str(e)}", exc_info=True
             )
+            yield self.convert_error(
+                "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
+            )
         finally:
+            await event_handler.cancel_run()
             logger.info("The stream has been stopped!")
 
     def _create_stream(
@@ -106,6 +110,11 @@ class VercelStreamResponse(StreamingResponse):
     def convert_data(cls, data: dict):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
+
+    @classmethod
+    def convert_error(cls, error: str):
+        error_str = json.dumps(error)
+        return f"{cls.ERROR_PREFIX}{error_str}\n"
 
     @staticmethod
     async def _generate_next_questions(chat_history: List[Message], response: str):
