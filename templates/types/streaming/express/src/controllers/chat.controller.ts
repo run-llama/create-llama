@@ -2,6 +2,7 @@ import { LlamaIndexAdapter, Message, StreamData, streamToResponse } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
+import { generateFilters } from "./engine/queryFilter";
 import {
   isValidMessages,
   retrieveDocumentIds,
@@ -24,8 +25,12 @@ export const chat = async (req: Request, res: Response) => {
 
     // retrieve document ids from the annotations of all messages (if any)
     const ids = retrieveDocumentIds(messages);
-    // create chat engine with index using the document ids
-    const chatEngine = await createChatEngine(ids, data);
+    // create chat engine with index using the document ids and additional params passed in the request body
+    const engineParams = {
+      preFilters: generateFilters(ids),
+      ...data,
+    };
+    const chatEngine = await createChatEngine(engineParams);
 
     // retrieve user message content from Vercel/AI format
     const userMessageContent = retrieveMessageContent(messages);

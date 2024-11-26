@@ -1,7 +1,7 @@
 import { ChatMessage, ToolCallLLM } from "llamaindex";
 import { getTool } from "../engine/tools";
 import { FormFillingWorkflow } from "./form-filling";
-import { getQueryEngineTools } from "./tools";
+import { getQueryEngineTool } from "./tools";
 
 const TIMEOUT = 360 * 1000;
 
@@ -11,7 +11,7 @@ export async function createWorkflow(options: {
 }) {
   return new FormFillingWorkflow({
     chatHistory: options.chatHistory,
-    queryEngineTools: (await getQueryEngineTools()) || [],
+    queryEngineTool: (await getQueryEngineTool())!,
     extractorTool: (await getTool("extract_missing_cells"))!,
     fillMissingCellsTool: (await getTool("fill_missing_cells"))!,
     llm: options.llm,

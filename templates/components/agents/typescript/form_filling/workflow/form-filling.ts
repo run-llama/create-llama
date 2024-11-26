@@ -48,7 +48,7 @@ export class FormFillingWorkflow extends Workflow<
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
   extractorTool: BaseToolWithCall;
-  queryEngineTools?: BaseToolWithCall[];
+  queryEngineTool?: BaseToolWithCall;
   fillMissingCellsTool: BaseToolWithCall;
   systemPrompt?: string;
 
@@ -56,7 +56,7 @@ export class FormFillingWorkflow extends Workflow<
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
     extractorTool: BaseToolWithCall;
-    queryEngineTools?: BaseToolWithCall[];
+    queryEngineTool: BaseToolWithCall;
     fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
     verbose?: boolean;
@@ -73,7 +73,7 @@ export class FormFillingWorkflow extends Workflow<
     }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
     this.extractorTool = options.extractorTool;
-    this.queryEngineTools = options.queryEngineTools;
+    this.queryEngineTool = options.queryEngineTool;
     this.fillMissingCellsTool = options.fillMissingCellsTool;
 
     this.memory = new ChatMemoryBuffer({
@@ -156,8 +156,8 @@ export class FormFillingWorkflow extends Workflow<
     const chatHistory = ev.data.input;
 
     const tools = [this.extractorTool, this.fillMissingCellsTool];
-    if (this.queryEngineTools) {
-      tools.push(...this.queryEngineTools);
+    if (this.queryEngineTool) {
+      tools.push(this.queryEngineTool);
     }
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
@@ -192,8 +192,8 @@ export class FormFillingWorkflow extends Workflow<
         });
       default:
         if (
-          this.queryEngineTools &&
-          this.queryEngineTools.some((tool) => tool.metadata.name === toolName)
+          this.queryEngineTool &&
+          this.queryEngineTool.metadata.name === toolName
         ) {
           return new FindAnswersEvent({
             toolCalls: toolCallResponse.toolCalls,
@@ -232,7 +232,7 @@ export class FormFillingWorkflow extends Workflow<
     ev: FindAnswersEvent,
   ): Promise<InputEvent> => {
     const { toolCalls } = ev.data;
-    if (!this.queryEngineTools) {
+    if (!this.queryEngineTool) {
       throw new Error("Query engine tool is not available");
     }
     ctx.sendEvent(
@@ -243,7 +243,7 @@ export class FormFillingWorkflow extends Workflow<
       }),
     );
     const toolMsgs = await callTools({
-      tools: this.queryEngineTools,
+      tools: [this.queryEngineTool],
       toolCalls,
       ctx,
       agentName: "Researcher",
