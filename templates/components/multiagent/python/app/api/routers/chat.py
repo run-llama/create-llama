@@ -1,12 +1,13 @@
 import logging
 
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+
 from app.api.routers.models import (
     ChatData,
 )
 from app.api.routers.vercel_response import VercelStreamResponse
 from app.engine.query_filter import generate_filters
 from app.workflows import create_workflow
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
 chat_router = r = APIRouter()
 
@@ -25,10 +26,13 @@ async def chat(
 
         doc_ids = data.get_chat_document_ids()
         filters = generate_filters(doc_ids)
-        params = data.data or {}
+        params = data.data or {
+            "filters": filters,
+        }
 
         workflow = create_workflow(
-            chat_history=messages, params=params, filters=filters
+            chat_history=messages,
+            params=params,
         )
 
         event_handler = workflow.run(input=last_message_content, streaming=True)

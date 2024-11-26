@@ -7,33 +7,26 @@ from app.engine.tools import ToolFactory
 from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from app.engine.tools.query_engine import get_query_engine_tool
 
 
 def _create_query_engine_tool(params=None) -> QueryEngineTool:
-    """
-    Provide an agent worker that can be used to query the index.
-    """
+    if params is None:
+        params = {}
     # Add query tool if index exists
-    index_config = IndexConfig(**(params or {}))
+    index_config = IndexConfig(**params)
     index = get_index(index_config)
     if index is None:
         return None
-    top_k = int(os.getenv("TOP_K", 0))
-    query_engine = index.as_query_engine(
-        **({"similarity_top_k": top_k} if top_k != 0 else {})
-    )
-    return QueryEngineTool(
-        query_engine=query_engine,
-        metadata=ToolMetadata(
-            name="query_index",
-            description="""
-                Use this tool to retrieve information about the text corpus from the index.
-            """,
-        ),
+    return get_query_engine_tool(
+        index=index,
+        engine_params=params,
+        tool_name="query_index",
+        tool_description="Use this tool to retrieve information about the text corpus from the index.",
     )
 
 
-def _get_research_tools(**kwargs) -> QueryEngineTool:
+def _get_research_tools(**kwargs):
     """
     Researcher take responsibility for retrieving information.
     Try init wikipedia or duckduckgo tool if available.
