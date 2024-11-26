@@ -12,8 +12,8 @@ import {
   ToolCallLLMMessageOptions,
 } from "llamaindex";
 import crypto from "node:crypto";
-import { createQueryEngineTool } from "../../../engines/typescript/agent/tools/query-engine";
 import { getDataSource } from "../engine";
+import { createQueryEngineTool } from "../engine/tools/query-engine";
 import { AgentRunEvent } from "./type";
 
 export const getQueryEngineTool = async (): Promise<QueryEngineTool | null> => {
