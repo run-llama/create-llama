@@ -1,8 +1,8 @@
-import os
 from typing import Any, Dict, List, Optional
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
+from app.engine.tools.query_engine import get_query_engine_tool
 from app.workflows.events import AgentRunEvent
 from app.workflows.tools import (
     call_tools,
@@ -10,7 +10,6 @@ from app.workflows.tools import (
 )
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.core.indices.vector_store import VectorStoreIndex
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolSelection

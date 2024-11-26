@@ -1,4 +1,3 @@
-import os
 from textwrap import dedent
 from typing import List
 
@@ -6,7 +5,7 @@ from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
-from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.tools import QueryEngineTool
 from app.engine.tools.query_engine import get_query_engine_tool
 
 
