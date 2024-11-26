@@ -22,6 +22,7 @@ class VercelStreamResponse(StreamingResponse):
 
     TEXT_PREFIX = "0:"
     DATA_PREFIX = "8:"
+    ERROR_PREFIX = "3:"
 
     def __init__(
         self,
@@ -53,17 +54,26 @@ class VercelStreamResponse(StreamingResponse):
         # Merge the chat response generator and the event generator
         combine = stream.merge(chat_response_generator, event_generator)
         is_stream_started = False
-        async with combine.stream() as streamer:
-            async for output in streamer:
-                if not is_stream_started:
-                    is_stream_started = True
-                    # Stream a blank message to start displaying the response in the UI
-                    yield cls.convert_text("")
+        try:
+            async with combine.stream() as streamer:
+                async for output in streamer:
+                    if await request.is_disconnected():
+                        break
 
-                yield output
+                    if not is_stream_started:
+                        is_stream_started = True
+                        # Stream a blank message to start displaying the response in the UI
+                        yield cls.convert_text("")
 
-                if await request.is_disconnected():
-                    break
+                    yield output
+        except Exception:
+            logger.exception("Error in stream response")
+            yield cls.convert_error(
+                "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
+            )
+        finally:
+            # Ensure event handler is marked as done even if connection breaks
+            event_handler.is_done = True
 
     @classmethod
     async def _event_generator(cls, event_handler: EventCallbackHandler):
@@ -130,6 +140,11 @@ class VercelStreamResponse(StreamingResponse):
     def convert_data(cls, data: dict):
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
+
+    @classmethod
+    def convert_error(cls, error: str):
+        error_str = json.dumps(error)
+        return f"{cls.ERROR_PREFIX}{error_str}\n"
 
     @staticmethod
     def _process_response_nodes(

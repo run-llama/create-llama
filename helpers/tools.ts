@@ -71,8 +71,7 @@ export const supportedTools: Tool[] = [
       {
         name: TOOL_SYSTEM_PROMPT_ENV_VAR,
         description: "System prompt for DuckDuckGo search tool.",
-        value: `You are a DuckDuckGo search agent. 
-You can use the duckduckgo search tool to get information from the web to answer user questions.
+        value: `You have access to the duckduckgo search tool. Use it to get information from the web to answer user questions.
 For better results, you can specify the region parameter to get results from a specific region but it's optional.`,
       },
     ],
@@ -88,13 +87,6 @@ For better results, you can specify the region parameter to get results from a s
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LLAMAHUB,
-    envVars: [
-      {
-        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for wiki tool.",
-        value: `You are a Wikipedia agent. You help users to get information from Wikipedia.`,
-      },
-    ],
   },
   {
     display: "Weather",
@@ -102,13 +94,6 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
-    envVars: [
-      {
-        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for weather tool.",
-        value: `You are a weather forecast agent. You help users to get the weather forecast for a given location.`,
-      },
-    ],
   },
   {
     display: "Document generator",
@@ -211,14 +196,6 @@ For better results, you can specify the region parameter to get results from a s
     },
     supportedFrameworks: ["fastapi", "express", "nextjs"],
     type: ToolType.LOCAL,
-    envVars: [
-      {
-        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for openapi action tool.",
-        value:
-          "You are an OpenAPI action agent. You help users to make requests to the provided OpenAPI schema.",
-      },
-    ],
   },
   {
     display: "Image Generator",
@@ -230,11 +207,6 @@ For better results, you can specify the region parameter to get results from a s
         name: "STABILITY_API_KEY",
         description:
           "STABILITY_API_KEY key is required to run image generator. Get it here: https://platform.stability.ai/account/keys",
-      },
-      {
-        name: TOOL_SYSTEM_PROMPT_ENV_VAR,
-        description: "System prompt for image generator tool.",
-        value: `You are an image generator agent. You help users to generate images using the Stability API.`,
       },
     ],
   },

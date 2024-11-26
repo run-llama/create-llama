@@ -92,7 +92,8 @@ export async function POST(req: Request) {
       const localFilePath = path.join("output", "uploaded", fileName);
       const fileContent = await fs.readFile(localFilePath);
 
-      await sbx.files.write(sandboxFilePath, fileContent);
+      const arrayBuffer = new Uint8Array(fileContent).buffer;
+      await sbx.files.write(sandboxFilePath, arrayBuffer);
       console.log(`Copied file to ${sandboxFilePath} in ${sbx.sandboxID}`);
     });
   }
