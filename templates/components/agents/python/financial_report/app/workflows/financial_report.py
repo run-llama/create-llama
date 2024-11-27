@@ -23,23 +23,19 @@ from llama_index.core.workflow import (
 )
 
 
-def _create_query_engine_tool(params=None, **kwargs) -> QueryEngineTool:
-    if params is None:
-        params = {}
-    # Add query tool if index exists
-    index_config = IndexConfig(**params)
-    index = get_index(index_config)
-    if index is None:
-        return None
-    return get_query_engine_tool(index=index, **kwargs)
-
-
 def create_workflow(
     chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
     **kwargs,
 ) -> Workflow:
-    query_engine_tool = _create_query_engine_tool(params, **kwargs)
+    # Create query engine tool
+    index_config = IndexConfig(**params)
+    index = get_index(index_config)
+    if index is None:
+        raise ValueError(
+            "Index is not found. Try run generation script to create the index first."
+        )
+    query_engine_tool = get_query_engine_tool(index=index)
 
     configured_tools: Dict[str, FunctionTool] = ToolFactory.from_env(map_result=True)  # type: ignore
     code_interpreter_tool = configured_tools.get("interpret")

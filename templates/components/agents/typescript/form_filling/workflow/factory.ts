@@ -11,7 +11,7 @@ export async function createWorkflow(options: {
 }) {
   return new FormFillingWorkflow({
     chatHistory: options.chatHistory,
-    queryEngineTool: (await getQueryEngineTool())!,
+    queryEngineTool: (await getQueryEngineTool()) || undefined,
     extractorTool: (await getTool("extract_missing_cells"))!,
     fillMissingCellsTool: (await getTool("fill_missing_cells"))!,
     llm: options.llm,

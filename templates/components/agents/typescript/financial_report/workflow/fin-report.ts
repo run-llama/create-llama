@@ -153,10 +153,11 @@ export class FinancialReportWorkflow extends Workflow<
   > => {
     const chatHistory = ev.data.input;
 
-    const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
-    if (this.queryEngineTool) {
-      tools.push(this.queryEngineTool);
-    }
+    const tools = [
+      this.codeInterpreterTool,
+      this.documentGeneratorTool,
+      this.queryEngineTool,
+    ];
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
@@ -189,10 +190,7 @@ export class FinancialReportWorkflow extends Workflow<
           toolCalls: toolCallResponse.toolCalls,
         });
       default:
-        if (
-          this.queryEngineTool &&
-          this.queryEngineTool.metadata.name === toolName
-        ) {
+        if (this.queryEngineTool.metadata.name === toolName) {
           return new ResearchEvent({
             toolCalls: toolCallResponse.toolCalls,
           });

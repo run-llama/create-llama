@@ -56,7 +56,7 @@ export class FormFillingWorkflow extends Workflow<
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
     extractorTool: BaseToolWithCall;
-    queryEngineTool: BaseToolWithCall;
+    queryEngineTool?: BaseToolWithCall;
     fillMissingCellsTool: BaseToolWithCall;
     systemPrompt?: string;
     verbose?: boolean;
