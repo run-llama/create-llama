@@ -1,6 +1,8 @@
 import {
   BaseQueryEngine,
+  CloudRetrieveParams,
   LlamaCloudIndex,
+  MetadataFilters,
   QueryEngineTool,
   VectorStoreIndex,
 } from "llamaindex";
@@ -36,14 +38,20 @@ function createQueryEngine(
     similarityTopK:
       params?.topK ??
       (process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined),
-    preFilters: generateFilters(params?.documentIds || []),
   };
 
   if (index instanceof LlamaCloudIndex) {
     return index.asQueryEngine({
       ...baseQueryParams,
       retrieval_mode: "auto_routed",
+      preFilters: generateFilters(
+        params?.documentIds || [],
+      ) as CloudRetrieveParams["filters"],
     });
   }
-  return index.asQueryEngine(baseQueryParams);
+
+  return index.asQueryEngine({
+    ...baseQueryParams,
+    preFilters: generateFilters(params?.documentIds || []) as MetadataFilters,
+  });
 }
