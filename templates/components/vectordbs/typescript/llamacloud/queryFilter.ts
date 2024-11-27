@@ -11,7 +11,6 @@ export function generateFilters(documentIds: string[]) {
   if (!documentIds.length)
     return {
       filters: [publicDocumentsFilter],
-      condition: "or",
     } as CloudRetrieveParams["filters"];
 
   const privateDocumentsFilter: MetadataFilter = {
