@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { StreamingTextResponse, type Message } from "ai";
+import { LlamaIndexAdapter, type Message } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { initSettings } from "./engine/settings";
 import {
@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     });
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
-
-    // Return the two streams in one response
-    return new StreamingTextResponse(stream, {}, dataStream);
+    return LlamaIndexAdapter.toDataStreamResponse(stream, {
+      data: dataStream,
+    });
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return NextResponse.json(

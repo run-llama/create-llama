@@ -1,4 +1,4 @@
-import { LlamaIndexAdapter, Message, StreamData, streamToResponse } from "ai";
+import { LlamaIndexAdapter, Message, StreamData } from "ai";
 import { Request, Response } from "express";
 import { ChatMessage, Settings } from "llamaindex";
 import { createChatEngine } from "./engine/chat";
@@ -43,7 +43,7 @@ export const chat = async (req: Request, res: Response) => {
       });
     });
 
-    const onFinal = (content: string) => {
+    const onCompletion = (content: string) => {
       chatHistory.push({ role: "assistant", content: content });
       generateNextQuestions(chatHistory)
         .then((questions: string[]) => {
@@ -59,8 +59,21 @@ export const chat = async (req: Request, res: Response) => {
         });
     };
 
-    const stream = LlamaIndexAdapter.toDataStream(response, { onFinal });
-    return streamToResponse(stream, res, {}, vercelStreamData);
+    const streamResponse = LlamaIndexAdapter.toDataStreamResponse(response, {
+      data: vercelStreamData,
+      callbacks: { onCompletion },
+    });
+    if (streamResponse.body) {
+      const reader = streamResponse.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          res.end();
+          return;
+        }
+        res.write(value);
+      }
+    }
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({

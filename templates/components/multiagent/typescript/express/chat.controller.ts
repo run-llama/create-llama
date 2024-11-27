@@ -1,4 +1,4 @@
-import { Message, streamToResponse } from "ai";
+import { LlamaIndexAdapter, Message } from "ai";
 import { Request, Response } from "express";
 import {
   convertToChatHistory,
@@ -28,7 +28,20 @@ export const chat = async (req: Request, res: Response) => {
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
 
-    return streamToResponse(stream, res, {}, dataStream);
+    const streamResponse = LlamaIndexAdapter.toDataStreamResponse(stream, {
+      data: dataStream,
+    });
+    if (streamResponse.body) {
+      const reader = streamResponse.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          res.end();
+          return;
+        }
+        res.write(value);
+      }
+    }
   } catch (error) {
     console.error("[LlamaIndex]", error);
     return res.status(500).json({

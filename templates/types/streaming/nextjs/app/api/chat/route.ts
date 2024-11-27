@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const onFinal = (content: string) => {
+    const onCompletion = (content: string) => {
       chatHistory.push({ role: "assistant", content: content });
       generateNextQuestions(chatHistory)
         .then((questions: string[]) => {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return LlamaIndexAdapter.toDataStreamResponse(response, {
       data: vercelStreamData,
-      callbacks: { onFinal },
+      callbacks: { onCompletion },
     });
   } catch (error) {
     console.error("[LlamaIndex]", error);
