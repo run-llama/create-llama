@@ -45,7 +45,7 @@ export class FinancialReportWorkflow extends Workflow<
 > {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
-  queryEngineTool: BaseToolWithCall[];
+  queryEngineTool: BaseToolWithCall;
   codeInterpreterTool: BaseToolWithCall;
   documentGeneratorTool: BaseToolWithCall;
   systemPrompt?: string;
@@ -216,7 +216,7 @@ export class FinancialReportWorkflow extends Workflow<
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      tools: this.queryEngineTools,
+      tools: [this.queryEngineTool],
       toolCalls,
       ctx,
       agentName: "Researcher",
