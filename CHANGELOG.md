@@ -1,5 +1,13 @@
 # create-llama
 
+## 0.3.18
+
+### Patch Changes
+
+- fe90a7e: chore: bump ai v4
+- 02b2473: Show streaming errors in Python, optimize system prompts for tool usage and set the weather tool as default for the Agentic RAG use case
+- 63e961e: Use auto_routed retriever mode for LlamaCloudIndex
+
 ## 0.3.17
 
 ### Patch Changes
