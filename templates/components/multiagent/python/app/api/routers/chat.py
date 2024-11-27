@@ -26,13 +26,12 @@ async def chat(
 
         doc_ids = data.get_chat_document_ids()
         filters = generate_filters(doc_ids)
-        params = data.data or {
-            "filters": filters,
-        }
+        params = data.data or {}
 
         workflow = create_workflow(
             chat_history=messages,
             params=params,
+            filters=filters,
         )
 
         event_handler = workflow.run(input=last_message_content, streaming=True)

@@ -24,7 +24,9 @@ from app.workflows.tools import (
 )
 
 
-def _create_query_engine_tool(params=None) -> QueryEngineTool:
+def _create_query_engine_tool(
+    params: Optional[Dict[str, Any]] = None, **kwargs
+) -> QueryEngineTool:
     if params is None:
         params = {}
     # Add query tool if index exists
@@ -32,19 +34,15 @@ def _create_query_engine_tool(params=None) -> QueryEngineTool:
     index = get_index(index_config)
     if index is None:
         return None
-    return get_query_engine_tool(
-        index=index,
-        engine_params=params,
-        tool_name="query_index",
-        tool_description="Use this tool to retrieve information about the text corpus from the index.",
-    )
+    return get_query_engine_tool(index=index, **kwargs)
 
 
 def create_workflow(
     chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
+    **kwargs,
 ) -> Workflow:
-    query_engine_tool = _create_query_engine_tool(params)
+    query_engine_tool = _create_query_engine_tool(params, **kwargs)
     configured_tools = ToolFactory.from_env(map_result=True)
     extractor_tool = configured_tools.get("extract_questions")  # type: ignore
     filling_tool = configured_tools.get("fill_form")  # type: ignore

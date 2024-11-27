@@ -9,7 +9,7 @@ from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.settings import Settings
 
 
-def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
+def get_chat_engine(params=None, event_handlers=None, **kwargs):
     system_prompt = os.getenv("SYSTEM_PROMPT")
     citation_prompt = os.getenv("SYSTEM_CITATION_PROMPT", None)
     top_k = int(os.getenv("TOP_K", 0))
@@ -33,10 +33,9 @@ def get_chat_engine(filters=None, params=None, event_handlers=None, **kwargs):
                 "StorageContext is empty - call 'poetry run generate' to generate the storage first"
             ),
         )
-
-    retriever = index.as_retriever(
-        filters=filters, **({"similarity_top_k": top_k} if top_k != 0 else {})
-    )
+    if top_k != 0 and kwargs.get("similarity_top_k") is None:
+        kwargs["similarity_top_k"] = top_k
+    retriever = index.as_retriever(**kwargs)
 
     return CondensePlusContextChatEngine(
         llm=llm,

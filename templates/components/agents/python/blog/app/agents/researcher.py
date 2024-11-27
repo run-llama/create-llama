@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
@@ -9,7 +9,9 @@ from llama_index.core.tools import QueryEngineTool
 from app.engine.tools.query_engine import get_query_engine_tool
 
 
-def _create_query_engine_tool(params=None) -> QueryEngineTool:
+def _create_query_engine_tool(
+    params: Optional[Dict[str, Any]] = None, **kwargs
+) -> QueryEngineTool:
     if params is None:
         params = {}
     # Add query tool if index exists
@@ -17,12 +19,7 @@ def _create_query_engine_tool(params=None) -> QueryEngineTool:
     index = get_index(index_config)
     if index is None:
         return None
-    return get_query_engine_tool(
-        index=index,
-        engine_params=params,
-        tool_name="query_index",
-        tool_description="Use this tool to retrieve information about the text corpus from the index.",
-    )
+    return get_query_engine_tool(index=index, **kwargs)
 
 
 def _get_research_tools(**kwargs):
