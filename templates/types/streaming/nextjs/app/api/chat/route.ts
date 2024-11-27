@@ -3,7 +3,6 @@ import { LlamaIndexAdapter, Message, StreamData } from "ai";
 import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
-import { generateFilters } from "./engine/queryFilter";
 import { initSettings } from "./engine/settings";
 import {
   isValidMessages,
@@ -38,12 +37,8 @@ export async function POST(request: NextRequest) {
 
     // retrieve document ids from the annotations of all messages (if any)
     const ids = retrieveDocumentIds(messages);
-    // create chat engine with index using the document ids and additional params passed in the request body
-    const engineParams = {
-      preFilters: generateFilters(ids),
-      ...data,
-    };
-    const chatEngine = await createChatEngine(engineParams);
+    // create chat engine with index using the document ids
+    const chatEngine = await createChatEngine(ids, data);
 
     // retrieve user message content from Vercel/AI format
     const userMessageContent = retrieveMessageContent(messages);

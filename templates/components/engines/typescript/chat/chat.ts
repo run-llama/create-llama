@@ -1,8 +1,9 @@
 import { ContextChatEngine, Settings } from "llamaindex";
 import { getDataSource } from "./index";
 import { nodeCitationProcessor } from "./nodePostprocessors";
+import { generateFilters } from "./queryFilter";
 
-export async function createChatEngine(params?: any) {
+export async function createChatEngine(documentIds?: string[], params?: any) {
   const index = await getDataSource(params);
   if (!index) {
     throw new Error(
@@ -11,7 +12,7 @@ export async function createChatEngine(params?: any) {
   }
   const retriever = index.asRetriever({
     similarityTopK: process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined,
-    ...params,
+    filters: generateFilters(documentIds || []),
   });
 
   const systemPrompt = process.env.SYSTEM_PROMPT;

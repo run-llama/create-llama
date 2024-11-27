@@ -5,14 +5,14 @@ import { getDataSource } from "./index";
 import { createTools } from "./tools";
 import { createQueryEngineTool } from "./tools/query-engine";
 
-export async function createChatEngine(params?: any) {
+export async function createChatEngine(documentIds?: string[], params?: any) {
   const tools: BaseToolWithCall[] = [];
 
   // Add a query engine tool if we have a data source
   // Delete this code if you don't have a data source
   const index = await getDataSource(params);
   if (index) {
-    tools.push(createQueryEngineTool(index, params));
+    tools.push(createQueryEngineTool(index, { documentIds }));
   }
 
   const configFile = path.join("config", "tools.json");
