@@ -8,10 +8,7 @@ import {
   retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
-import {
-  createStreamFromWorkflowContext,
-  streamToAsyncIterable,
-} from "./workflow/stream";
+import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 initObservability();
 initSettings();
@@ -44,8 +41,7 @@ export async function POST(request: NextRequest) {
     });
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
-    const streamIterable = streamToAsyncIterable(stream);
-    return LlamaIndexAdapter.toDataStreamResponse(streamIterable, {
+    return LlamaIndexAdapter.toDataStreamResponse(stream, {
       data: dataStream,
     });
   } catch (error) {

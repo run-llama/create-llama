@@ -3,19 +3,15 @@ import {
   WorkflowContext,
   WorkflowEvent,
 } from "@llamaindex/workflow";
-import {
-  StreamData,
-  createStreamDataTransformer,
-  parseDataStreamPart,
-} from "ai";
+import { StreamData } from "ai";
 import { ChatResponseChunk, EngineResponse } from "llamaindex";
+import { ReadableStream } from "stream/web";
 import { AgentRunEvent } from "./type";
 
 export async function createStreamFromWorkflowContext<Input, Output, Context>(
   context: WorkflowContext<Input, Output, Context>,
-): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
+): Promise<{ stream: ReadableStream<EngineResponse>; dataStream: StreamData }> {
   const dataStream = new StreamData();
-  const encoder = new TextEncoder();
   let generator: AsyncGenerator<ChatResponseChunk> | undefined;
 
   const closeStreams = (controller: ReadableStreamDefaultController) => {
@@ -23,10 +19,10 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
     dataStream.close();
   };
 
-  const mainStream = new ReadableStream({
+  const stream = new ReadableStream<EngineResponse>({
     async start(controller) {
       // Kickstart the stream by sending an empty string
-      controller.enqueue(encoder.encode(""));
+      controller.enqueue({ delta: "" } as EngineResponse);
     },
     async pull(controller) {
       while (!generator) {
@@ -45,18 +41,14 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
         closeStreams(controller);
         return;
       }
-      if (chunk.delta) {
-        controller.enqueue(encoder.encode(chunk.delta));
+      const delta = chunk.delta ?? "";
+      if (delta) {
+        controller.enqueue({ delta } as EngineResponse);
       }
     },
   });
 
-  return {
-    stream: mainStream
-      .pipeThrough(createStreamDataTransformer())
-      .pipeThrough(new TextDecoderStream()),
-    dataStream,
-  };
+  return { stream, dataStream };
 }
 
 function handleEvent(
@@ -74,26 +66,4 @@ function handleEvent(
       data: event.data,
     });
   }
-}
-
-export function streamToAsyncIterable(stream: ReadableStream<string>) {
-  const streamIterable: AsyncIterable<EngineResponse> = {
-    [Symbol.asyncIterator]() {
-      const reader = stream.getReader();
-      return {
-        async next() {
-          const { done, value } = await reader.read();
-          if (done) {
-            return { done: true, value: undefined };
-          }
-          const delta = parseDataStreamPart(value)?.value.toString() || "";
-          return {
-            done: false,
-            value: { delta } as unknown as EngineResponse,
-          };
-        },
-      };
-    },
-  };
-  return streamIterable;
 }
