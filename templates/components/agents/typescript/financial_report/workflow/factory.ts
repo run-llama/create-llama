@@ -9,11 +9,19 @@ export async function createWorkflow(options: {
   chatHistory: ChatMessage[];
   llm?: ToolCallLLM;
 }) {
+  const queryEngineTool = await getQueryEngineTool();
+  const codeInterpreterTool = await getTool("interpreter");
+  const documentGeneratorTool = await getTool("document_generator");
+
+  if (!queryEngineTool || !codeInterpreterTool || !documentGeneratorTool) {
+    throw new Error("One or more required tools are not defined");
+  }
+
   return new FinancialReportWorkflow({
     chatHistory: options.chatHistory,
-    queryEngineTool: (await getQueryEngineTool())!,
-    codeInterpreterTool: (await getTool("interpreter"))!,
-    documentGeneratorTool: (await getTool("document_generator"))!,
+    queryEngineTool,
+    codeInterpreterTool,
+    documentGeneratorTool,
     llm: options.llm,
     timeout: TIMEOUT,
   });
