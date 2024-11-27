@@ -115,9 +115,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
         for (const filePath of input.sandboxFiles) {
           const fileName = path.basename(filePath);
           const localFilePath = path.join(this.uploadedFilesDir, fileName);
-          const content = fs.readFileSync(
-            localFilePath,
-          ) as unknown as ArrayBuffer;
+          const content = fs.readFileSync(localFilePath) as ArrayBuffer;
           await this.codeInterpreter?.files.write(filePath, content);
         }
       } catch (error) {

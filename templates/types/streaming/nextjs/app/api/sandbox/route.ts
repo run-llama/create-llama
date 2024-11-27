@@ -90,9 +90,7 @@ export async function POST(req: Request) {
     artifact.files.forEach(async (sandboxFilePath) => {
       const fileName = path.basename(sandboxFilePath);
       const localFilePath = path.join("output", "uploaded", fileName);
-      const fileContent = (await fs.readFile(
-        localFilePath,
-      )) as unknown as ArrayBuffer;
+      const fileContent = (await fs.readFile(localFilePath)) as ArrayBuffer;
 
       await sbx.files.write(sandboxFilePath, fileContent);
       console.log(`Copied file to ${sandboxFilePath} in ${sbx.sandboxID}`);
