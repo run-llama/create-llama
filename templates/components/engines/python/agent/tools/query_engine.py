@@ -1,10 +1,13 @@
 import os
 from typing import Optional
 
+from llama_index.core.query_engine import BaseQueryEngine, SimpleMultiModalQueryEngine
 from llama_index.core.tools.query_engine import QueryEngineTool
 
+from app.settings import get_multi_modal_llm
 
-def create_query_engine(index, **kwargs):
+
+def create_query_engine(index, **kwargs) -> BaseQueryEngine:
     """
     Create a query engine for the given index.
 
@@ -17,11 +20,18 @@ def create_query_engine(index, **kwargs):
         kwargs["similarity_top_k"] = top_k
     # If index is index is LlamaCloudIndex
     # use auto_routed mode for better query results
-    if (
-        index.__class__.__name__ == "LlamaCloudIndex"
-        and kwargs.get("auto_routed") is None
-    ):
-        kwargs["auto_routed"] = True
+    if index.__class__.__name__ == "LlamaCloudIndex":
+        if kwargs.get("auto_routed") is None:
+            kwargs["auto_routed"] = True
+            kwargs["retrieve_image_nodes"] = True
+            # TODO: Add support for MultiModalVectorStoreIndex
+            mm_llm = get_multi_modal_llm()
+            if mm_llm:
+                return SimpleMultiModalQueryEngine(
+                    retriever=index.as_retriever(**kwargs),
+                    multi_modal_llm=mm_llm,
+                )
+
     return index.as_query_engine(**kwargs)
 
 

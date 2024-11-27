@@ -1,7 +1,22 @@
 import os
-from typing import Dict
+from typing import Dict, Optional
 
+from llama_index.core.multi_modal_llms import MultiModalLLM
 from llama_index.core.settings import Settings
+
+
+def get_multi_modal_llm() -> Optional[MultiModalLLM]:
+    model_provider = os.getenv("MODEL_PROVIDER")
+    llm_model = os.getenv("MULTIMODAL_LLM_MODEL")
+    if llm_model is None:
+        return None
+    if model_provider == "openai":
+        from llama_index.multi_modal_llms.openai import OpenAIMultiModal
+
+        return OpenAIMultiModal(model=llm_model)
+    else:
+        # TODO: Add support for other providers
+        return None
 
 
 def init_settings():
