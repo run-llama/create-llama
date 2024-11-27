@@ -5,7 +5,10 @@ import {
   retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
 import { createWorkflow } from "./workflow/factory";
-import { createStreamFromWorkflowContext } from "./workflow/stream";
+import {
+  createStreamFromWorkflowContext,
+  streamToAsyncIterable,
+} from "./workflow/stream";
 
 export const chat = async (req: Request, res: Response) => {
   try {
@@ -27,10 +30,13 @@ export const chat = async (req: Request, res: Response) => {
 
     const { stream, dataStream } =
       await createStreamFromWorkflowContext(context);
-
-    const streamResponse = LlamaIndexAdapter.toDataStreamResponse(stream, {
-      data: dataStream,
-    });
+    const streamIterable = streamToAsyncIterable(stream);
+    const streamResponse = LlamaIndexAdapter.toDataStreamResponse(
+      streamIterable,
+      {
+        data: dataStream,
+      },
+    );
     if (streamResponse.body) {
       const reader = streamResponse.body.getReader();
       while (true) {

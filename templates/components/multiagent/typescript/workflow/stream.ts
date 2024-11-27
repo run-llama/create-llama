@@ -13,7 +13,7 @@ import { AgentRunEvent } from "./type";
 
 export async function createStreamFromWorkflowContext<Input, Output, Context>(
   context: WorkflowContext<Input, Output, Context>,
-): Promise<{ stream: AsyncIterable<EngineResponse>; dataStream: StreamData }> {
+): Promise<{ stream: ReadableStream<string>; dataStream: StreamData }> {
   const dataStream = new StreamData();
   const encoder = new TextEncoder();
   let generator: AsyncGenerator<ChatResponseChunk> | undefined;
@@ -51,14 +51,10 @@ export async function createStreamFromWorkflowContext<Input, Output, Context>(
     },
   });
 
-  const stream = mainStream
-    .pipeThrough(createStreamDataTransformer())
-    .pipeThrough(new TextDecoderStream());
-
-  const streamIterable = streamToAsyncIterable(stream);
-
   return {
-    stream: streamIterable,
+    stream: mainStream
+      .pipeThrough(createStreamDataTransformer())
+      .pipeThrough(new TextDecoderStream()),
     dataStream,
   };
 }
@@ -80,7 +76,7 @@ function handleEvent(
   }
 }
 
-function streamToAsyncIterable(stream: ReadableStream<string>) {
+export function streamToAsyncIterable(stream: ReadableStream<string>) {
   const streamIterable: AsyncIterable<EngineResponse> = {
     [Symbol.asyncIterator]() {
       const reader = stream.getReader();
