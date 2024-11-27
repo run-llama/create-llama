@@ -1,15 +1,15 @@
 import { ChatMessage } from "llamaindex";
 import { getTool } from "../engine/tools";
 import { FunctionCallingAgent } from "./single-agent";
-import { getQueryEngineTools } from "./tools";
+import { getQueryEngineTool } from "./tools";
 
 export const createResearcher = async (chatHistory: ChatMessage[]) => {
-  const queryEngineTools = await getQueryEngineTools();
+  const queryEngineTool = await getQueryEngineTool();
   const tools = [
     await getTool("wikipedia_tool"),
     await getTool("duckduckgo_search"),
     await getTool("image_generator"),
-    ...(queryEngineTools ? queryEngineTools : []),
+    queryEngineTool,
   ].filter((tool) => tool !== undefined);
 
   return new FunctionCallingAgent({

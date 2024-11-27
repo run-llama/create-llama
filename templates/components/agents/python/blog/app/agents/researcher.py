@@ -1,4 +1,3 @@
-import os
 from textwrap import dedent
 from typing import List
 
@@ -6,42 +5,24 @@ from app.engine.index import IndexConfig, get_index
 from app.engine.tools import ToolFactory
 from app.workflows.single import FunctionCallingAgent
 from llama_index.core.chat_engine.types import ChatMessage
-from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from app.engine.tools.query_engine import get_query_engine_tool
 
 
-def _create_query_engine_tool(params=None) -> QueryEngineTool:
-    """
-    Provide an agent worker that can be used to query the index.
-    """
-    # Add query tool if index exists
-    index_config = IndexConfig(**(params or {}))
-    index = get_index(index_config)
-    if index is None:
-        return None
-    top_k = int(os.getenv("TOP_K", 0))
-    query_engine = index.as_query_engine(
-        **({"similarity_top_k": top_k} if top_k != 0 else {})
-    )
-    return QueryEngineTool(
-        query_engine=query_engine,
-        metadata=ToolMetadata(
-            name="query_index",
-            description="""
-                Use this tool to retrieve information about the text corpus from the index.
-            """,
-        ),
-    )
-
-
-def _get_research_tools(**kwargs) -> QueryEngineTool:
+def _get_research_tools(**kwargs):
     """
     Researcher take responsibility for retrieving information.
     Try init wikipedia or duckduckgo tool if available.
     """
     tools = []
-    query_engine_tool = _create_query_engine_tool(**kwargs)
-    if query_engine_tool is not None:
-        tools.append(query_engine_tool)
+    # Create query engine tool
+    index_config = IndexConfig(**kwargs)
+    index = get_index(index_config)
+    if index is not None:
+        query_engine_tool = get_query_engine_tool(index=index)
+        if query_engine_tool is not None:
+            tools.append(query_engine_tool)
+
+    # Create duckduckgo tool
     researcher_tool_names = [
         "duckduckgo_search",
         "duckduckgo_image_search",

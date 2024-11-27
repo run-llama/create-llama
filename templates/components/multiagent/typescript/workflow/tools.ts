@@ -5,7 +5,6 @@ import {
   ChatMessage,
   ChatResponse,
   ChatResponseChunk,
-  LlamaCloudIndex,
   PartialToolCall,
   QueryEngineTool,
   ToolCall,
@@ -14,58 +13,17 @@ import {
 } from "llamaindex";
 import crypto from "node:crypto";
 import { getDataSource } from "../engine";
+import { createQueryEngineTool } from "../engine/tools/query-engine";
 import { AgentRunEvent } from "./type";
 
-export const getQueryEngineTools = async (): Promise<
-  QueryEngineTool[] | null
-> => {
-  const topK = process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined;
-
+export const getQueryEngineTool = async (): Promise<QueryEngineTool | null> => {
   const index = await getDataSource();
+
   if (!index) {
     return null;
   }
-  // index is LlamaCloudIndex use two query engine tools
-  if (index instanceof LlamaCloudIndex) {
-    return [
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          similarityTopK: topK,
-          retrieval_mode: "files_via_content",
-        }),
-        metadata: {
-          name: "document_retriever",
-          description: `Document retriever that retrieves entire documents from the corpus.
-  ONLY use for research questions that may require searching over entire research reports.
-  Will be slower and more expensive than chunk-level retrieval but may be necessary.`,
-        },
-      }),
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          similarityTopK: topK,
-          retrieval_mode: "chunks",
-        }),
-        metadata: {
-          name: "chunk_retriever",
-          description: `Retrieves a small set of relevant document chunks from the corpus.
-      Use for research questions that want to look up specific facts from the knowledge corpus,
-      and need entire documents.`,
-        },
-      }),
-    ];
-  } else {
-    return [
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          similarityTopK: topK,
-        }),
-        metadata: {
-          name: "retriever",
-          description: `Use this tool to retrieve information about the text corpus from the index.`,
-        },
-      }),
-    ];
-  }
+
+  return createQueryEngineTool(index);
 };
 
 /**

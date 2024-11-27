@@ -45,7 +45,7 @@ export class FinancialReportWorkflow extends Workflow<
 > {
   llm: ToolCallLLM;
   memory: ChatMemoryBuffer;
-  queryEngineTools: BaseToolWithCall[];
+  queryEngineTool: BaseToolWithCall;
   codeInterpreterTool: BaseToolWithCall;
   documentGeneratorTool: BaseToolWithCall;
   systemPrompt?: string;
@@ -53,7 +53,7 @@ export class FinancialReportWorkflow extends Workflow<
   constructor(options: {
     llm?: ToolCallLLM;
     chatHistory: ChatMessage[];
-    queryEngineTools: BaseToolWithCall[];
+    queryEngineTool: BaseToolWithCall;
     codeInterpreterTool: BaseToolWithCall;
     documentGeneratorTool: BaseToolWithCall;
     systemPrompt?: string;
@@ -70,7 +70,7 @@ export class FinancialReportWorkflow extends Workflow<
       throw new Error("LLM is not a ToolCallLLM");
     }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
-    this.queryEngineTools = options.queryEngineTools;
+    this.queryEngineTool = options.queryEngineTool;
     this.codeInterpreterTool = options.codeInterpreterTool;
 
     this.documentGeneratorTool = options.documentGeneratorTool;
@@ -153,10 +153,11 @@ export class FinancialReportWorkflow extends Workflow<
   > => {
     const chatHistory = ev.data.input;
 
-    const tools = [this.codeInterpreterTool, this.documentGeneratorTool];
-    if (this.queryEngineTools) {
-      tools.push(...this.queryEngineTools);
-    }
+    const tools = [
+      this.codeInterpreterTool,
+      this.documentGeneratorTool,
+      this.queryEngineTool,
+    ];
 
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
@@ -189,10 +190,7 @@ export class FinancialReportWorkflow extends Workflow<
           toolCalls: toolCallResponse.toolCalls,
         });
       default:
-        if (
-          this.queryEngineTools &&
-          this.queryEngineTools.some((tool) => tool.metadata.name === toolName)
-        ) {
+        if (this.queryEngineTool.metadata.name === toolName) {
           return new ResearchEvent({
             toolCalls: toolCallResponse.toolCalls,
           });
@@ -216,7 +214,7 @@ export class FinancialReportWorkflow extends Workflow<
     const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      tools: this.queryEngineTools,
+      tools: [this.queryEngineTool],
       toolCalls,
       ctx,
       agentName: "Researcher",

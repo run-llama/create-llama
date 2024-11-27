@@ -1,16 +1,7 @@
-import os
 from typing import Any, Dict, List, Optional
 
-from app.engine.index import IndexConfig, get_index
-from app.engine.tools import ToolFactory
-from app.workflows.events import AgentRunEvent
-from app.workflows.tools import (
-    call_tools,
-    chat_with_tools,
-)
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.core.indices.vector_store import VectorStoreIndex
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolSelection
@@ -23,24 +14,28 @@ from llama_index.core.workflow import (
     step,
 )
 
+from app.engine.index import IndexConfig, get_index
+from app.engine.tools import ToolFactory
+from app.engine.tools.query_engine import get_query_engine_tool
+from app.workflows.events import AgentRunEvent
+from app.workflows.tools import (
+    call_tools,
+    chat_with_tools,
+)
+
 
 def create_workflow(
     chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
-    filters: Optional[List[Any]] = None,
+    **kwargs,
 ) -> Workflow:
-    if params is None:
-        params = {}
-    if filters is None:
-        filters = []
+    # Create query engine tool
     index_config = IndexConfig(**params)
-    index: VectorStoreIndex = get_index(config=index_config)
+    index = get_index(index_config)
     if index is None:
         query_engine_tool = None
     else:
-        top_k = int(os.getenv("TOP_K", 10))
-        query_engine = index.as_query_engine(similarity_top_k=top_k, filters=filters)
-        query_engine_tool = QueryEngineTool.from_defaults(query_engine=query_engine)
+        query_engine_tool = get_query_engine_tool(index=index)
 
     configured_tools = ToolFactory.from_env(map_result=True)
     extractor_tool = configured_tools.get("extract_questions")  # type: ignore

@@ -1,14 +1,9 @@
-import {
-  BaseChatEngine,
-  BaseToolWithCall,
-  LLMAgent,
-  QueryEngineTool,
-} from "llamaindex";
+import { BaseChatEngine, BaseToolWithCall, LLMAgent } from "llamaindex";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getDataSource } from "./index";
-import { generateFilters } from "./queryFilter";
 import { createTools } from "./tools";
+import { createQueryEngineTool } from "./tools/query-engine";
 
 export async function createChatEngine(documentIds?: string[], params?: any) {
   const tools: BaseToolWithCall[] = [];
@@ -17,17 +12,7 @@ export async function createChatEngine(documentIds?: string[], params?: any) {
   // Delete this code if you don't have a data source
   const index = await getDataSource(params);
   if (index) {
-    tools.push(
-      new QueryEngineTool({
-        queryEngine: index.asQueryEngine({
-          preFilters: generateFilters(documentIds || []),
-        }),
-        metadata: {
-          name: "data_query_engine",
-          description: `A query engine for documents from your data source.`,
-        },
-      }),
-    );
+    tools.push(createQueryEngineTool(index, { documentIds }));
   }
 
   const configFile = path.join("config", "tools.json");
