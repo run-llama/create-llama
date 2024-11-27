@@ -33,18 +33,17 @@ function createQueryEngine(
   params?: QueryEngineParams,
 ): BaseQueryEngine {
   const baseQueryParams = {
-    similarityTopK: params?.topK
-      ? params.topK
-      : process.env.TOP_K
-        ? parseInt(process.env.TOP_K)
-        : undefined,
+    similarityTopK:
+      params?.topK ??
+      (process.env.TOP_K ? parseInt(process.env.TOP_K) : undefined),
     preFilters: generateFilters(params?.documentIds || []),
   };
 
-  const queryParams =
-    index instanceof LlamaCloudIndex
-      ? { ...baseQueryParams, retrieverMode: "auto_routed" }
-      : baseQueryParams;
-
-  return index.asQueryEngine(queryParams);
+  if (index instanceof LlamaCloudIndex) {
+    return index.asQueryEngine({
+      ...baseQueryParams,
+      retrieval_mode: "auto_routed",
+    });
+  }
+  return index.asQueryEngine(baseQueryParams);
 }
