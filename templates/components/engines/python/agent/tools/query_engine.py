@@ -52,6 +52,7 @@ class MultiModalQueryEngine(SimpleMultiModalQueryEngine):
         self,
         query_bundle: QueryBundle,
         nodes: List[NodeWithScore],
+        additional_source_nodes: Optional[Sequence[NodeWithScore]] = None,
     ) -> RESPONSE_TYPE:
         image_nodes, text_nodes = _get_image_and_text_nodes(nodes)
         # Summarize the text nodes
