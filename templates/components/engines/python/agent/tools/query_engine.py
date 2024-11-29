@@ -53,7 +53,7 @@ class MultiModalSynthesizer(TreeSummarize):
 
         fmt_prompt = self._text_qa_template.format(
             context_str=text_response,
-            query_str=query.query_str,  # type: ignore
+            query_str=query.query_str,
         )
 
         llm_response = await self._multi_modal_llm.acomplete(
@@ -100,7 +100,7 @@ def create_query_engine(index, **kwargs) -> BaseQueryEngine:
                     ),
                 )
 
-    raise ValueError("Multi-modal LLM is not set")
+    return index.as_query_engine(**kwargs)
 
 
 def get_query_engine_tool(
