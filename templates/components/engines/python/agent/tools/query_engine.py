@@ -20,7 +20,7 @@ from llama_index.core.schema import (
 )
 from llama_index.core.tools.query_engine import QueryEngineTool
 
-from app.settings import multi_modal_llm
+from app.settings import get_multi_modal_llm
 
 
 class MultiModalSynthesizer(TreeSummarize):
@@ -38,38 +38,6 @@ class MultiModalSynthesizer(TreeSummarize):
         super().__init__(*args, **kwargs)
         self._multi_modal_llm = multimodal_model
         self._text_qa_template = text_qa_template or DEFAULT_TREE_SUMMARIZE_PROMPT_SEL
-
-    def synthesize(
-        self,
-        query: QueryTextType,
-        nodes: List[NodeWithScore],
-        additional_source_nodes: Optional[Sequence[NodeWithScore]] = None,
-        **response_kwargs: Any,
-    ) -> RESPONSE_TYPE:
-        image_nodes, text_nodes = _get_image_and_text_nodes(nodes)
-
-        # Summarize the text nodes to avoid exceeding the token limit
-        text_response = str(super().synthesize(query, nodes))
-
-        fmt_prompt = self._text_qa_template.format(
-            context_str=text_response,
-            query_str=query.query_str,  # type: ignore
-        )
-
-        llm_response = self._multi_modal_llm.complete(
-            prompt=fmt_prompt,
-            image_documents=[
-                image_node.node
-                for image_node in image_nodes
-                if isinstance(image_node.node, ImageNode)
-            ],
-        )
-
-        return Response(
-            response=str(llm_response),
-            source_nodes=nodes,
-            metadata={"text_nodes": text_nodes, "image_nodes": image_nodes},
-        )
 
     async def asynthesize(
         self,
@@ -122,18 +90,17 @@ def create_query_engine(index, **kwargs) -> BaseQueryEngine:
         retrieval_mode = kwargs.get("retrieval_mode")
         if retrieval_mode is None:
             kwargs["retrieval_mode"] = "auto_routed"
-            mm_model = multi_modal_llm.get()
-            if mm_model:
+            multi_modal_llm = get_multi_modal_llm()
+            if multi_modal_llm:
                 kwargs["retrieve_image_nodes"] = True
-                print("Using multi-modal model")
                 return RetrieverQueryEngine(
                     retriever=index.as_retriever(**kwargs),
                     response_synthesizer=MultiModalSynthesizer(
-                        multimodal_model=mm_model
+                        multimodal_model=multi_modal_llm
                     ),
                 )
 
-    return index.as_query_engine(**kwargs)
+    raise ValueError("Multi-modal LLM is not set")
 
 
 def get_query_engine_tool(

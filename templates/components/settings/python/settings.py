@@ -1,13 +1,16 @@
 import os
-from contextvars import ContextVar
 from typing import Dict, Optional
 
 from llama_index.core.multi_modal_llms import MultiModalLLM
 from llama_index.core.settings import Settings
 
-multi_modal_llm: ContextVar[Optional[MultiModalLLM]] = ContextVar(
-    "multi_modal_llm", default=None
-)
+# `Settings` does not support setting `MultiModalLLM`
+# so we use a global variable to store it
+_multi_modal_llm: Optional[MultiModalLLM] = None
+
+
+def get_multi_modal_llm():
+    return _multi_modal_llm
 
 
 def init_settings():
@@ -78,7 +81,8 @@ def init_openai():
     )
 
     if model_name in GPT4V_MODELS:
-        multi_modal_llm.set(OpenAIMultiModal(model=model_name))
+        global _multi_modal_llm
+        _multi_modal_llm = OpenAIMultiModal(model=model_name)
 
     dimensions = os.getenv("EMBEDDING_DIM")
     Settings.embed_model = OpenAIEmbedding(
