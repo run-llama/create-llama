@@ -1,7 +1,6 @@
 import os
 from typing import Any, Dict, List, Optional, Sequence
 
-from llama_index.core import get_response_synthesizer
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.response.schema import RESPONSE_TYPE, Response
 from llama_index.core.multi_modal_llms import MultiModalLLM
@@ -42,11 +41,10 @@ def create_query_engine(index, **kwargs) -> BaseQueryEngine:
     # If index is index is LlamaCloudIndex
     # use auto_routed mode for better query results
     if index.__class__.__name__ == "LlamaCloudIndex":
-        retrieval_mode = kwargs.get("retrieval_mode")
-        if retrieval_mode is None:
+        if kwargs.get("retrieval_mode") is None:
             kwargs["retrieval_mode"] = "auto_routed"
-            if multimodal_llm:
-                kwargs["retrieve_image_nodes"] = True
+        if multimodal_llm:
+            kwargs["retrieve_image_nodes"] = True
     return index.as_query_engine(**kwargs)
 
 
@@ -86,14 +84,14 @@ class MultiModalSynthesizer(BaseSynthesizer):
     def __init__(
         self,
         multimodal_model: MultiModalLLM,
-        response_synthesizer: Optional[BaseSynthesizer] = None,
+        response_synthesizer: Optional[BaseSynthesizer],
         text_qa_template: Optional[BasePromptTemplate] = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._multi_modal_llm = multimodal_model
-        self._response_synthesizer = response_synthesizer or get_response_synthesizer()
+        self._response_synthesizer = response_synthesizer
         self._text_qa_template = text_qa_template or DEFAULT_TEXT_QA_PROMPT_SEL
 
     def _get_prompts(self, **kwargs) -> Dict[str, Any]:
