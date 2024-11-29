@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict, List, Optional, Sequence
 
+from llama_index.core import get_response_synthesizer
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.response.schema import RESPONSE_TYPE, Response
 from llama_index.core.multi_modal_llms import MultiModalLLM
@@ -84,14 +85,14 @@ class MultiModalSynthesizer(BaseSynthesizer):
     def __init__(
         self,
         multimodal_model: MultiModalLLM,
-        response_synthesizer: Optional[BaseSynthesizer],
+        response_synthesizer: Optional[BaseSynthesizer] = None,
         text_qa_template: Optional[BasePromptTemplate] = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._multi_modal_llm = multimodal_model
-        self._response_synthesizer = response_synthesizer
+        self._response_synthesizer = response_synthesizer or get_response_synthesizer()
         self._text_qa_template = text_qa_template or DEFAULT_TEXT_QA_PROMPT_SEL
 
     def _get_prompts(self, **kwargs) -> Dict[str, Any]:
