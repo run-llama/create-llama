@@ -95,6 +95,38 @@ class MultiModalSynthesizer(BaseSynthesizer):
             metadata={"text_nodes": text_nodes, "image_nodes": image_nodes},
         )
 
+    def synthesize(
+        self,
+        query: QueryTextType,
+        nodes: List[NodeWithScore],
+        additional_source_nodes: Optional[Sequence[NodeWithScore]] = None,
+        **response_kwargs: Any,
+    ) -> RESPONSE_TYPE:
+        image_nodes, text_nodes = _get_image_and_text_nodes(nodes)
+
+        # Summarize the text nodes to avoid exceeding the token limit
+        text_response = str(self._response_synthesizer.synthesize(query, text_nodes))
+
+        fmt_prompt = self._text_qa_template.format(
+            context_str=text_response,
+            query_str=query.query_str,  # type: ignore
+        )
+
+        llm_response = self._multi_modal_llm.complete(
+            prompt=fmt_prompt,
+            image_documents=[
+                image_node.node
+                for image_node in image_nodes
+                if isinstance(image_node.node, ImageNode)
+            ],
+        )
+
+        return Response(
+            response=str(llm_response),
+            source_nodes=nodes,
+            metadata={"text_nodes": text_nodes, "image_nodes": image_nodes},
+        )
+
 
 def create_query_engine(index, **kwargs) -> BaseQueryEngine:
     """
