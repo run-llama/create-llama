@@ -1,7 +1,16 @@
 import os
-from typing import Dict
+from typing import Dict, Optional
 
+from llama_index.core.multi_modal_llms import MultiModalLLM
 from llama_index.core.settings import Settings
+
+# `Settings` does not support setting `MultiModalLLM`
+# so we use a global variable to store it
+_multi_modal_llm: Optional[MultiModalLLM] = None
+
+
+def get_multi_modal_llm():
+    return _multi_modal_llm
 
 
 def init_settings():
@@ -60,13 +69,20 @@ def init_openai():
     from llama_index.core.constants import DEFAULT_TEMPERATURE
     from llama_index.embeddings.openai import OpenAIEmbedding
     from llama_index.llms.openai import OpenAI
+    from llama_index.multi_modal_llms.openai import OpenAIMultiModal
+    from llama_index.multi_modal_llms.openai.utils import GPT4V_MODELS
 
     max_tokens = os.getenv("LLM_MAX_TOKENS")
+    model_name = os.getenv("MODEL", "gpt-4o-mini")
     Settings.llm = OpenAI(
-        model=os.getenv("MODEL", "gpt-4o-mini"),
+        model=model_name,
         temperature=float(os.getenv("LLM_TEMPERATURE", DEFAULT_TEMPERATURE)),
         max_tokens=int(max_tokens) if max_tokens is not None else None,
     )
+
+    if model_name in GPT4V_MODELS:
+        global _multi_modal_llm
+        _multi_modal_llm = OpenAIMultiModal(model=model_name)
 
     dimensions = os.getenv("EMBEDDING_DIM")
     Settings.embed_model = OpenAIEmbedding(
