@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from llama_index.core import get_response_synthesizer
 from llama_index.core.base.base_query_engine import BaseQueryEngine
@@ -19,6 +19,7 @@ from llama_index.core.schema import (
     NodeWithScore,
 )
 from llama_index.core.tools.query_engine import QueryEngineTool
+from llama_index.core.types import RESPONSE_TEXT_TYPE
 
 from app.settings import get_multi_modal_llm
 
@@ -40,6 +41,25 @@ class MultiModalSynthesizer(BaseSynthesizer):
         self._multi_modal_llm = multimodal_model
         self._response_synthesizer = response_synthesizer
         self._text_qa_template = text_qa_template or DEFAULT_TEXT_QA_PROMPT_SEL
+
+    def _get_prompts(self, **kwargs) -> Dict[str, Any]:
+        return {
+            "text_qa_template": self._text_qa_template,
+        }
+
+    def _update_prompts(self, prompts: Dict[str, Any]) -> None:
+        if "text_qa_template" in prompts:
+            self._text_qa_template = prompts["text_qa_template"]
+
+    async def aget_response(
+        self,
+        *args,
+        **response_kwargs: Any,
+    ) -> RESPONSE_TEXT_TYPE:
+        return await self._response_synthesizer.aget_response(*args, **response_kwargs)
+
+    def get_response(self, *args, **kwargs) -> RESPONSE_TEXT_TYPE:
+        return self._response_synthesizer.get_response(*args, **kwargs)
 
     async def asynthesize(
         self,
