@@ -37,7 +37,6 @@ def create_query_engine(index, **kwargs) -> BaseQueryEngine:
     if multimodal_llm:
         kwargs["response_synthesizer"] = MultiModalSynthesizer(
             multimodal_model=multimodal_llm,
-            response_synthesizer=get_response_synthesizer(),
         )
 
     # If index is index is LlamaCloudIndex
@@ -87,14 +86,14 @@ class MultiModalSynthesizer(BaseSynthesizer):
     def __init__(
         self,
         multimodal_model: MultiModalLLM,
-        response_synthesizer: Optional[BaseSynthesizer],
+        response_synthesizer: Optional[BaseSynthesizer] = None,
         text_qa_template: Optional[BasePromptTemplate] = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._multi_modal_llm = multimodal_model
-        self._response_synthesizer = response_synthesizer
+        self._response_synthesizer = response_synthesizer or get_response_synthesizer()
         self._text_qa_template = text_qa_template or DEFAULT_TEXT_QA_PROMPT_SEL
 
     def _get_prompts(self, **kwargs) -> Dict[str, Any]:
