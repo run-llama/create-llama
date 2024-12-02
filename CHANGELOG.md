@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.3.19
+
+### Patch Changes
+
+- f9a057d: Add support multimodal indexes (e.g. from LlamaCloud)
+- aedd73d: bump: chat-ui
+
 ## 0.3.18
 
 ### Patch Changes
