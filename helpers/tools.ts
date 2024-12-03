@@ -41,7 +41,7 @@ export const supportedTools: Tool[] = [
     dependencies: [
       {
         name: "llama-index-tools-google",
-        version: "^0.2.0",
+        version: "^0.3.0",
       },
     ],
     supportedFrameworks: ["fastapi"],
@@ -82,7 +82,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "llama-index-tools-wikipedia",
-        version: "^0.2.0",
+        version: "^0.3.0",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
