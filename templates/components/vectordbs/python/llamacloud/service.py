@@ -1,18 +1,18 @@
-from io import BytesIO
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import typing
+from io import BytesIO
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
+from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel
-import requests
+
 from app.api.routers.models import SourceNodes
 from app.engine.index import get_client
-from llama_index.core.schema import NodeWithScore
-
 
 logger = logging.getLogger("uvicorn")
 
