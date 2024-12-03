@@ -33,6 +33,7 @@ def generate_datasource():
     files_to_process = reader.input_files
 
     # add each file to the LlamaCloud pipeline
+    error_files = []
     for input_file in tqdm(
         files_to_process,
         desc="Processing files",
@@ -42,13 +43,20 @@ def generate_datasource():
             logger.debug(
                 f"Adding file {input_file} to pipeline {index.name} in project {index.project_name}"
             )
-            LLamaCloudFileService.add_file_to_pipeline(
-                index.project.id,
-                index.pipeline.id,
-                f,
-                custom_metadata={},
-                wait_for_processing=False,
-            )
+            try:
+                LLamaCloudFileService.add_file_to_pipeline(
+                    index.project.id,
+                    index.pipeline.id,
+                    f,
+                    custom_metadata={},
+                    wait_for_processing=False,
+                )
+            except Exception as e:
+                error_files.append(input_file)
+                logger.error(f"Error adding file {input_file}: {e}")
+
+    if error_files:
+        logger.error(f"Failed to add the following files: {error_files}")
 
     logger.info("Finished generating the index")
 
