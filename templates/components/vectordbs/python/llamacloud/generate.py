@@ -7,6 +7,7 @@ load_dotenv()
 import logging
 
 from llama_index.core.readers import SimpleDirectoryReader
+from tqdm import tqdm
 
 from app.engine.index import get_index
 from app.engine.service import LLamaCloudFileService  # type: ignore
@@ -32,9 +33,13 @@ def generate_datasource():
     files_to_process = reader.input_files
 
     # add each file to the LlamaCloud pipeline
-    for input_file in files_to_process:
+    for input_file in tqdm(
+        files_to_process,
+        desc="Processing files",
+        unit="file",
+    ):
         with open(input_file, "rb") as f:
-            logger.info(
+            logger.debug(
                 f"Adding file {input_file} to pipeline {index.name} in project {index.project_name}"
             )
             LLamaCloudFileService.add_file_to_pipeline(
