@@ -95,10 +95,9 @@ def get_index(
         index = LlamaCloudIndex(**config.to_index_kwargs())
         return index
     except ValueError:
+        logger.warning("Index not found")
         if create_if_missing:
-            logger.info(
-                f"Index {config.llama_cloud_pipeline_config.pipeline} not found, creating it"
-            )
+            logger.info("Creating index")
             _create_index(config)
             return LlamaCloudIndex(**config.to_index_kwargs())
         return None
