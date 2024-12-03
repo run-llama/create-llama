@@ -64,6 +64,7 @@ class LLamaCloudFileService:
         pipeline_id: str,
         upload_file: Union[typing.IO, Tuple[str, BytesIO]],
         custom_metadata: Optional[Dict[str, PipelineFileCreateCustomMetadataValue]],
+        wait_for_processing: bool = True,
     ) -> str:
         client = get_client()
         file = client.files.upload_file(project_id=project_id, upload_file=upload_file)
@@ -75,6 +76,9 @@ class LLamaCloudFileService:
             }
         ]
         files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)
+
+        if not wait_for_processing:
+            return file_id
 
         # Wait 2s for the file to be processed
         max_attempts = 20
