@@ -167,15 +167,15 @@ const getAdditionalDependencies = (
       if (templateType !== "multiagent") {
         dependencies.push({
           name: "llama-index-llms-openai",
-          version: "^0.2.0",
+          version: "^0.3.2",
         });
         dependencies.push({
           name: "llama-index-embeddings-openai",
-          version: "^0.2.3",
+          version: "^0.3.1",
         });
         dependencies.push({
           name: "llama-index-agent-openai",
-          version: "^0.3.0",
+          version: "^0.4.0",
         });
       }
       break;
