@@ -1,18 +1,18 @@
-from io import BytesIO
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import typing
+from io import BytesIO
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
+from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel
-import requests
+
 from app.api.routers.models import SourceNodes
 from app.engine.index import get_client
-from llama_index.core.schema import NodeWithScore
-
 
 logger = logging.getLogger("uvicorn")
 
@@ -64,27 +64,34 @@ class LLamaCloudFileService:
         pipeline_id: str,
         upload_file: Union[typing.IO, Tuple[str, BytesIO]],
         custom_metadata: Optional[Dict[str, PipelineFileCreateCustomMetadataValue]],
+        wait_for_processing: bool = True,
     ) -> str:
         client = get_client()
         file = client.files.upload_file(project_id=project_id, upload_file=upload_file)
+        file_id = file.id
         files = [
             {
-                "file_id": file.id,
-                "custom_metadata": {"file_id": file.id, **(custom_metadata or {})},
+                "file_id": file_id,
+                "custom_metadata": {"file_id": file_id, **(custom_metadata or {})},
             }
         ]
         files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)
+
+        if not wait_for_processing:
+            return file_id
 
         # Wait 2s for the file to be processed
         max_attempts = 20
         attempt = 0
         while attempt < max_attempts:
-            result = client.pipelines.get_pipeline_file_status(pipeline_id, file.id)
+            result = client.pipelines.get_pipeline_file_status(
+                file_id=file_id, pipeline_id=pipeline_id
+            )
             if result.status == ManagedIngestionStatus.ERROR:
                 raise Exception(f"File processing failed: {str(result)}")
             if result.status == ManagedIngestionStatus.SUCCESS:
                 # File is ingested - return the file id
-                return file.id
+                return file_id
             attempt += 1
             time.sleep(0.1)  # Sleep for 100ms
         raise Exception(

@@ -2,10 +2,12 @@ import logging
 import os
 from typing import Optional
 
+from llama_cloud import PipelineType
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
+from llama_index.core.settings import Settings
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
 from pydantic import BaseModel, Field, field_validator
 
@@ -82,14 +84,63 @@ class IndexConfig(BaseModel):
         }
 
 
-def get_index(config: IndexConfig = None):
+def get_index(
+    config: IndexConfig = None,
+    create_if_missing: bool = False,
+):
     if config is None:
         config = IndexConfig()
-    index = LlamaCloudIndex(**config.to_index_kwargs())
-
-    return index
+    # Check whether the index exists
+    try:
+        index = LlamaCloudIndex(**config.to_index_kwargs())
+        return index
+    except ValueError:
+        logger.warning("Index not found")
+        if create_if_missing:
+            logger.info("Creating index")
+            _create_index(config)
+            return LlamaCloudIndex(**config.to_index_kwargs())
+        return None
 
 
 def get_client():
     config = LlamaCloudConfig()
     return llama_cloud_get_client(**config.to_client_kwargs())
+
+
+def _create_index(
+    config: IndexConfig,
+):
+    client = get_client()
+    pipeline_name = config.llama_cloud_pipeline_config.pipeline
+
+    pipelines = client.pipelines.search_pipelines(
+        pipeline_name=pipeline_name,
+        pipeline_type=PipelineType.MANAGED.value,
+    )
+    if len(pipelines) == 0:
+        from llama_index.embeddings.openai import OpenAIEmbedding
+
+        if not isinstance(Settings.embed_model, OpenAIEmbedding):
+            raise ValueError(
+                "Creating a new pipeline with a non-OpenAI embedding model is not supported."
+            )
+        client.pipelines.upsert_pipeline(
+            request={
+                "name": pipeline_name,
+                "embedding_config": {
+                    "type": "OPENAI_EMBEDDING",
+                    "component": {
+                        "api_key": os.getenv("OPENAI_API_KEY"),  # editable
+                        "model_name": os.getenv("EMBEDDING_MODEL"),
+                    },
+                },
+                "transform_config": {
+                    "mode": "auto",
+                    "config": {
+                        "chunk_size": Settings.chunk_size,  # editable
+                        "chunk_overlap": Settings.chunk_overlap,  # editable
+                    },
+                },
+            },
+        )

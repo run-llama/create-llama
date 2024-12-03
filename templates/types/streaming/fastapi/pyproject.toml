@@ -19,7 +19,7 @@ python-dotenv = "^1.0.0"
 pydantic = "<2.10"
 aiostream = "^0.5.2"
 cachetools = "^5.3.3"
-llama-index = "^0.11.17"
+llama-index = "^0.12.1"
 rich = "^13.9.4"
 
 [tool.poetry.group.dev.dependencies]

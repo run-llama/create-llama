@@ -2,6 +2,7 @@ import os
 from typing import List
 
 import reflex as rx
+
 from app.engine.generate import generate_datasource
 
 
@@ -78,10 +79,10 @@ def upload_component() -> rx.Component:
             UploadedFilesState.uploaded_files,
             lambda file: rx.card(
                 rx.stack(
-                    rx.text(file.file_name, size="sm"),
+                    rx.text(file.file_name, size="2"),
                     rx.button(
                         "x",
-                        size="sm",
+                        size="2",
                         on_click=UploadedFilesState.remove_file(file.file_name),
                     ),
                     justify="between",

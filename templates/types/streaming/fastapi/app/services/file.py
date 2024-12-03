@@ -249,6 +249,7 @@ class FileService:
             index.pipeline.id,
             upload_file,
             custom_metadata={},
+            wait_for_processing=True,
         )
         return doc_id
 

@@ -37,21 +37,21 @@ const getAdditionalDependencies = (
     case "mongo": {
       dependencies.push({
         name: "llama-index-vector-stores-mongodb",
-        version: "^0.3.1",
+        version: "^0.6.0",
       });
       break;
     }
     case "pg": {
       dependencies.push({
         name: "llama-index-vector-stores-postgres",
-        version: "^0.2.5",
+        version: "^0.3.2",
       });
       break;
     }
     case "pinecone": {
       dependencies.push({
         name: "llama-index-vector-stores-pinecone",
-        version: "^0.2.1",
+        version: "^0.4.1",
         constraints: {
           python: ">=3.11,<3.13",
         },
@@ -61,7 +61,7 @@ const getAdditionalDependencies = (
     case "milvus": {
       dependencies.push({
         name: "llama-index-vector-stores-milvus",
-        version: "^0.2.0",
+        version: "^0.3.0",
       });
       dependencies.push({
         name: "pymilvus",
@@ -72,14 +72,14 @@ const getAdditionalDependencies = (
     case "astra": {
       dependencies.push({
         name: "llama-index-vector-stores-astra-db",
-        version: "^0.2.0",
+        version: "^0.4.0",
       });
       break;
     }
     case "qdrant": {
       dependencies.push({
         name: "llama-index-vector-stores-qdrant",
-        version: "^0.3.0",
+        version: "^0.4.0",
         constraints: {
           python: ">=3.11,<3.13",
         },
@@ -89,21 +89,21 @@ const getAdditionalDependencies = (
     case "chroma": {
       dependencies.push({
         name: "llama-index-vector-stores-chroma",
-        version: "^0.2.0",
+        version: "^0.4.0",
       });
       break;
     }
     case "weaviate": {
       dependencies.push({
         name: "llama-index-vector-stores-weaviate",
-        version: "^1.1.1",
+        version: "^1.2.3",
       });
       break;
     }
     case "llamacloud":
       dependencies.push({
         name: "llama-index-indices-managed-llama-cloud",
-        version: "^0.6.0",
+        version: "^0.6.3",
       });
       break;
   }
@@ -122,13 +122,13 @@ const getAdditionalDependencies = (
         case "web":
           dependencies.push({
             name: "llama-index-readers-web",
-            version: "^0.2.2",
+            version: "^0.3.0",
           });
           break;
         case "db":
           dependencies.push({
             name: "llama-index-readers-database",
-            version: "^0.2.0",
+            version: "^0.3.0",
           });
           dependencies.push({
             name: "pymysql",
@@ -167,15 +167,15 @@ const getAdditionalDependencies = (
       if (templateType !== "multiagent") {
         dependencies.push({
           name: "llama-index-llms-openai",
-          version: "^0.2.0",
+          version: "^0.3.2",
         });
         dependencies.push({
           name: "llama-index-embeddings-openai",
-          version: "^0.2.3",
+          version: "^0.3.1",
         });
         dependencies.push({
           name: "llama-index-agent-openai",
-          version: "^0.3.0",
+          version: "^0.4.0",
         });
       }
       break;
@@ -524,7 +524,7 @@ export const installPythonTemplate = async ({
     if (observability === "llamatrace") {
       addOnDependencies.push({
         name: "llama-index-callbacks-arize-phoenix",
-        version: "^0.2.1",
+        version: "^0.3.0",
         constraints: {
           python: ">=3.11,<3.13",
         },
