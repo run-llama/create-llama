@@ -67,10 +67,11 @@ class LLamaCloudFileService:
     ) -> str:
         client = get_client()
         file = client.files.upload_file(project_id=project_id, upload_file=upload_file)
+        file_id = file.id
         files = [
             {
-                "file_id": file.id,
-                "custom_metadata": {"file_id": file.id, **(custom_metadata or {})},
+                "file_id": file_id,
+                "custom_metadata": {"file_id": file_id, **(custom_metadata or {})},
             }
         ]
         files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)
@@ -79,12 +80,14 @@ class LLamaCloudFileService:
         max_attempts = 20
         attempt = 0
         while attempt < max_attempts:
-            result = client.pipelines.get_pipeline_file_status(pipeline_id, file.id)
+            result = client.pipelines.get_pipeline_file_status(
+                file_id=file_id, pipeline_id=pipeline_id
+            )
             if result.status == ManagedIngestionStatus.ERROR:
                 raise Exception(f"File processing failed: {str(result)}")
             if result.status == ManagedIngestionStatus.SUCCESS:
                 # File is ingested - return the file id
-                return file.id
+                return file_id
             attempt += 1
             time.sleep(0.1)  # Sleep for 100ms
         raise Exception(
