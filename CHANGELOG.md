@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.20
+
+### Patch Changes
+
+- 27d2499: Bump the LlamaCloud library and fix breaking changes (Python).
+
 ## 0.3.19
 
 ### Patch Changes
