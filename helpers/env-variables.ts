@@ -525,7 +525,7 @@ Here is the conversation history
 ---------------------
 {conversation}
 ---------------------
-Given the conversation history, please give me 3 questions that you might ask next!
+Given the conversation history, please give me 3 questions that user might ask next!
 Your answer should be wrapped in three sticks which follows the following format:
 \`\`\`
 <question 1>
