@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.21
+
+### Patch Changes
+
+- 95227a7: Add query endpoint
+
 ## 0.3.20
 
 ### Patch Changes
