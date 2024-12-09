@@ -1,0 +1,18 @@
+{
+  "name": "@create-llama/e2e-clean",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "tsx clean.ts create-llama"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.1"
+  },
+  "dependencies": {
+    "@llamaindex/cloud": "^0.2.14",
+    "@llamaindex/core": "^0.2.12",
+    "tiktoken": "^1.0.17"
+  }
+}
