@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.22
+
+### Patch Changes
+
+- 25667d4: Make OpenAPI spec usable by custom GPTs
+
 ## 0.3.21
 
 ### Patch Changes
