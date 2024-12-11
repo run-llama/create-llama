@@ -16,7 +16,11 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
+servers = []
+app_name = os.getenv("FLY_APP_NAME")
+if app_name:
+    servers = [{"url": f"https://{app_name}.fly.dev"}]
+app = FastAPI(servers=servers)
 
 init_settings()
 init_observability()
