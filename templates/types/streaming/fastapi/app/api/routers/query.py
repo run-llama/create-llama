@@ -18,8 +18,8 @@ def get_query_engine() -> BaseQueryEngine:
 
 @r.get(
     "/",
-    summary="Call the get information from a knowledge base",
-    description="Get information from the knowledge base using a search query parameter",
+    summary="Get information from the knowledge base",
+    description="Retrieves relevant information from the knowledge base based on the provided search query. Returns a text response containing the matched information.",
 )
 async def query_request(
     query: str,
