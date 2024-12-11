@@ -16,7 +16,11 @@ def get_query_engine() -> BaseQueryEngine:
     return index.as_query_engine()
 
 
-@r.get("/")
+@r.get(
+    "/",
+    summary="Get information from the knowledge base",
+    description="Retrieves relevant information from the knowledge base based on the provided search query. Returns a text response containing the matched information.",
+)
 async def query_request(
     query: str,
 ) -> str:
