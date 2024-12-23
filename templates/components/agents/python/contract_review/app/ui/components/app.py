@@ -111,7 +111,7 @@ def upload_component() -> rx.Component:
                     padding="1rem",
                 ),
                 rx.cond(
-                    AppState.uploaded_file != None,  # type: ignore
+                    AppState.uploaded_file != None,  # noqa: E711
                     rx.text(AppState.uploaded_file.file_name),  # type: ignore
                     rx.text("No file uploaded"),
                 ),
