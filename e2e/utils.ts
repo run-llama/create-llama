@@ -113,7 +113,7 @@ export async function runCreateLlama({
   if (observability) {
     commandArgs.push("--observability", observability);
   }
-  if (templateType === "multiagent" && agents) {
+  if ((templateType === "multiagent" || templateType === "reflex") && agents) {
     commandArgs.push("--agents", agents);
   }
 
