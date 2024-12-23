@@ -487,9 +487,14 @@ export const installPythonTemplate = async ({
 
   if (template === "multiagent" || template === "reflex") {
     if (agents) {
+      const sourcePath =
+        template === "multiagent"
+          ? path.join(compPath, "agents", "python", agents)
+          : path.join(compPath, "reflex", agents);
+
       await copy("**", path.join(root), {
         parents: true,
-        cwd: path.join(compPath, "agents", "python", agents),
+        cwd: sourcePath,
         rename: assetRelocator,
       });
     } else {

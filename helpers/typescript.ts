@@ -153,7 +153,7 @@ export const installTSTemplate = async ({
     } else {
       console.log(
         red(
-          "There is no agent selected for multi-agent template. Please pick an agent to use via --agents flag.",
+          `There is no agent selected for ${template} template. Please pick an agent to use via --agents flag.`,
         ),
       );
       process.exit(1);
