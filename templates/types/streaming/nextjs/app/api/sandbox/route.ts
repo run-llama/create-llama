@@ -13,12 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  CodeInterpreter,
-  ExecutionError,
-  Result,
-  Sandbox,
-} from "@e2b/code-interpreter";
+import { ExecutionError, Result, Sandbox } from "@e2b/code-interpreter";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { saveDocument } from "../chat/llamaindex/documents/helper";
@@ -50,39 +45,35 @@ export type ExecutionResult = {
   url: string;
 };
 
+// see https://github.com/e2b-dev/fragments/tree/main/sandbox-templates
+const SUPPORTED_TEMPLATES = [
+  "nextjs-developer",
+  "vue-developer",
+  "streamlit-developer",
+  "gradio-developer",
+];
+
 export async function POST(req: Request) {
   const { artifact }: { artifact: CodeArtifact } = await req.json();
 
-  let sbx: Sandbox | CodeInterpreter | undefined = undefined;
-
-  // Create a interpreter or a sandbox
-  if (artifact.template === "code-interpreter-multilang") {
-    sbx = await CodeInterpreter.create({
-      metadata: { template: artifact.template },
-      timeoutMs: sandboxTimeout,
-    });
-    console.log("Created code interpreter", sbx.sandboxID);
+  let sbx: Sandbox;
+  const sandboxOpts = {
+    metadata: { template: artifact.template, userID: "default" },
+    timeoutMs: sandboxTimeout,
+  };
+  if (SUPPORTED_TEMPLATES.includes(artifact.template)) {
+    sbx = await Sandbox.create(artifact.template, sandboxOpts);
   } else {
-    sbx = await Sandbox.create(artifact.template, {
-      metadata: { template: artifact.template, userID: "default" },
-      timeoutMs: sandboxTimeout,
-    });
-    console.log("Created sandbox", sbx.sandboxID);
+    sbx = await Sandbox.create(sandboxOpts);
   }
+  console.log("Created sandbox", sbx.sandboxId);
 
   // Install packages
   if (artifact.has_additional_dependencies) {
-    if (sbx instanceof CodeInterpreter) {
-      await sbx.notebook.execCell(artifact.install_dependencies_command);
-      console.log(
-        `Installed dependencies: ${artifact.additional_dependencies.join(", ")} in code interpreter ${sbx.sandboxID}`,
-      );
-    } else if (sbx instanceof Sandbox) {
-      await sbx.commands.run(artifact.install_dependencies_command);
-      console.log(
-        `Installed dependencies: ${artifact.additional_dependencies.join(", ")} in sandbox ${sbx.sandboxID}`,
-      );
-    }
+    await sbx.commands.run(artifact.install_dependencies_command);
+    console.log(
+      `Installed dependencies: ${artifact.additional_dependencies.join(", ")} in sandbox ${sbx.sandboxId}`,
+    );
   }
 
   // Copy files
@@ -94,7 +85,7 @@ export async function POST(req: Request) {
 
       const arrayBuffer = new Uint8Array(fileContent).buffer;
       await sbx.files.write(sandboxFilePath, arrayBuffer);
-      console.log(`Copied file to ${sandboxFilePath} in ${sbx.sandboxID}`);
+      console.log(`Copied file to ${sandboxFilePath} in ${sbx.sandboxId}`);
     });
   }
 
@@ -102,19 +93,17 @@ export async function POST(req: Request) {
   if (artifact.code && Array.isArray(artifact.code)) {
     artifact.code.forEach(async (file) => {
       await sbx.files.write(file.file_path, file.file_content);
-      console.log(`Copied file to ${file.file_path} in ${sbx.sandboxID}`);
+      console.log(`Copied file to ${file.file_path} in ${sbx.sandboxId}`);
     });
   } else {
     await sbx.files.write(artifact.file_path, artifact.code);
-    console.log(`Copied file to ${artifact.file_path} in ${sbx.sandboxID}`);
+    console.log(`Copied file to ${artifact.file_path} in ${sbx.sandboxId}`);
   }
 
   // Execute code or return a URL to the running sandbox
   if (artifact.template === "code-interpreter-multilang") {
-    const result = await (sbx as CodeInterpreter).notebook.execCell(
-      artifact.code || "",
-    );
-    await (sbx as CodeInterpreter).close();
+    const result = await sbx.runCode(artifact.code || "");
+    await sbx.kill();
     const outputUrls = await downloadCellResults(result.results);
     return new Response(
       JSON.stringify({
