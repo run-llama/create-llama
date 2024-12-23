@@ -118,7 +118,8 @@ const prepareContextData = async (
       const destPath = path.join(
         root,
         "data",
-        path.basename(dataSourceConfig.url.toString()),
+        dataSourceConfig.filename ??
+          path.basename(dataSourceConfig.url.toString()),
       );
       await downloadFile(dataSourceConfig.url.toString(), destPath);
     } else {
@@ -192,7 +193,7 @@ export const installTemplate = async (
     if (
       props.template === "streaming" ||
       props.template === "multiagent" ||
-      props.template === "extractor"
+      props.template === "reflex"
     ) {
       await createBackendEnvFile(props.root, props);
     }

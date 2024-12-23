@@ -1,5 +1,9 @@
 import prompts from "prompts";
-import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
+import {
+  EXAMPLE_10K_SEC_FILES,
+  EXAMPLE_FILE,
+  EXAMPLE_GDPR,
+} from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -12,6 +16,7 @@ type AppType =
   | "financial_report_agent"
   | "form_filling"
   | "extractor"
+  | "contract_review"
   | "data_scientist";
 
 type SimpleAnswers = {
@@ -42,6 +47,7 @@ export const askSimpleQuestions = async (
         },
         { title: "Code Artifact Agent", value: "code_artifact" },
         { title: "Information Extractor", value: "extractor" },
+        { title: "Contract Review", value: "contract_review" },
       ],
     },
     questionHandlers,
@@ -51,7 +57,7 @@ export const askSimpleQuestions = async (
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
 
-  if (appType !== "extractor") {
+  if (appType !== "extractor" && appType !== "contract_review") {
     const { language: newLanguage } = await prompts(
       {
         type: "select",
@@ -166,10 +172,18 @@ const convertAnswers = async (
       modelConfig: MODEL_GPT4o,
     },
     extractor: {
-      template: "extractor",
+      template: "reflex",
+      agents: "extractor",
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_FILE],
+    },
+    contract_review: {
+      template: "reflex",
+      agents: "contract_review",
+      tools: [],
+      frontend: false,
+      dataSources: [EXAMPLE_GDPR],
     },
   };
   const results = lookup[answers.appType];

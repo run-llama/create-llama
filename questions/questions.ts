@@ -95,8 +95,8 @@ export const askProQuestions = async (program: QuestionArgs) => {
     return; // early return - no further questions needed for llamapack projects
   }
 
-  if (program.template === "extractor") {
-    // Extractor template only supports FastAPI, empty data sources, and llamacloud
+  if (program.template === "reflex") {
+    // Reflex template only supports FastAPI, empty data sources, and llamacloud
     // So we just use example file for extractor template, this allows user to choose vector database later
     program.dataSources = [EXAMPLE_FILE];
     program.framework = "fastapi";
@@ -354,11 +354,8 @@ export const askProQuestions = async (program: QuestionArgs) => {
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = true;
   } else {
-    // Extractor template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
-    if (
-      program.useLlamaParse === undefined &&
-      program.template !== "extractor"
-    ) {
+    // Reflex template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
+    if (program.useLlamaParse === undefined && program.template !== "reflex") {
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
         const { useLlamaParse } = await prompts(
