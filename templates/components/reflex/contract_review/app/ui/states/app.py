@@ -42,9 +42,6 @@ class AppState(rx.State):
                 self.uploaded_file = UploadedFile(
                     file_name=file.filename, size=len(upload_data)
                 )
-                yield rx.toast.success(
-                    "File uploaded successfully", position="top-center"
-                )
                 yield AppState.reset_workflow
                 yield AppState.trigger_workflow
             except Exception as e:
@@ -80,14 +77,11 @@ class AppState(rx.State):
                         match event.step:
                             case Step.PARSE_CONTRACT:
                                 yield ContractLoaderState.add_log(event)
-                            case Step.DISPATCH_GUIDELINE_MATCH:
-                                yield ContractLoaderState.stop
+                            case Step.ANALYZE_CLAUSES:
                                 yield GuidelineState.add_log(event)
-                            case Step.HANDLE_GUIDELINE_MATCH:
-                                yield GuidelineState.stop
+                            case Step.HANDLE_CLAUSE:
                                 yield GuidelineHandlerState.add_log(event)
                             case Step.GENERATE_REPORT:
-                                yield GuidelineHandlerState.stop
                                 yield ReportState.add_log(event)
             except Exception as e:
                 yield rx.toast.error(str(e), position="top-center")

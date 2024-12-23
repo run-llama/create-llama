@@ -79,7 +79,7 @@ class ComplianceReport(BaseModel):
     overall_compliant: bool = Field(
         ..., description="Indicates if the contract is considered overall compliant."
     )
-    summary_notes: Optional[str] = Field(
-        None,
-        description="General summary or recommendations for achieving full compliance.",
+    summary_notes: str = Field(
+        ...,
+        description="Always give a general summary or recommendations for achieving full compliance.",
     )

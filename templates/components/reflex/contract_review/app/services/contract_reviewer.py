@@ -52,8 +52,8 @@ def get_workflow():
 
 class Step(Enum):
     PARSE_CONTRACT = "parse_contract"
-    DISPATCH_GUIDELINE_MATCH = "dispatch_guideline_match"
-    HANDLE_GUIDELINE_MATCH = "handle_guideline_match"
+    ANALYZE_CLAUSES = "analyze_clauses"
+    HANDLE_CLAUSE = "handle_clause"
     GENERATE_REPORT = "generate_report"
 
 
@@ -81,9 +81,9 @@ class GenerateReportEvent(Event):
 
 class LogEvent(Event):
     msg: str
-    delta: bool = False
     step: Step
     data: dict = {}
+    is_step_completed: bool = False
 
 
 class ContractReviewWorkflow(Workflow):
@@ -121,28 +121,33 @@ class ContractReviewWorkflow(Workflow):
         # Set contract file name in context
         await ctx.set("contract_file_name", contract_file_name)
 
-        ctx.write_event_to_stream(
-            LogEvent(
-                msg=f"Reading contract: {contract_file_name}",
-                step=Step.PARSE_CONTRACT,
-            )
-        )
-
         # Parse and read the contract to documents
         docs = SimpleDirectoryReader(
             input_files=[str(uploaded_contract_path)]
         ).load_data()
-
         ctx.write_event_to_stream(
             LogEvent(
-                msg=f"Loaded into {len(docs)} documents",
+                msg=f"Loaded document: {contract_file_name}",
                 step=Step.PARSE_CONTRACT,
-                data={"num_docs": len(docs)},
+                data={
+                    "saved_path": str(uploaded_contract_path),
+                    "parsed_data": None,
+                },
             )
         )
 
         # Parse the contract into a structured model
         # See the ContractExtraction model for information we want to extract
+        ctx.write_event_to_stream(
+            LogEvent(
+                msg="Extracting information from the document",
+                step=Step.PARSE_CONTRACT,
+                data={
+                    "saved_path": str(uploaded_contract_path),
+                    "parsed_data": None,
+                },
+            )
+        )
         prompt = ChatPromptTemplate.from_messages([("user", CONTRACT_EXTRACT_PROMPT)])
         contract_extraction = await self.llm.astructured_predict(
             ContractExtraction,
@@ -161,11 +166,12 @@ class ContractReviewWorkflow(Workflow):
 
         ctx.write_event_to_stream(
             LogEvent(
-                msg=f"Contract data saved to {contract_extraction_path}",
+                msg="Extracted successfully",
                 step=Step.PARSE_CONTRACT,
+                is_step_completed=True,
                 data={
                     "saved_path": str(contract_extraction_path),
-                    "raw_data": contract_extraction.model_dump_json(),
+                    "parsed_data": contract_extraction.model_dump_json(),
                 },
             )
         )
@@ -195,7 +201,7 @@ class ContractReviewWorkflow(Workflow):
         ctx.write_event_to_stream(
             LogEvent(
                 msg=f"Created {len(ev.contract_extraction.clauses)} tasks for analyzing with the guidelines",
-                step=Step.DISPATCH_GUIDELINE_MATCH,
+                step=Step.ANALYZE_CLAUSES,
             )
         )
 
@@ -207,12 +213,11 @@ class ContractReviewWorkflow(Workflow):
         ctx.write_event_to_stream(
             LogEvent(
                 msg=f"Handling clause for request {ev.request_id}",
-                step=Step.HANDLE_GUIDELINE_MATCH,
+                step=Step.HANDLE_CLAUSE,
                 data={
                     "request_id": ev.request_id,
                     "clause_text": ev.clause.clause_text,
                     "is_compliant": None,
-                    "is_completed": False,
                 },
             )
         )
@@ -242,12 +247,12 @@ Find the relevant guideline from {ev.vendor_name} that aligns with the following
         ctx.write_event_to_stream(
             LogEvent(
                 msg=f"Completed compliance check for request {ev.request_id}",
-                step=Step.HANDLE_GUIDELINE_MATCH,
+                step=Step.HANDLE_CLAUSE,
+                is_step_completed=True,
                 data={
                     "request_id": ev.request_id,
                     "clause_text": ev.clause.clause_text,
                     "is_compliant": compliance_output.compliant,
-                    "is_completed": True,
                     "output": compliance_output.model_dump(),
                 },
             )
@@ -275,6 +280,14 @@ Find the relevant guideline from {ev.vendor_name} that aligns with the following
             for mr in match_results:
                 fp.write(mr.model_dump_json() + "\n")
 
+        ctx.write_event_to_stream(
+            LogEvent(
+                msg=f"Processed {len(match_results)} clauses",
+                step=Step.ANALYZE_CLAUSES,
+                is_step_completed=True,
+                data={"saved_path": str(match_results_path)},
+            )
+        )
         return GenerateReportEvent(match_results=[e.result for e in events])
 
     @step
@@ -336,10 +349,10 @@ Find the relevant guideline from {ev.vendor_name} that aligns with the following
             LogEvent(
                 msg=f"Compliance report saved to {compliance_report_path}",
                 step=Step.GENERATE_REPORT,
+                is_step_completed=True,
                 data={
-                    "is_completed": True,
                     "saved_path": str(compliance_report_path),
-                    "raw_data": compliance_report.model_dump_json(),
+                    "result": compliance_report,
                 },
             )
         )

@@ -7,9 +7,11 @@ def card_component(
     show_loading: bool = False,
 ) -> rx.Component:
     return rx.card(
-        rx.stack(
+        rx.hstack(
             rx.cond(show_loading, rx.spinner(size="2")),
             rx.text(title, size="4"),
+            align_items="center",
+            gap="2",
         ),
         rx.divider(orientation="horizontal"),
         rx.container(children),

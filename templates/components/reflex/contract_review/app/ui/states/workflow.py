@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 import reflex as rx
 from pydantic import BaseModel
 
+from app.models import ComplianceReport
 from app.services.contract_reviewer import LogEvent
 from rxconfig import config as rx_config
 
@@ -17,8 +18,8 @@ class ContractLoaderState(rx.State):
         if not self.is_started:
             yield ContractLoaderState.start
         self.log.append(log.model_dump())
-        if "data saved" in log.msg:
-            self.is_running = False
+        if log.is_step_completed:
+            yield ContractLoaderState.stop
 
     def has_log(self):
         return len(self.log) > 0
@@ -49,7 +50,7 @@ class GuidelineState(rx.State):
         if not self.is_started:
             yield GuidelineState.start
         self.log.append(log.model_dump())
-        if "Dispatched" in log.msg:
+        if log.is_step_completed:
             yield GuidelineState.stop
 
     def has_log(self):
@@ -79,8 +80,6 @@ class GuidelineData(BaseModel):
 
 
 class GuidelineHandlerState(rx.State):
-    is_completed: bool = False
-    # Map of request_id to compliance check results
     data: Dict[str, GuidelineData] = {}
 
     def has_data(self):
@@ -93,26 +92,29 @@ class GuidelineHandlerState(rx.State):
             return
         is_compliant = log.data.get("is_compliant", None)
         self.data[_id] = GuidelineData(
-            is_completed=log.data.get("is_completed", False),
+            is_completed=log.is_step_completed,
             is_compliant=is_compliant,
             clause_text=log.data.get("clause_text", None),
             output=log.data.get("output", {}),
         )
+        if log.is_step_completed:
+            yield self.stop(request_id=_id)
 
     @rx.event
     def reset_state(self):
-        self.is_completed = False
         self.data = {}
 
     @rx.event
-    def stop(self):
-        self.is_completed = True
+    def stop(self, request_id: str):
+        # Update the item in the data to be completed
+        self.data[request_id].is_completed = True
 
 
 class ReportState(rx.State):
-    is_started: bool = False
+    is_running: bool = False
     is_completed: bool = False
     saved_path: str = ""
+    result: Optional[ComplianceReport] = None
 
     @rx.var()
     def download_url(self) -> str:
@@ -120,14 +122,17 @@ class ReportState(rx.State):
 
     @rx.event
     def add_log(self, log: LogEvent):
-        if not self.is_started:
-            self.is_started = True
-        if log.data.get("is_completed"):
+        if not self.is_running:
+            self.is_running = True
+        if log.is_step_completed:
+            print("Result", log.data.get("result"))
             self.is_completed = True
-            self.saved_path = log.data.get("saved_path") or ""
+            self.saved_path = log.data.get("saved_path")
+            self.result = log.data.get("result")
 
     @rx.event
     def reset_state(self):
-        self.is_started = False
+        self.is_running = False
         self.is_completed = False
         self.saved_path = ""
+        self.result = None

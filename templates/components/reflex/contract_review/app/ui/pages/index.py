@@ -1,10 +1,10 @@
 import reflex as rx
 
 from app.ui.components import (
-    upload_component,
-    load_contract_component,
     guideline_component,
+    load_contract_component,
     report_component,
+    upload_component,
 )
 from app.ui.templates import template
 
@@ -25,6 +25,7 @@ def index() -> rx.Component:
             align_items="left",
             justify_content="left",
             width="100%",
+            padding="1rem",
         ),
         rx.container(
             rx.vstack(
