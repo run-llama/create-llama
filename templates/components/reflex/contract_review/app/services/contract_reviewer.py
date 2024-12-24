@@ -57,10 +57,6 @@ class Step(Enum):
     GENERATE_REPORT = "generate_report"
 
 
-# We are using LogEvent to update the UI
-# But it could be great if we can just reuse the step events from the workflow to update the UI
-
-
 class ContractExtractionEvent(Event):
     contract_extraction: ContractExtraction
 
