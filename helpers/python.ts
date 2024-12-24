@@ -405,8 +405,8 @@ export const installPythonTemplate = async ({
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
   let templatePath;
-  if (template === "extractor") {
-    templatePath = path.join(templatesDir, "types", "extractor", framework);
+  if (template === "reflex") {
+    templatePath = path.join(templatesDir, "types", "reflex");
   } else {
     templatePath = path.join(templatesDir, "types", "streaming", framework);
   }
@@ -472,24 +472,6 @@ export const installPythonTemplate = async ({
       cwd: path.join(compPath, "engines", "python", engine),
     });
 
-    // Copy agent code
-    if (template === "multiagent") {
-      if (agents) {
-        await copy("**", path.join(root), {
-          parents: true,
-          cwd: path.join(compPath, "agents", "python", agents),
-          rename: assetRelocator,
-        });
-      } else {
-        console.log(
-          red(
-            "There is no agent selected for multi-agent template. Please pick an agent to use via --agents flag.",
-          ),
-        );
-        process.exit(1);
-      }
-    }
-
     // Copy router code
     await copyRouterCode(root, tools ?? []);
   }
@@ -501,6 +483,28 @@ export const installPythonTemplate = async ({
       cwd: path.join(compPath, "multiagent", "python"),
       rename: assetRelocator,
     });
+  }
+
+  if (template === "multiagent" || template === "reflex") {
+    if (agents) {
+      const sourcePath =
+        template === "multiagent"
+          ? path.join(compPath, "agents", "python", agents)
+          : path.join(compPath, "reflex", agents);
+
+      await copy("**", path.join(root), {
+        parents: true,
+        cwd: sourcePath,
+        rename: assetRelocator,
+      });
+    } else {
+      console.log(
+        red(
+          `There is no agent selected for ${template} template. Please pick an agent to use via --agents flag.`,
+        ),
+      );
+      process.exit(1);
+    }
   }
 
   console.log("Adding additional dependencies");

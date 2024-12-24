@@ -49,7 +49,7 @@ export const getDataSourceChoices = (
     );
   }
 
-  if (framework === "fastapi" && template !== "extractor") {
+  if (framework === "fastapi" && template !== "reflex") {
     choices.push({
       title: "Use website content (requires Chrome)",
       value: "web",

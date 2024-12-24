@@ -1,5 +1,5 @@
 import { SpawnOptions, spawn } from "child_process";
-import { TemplateFramework } from "./types";
+import { TemplateFramework, TemplateType } from "./types";
 
 const createProcess = (
   command: string,
@@ -58,17 +58,17 @@ export function runTSApp(appPath: string, port: number) {
 
 export async function runApp(
   appPath: string,
-  template: string,
+  template: TemplateType,
   framework: TemplateFramework,
   port?: number,
 ): Promise<void> {
   try {
     // Start the app
     const defaultPort =
-      framework === "nextjs" || template === "extractor" ? 3000 : 8000;
+      framework === "nextjs" || template === "reflex" ? 3000 : 8000;
 
     const appRunner =
-      template === "extractor"
+      template === "reflex"
         ? runReflexApp
         : framework === "fastapi"
           ? runFastAPIApp

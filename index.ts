@@ -215,7 +215,7 @@ const options = program.opts();
 
 if (
   process.argv.includes("--no-llama-parse") ||
-  options.template === "extractor"
+  options.template === "reflex"
 ) {
   options.useLlamaParse = false;
 }

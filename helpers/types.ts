@@ -20,11 +20,11 @@ export type ModelConfig = {
   isConfigured(): boolean;
 };
 export type TemplateType =
-  | "extractor"
   | "streaming"
   | "community"
   | "llamapack"
-  | "multiagent";
+  | "multiagent"
+  | "reflex";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB =
@@ -49,14 +49,21 @@ export type TemplateDataSource = {
 };
 export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
-export type TemplateAgents = "financial_report" | "blog" | "form_filling";
+export type TemplateAgents =
+  | "financial_report"
+  | "blog"
+  | "form_filling"
+  | "extractor"
+  | "contract_review";
 // Config for both file and folder
 export type FileSourceConfig =
   | {
       path: string;
+      filename?: string;
     }
   | {
       url: URL;
+      filename?: string;
     };
 export type WebSourceConfig = {
   baseUrl?: string;
