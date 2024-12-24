@@ -14,8 +14,31 @@ dotenv.load_dotenv()
 
 
 FRONTEND_DIR = Path(os.getenv("FRONTEND_DIR", ".frontend"))
-DEFAULT_FRONTEND_PORT = 3000
+APP_HOST = os.getenv("APP_HOST", "localhost")
+APP_PORT = int(
+    os.getenv("APP_PORT", 8000)
+)  # Allocated to backend but also for access to the app, please change it in .env
+DEFAULT_FRONTEND_PORT = (
+    3000  # Not for access directly, but for proxying to the backend in development
+)
 STATIC_DIR = Path(os.getenv("STATIC_DIR", "static"))
+
+
+class NodePackageManager(str):
+    def __new__(cls, value: str) -> "NodePackageManager":
+        return super().__new__(cls, value)
+
+    @property
+    def name(self) -> str:
+        return Path(self).stem
+
+    @property
+    def is_pnpm(self) -> bool:
+        return self.name == "pnpm"
+
+    @property
+    def is_npm(self) -> bool:
+        return self.name == "npm"
 
 
 def build():
@@ -146,13 +169,12 @@ async def _run_frontend(
         package_manager,
         "run",
         "dev",
+        "--" if package_manager.is_npm else "",
         "-p",
         str(port),
         cwd=FRONTEND_DIR,
     )
-    rich.print(
-        f"\n[bold]Waiting for frontend to start, port: {port}, process id: {frontend_process.pid}[/bold]"
-    )
+    rich.print("\n[bold]Waiting for frontend to start...")
     # Block until the frontend is accessible
     for _ in range(timeout):
         await asyncio.sleep(1)
@@ -161,7 +183,7 @@ async def _run_frontend(
             raise RuntimeError("Could not start frontend dev server")
         if not _is_bindable_port(port):
             rich.print(
-                f"\n[bold green]Frontend dev server is running on port {port}[/bold green]"
+                "\n[bold]Frontend dev server is running. Please wait a while for the app to be ready...[/bold]"
             )
             return frontend_process, port
     raise TimeoutError(f"Frontend dev server failed to start within {timeout} seconds")
@@ -173,33 +195,45 @@ async def _run_backend(
     """
     Start the backend development server.
 
-    Args:
-        frontend_port: The port number the frontend is running on
     Returns:
         Process: The backend process
     """
     # Merge environment variables
     envs = {**os.environ, **(envs or {})}
-    rich.print("\n[bold]Starting backend FastAPI server...[/bold]")
+    rich.print(f"\n[bold]Starting app on port {APP_PORT}...[/bold]")
     poetry_executable = _get_poetry_executable()
-    return await asyncio.create_subprocess_exec(
+    process = await asyncio.create_subprocess_exec(
         poetry_executable,
         "run",
         "python",
         "main.py",
         env=envs,
     )
+    # Wait for port is started
+    timeout = 30
+    for _ in range(timeout):
+        await asyncio.sleep(1)
+        if process.returncode is not None:
+            raise RuntimeError("Could not start backend dev server")
+        if _is_bindable_port(APP_PORT):
+            rich.print(
+                f"\n[bold green]App is running. You now can access it at http://{APP_HOST}:{APP_PORT}[/bold green]"
+            )
+            return process
+    # Timeout, kill the process
+    process.terminate()
+    raise TimeoutError(f"Backend dev server failed to start within {timeout} seconds")
 
 
 def _install_frontend_dependencies():
     package_manager = _get_node_package_manager()
     rich.print(
-        f"\n[bold]Installing frontend dependencies using {Path(package_manager).name}. It might take a while...[/bold]"
+        f"\n[bold]Installing frontend dependencies using {package_manager.name}. It might take a while...[/bold]"
     )
     run([package_manager, "install"], cwd=".frontend", check=True)
 
 
-def _get_node_package_manager() -> str:
+def _get_node_package_manager() -> NodePackageManager:
     """
     Check for available package managers and return the preferred one.
     Returns 'pnpm' if installed, falls back to 'npm'.
@@ -215,12 +249,12 @@ def _get_node_package_manager() -> str:
     for cmd in pnpm_cmds:
         cmd_path = which(cmd)
         if cmd_path is not None:
-            return cmd_path
+            return NodePackageManager(cmd_path)
 
     for cmd in npm_cmds:
         cmd_path = which(cmd)
         if cmd_path is not None:
-            return cmd_path
+            return NodePackageManager(cmd_path)
 
     raise SystemError(
         "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
