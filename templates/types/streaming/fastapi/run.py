@@ -178,10 +178,9 @@ async def _run_frontend(
     # Block until the frontend is accessible
     for _ in range(timeout):
         await asyncio.sleep(1)
-        # Check if the frontend is accessible (port is open) or frontend_process is running
         if frontend_process.returncode is not None:
             raise RuntimeError("Could not start frontend dev server")
-        if not _is_bindable_port(port):
+        if _is_server_running(port):
             rich.print(
                 "\n[bold]Frontend dev server is running. Please wait a while for the app to be ready...[/bold]"
             )
@@ -200,6 +199,11 @@ async def _run_backend(
     """
     # Merge environment variables
     envs = {**os.environ, **(envs or {})}
+    # Check if the port is free
+    if not _is_port_available(APP_PORT):
+        raise SystemError(
+            f"Port {APP_PORT} is not available! Please change the port in .env file or kill the process running on this port."
+        )
     rich.print(f"\n[bold]Starting app on port {APP_PORT}...[/bold]")
     poetry_executable = _get_poetry_executable()
     process = await asyncio.create_subprocess_exec(
@@ -215,7 +219,7 @@ async def _run_backend(
         await asyncio.sleep(1)
         if process.returncode is not None:
             raise RuntimeError("Could not start backend dev server")
-        if not _is_bindable_port(APP_PORT):
+        if _is_server_running(APP_PORT):
             rich.print(
                 f"\n[bold green]App is running. You now can access it at http://{APP_HOST}:{APP_PORT}[/bold green]"
             )
@@ -278,28 +282,27 @@ def _get_poetry_executable() -> str:
     raise SystemError("Poetry is not installed. Please install Poetry first.")
 
 
-def _is_bindable_port(port: int) -> bool:
-    """Check if a port is available by attempting to connect to it."""
+def _is_port_available(port: int) -> bool:
+    """Check if a port is available for binding."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            # Try to connect to the port
             s.connect(("localhost", port))
-            # If we can connect, port is in use
-            return False
+            return False  # Port is in use, so not available
         except ConnectionRefusedError:
-            # Connection refused means port is available
-            return True
+            return True  # Port is available
         except socket.error:
-            # Other socket errors also likely mean port is available
-            return True
+            return True  # Other socket errors likely mean port is available
+
+
+def _is_server_running(port: int) -> bool:
+    """Check if a server is running on the specified port."""
+    return not _is_port_available(port)
 
 
 def _find_free_port(start_port: int) -> int:
-    """
-    Find a free port starting from the given port number.
-    """
+    """Find a free port starting from the given port number."""
     for port in range(start_port, 65535):
-        if _is_bindable_port(port):
+        if _is_port_available(port):
             return port
     raise SystemError("No free port found")
 
