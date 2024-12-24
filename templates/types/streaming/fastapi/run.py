@@ -215,7 +215,7 @@ async def _run_backend(
         await asyncio.sleep(1)
         if process.returncode is not None:
             raise RuntimeError("Could not start backend dev server")
-        if _is_bindable_port(APP_PORT):
+        if not _is_bindable_port(APP_PORT):
             rich.print(
                 f"\n[bold green]App is running. You now can access it at http://{APP_HOST}:{APP_PORT}[/bold green]"
             )
