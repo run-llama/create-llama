@@ -47,7 +47,10 @@ export const askSimpleQuestions = async (
         },
         { title: "Code Artifact Agent", value: "code_artifact" },
         { title: "Information Extractor", value: "extractor" },
-        { title: "Contract Review", value: "contract_review" },
+        {
+          title: "Contract Review (using Workflows)",
+          value: "contract_review",
+        },
       ],
     },
     questionHandlers,

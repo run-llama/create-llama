@@ -19,7 +19,7 @@ def index() -> rx.Component:
         rx.vstack(
             rx.heading("Built by LlamaIndex", size="6"),
             rx.text(
-                "Upload a contract to view the progress of the contract review.",
+                "Upload a contract to start the review process.",
             ),
             background_color="var(--gray-3)",
             align_items="left",

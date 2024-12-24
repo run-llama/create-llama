@@ -83,5 +83,8 @@ class AppState(rx.State):
                                 yield GuidelineHandlerState.add_log(event)
                             case Step.GENERATE_REPORT:
                                 yield ReportState.add_log(event)
+                # Wait for workflow completion and propagate any exceptions
+                await handler.result()
             except Exception as e:
                 yield rx.toast.error(str(e), position="top-center")
+                yield AppState.reset_workflow
