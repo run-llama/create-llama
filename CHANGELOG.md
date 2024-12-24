@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.23
+
+### Patch Changes
+
+- 9077cae: Add contract review use case (Python)
+
 ## 0.3.22
 
 ### Patch Changes
