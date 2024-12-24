@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Optional
 
@@ -11,6 +12,8 @@ from app.ui.states.workflow import (
     GuidelineState,
     ReportState,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UploadedFile(rx.Base):
@@ -84,7 +87,8 @@ class AppState(rx.State):
                             case Step.GENERATE_REPORT:
                                 yield ReportState.add_log(event)
                 # Wait for workflow completion and propagate any exceptions
-                await handler.result()
+                _ = await handler
             except Exception as e:
+                logger.error(f"Error in trigger_workflow: {e}")
                 yield rx.toast.error(str(e), position="top-center")
                 yield AppState.reset_workflow
