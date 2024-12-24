@@ -32,20 +32,20 @@ class AppState(rx.State):
             yield rx.toast.error(
                 "You can only upload one file at a time", position="top-center"
             )
-        else:
-            try:
-                file = files[0]
-                upload_data = await file.read()
-                outfile = os.path.join(UPLOADED_DIR, file.filename)
-                with open(outfile, "wb") as f:
-                    f.write(upload_data)
-                self.uploaded_file = UploadedFile(
-                    file_name=file.filename, size=len(upload_data)
-                )
-                yield AppState.reset_workflow
-                yield AppState.trigger_workflow
-            except Exception as e:
-                yield rx.toast.error(str(e), position="top-center")
+            return
+        try:
+            file = files[0]
+            upload_data = await file.read()
+            outfile = os.path.join(UPLOADED_DIR, file.filename)
+            with open(outfile, "wb") as f:
+                f.write(upload_data)
+            self.uploaded_file = UploadedFile(
+                file_name=file.filename, size=len(upload_data)
+            )
+            yield AppState.reset_workflow
+            yield AppState.trigger_workflow
+        except Exception as e:
+            yield rx.toast.error(str(e), position="top-center")
 
     @rx.event
     def reset_workflow(self):
