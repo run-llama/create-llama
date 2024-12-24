@@ -8,7 +8,7 @@ def report_component() -> rx.Component:
     return rx.cond(
         ReportState.is_running,
         card_component(
-            title="Report",
+            title="Conclusion",
             show_loading=~ReportState.is_completed,  # type: ignore
             children=rx.cond(
                 ReportState.is_completed,
@@ -39,17 +39,9 @@ def report_component() -> rx.Component:
                             ),
                         )
                     ),
-                    rx.text("Your report is ready to download"),
-                    rx.button(
-                        "Download",
-                        on_click=rx.download(
-                            url=ReportState.download_url,
-                            filename="report.json",
-                        ),
-                    ),
                 ),
                 rx.vstack(
-                    rx.text("Generating report..."),
+                    rx.text("Analyzing compliance results for final conclusion..."),
                 ),
             ),
         ),
