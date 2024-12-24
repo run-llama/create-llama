@@ -253,7 +253,7 @@ Find the relevant guideline from {ev.vendor_name} that aligns with the following
                     "request_id": ev.request_id,
                     "clause_text": ev.clause.clause_text,
                     "is_compliant": compliance_output.compliant,
-                    "output": compliance_output.model_dump(),
+                    "result": compliance_output,
                 },
             )
         )

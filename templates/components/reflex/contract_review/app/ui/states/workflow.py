@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import reflex as rx
 from pydantic import BaseModel
 
-from app.models import ComplianceReport
+from app.models import ClauseComplianceCheck, ComplianceReport
 from app.services.contract_reviewer import LogEvent
 from rxconfig import config as rx_config
 
@@ -76,7 +76,7 @@ class GuidelineData(BaseModel):
     is_completed: bool
     is_compliant: Optional[bool]
     clause_text: Optional[str]
-    output: Optional[Dict[str, Any]]
+    result: Optional[ClauseComplianceCheck] = None
 
 
 class GuidelineHandlerState(rx.State):
@@ -95,7 +95,7 @@ class GuidelineHandlerState(rx.State):
             is_completed=log.is_step_completed,
             is_compliant=is_compliant,
             clause_text=log.data.get("clause_text", None),
-            output=log.data.get("output", {}),
+            result=log.data.get("result", None),
         )
         if log.is_step_completed:
             yield self.stop(request_id=_id)
@@ -125,7 +125,6 @@ class ReportState(rx.State):
         if not self.is_running:
             self.is_running = True
         if log.is_step_completed:
-            print("Result", log.data.get("result"))
             self.is_completed = True
             self.saved_path = log.data.get("saved_path")
             self.result = log.data.get("result")

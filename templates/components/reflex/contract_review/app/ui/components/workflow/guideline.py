@@ -1,7 +1,8 @@
-from typing import Any, Dict, List
+from typing import List
 
 import reflex as rx
 
+from app.models import ClauseComplianceCheck
 from app.ui.components.shared import card_component
 from app.ui.states.workflow import GuidelineData, GuidelineHandlerState, GuidelineState
 
@@ -34,7 +35,7 @@ def guideline_handler_component(item: List) -> rx.Component:
         rx.hover_card.content(
             rx.cond(
                 status.is_completed,
-                guideline_output_component(status.output),  # type: ignore
+                guideline_result_component(status.result),  # type: ignore
                 rx.spinner(size="1"),
             ),
             side="right",
@@ -42,19 +43,41 @@ def guideline_handler_component(item: List) -> rx.Component:
     )
 
 
-def guideline_output_component(output: Dict[str, Any]) -> rx.Component:
+def guideline_result_component(result: ClauseComplianceCheck) -> rx.Component:
     return rx.inset(
         rx.table.root(
-            rx.table.body(
+            rx.table.header(
                 rx.table.row(
                     rx.table.cell("Clause"),
-                    rx.table.cell(output.clause_text),  # type: ignore
-                ),
-                rx.table.row(
-                    rx.table.cell("Notes"),
-                    rx.table.cell(output.notes),  # type: ignore
+                    rx.table.cell("Guideline"),
                 ),
             ),
+            rx.table.body(
+                rx.table.row(
+                    # rx.table.cell("Clause"),
+                    rx.table.cell(
+                        rx.text(result.clause_text, size="1"),
+                    ),  # type: ignore
+                    rx.table.cell(
+                        rx.text(result.matched_guideline.guideline_text, size="1"),  # type: ignore
+                    ),
+                ),
+            ),
+        ),
+        rx.container(
+            rx.cond(
+                result.compliant,
+                rx.text(
+                    result.notes,  # type: ignore
+                    size="2",
+                    color="green",
+                ),
+                rx.text(
+                    result.notes,  # type: ignore
+                    size="2",
+                    color="red",
+                ),
+            )
         ),
     )
 
@@ -63,7 +86,7 @@ def guideline_component() -> rx.Component:
     return rx.cond(
         GuidelineState.is_started,
         card_component(
-            title="Finding relevant guidelines",
+            title="Analyze the document with provided guidelines",
             children=rx.vstack(
                 rx.vstack(
                     rx.foreach(
