@@ -107,23 +107,28 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       this.codeInterpreter = await Sandbox.create({
         apiKey: this.apiKey,
       });
-    }
-    // upload files to sandbox
-    if (input.sandboxFiles) {
-      console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
-      try {
-        for (const filePath of input.sandboxFiles) {
-          const fileName = path.basename(filePath);
-          const localFilePath = path.join(this.uploadedFilesDir, fileName);
-          const content = fs.readFileSync(localFilePath);
+      // upload files to sandbox when it's initialized
+      if (input.sandboxFiles) {
+        console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
+        try {
+          for (const filePath of input.sandboxFiles) {
+            const fileName = path.basename(filePath);
+            const localFilePath = path.join(this.uploadedFilesDir, fileName);
+            const content = fs.readFileSync(localFilePath);
 
-          const arrayBuffer = new Uint8Array(content).buffer;
-          await this.codeInterpreter?.files.write(filePath, arrayBuffer);
+            const arrayBuffer = new Uint8Array(content).buffer;
+            const res = await this.codeInterpreter?.files.write(
+              filePath,
+              arrayBuffer,
+            );
+            console.log({ res });
+          }
+        } catch (error) {
+          console.error("Got error when uploading files to sandbox", error);
         }
-      } catch (error) {
-        console.error("Got error when uploading files to sandbox", error);
       }
     }
+
     return this.codeInterpreter;
   }
 
