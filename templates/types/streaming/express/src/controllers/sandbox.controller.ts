@@ -103,10 +103,12 @@ export const sandbox = async (req: Request, res: Response) => {
       }),
     );
   } else {
-    return res.status(200).json({
-      template: artifact.template,
-      url: `https://${sbx?.getHost(artifact.port || 80)}`,
-    });
+    return new Response(
+      JSON.stringify({
+        template: artifact.template,
+        url: `https://${sbx?.getHost(artifact.port || 80)}`,
+      }),
+    );
   }
 };
 
