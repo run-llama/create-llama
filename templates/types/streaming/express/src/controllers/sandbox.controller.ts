@@ -93,22 +93,18 @@ export const sandbox = async (req: Request, res: Response) => {
     const result = await sbx.runCode(artifact.code || "");
     await sbx.kill();
     const outputUrls = await downloadCellResults(result.results);
-    return new Response(
-      JSON.stringify({
-        template: artifact.template,
-        stdout: result.logs.stdout,
-        stderr: result.logs.stderr,
-        runtimeError: result.error,
-        outputUrls: outputUrls,
-      }),
-    );
+    return res.status(200).json({
+      template: artifact.template,
+      stdout: result.logs.stdout,
+      stderr: result.logs.stderr,
+      runtimeError: result.error,
+      outputUrls: outputUrls,
+    });
   } else {
-    return new Response(
-      JSON.stringify({
-        template: artifact.template,
-        url: `https://${sbx?.getHost(artifact.port || 80)}`,
-      }),
-    );
+    return res.status(200).json({
+      template: artifact.template,
+      url: `https://${sbx?.getHost(artifact.port || 80)}`,
+    });
   }
 };
 
