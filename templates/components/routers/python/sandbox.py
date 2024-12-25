@@ -119,7 +119,7 @@ async def create_sandbox(request: Request):
 
     # Execute code or return a URL to the running sandbox
     if artifact.template == "code-interpreter-multilang":
-        result = sbx.runCode(artifact.code or "")
+        result = sbx.run_code(artifact.code or "")
         output_urls = _download_cell_results(result.results)
         runtime_error = asdict(result.error) if result.error else None
         return ExecutionResult(

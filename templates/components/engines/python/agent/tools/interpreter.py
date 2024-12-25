@@ -163,7 +163,7 @@ class E2BCodeInterpreter:
             logger.info(
                 f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
             )
-            exec = self.interpreter.runCode(code)
+            exec = self.interpreter.run_code(code)
 
             if exec.error:
                 error_message = f"The code failed to execute successfully. Error: {exec.error}. Try to fix the code and run again."
