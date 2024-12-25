@@ -26,7 +26,7 @@ export const installTSTemplate = async ({
   tools,
   dataSources,
   useLlamaParse,
-  agents,
+  useCase,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -131,16 +131,16 @@ export const installTSTemplate = async ({
       cwd: path.join(multiagentPath, "workflow"),
     });
 
-    // Copy agents use case code for multiagent template
-    if (agents) {
-      console.log("\nCopying agent:", agents, "\n");
-      const useCasePath = path.join(compPath, "agents", "typescript", agents);
-      const agentsCodePath = path.join(useCasePath, "workflow");
+    // Copy use case code for multiagent template
+    if (useCase) {
+      console.log("\nCopying use case:", useCase, "\n");
+      const useCasePath = path.join(compPath, "agents", "typescript", useCase);
+      const useCaseCodePath = path.join(useCasePath, "workflow");
 
-      // Copy agent codes
+      // Copy use case codes
       await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
         parents: true,
-        cwd: agentsCodePath,
+        cwd: useCaseCodePath,
         rename: assetRelocator,
       });
 
@@ -153,7 +153,7 @@ export const installTSTemplate = async ({
     } else {
       console.log(
         red(
-          `There is no agent selected for ${template} template. Please pick an agent to use via --agents flag.`,
+          `There is no use case selected for ${template} template. Please pick a use case to use via --use-case flag.`,
         ),
       );
       process.exit(1);

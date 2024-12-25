@@ -2,7 +2,7 @@ import { blue } from "picocolors";
 import prompts from "prompts";
 import { isCI } from ".";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
-import { EXAMPLE_FILE } from "../helpers/datasources";
+import { EXAMPLE_FILE, EXAMPLE_GDPR } from "../helpers/datasources";
 import { getAvailableLlamapackOptions } from "../helpers/llama-pack";
 import { askModelConfig } from "../helpers/providers";
 import { getProjectOptions } from "../helpers/repo";
@@ -101,11 +101,10 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.dataSources = [EXAMPLE_FILE];
     program.framework = "fastapi";
     // Ask for which Reflex use case to use
-    // TODO: rename to use case instead of agents
-    const { agents } = await prompts(
+    const { useCase } = await prompts(
       {
         type: "select",
-        name: "agents",
+        name: "useCase",
         message: "Which use case would you like to build?",
         choices: [
           { title: "Structured Extractor", value: "extractor" },
@@ -118,7 +117,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
       },
       questionHandlers,
     );
-    program.agents = agents;
+    program.useCase = useCase;
   }
 
   if (!program.framework) {
@@ -190,32 +189,50 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.observability = observability;
   }
 
-  // Ask agents
-  if (program.template === "multiagent" && !program.agents) {
-    const { agents } = await prompts(
+  if (
+    (program.template === "reflex" || program.template === "multiagent") &&
+    !program.useCase
+  ) {
+    const choices =
+      program.template === "reflex"
+        ? [
+            { title: "Structured Extractor", value: "extractor" },
+            {
+              title: "Contract review (using Workflow)",
+              value: "contract_review",
+            },
+          ]
+        : [
+            {
+              title: "Financial report (generate a financial report)",
+              value: "financial_report",
+            },
+            {
+              title: "Form filling (fill missing value in a CSV file)",
+              value: "form_filling",
+            },
+            { title: "Blog writer (Write a blog post)", value: "blog_writer" },
+          ];
+
+    const { useCase } = await prompts(
       {
         type: "select",
-        name: "agents",
-        message: "Which agents would you like to use?",
-        choices: [
-          {
-            title: "Financial report (generate a financial report)",
-            value: "financial_report",
-          },
-          {
-            title: "Form filling (fill missing value in a CSV file)",
-            value: "form_filling",
-          },
-          {
-            title: "Blog writer (Write a blog post)",
-            value: "blog_writer",
-          },
-        ],
+        name: "useCase",
+        message: "Which use case would you like to use?",
+        choices,
         initial: 0,
       },
       questionHandlers,
     );
-    program.agents = agents;
+    program.useCase = useCase;
+  }
+
+  // Configure framework and data sources for Reflex template
+  if (program.template === "reflex") {
+    program.framework = "fastapi";
+
+    program.dataSources =
+      program.useCase === "extractor" ? [EXAMPLE_FILE] : [EXAMPLE_GDPR];
   }
 
   if (!program.modelConfig) {
@@ -241,8 +258,8 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.vectorDb = vectorDb;
   }
 
-  if (program.vectorDb === "llamacloud") {
-    // When using a LlamaCloud index, don't ask for data sources just copy an example file
+  if (program.vectorDb === "llamacloud" && program.dataSources.length === 0) {
+    // When using a LlamaCloud index and no data sources are provided, just copy an example file
     program.dataSources = [EXAMPLE_FILE];
   }
 

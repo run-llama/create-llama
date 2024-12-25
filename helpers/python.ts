@@ -380,28 +380,32 @@ export const installPythonDependencies = (
 };
 
 export const installPythonTemplate = async ({
+  appName,
   root,
   template,
   framework,
   vectorDb,
+  postInstallAction,
+  modelConfig,
   dataSources,
   tools,
-  postInstallAction,
+  useLlamaParse,
+  useCase,
   observability,
-  modelConfig,
-  agents,
 }: Pick<
   InstallTemplateArgs,
+  | "appName"
   | "root"
-  | "framework"
   | "template"
+  | "framework"
   | "vectorDb"
+  | "postInstallAction"
+  | "modelConfig"
   | "dataSources"
   | "tools"
-  | "postInstallAction"
+  | "useLlamaParse"
+  | "useCase"
   | "observability"
-  | "modelConfig"
-  | "agents"
 >) => {
   console.log("\nInitializing Python project with template:", template, "\n");
   let templatePath;
@@ -476,21 +480,12 @@ export const installPythonTemplate = async ({
     await copyRouterCode(root, tools ?? []);
   }
 
-  if (template === "multiagent") {
-    // Copy multi-agent code
-    await copy("**", path.join(root), {
-      parents: true,
-      cwd: path.join(compPath, "multiagent", "python"),
-      rename: assetRelocator,
-    });
-  }
-
   if (template === "multiagent" || template === "reflex") {
-    if (agents) {
+    if (useCase) {
       const sourcePath =
         template === "multiagent"
-          ? path.join(compPath, "agents", "python", agents)
-          : path.join(compPath, "reflex", agents);
+          ? path.join(compPath, "agents", "python", useCase)
+          : path.join(compPath, "reflex", useCase);
 
       await copy("**", path.join(root), {
         parents: true,
@@ -500,7 +495,7 @@ export const installPythonTemplate = async ({
     } else {
       console.log(
         red(
-          `There is no agent selected for ${template} template. Please pick an agent to use via --agents flag.`,
+          `There is no use case selected for ${template} template. Please pick a use case to use via --use-case flag.`,
         ),
       );
       process.exit(1);

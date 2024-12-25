@@ -133,7 +133,7 @@ const convertAnswers = async (
     AppType,
     Pick<
       QuestionResults,
-      "template" | "tools" | "frontend" | "dataSources" | "agents"
+      "template" | "tools" | "frontend" | "dataSources" | "useCase"
     > & {
       modelConfig?: ModelConfig;
     }
@@ -160,7 +160,7 @@ const convertAnswers = async (
     },
     financial_report_agent: {
       template: "multiagent",
-      agents: "financial_report",
+      useCase: "financial_report",
       tools: getTools(["document_generator", "interpreter"]),
       dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
@@ -168,7 +168,7 @@ const convertAnswers = async (
     },
     form_filling: {
       template: "multiagent",
-      agents: "form_filling",
+      useCase: "form_filling",
       tools: getTools(["form_filling"]),
       dataSources: EXAMPLE_10K_SEC_FILES,
       frontend: true,
@@ -176,14 +176,14 @@ const convertAnswers = async (
     },
     extractor: {
       template: "reflex",
-      agents: "extractor",
+      useCase: "extractor",
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_FILE],
     },
     contract_review: {
       template: "reflex",
-      agents: "contract_review",
+      useCase: "contract_review",
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_GDPR],

@@ -202,10 +202,10 @@ const program = new Command(packageJson.name)
     false,
   )
   .option(
-    "--agents <agents>",
+    "--use-case <useCase>",
     `
 
-  Select which agents to use for the multi-agent template (e.g: financial_report, blog).
+  Select which use case to use for the multi-agent template (e.g: financial_report, blog).
 `,
   )
   .allowUnknownOption()

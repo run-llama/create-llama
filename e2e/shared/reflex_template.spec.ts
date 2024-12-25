@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
-import { TemplateAgents, TemplateFramework } from "../../helpers";
+import { TemplateFramework, TemplateUseCase } from "../../helpers";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
@@ -12,7 +12,7 @@ const templateFramework: TemplateFramework = process.env.FRAMEWORK
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
   : "--example-file";
-const templateAgents: TemplateAgents[] = ["extractor", "contract_review"];
+const templateUseCases: TemplateUseCase[] = ["extractor", "contract_review"];
 
 // The reflex template currently only works with FastAPI and files (and not on Windows)
 if (
@@ -20,8 +20,8 @@ if (
   templateFramework === "fastapi" &&
   dataSource === "--example-file"
 ) {
-  for (const agents of templateAgents) {
-    test.describe(`Test reflex template ${agents} ${templateFramework} ${dataSource}`, async () => {
+  for (const useCase of templateUseCases) {
+    test.describe(`Test reflex template ${useCase} ${templateFramework} ${dataSource}`, async () => {
       let appPort: number;
       let name: string;
       let appProcess: ChildProcess;
@@ -39,7 +39,7 @@ if (
           vectorDb: "none",
           port: appPort,
           postInstallAction: "runApp",
-          agents,
+          useCase,
         });
         name = result.projectName;
         appProcess = result.appProcess;
