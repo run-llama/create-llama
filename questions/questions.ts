@@ -33,7 +33,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
             title: "Multi-agent app (using workflows)",
             value: "multiagent",
           },
-          { title: "Structured Extractor", value: "extractor" },
+          { title: "Fullstack python template with Reflex", value: "reflex" },
           {
             title: `Community template from ${styledRepo}`,
             value: "community",
@@ -100,6 +100,25 @@ export const askProQuestions = async (program: QuestionArgs) => {
     // So we just use example file for extractor template, this allows user to choose vector database later
     program.dataSources = [EXAMPLE_FILE];
     program.framework = "fastapi";
+    // Ask for which Reflex use case to use
+    // TODO: rename to use case instead of agents
+    const { agents } = await prompts(
+      {
+        type: "select",
+        name: "agents",
+        message: "Which use case would you like to build?",
+        choices: [
+          { title: "Structured Extractor", value: "extractor" },
+          {
+            title: "Contract review (using Workflow)",
+            value: "contract_review",
+          },
+        ],
+        initial: 0,
+      },
+      questionHandlers,
+    );
+    program.agents = agents;
   }
 
   if (!program.framework) {
@@ -354,7 +373,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
     // default to use LlamaParse if using LlamaCloud
     program.useLlamaParse = true;
   } else {
-    // Reflex template doesn't support LlamaParse and LlamaCloud right now (cannot use asyncio loop in Reflex)
+    // Reflex template doesn't support LlamaParse right now (cannot use asyncio loop in Reflex)
     if (program.useLlamaParse === undefined && program.template !== "reflex") {
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
