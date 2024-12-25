@@ -14,8 +14,31 @@ dotenv.load_dotenv()
 
 
 FRONTEND_DIR = Path(os.getenv("FRONTEND_DIR", ".frontend"))
-DEFAULT_FRONTEND_PORT = 3000
+APP_HOST = os.getenv("APP_HOST", "localhost")
+APP_PORT = int(
+    os.getenv("APP_PORT", 8000)
+)  # Allocated to backend but also for access to the app, please change it in .env
+DEFAULT_FRONTEND_PORT = (
+    3000  # Not for access directly, but for proxying to the backend in development
+)
 STATIC_DIR = Path(os.getenv("STATIC_DIR", "static"))
+
+
+class NodePackageManager(str):
+    def __new__(cls, value: str) -> "NodePackageManager":
+        return super().__new__(cls, value)
+
+    @property
+    def name(self) -> str:
+        return Path(self).stem
+
+    @property
+    def is_pnpm(self) -> bool:
+        return self.name == "pnpm"
+
+    @property
+    def is_npm(self) -> bool:
+        return self.name == "npm"
 
 
 def build():
@@ -146,22 +169,20 @@ async def _run_frontend(
         package_manager,
         "run",
         "dev",
+        "--" if package_manager.is_npm else "",
         "-p",
         str(port),
         cwd=FRONTEND_DIR,
     )
-    rich.print(
-        f"\n[bold]Waiting for frontend to start, port: {port}, process id: {frontend_process.pid}[/bold]"
-    )
+    rich.print("\n[bold]Waiting for frontend to start...")
     # Block until the frontend is accessible
     for _ in range(timeout):
         await asyncio.sleep(1)
-        # Check if the frontend is accessible (port is open) or frontend_process is running
         if frontend_process.returncode is not None:
             raise RuntimeError("Could not start frontend dev server")
-        if not _is_bindable_port(port):
+        if _is_server_running(port):
             rich.print(
-                f"\n[bold green]Frontend dev server is running on port {port}[/bold green]"
+                "\n[bold]Frontend dev server is running. Please wait a while for the app to be ready...[/bold]"
             )
             return frontend_process, port
     raise TimeoutError(f"Frontend dev server failed to start within {timeout} seconds")
@@ -173,33 +194,50 @@ async def _run_backend(
     """
     Start the backend development server.
 
-    Args:
-        frontend_port: The port number the frontend is running on
     Returns:
         Process: The backend process
     """
     # Merge environment variables
     envs = {**os.environ, **(envs or {})}
-    rich.print("\n[bold]Starting backend FastAPI server...[/bold]")
+    # Check if the port is free
+    if not _is_port_available(APP_PORT):
+        raise SystemError(
+            f"Port {APP_PORT} is not available! Please change the port in .env file or kill the process running on this port."
+        )
+    rich.print(f"\n[bold]Starting app on port {APP_PORT}...[/bold]")
     poetry_executable = _get_poetry_executable()
-    return await asyncio.create_subprocess_exec(
+    process = await asyncio.create_subprocess_exec(
         poetry_executable,
         "run",
         "python",
         "main.py",
         env=envs,
     )
+    # Wait for port is started
+    timeout = 30
+    for _ in range(timeout):
+        await asyncio.sleep(1)
+        if process.returncode is not None:
+            raise RuntimeError("Could not start backend dev server")
+        if _is_server_running(APP_PORT):
+            rich.print(
+                f"\n[bold green]App is running. You now can access it at http://{APP_HOST}:{APP_PORT}[/bold green]"
+            )
+            return process
+    # Timeout, kill the process
+    process.terminate()
+    raise TimeoutError(f"Backend dev server failed to start within {timeout} seconds")
 
 
 def _install_frontend_dependencies():
     package_manager = _get_node_package_manager()
     rich.print(
-        f"\n[bold]Installing frontend dependencies using {Path(package_manager).name}. It might take a while...[/bold]"
+        f"\n[bold]Installing frontend dependencies using {package_manager.name}. It might take a while...[/bold]"
     )
     run([package_manager, "install"], cwd=".frontend", check=True)
 
 
-def _get_node_package_manager() -> str:
+def _get_node_package_manager() -> NodePackageManager:
     """
     Check for available package managers and return the preferred one.
     Returns 'pnpm' if installed, falls back to 'npm'.
@@ -215,12 +253,12 @@ def _get_node_package_manager() -> str:
     for cmd in pnpm_cmds:
         cmd_path = which(cmd)
         if cmd_path is not None:
-            return cmd_path
+            return NodePackageManager(cmd_path)
 
     for cmd in npm_cmds:
         cmd_path = which(cmd)
         if cmd_path is not None:
-            return cmd_path
+            return NodePackageManager(cmd_path)
 
     raise SystemError(
         "Neither pnpm nor npm is installed. Please install Node.js and a package manager first."
@@ -244,28 +282,27 @@ def _get_poetry_executable() -> str:
     raise SystemError("Poetry is not installed. Please install Poetry first.")
 
 
-def _is_bindable_port(port: int) -> bool:
-    """Check if a port is available by attempting to connect to it."""
+def _is_port_available(port: int) -> bool:
+    """Check if a port is available for binding."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            # Try to connect to the port
             s.connect(("localhost", port))
-            # If we can connect, port is in use
-            return False
+            return False  # Port is in use, so not available
         except ConnectionRefusedError:
-            # Connection refused means port is available
-            return True
+            return True  # Port is available
         except socket.error:
-            # Other socket errors also likely mean port is available
-            return True
+            return True  # Other socket errors likely mean port is available
+
+
+def _is_server_running(port: int) -> bool:
+    """Check if a server is running on the specified port."""
+    return not _is_port_available(port)
 
 
 def _find_free_port(start_port: int) -> int:
-    """
-    Find a free port starting from the given port number.
-    """
+    """Find a free port starting from the given port number."""
     for port in range(start_port, 65535):
-        if _is_bindable_port(port):
+        if _is_port_available(port):
             return port
     raise SystemError("No free port found")
 
