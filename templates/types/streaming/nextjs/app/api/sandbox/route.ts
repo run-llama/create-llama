@@ -36,6 +36,8 @@ const sandboxTimeout = 10 * 60 * 1000; // 10 minute in ms
 
 export const maxDuration = 60;
 
+const OUTPUT_DIR = path.join("output", "tools");
+
 export type ExecutionResult = {
   template: string;
   stdout: string[];
@@ -75,6 +77,8 @@ export async function POST(req: Request) {
       `Installed dependencies: ${artifact.additional_dependencies.join(", ")} in sandbox ${sbx.sandboxId}`,
     );
   }
+
+  console.log({ artifactFiles: artifact.files });
 
   // Copy files
   if (artifact.files) {
@@ -133,14 +137,19 @@ async function downloadCellResults(
       const formats = res.formats(); // available formats in the result
       const formatResults = await Promise.all(
         formats.map(async (ext) => {
+          if (ext === "chart") return null; // chart data is an object, don't need to save it
+          if (ext === "text") return null; // just log information, don't save it
           const filename = `${crypto.randomUUID()}.${ext}`;
           const base64 = res[ext as keyof Result];
           const buffer = Buffer.from(base64, "base64");
-          const fileurl = await saveDocument(filename, buffer);
+          const fileurl = await saveDocument(
+            path.join(OUTPUT_DIR, filename),
+            buffer,
+          );
           return { url: fileurl, filename };
         }),
       );
-      return formatResults;
+      return formatResults.filter((result) => result !== null);
     }),
   );
   return results.flat();
