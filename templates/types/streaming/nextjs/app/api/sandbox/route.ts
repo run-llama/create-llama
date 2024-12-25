@@ -135,26 +135,18 @@ async function downloadCellResults(
     cellResults.map(async (res) => {
       const formats = res.formats(); // available formats in the result
       const formatResults = await Promise.all(
-        formats.map(async (ext) => {
-          if (ext === "chart") {
-            // save chart data as json file
-            const filename = `${crypto.randomUUID()}.json`;
+        formats
+          .filter((ext) => ["png", "svg", "jpeg", "pdf"].includes(ext))
+          .map(async (ext) => {
+            const filename = `${crypto.randomUUID()}.${ext}`;
+            const base64 = res[ext as keyof Result];
+            const buffer = Buffer.from(base64, "base64");
             const fileurl = await saveDocument(
               path.join(OUTPUT_DIR, filename),
-              JSON.stringify(res[ext as keyof Result]),
+              buffer,
             );
             return { url: fileurl, filename };
-          }
-
-          const filename = `${crypto.randomUUID()}.${ext}`;
-          const base64 = res[ext as keyof Result];
-          const buffer = Buffer.from(base64, "base64");
-          const fileurl = await saveDocument(
-            path.join(OUTPUT_DIR, filename),
-            buffer,
-          );
-          return { url: fileurl, filename };
-        }),
+          }),
       );
       return formatResults;
     }),
