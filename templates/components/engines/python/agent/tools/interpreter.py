@@ -159,7 +159,7 @@ class E2BCodeInterpreter:
         if self.interpreter is None:
             self._init_interpreter(sandbox_files)
 
-        if self.interpreter and self.interpreter.notebook:
+        if self.interpreter:
             logger.info(
                 f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
             )
