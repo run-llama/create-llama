@@ -130,13 +130,22 @@ async function downloadCellResults(
   cellResults?: Result[],
 ): Promise<Array<{ url: string; filename: string }>> {
   if (!cellResults) return [];
+
   const results = await Promise.all(
     cellResults.map(async (res) => {
       const formats = res.formats(); // available formats in the result
       const formatResults = await Promise.all(
         formats.map(async (ext) => {
-          if (ext === "chart") return null; // chart data is an object, don't need to save it
-          if (ext === "text") return null; // just log information, don't save it
+          if (ext === "chart") {
+            // save chart data as json file
+            const filename = `${crypto.randomUUID()}.json`;
+            const fileurl = await saveDocument(
+              path.join(OUTPUT_DIR, filename),
+              JSON.stringify(res[ext as keyof Result]),
+            );
+            return { url: fileurl, filename };
+          }
+
           const filename = `${crypto.randomUUID()}.${ext}`;
           const base64 = res[ext as keyof Result];
           const buffer = Buffer.from(base64, "base64");
@@ -147,7 +156,7 @@ async function downloadCellResults(
           return { url: fileurl, filename };
         }),
       );
-      return formatResults.filter((result) => result !== null);
+      return formatResults;
     }),
   );
   return results.flat();
