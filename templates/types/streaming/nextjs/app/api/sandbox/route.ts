@@ -78,8 +78,6 @@ export async function POST(req: Request) {
     );
   }
 
-  console.log({ artifactFiles: artifact.files });
-
   // Copy files
   if (artifact.files) {
     artifact.files.forEach(async (sandboxFilePath) => {
