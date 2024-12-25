@@ -17,7 +17,7 @@ import logging
 import os
 import uuid
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from app.engine.tools.artifact import CodeArtifact
 from app.services.file import FileService
