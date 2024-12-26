@@ -117,11 +117,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
             const content = fs.readFileSync(localFilePath);
 
             const arrayBuffer = new Uint8Array(content).buffer;
-            const res = await this.codeInterpreter?.files.write(
-              filePath,
-              arrayBuffer,
-            );
-            console.log({ res });
+            await this.codeInterpreter?.files.write(filePath, arrayBuffer);
           }
         } catch (error) {
           console.error("Got error when uploading files to sandbox", error);
