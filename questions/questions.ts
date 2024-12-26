@@ -211,7 +211,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
               title: "Form filling (fill missing value in a CSV file)",
               value: "form_filling",
             },
-            { title: "Blog writer (Write a blog post)", value: "blog_writer" },
+            { title: "Blog writer (Write a blog post)", value: "blog" },
           ];
 
     const { useCase } = await prompts(
