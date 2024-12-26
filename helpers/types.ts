@@ -49,7 +49,7 @@ export type TemplateDataSource = {
 };
 export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
-export type TemplateAgents =
+export type TemplateUseCase =
   | "financial_report"
   | "blog"
   | "form_filling"
@@ -106,5 +106,5 @@ export interface InstallTemplateArgs {
   postInstallAction?: TemplatePostInstallAction;
   tools?: Tool[];
   observability?: TemplateObservability;
-  agents?: TemplateAgents;
+  useCase?: TemplateUseCase;
 }

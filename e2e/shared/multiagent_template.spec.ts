@@ -18,10 +18,10 @@ const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateAgents = ["financial_report", "blog", "form_filling"];
+const templateUseCases = ["financial_report", "blog", "form_filling"];
 
-for (const agents of templateAgents) {
-  test.describe(`Test multiagent template ${agents} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
+for (const useCase of templateUseCases) {
+  test.describe(`Test multiagent template ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
       process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
       "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
@@ -46,7 +46,7 @@ for (const agents of templateAgents) {
         postInstallAction: templatePostInstallAction,
         templateUI,
         appType,
-        agents,
+        useCase,
       });
       name = result.projectName;
       appProcess = result.appProcess;
@@ -71,8 +71,8 @@ for (const agents of templateAgents) {
     }) => {
       test.skip(
         templatePostInstallAction !== "runApp" ||
-          agents === "financial_report" ||
-          agents === "form_filling" ||
+          useCase === "financial_report" ||
+          useCase === "form_filling" ||
           templateFramework === "express",
         "Skip chat tests for financial report and form filling.",
       );
