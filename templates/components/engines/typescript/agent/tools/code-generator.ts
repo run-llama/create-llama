@@ -103,6 +103,7 @@ export class CodeGeneratorTool implements BaseTool<CodeGeneratorParameter> {
       const artifact = await this.generateArtifact(
         input.requirement,
         input.oldCode,
+        input.sandboxFiles, // help the generated code use exact files
       );
       if (input.sandboxFiles) {
         artifact.files = input.sandboxFiles;
@@ -117,10 +118,12 @@ export class CodeGeneratorTool implements BaseTool<CodeGeneratorParameter> {
   async generateArtifact(
     query: string,
     oldCode?: string,
+    attachments?: string[],
   ): Promise<CodeArtifact> {
     const userMessage = `
     ${query}
     ${oldCode ? `The existing code is: \n\`\`\`${oldCode}\`\`\`` : ""}
+    ${attachments ? `The attachments are: \n${attachments.join("\n")}` : ""}
     `;
     const messages: ChatMessage[] = [
       { role: "system", content: CODE_GENERATION_PROMPT },

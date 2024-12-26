@@ -470,11 +470,11 @@ const getSystemPromptEnv = (
     });
 
     const systemPrompt =
-      "'" +
+      '"' +
       DEFAULT_SYSTEM_PROMPT +
       (dataSources?.length ? `\n${DATA_SOURCES_PROMPT}` : "") +
       (toolSystemPrompt ? `\n${toolSystemPrompt}` : "") +
-      "'";
+      '"';
 
     systemPromptEnv.push({
       name: "SYSTEM_PROMPT",

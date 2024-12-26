@@ -17,11 +17,11 @@ import logging
 import os
 import uuid
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from app.engine.tools.artifact import CodeArtifact
 from app.services.file import FileService
-from e2b_code_interpreter import CodeInterpreter, Sandbox  # type: ignore
+from e2b_code_interpreter import Sandbox  # type: ignore
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -60,6 +60,14 @@ class FileUpload(BaseModel):
     name: str
 
 
+SUPPORTED_TEMPLATES = [
+    "nextjs-developer",
+    "vue-developer",
+    "streamlit-developer",
+    "gradio-developer",
+]
+
+
 @sandbox_router.post("")
 async def create_sandbox(request: Request):
     request_data = await request.json()
@@ -79,33 +87,22 @@ async def create_sandbox(request: Request):
             status_code=400, detail="Could not create artifact from the request data"
         )
 
-    sbx = None
-
-    # Create an interpreter or a sandbox
-    if artifact.template == "code-interpreter-multilang":
-        sbx = CodeInterpreter(api_key=os.getenv("E2B_API_KEY"), timeout=SANDBOX_TIMEOUT)
-        logger.debug(f"Created code interpreter {sbx}")
-    else:
-        sbx = Sandbox(
-            api_key=os.getenv("E2B_API_KEY"),
-            template=artifact.template,
-            metadata={"template": artifact.template, "user_id": "default"},
-            timeout=SANDBOX_TIMEOUT,
-        )
-        logger.debug(f"Created sandbox {sbx}")
+    sbx = Sandbox(
+        api_key=os.getenv("E2B_API_KEY"),
+        template=(
+            None if artifact.template not in SUPPORTED_TEMPLATES else artifact.template
+        ),
+        metadata={"template": artifact.template, "user_id": "default"},
+        timeout=SANDBOX_TIMEOUT,
+    )
+    logger.debug(f"Created sandbox {sbx}")
 
     # Install packages
     if artifact.has_additional_dependencies:
-        if isinstance(sbx, CodeInterpreter):
-            sbx.notebook.exec_cell(artifact.install_dependencies_command)
-            logger.debug(
-                f"Installed dependencies: {', '.join(artifact.additional_dependencies)} in code interpreter {sbx}"
-            )
-        elif isinstance(sbx, Sandbox):
-            sbx.commands.run(artifact.install_dependencies_command)
-            logger.debug(
-                f"Installed dependencies: {', '.join(artifact.additional_dependencies)} in sandbox {sbx}"
-            )
+        sbx.commands.run(artifact.install_dependencies_command)
+        logger.debug(
+            f"Installed dependencies: {', '.join(artifact.additional_dependencies)} in sandbox {sbx}"
+        )
 
     # Copy files
     if len(sandbox_files) > 0:
@@ -122,7 +119,7 @@ async def create_sandbox(request: Request):
 
     # Execute code or return a URL to the running sandbox
     if artifact.template == "code-interpreter-multilang":
-        result = sbx.notebook.exec_cell(artifact.code or "")
+        result = sbx.run_code(artifact.code or "")
         output_urls = _download_cell_results(result.results)
         runtime_error = asdict(result.error) if result.error else None
         return ExecutionResult(
@@ -145,7 +142,7 @@ async def create_sandbox(request: Request):
 
 
 def _upload_files(
-    sandbox: Union[CodeInterpreter, Sandbox],
+    sandbox: Sandbox,
     sandbox_files: List[str] = [],
 ) -> None:
     for file_path in sandbox_files:

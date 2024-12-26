@@ -1,4 +1,4 @@
-import { CodeInterpreter, Logs, Result } from "@e2b/code-interpreter";
+import { Logs, Result, Sandbox } from "@e2b/code-interpreter";
 import type { JSONSchemaType } from "ajv";
 import fs from "fs";
 import { BaseTool, ToolMetadata } from "llamaindex";
@@ -82,7 +82,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   private apiKey?: string;
   private fileServerURLPrefix?: string;
   metadata: ToolMetadata<JSONSchemaType<InterpreterParameter>>;
-  codeInterpreter?: CodeInterpreter;
+  codeInterpreter?: Sandbox;
 
   constructor(params?: InterpreterToolParams) {
     this.metadata = params?.metadata || DEFAULT_META_DATA;
@@ -104,26 +104,27 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
 
   public async initInterpreter(input: InterpreterParameter) {
     if (!this.codeInterpreter) {
-      this.codeInterpreter = await CodeInterpreter.create({
+      this.codeInterpreter = await Sandbox.create({
         apiKey: this.apiKey,
       });
-    }
-    // upload files to sandbox
-    if (input.sandboxFiles) {
-      console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
-      try {
-        for (const filePath of input.sandboxFiles) {
-          const fileName = path.basename(filePath);
-          const localFilePath = path.join(this.uploadedFilesDir, fileName);
-          const content = fs.readFileSync(localFilePath);
+      // upload files to sandbox when it's initialized
+      if (input.sandboxFiles) {
+        console.log(`Uploading ${input.sandboxFiles.length} files to sandbox`);
+        try {
+          for (const filePath of input.sandboxFiles) {
+            const fileName = path.basename(filePath);
+            const localFilePath = path.join(this.uploadedFilesDir, fileName);
+            const content = fs.readFileSync(localFilePath);
 
-          const arrayBuffer = new Uint8Array(content).buffer;
-          await this.codeInterpreter?.files.write(filePath, arrayBuffer);
+            const arrayBuffer = new Uint8Array(content).buffer;
+            await this.codeInterpreter?.files.write(filePath, arrayBuffer);
+          }
+        } catch (error) {
+          console.error("Got error when uploading files to sandbox", error);
         }
-      } catch (error) {
-        console.error("Got error when uploading files to sandbox", error);
       }
     }
+
     return this.codeInterpreter;
   }
 
@@ -150,7 +151,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
       `\n${"=".repeat(50)}\n> Running following AI-generated code:\n${input.code}\n${"=".repeat(50)}`,
     );
     const interpreter = await this.initInterpreter(input);
-    const exec = await interpreter.notebook.execCell(input.code);
+    const exec = await interpreter.runCode(input.code);
     if (exec.error) console.error("[Code Interpreter error]", exec.error);
     const extraResult = await this.getExtraResult(exec.results[0]);
     const result: InterpreterToolOutput = {
@@ -169,7 +170,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
   }
 
   async close() {
-    await this.codeInterpreter?.close();
+    await this.codeInterpreter?.kill();
   }
 
   private async getExtraResult(
