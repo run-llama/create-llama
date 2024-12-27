@@ -1,5 +1,14 @@
 # create-llama
 
+## 0.3.24
+
+### Patch Changes
+
+- a84743c: Change --agents paramameter to --use-case
+- a84743c: Add LlamaCloud support for Reflex templates
+- a7a6592: Fix the npm issue on the full-stack Python template
+- fc5e56e: bump: code interpreter v1
+
 ## 0.3.23
 
 ### Patch Changes
