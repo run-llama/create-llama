@@ -42,7 +42,7 @@ export interface WeatherData {
 const weatherCodeDisplayMap: Record<
   string,
   {
-    icon: JSX.Element;
+    icon: React.ReactNode;
     status: string;
   }
 > = {
