@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.25
+
+### Patch Changes
+
+- 5450096: bump: react 19 stable
+
 ## 0.3.24
 
 ### Patch Changes
