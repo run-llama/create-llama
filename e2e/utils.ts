@@ -88,7 +88,7 @@ export async function runCreateLlama({
     ...dataSourceArgs,
     "--vector-db",
     vectorDb,
-    "--use-pnpm",
+    "--use-npm",
     "--port",
     port,
     "--post-install-action",
