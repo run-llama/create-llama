@@ -317,7 +317,7 @@ class Planner:
         # gather completed sub-tasks and response pairs
         completed_outputs_str = ""
         for sub_task_name, task_output in completed_sub_task.items():
-            task_str = f"{sub_task_name}:\n" f"\t{task_output!s}\n"
+            task_str = f"{sub_task_name}:\n\t{task_output!s}\n"
             completed_outputs_str += task_str
 
         # get a string for the remaining sub-tasks
