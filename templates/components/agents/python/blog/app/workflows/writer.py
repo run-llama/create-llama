@@ -1,0 +1,295 @@
+import logging
+import os
+import uuid
+from typing import Any, Dict, List, Optional
+
+from app.engine.index import IndexConfig, get_index
+from app.workflows.agents import plan_research, research, write_report
+from app.workflows.models import (
+    CollectAnswersEvent,
+    DataEvent,
+    PlanResearchEvent,
+    ResearchEvent,
+    ResponseChunkEvent,
+    RetrieveSource,
+    SourceNodesEvent,
+    WriteReportEvent,
+)
+from llama_index.core.indices.base import BaseIndex
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.memory.simple_composable_memory import SimpleComposableMemory
+from llama_index.core.schema import Node
+from llama_index.core.types import ChatMessage, MessageRole
+from llama_index.core.workflow import (
+    Context,
+    StartEvent,
+    StopEvent,
+    Workflow,
+    step,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+def create_workflow(
+    chat_history: Optional[List[ChatMessage]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    **kwargs,
+) -> Workflow:
+    index_config = IndexConfig(**params)
+    index = get_index(index_config)
+    if index is None:
+        raise ValueError(
+            "Index is not found. Try run generation script to create the index first."
+        )
+
+    return WriterWorkflow(
+        index=index,
+        chat_history=chat_history,
+        **kwargs,
+    )
+
+
+class WriterWorkflow(Workflow):
+    """
+    A workflow to research and write a post for a specific topic.
+
+    Requirements:
+    - An indexed documents containing the knowledge base related to the topic
+
+    Steps:
+    1. Retrieve information from the knowledge base
+    2. Analyze the retrieved information and provide questions for answering
+    3. Answer the questions
+    4. Write the post based on the research results
+    """
+
+    memory: SimpleComposableMemory
+    context_nodes: List[Node]
+    index: BaseIndex
+    user_request: str
+    stream: bool = False
+
+    def __init__(
+        self,
+        index: BaseIndex,
+        chat_history: Optional[List[ChatMessage]] = None,
+        stream: bool = False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.index = index
+        self.context_nodes = []
+        self.stream = stream
+        self.chat_history = chat_history
+        self.memory = SimpleComposableMemory.from_defaults(
+            primary_memory=ChatMemoryBuffer.from_defaults(
+                chat_history=chat_history,
+            ),
+        )
+
+    @step
+    def retrieve(self, ctx: Context, ev: StartEvent) -> PlanResearchEvent:
+        """
+        Initiate the workflow: memory, tools, agent
+        """
+        self.user_request = ev.get("user_request")
+        # First retrieve information from the source
+        self.memory.put_messages(
+            messages=[
+                ChatMessage(
+                    role=MessageRole.USER,
+                    content=self.user_request,
+                )
+            ]
+        )
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="retrieve",
+                state="inprogress",
+                data={},
+            )
+        )
+        if ev.source == RetrieveSource.WEB:
+            raise NotImplementedError("Web retrieval is not implemented")
+        elif ev.source == RetrieveSource.DOCUMENTS:
+            retriever = self.index.as_retriever(
+                similarity_top_k=os.getenv("TOP_K", 5),
+            )
+            nodes = retriever.retrieve(ev.query)
+            self.context_nodes.extend(nodes)
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="retrieve",
+                state="done",
+                data={
+                    "nodes": nodes,
+                },
+            )
+        )
+        # Send source nodes to the stream
+        # Use SourceNodesEvent to display source nodes in the UI.
+        ctx.write_event_to_stream(
+            SourceNodesEvent(
+                nodes=nodes,
+            )
+        )
+        return PlanResearchEvent(
+            context_nodes=self.context_nodes,
+        )
+
+    @step
+    async def analyze(
+        self, ctx: Context, ev: PlanResearchEvent
+    ) -> ResearchEvent | WriteReportEvent:
+        """
+        Analyze the retrieved information
+        """
+        print("Analyzing the retrieved information")
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="analyze",
+                state="inprogress",
+                data={"message": "Analyze..."},
+            )
+        )
+        res = await plan_research(
+            memory=self.memory,
+            context_nodes=self.context_nodes,
+            user_request=self.user_request,
+        )
+        if res.decision == "write":
+            self.memory.put(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="No more idea to analyze. We should report the answers.",
+                )
+            )
+            ctx.send_event(WriteReportEvent())
+        else:
+            await ctx.set("n_questions", len(res.research_questions))
+            self.memory.put(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="We need to find answers to the following questions:\n"
+                    + "\n".join(res.research_questions),
+                )
+            )
+            for question in res.research_questions:
+                question_id = str(uuid.uuid4())
+                ctx.write_event_to_stream(
+                    DataEvent(
+                        type="answer",
+                        state="pending",
+                        data={
+                            "id": question_id,
+                            "type": "question",
+                            "question": question,
+                            "answer": None,
+                        },
+                    )
+                )
+                ctx.send_event(
+                    ResearchEvent(
+                        question_id=question_id,
+                        question=question,
+                        context_nodes=self.context_nodes,
+                    )
+                )
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="analyze",
+                state="done",
+                data={"message": "Analyzed"},
+            )
+        )
+        return None
+
+    @step(num_workers=2)
+    async def answer(self, ctx: Context, ev: ResearchEvent) -> CollectAnswersEvent:
+        """
+        Answer the question
+        """
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="answer",
+                state="inprogress",
+                data={"id": ev.question_id, "question": ev.question},
+            )
+        )
+        try:
+            answer = await research(
+                context_nodes=ev.context_nodes,
+                question=ev.question,
+            )
+        except Exception as e:
+            logger.error(f"Error answering question {ev.question}: {e}")
+            answer = f"Got error when answering the question: {ev.question}"
+        ctx.write_event_to_stream(
+            DataEvent(
+                type="answer",
+                state="done",
+                data={
+                    "id": ev.question_id,
+                    "type": "question",
+                    "question": ev.question,
+                    "answer": answer,
+                },
+            )
+        )
+
+        return CollectAnswersEvent(
+            question_id=ev.question_id,
+            question=ev.question,
+            answer=answer,
+        )
+
+    @step
+    async def collect_answers(
+        self, ctx: Context, ev: CollectAnswersEvent
+    ) -> WriteReportEvent:
+        """
+        Collect answers to all questions
+        """
+        num_questions = await ctx.get("n_questions")
+        results = ctx.collect_events(
+            ev,
+            expected=[CollectAnswersEvent] * num_questions,
+        )
+        if results is None:
+            return None
+        for result in results:
+            self.memory.put(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content=f"<Question>{result.question}</Question>\n<Answer>{result.answer}</Answer>",
+                )
+            )
+        ctx.set("n_questions", 0)
+        self.memory.put(
+            message=ChatMessage(
+                role=MessageRole.ASSISTANT,
+                content="Researched all the questions. Now, i need to analyze if it's ready to write a report or need to research more.",
+            )
+        )
+        return PlanResearchEvent()
+
+    @step
+    async def report(self, ctx: Context, ev: WriteReportEvent) -> StopEvent:
+        """
+        Report the answers
+        """
+        res = await write_report(
+            memory=self.memory,
+            user_request=self.user_request,
+            stream=self.stream,
+        )
+        if not self.stream:
+            result = res.text
+        else:
+            ctx.write_event_to_stream(ResponseChunkEvent(response=res))
+            result = ""
+        return StopEvent(
+            result=result,
+        )

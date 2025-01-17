@@ -108,13 +108,13 @@ class FinancialReportWorkflow(Workflow):
         self.query_engine_tool = query_engine_tool
         self.code_interpreter_tool = code_interpreter_tool
         self.document_generator_tool = document_generator_tool
-        assert (
-            query_engine_tool is not None
-        ), "Query engine tool is not found. Try run generation script or upload a document file first."
+        assert query_engine_tool is not None, (
+            "Query engine tool is not found. Try run generation script or upload a document file first."
+        )
         assert code_interpreter_tool is not None, "Code interpreter tool is required"
-        assert (
-            document_generator_tool is not None
-        ), "Document generator tool is required"
+        assert document_generator_tool is not None, (
+            "Document generator tool is required"
+        )
         self.tools = [
             self.query_engine_tool,
             self.code_interpreter_tool,

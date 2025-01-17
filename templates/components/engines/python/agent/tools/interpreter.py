@@ -161,7 +161,7 @@ class E2BCodeInterpreter:
 
         if self.interpreter:
             logger.info(
-                f"\n{'='*50}\n> Running following AI-generated code:\n{code}\n{'='*50}"
+                f"\n{'=' * 50}\n> Running following AI-generated code:\n{code}\n{'=' * 50}"
             )
             exec = self.interpreter.run_code(code)
 
