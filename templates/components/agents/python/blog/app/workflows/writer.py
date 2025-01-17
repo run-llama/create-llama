@@ -10,8 +10,6 @@ from app.workflows.models import (
     DataEvent,
     PlanResearchEvent,
     ResearchEvent,
-    ResponseChunkEvent,
-    RetrieveSource,
     SourceNodesEvent,
     WriteReportEvent,
 )
@@ -76,6 +74,7 @@ class WriterWorkflow(Workflow):
         index: BaseIndex,
         chat_history: Optional[List[ChatMessage]] = None,
         stream: bool = False,
+        timeout: Optional[float] = 120.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -83,6 +82,7 @@ class WriterWorkflow(Workflow):
         self.context_nodes = []
         self.stream = stream
         self.chat_history = chat_history
+        self.timeout = timeout
         self.memory = SimpleComposableMemory.from_defaults(
             primary_memory=ChatMemoryBuffer.from_defaults(
                 chat_history=chat_history,
@@ -94,8 +94,7 @@ class WriterWorkflow(Workflow):
         """
         Initiate the workflow: memory, tools, agent
         """
-        self.user_request = ev.get("user_request")
-        # First retrieve information from the source
+        self.user_request = ev.get("input")
         self.memory.put_messages(
             messages=[
                 ChatMessage(
@@ -111,14 +110,11 @@ class WriterWorkflow(Workflow):
                 data={},
             )
         )
-        if ev.source == RetrieveSource.WEB:
-            raise NotImplementedError("Web retrieval is not implemented")
-        elif ev.source == RetrieveSource.DOCUMENTS:
-            retriever = self.index.as_retriever(
-                similarity_top_k=os.getenv("TOP_K", 5),
-            )
-            nodes = retriever.retrieve(ev.query)
-            self.context_nodes.extend(nodes)
+        retriever = self.index.as_retriever(
+            similarity_top_k=os.getenv("TOP_K", 5),
+        )
+        nodes = retriever.retrieve(self.user_request)
+        self.context_nodes.extend(nodes)
         ctx.write_event_to_stream(
             DataEvent(
                 type="retrieve",
@@ -285,11 +281,6 @@ class WriterWorkflow(Workflow):
             user_request=self.user_request,
             stream=self.stream,
         )
-        if not self.stream:
-            result = res.text
-        else:
-            ctx.write_event_to_stream(ResponseChunkEvent(response=res))
-            result = ""
         return StopEvent(
-            result=result,
+            result=res,
         )
