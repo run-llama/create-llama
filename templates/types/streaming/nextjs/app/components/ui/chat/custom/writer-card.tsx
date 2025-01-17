@@ -8,7 +8,7 @@ import {
   NotebookPen,
   Search,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -45,42 +45,49 @@ type WriterState = {
   };
 };
 
-// Update the state based on the event
-const updateState = (state: WriterState, event: WriterEvent): WriterState => {
+const stateIcon: Record<EventState, React.ReactNode> = {
+  pending: <Clock className="w-4 h-4 text-yellow-500" />,
+  inprogress: <CircleDashed className="w-4 h-4 text-blue-500 animate-spin" />,
+  done: <CheckCircle2 className="w-4 h-4 text-green-500" />,
+  error: <AlertCircle className="w-4 h-4 text-red-500" />,
+};
+
+// Transform the state based on the event without mutations
+const transformState = (
+  state: WriterState,
+  event: WriterEvent,
+): WriterState => {
   switch (event.type) {
     case "answer": {
       const { id, question, answer } = event.data;
       if (!id || !question) return state;
 
-      const questions = state.analyze.questions;
-      const existingQuestion = questions.find((q) => q.id === id);
+      const updatedQuestions = state.analyze.questions.map((q) => {
+        if (q.id !== id) return q;
+        return {
+          ...q,
+          state: event.state,
+          answer: answer ?? q.answer,
+        };
+      });
 
-      const updatedQuestions = existingQuestion
-        ? questions.map((q) =>
-            q.id === id
-              ? {
-                  ...existingQuestion,
-                  state: event.state,
-                  answer: answer || existingQuestion.answer,
-                }
-              : q,
-          )
-        : [
-            ...questions,
+      const newQuestion = !state.analyze.questions.some((q) => q.id === id)
+        ? [
             {
               id,
               question,
-              answer: answer || null,
+              answer: answer ?? null,
               state: event.state,
               isOpen: false,
             },
-          ];
+          ]
+        : [];
 
       return {
         ...state,
         analyze: {
           ...state.analyze,
-          questions: updatedQuestions,
+          questions: [...updatedQuestions, ...newQuestion],
         },
       };
     }
@@ -100,36 +107,30 @@ const updateState = (state: WriterState, event: WriterEvent): WriterState => {
   }
 };
 
-export function WriterCard({ message }: { message: Message }) {
-  const [state, setState] = useState<WriterState>({
+// Convert writer events to state
+const writeEventsToState = (events: WriterEvent[] | undefined): WriterState => {
+  if (!events?.length) {
+    return {
+      retrieve: { state: null },
+      analyze: { state: null, questions: [] },
+    };
+  }
+
+  const initialState: WriterState = {
     retrieve: { state: null },
     analyze: { state: null, questions: [] },
-  });
+  };
 
+  return events.reduce(
+    (acc: WriterState, event: WriterEvent) => transformState(acc, event),
+    initialState,
+  );
+};
+
+export function WriterCard({ message }: { message: Message }) {
   const writerEvents = message.annotations as WriterEvent[] | undefined;
 
-  useEffect(() => {
-    if (writerEvents?.length) {
-      writerEvents.forEach((event) => {
-        setState((currentState) => updateState(currentState, event));
-      });
-    }
-  }, [writerEvents]);
-
-  const getStateIcon = (state: EventState | null) => {
-    switch (state) {
-      case "pending":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      case "inprogress":
-        return <CircleDashed className="w-4 h-4 text-blue-500 animate-spin" />;
-      case "done":
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "error":
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
+  const state = useMemo(() => writeEventsToState(writerEvents), [writerEvents]);
 
   if (!writerEvents?.length) {
     return null;
@@ -167,7 +168,7 @@ export function WriterCard({ message }: { message: Message }) {
                   <CollapsibleTrigger className="w-full">
                     <div className="flex items-center gap-2 p-3 hover:bg-gray-50 transition-colors rounded-lg border border-gray-200">
                       <div className="flex-shrink-0">
-                        {getStateIcon(question.state)}
+                        {stateIcon[question.state]}
                       </div>
                       <span className="font-medium text-left flex-1">
                         {question.question}

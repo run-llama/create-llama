@@ -3,16 +3,6 @@ import os
 import uuid
 from typing import Any, Dict, List, Optional
 
-from app.engine.index import IndexConfig, get_index
-from app.workflows.agents import plan_research, research, write_report
-from app.workflows.models import (
-    CollectAnswersEvent,
-    DataEvent,
-    PlanResearchEvent,
-    ResearchEvent,
-    SourceNodesEvent,
-    WriteReportEvent,
-)
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.memory.simple_composable_memory import SimpleComposableMemory
@@ -26,7 +16,18 @@ from llama_index.core.workflow import (
     step,
 )
 
-logger = logging.getLogger(__name__)
+from app.engine.index import IndexConfig, get_index
+from app.workflows.agents import plan_research, research, write_report
+from app.workflows.models import (
+    CollectAnswersEvent,
+    DataEvent,
+    PlanResearchEvent,
+    ResearchEvent,
+    SourceNodesEvent,
+    WriteReportEvent,
+)
+
+logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 
 
@@ -45,7 +46,7 @@ def create_workflow(
     return WriterWorkflow(
         index=index,
         chat_history=chat_history,
-        **kwargs,
+        timeout=120.0,
     )
 
 
@@ -67,14 +68,13 @@ class WriterWorkflow(Workflow):
     context_nodes: List[Node]
     index: BaseIndex
     user_request: str
-    stream: bool = False
+    stream: bool = True
 
     def __init__(
         self,
         index: BaseIndex,
         chat_history: Optional[List[ChatMessage]] = None,
-        stream: bool = False,
-        timeout: Optional[float] = 120.0,
+        stream: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -82,7 +82,6 @@ class WriterWorkflow(Workflow):
         self.context_nodes = []
         self.stream = stream
         self.chat_history = chat_history
-        self.timeout = timeout
         self.memory = SimpleComposableMemory.from_defaults(
             primary_memory=ChatMemoryBuffer.from_defaults(
                 chat_history=chat_history,
@@ -142,7 +141,7 @@ class WriterWorkflow(Workflow):
         """
         Analyze the retrieved information
         """
-        print("Analyzing the retrieved information")
+        logger.info("Analyzing the retrieved information")
         ctx.write_event_to_stream(
             DataEvent(
                 type="analyze",
@@ -262,7 +261,7 @@ class WriterWorkflow(Workflow):
                     content=f"<Question>{result.question}</Question>\n<Answer>{result.answer}</Answer>",
                 )
             )
-        ctx.set("n_questions", 0)
+        await ctx.set("n_questions", 0)
         self.memory.put(
             message=ChatMessage(
                 role=MessageRole.ASSISTANT,
@@ -276,6 +275,7 @@ class WriterWorkflow(Workflow):
         """
         Report the answers
         """
+        logger.info("Writing the report")
         res = await write_report(
             memory=self.memory,
             user_request=self.user_request,

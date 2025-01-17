@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Literal
 
-from app.api.routers.models import SourceNodes
-from llama_index.core.schema import Node, NodeWithScore
+from llama_index.core.schema import NodeWithScore
 from llama_index.core.workflow import Event
+
+from app.api.routers.models import SourceNodes
 
 
 # Workflow events
@@ -13,7 +14,7 @@ class PlanResearchEvent(Event):
 class ResearchEvent(Event):
     question_id: str
     question: str
-    context_nodes: List[NodeWithScore | Node]
+    context_nodes: List[NodeWithScore]
 
 
 class CollectAnswersEvent(Event):

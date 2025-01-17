@@ -25,7 +25,7 @@ export function ChatMessageContent() {
     },
     // add the writer card
     {
-      position: ContentPosition.AFTER_EVENTS,
+      position: ContentPosition.CHAT_EVENTS,
       component: <WriterCard message={message} />,
     },
     {
