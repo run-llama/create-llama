@@ -6,6 +6,7 @@ import {
   useChatUI,
 } from "@llamaindex/chat-ui";
 import { Markdown } from "./custom/markdown";
+import { WriterCard } from "./custom/writer-card";
 import { ToolAnnotations } from "./tools/chat-tools";
 
 export function ChatMessageContent() {
@@ -21,6 +22,11 @@ export function ChatMessageContent() {
           sources={getSourceAnnotationData(message.annotations)?.[0]}
         />
       ),
+    },
+    // add the writer card
+    {
+      position: ContentPosition.AFTER_EVENTS,
+      component: <WriterCard message={message} />,
     },
     {
       // add the tool annotations after events
