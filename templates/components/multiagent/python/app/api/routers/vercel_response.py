@@ -86,8 +86,6 @@ class VercelStreamResponse(StreamingResponse):
             if question_data:
                 yield self.convert_data(question_data)
 
-            # TODO: stream sources
-
         # Yield the events from the event handler
         async def _event_generator():
             async for event in events:
