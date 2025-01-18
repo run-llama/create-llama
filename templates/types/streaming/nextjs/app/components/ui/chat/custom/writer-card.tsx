@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../collapsible";
+import { Markdown } from "./markdown";
 
 type EventState = "pending" | "inprogress" | "done" | "error";
 
@@ -178,8 +179,8 @@ export function WriterCard({ message }: { message: Message }) {
                   </CollapsibleTrigger>
                   {question.answer && (
                     <CollapsibleContent>
-                      <div className="p-3 text-gray-600 text-left border border-t-0 border-gray-200 rounded-b-lg">
-                        {question.answer}
+                      <div className="p-3 border border-t-0 border-gray-200 rounded-b-lg">
+                        <Markdown content={question.answer} />
                       </div>
                     </CollapsibleContent>
                   )}
