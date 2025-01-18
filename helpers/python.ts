@@ -480,6 +480,13 @@ export const installPythonTemplate = async ({
     await copyRouterCode(root, tools ?? []);
   }
 
+  // Copy multiagents overrides
+  if (template === "multiagent") {
+    await copy("**", path.join(root), {
+      cwd: path.join(compPath, "multiagent", "python"),
+    });
+  }
+
   if (template === "multiagent" || template === "reflex") {
     if (useCase) {
       const sourcePath =

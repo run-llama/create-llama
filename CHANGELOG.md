@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.26
+
+### Patch Changes
+
+- f73d46b: Fix missing copy of the multiagent code
+
 ## 0.3.25
 
 ### Patch Changes
