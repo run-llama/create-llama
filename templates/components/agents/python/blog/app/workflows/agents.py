@@ -68,7 +68,7 @@ async def plan_research(
 
 async def research(
     question: str,
-    context_nodes: List[Node],
+    context_nodes: List[NodeWithScore],
 ) -> str:
     prompt = """
     You are a researcher who are inprogress of answering the question.
@@ -113,8 +113,7 @@ async def write_report(
     The report should be a great outline of the research and cover all the important points of the researched perspective.
     + Have a great outline for a research report. The outline should cover the researched perspective.
     + Represent in markdown format. If possible, use tables or figures to have better presentation.
-    + The citation has been customized as a new format, don't update the citation index/id; just keep it as it is.
-    At the result, you don't need to write a Reference section.
+    + Never remove citation information (the [citation:id]() part in the provided context). You should keep it in the final report.
     <User request>
     {user_request}
     </User request>
