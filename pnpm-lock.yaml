@@ -24,8 +24,8 @@ importers:
         specifier: ^20.11.7
         version: 20.12.10
       '@types/prompts':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.4.2
+        version: 2.4.2
       '@types/tar':
         specifier: 6.1.5
         version: 6.1.5
@@ -298,8 +298,8 @@ packages:
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
-  '@types/prompts@2.0.1':
-    resolution: {integrity: sha512-AhtMcmETelF8wFDV1ucbChKhLgsc+ytXZXkNz/nnTAMSDeqsjALknEFxi7ZtLgS/G8bV2rp90LhDW5SGACimIQ==}
+  '@types/prompts@2.4.2':
+    resolution: {integrity: sha512-TwNx7qsjvRIUv/BCx583tqF5IINEVjCNqg9ofKHRlSoUHE62WBHrem4B1HGXcIrG511v29d1kJ9a/t2Esz7MIg==}
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
@@ -2208,7 +2208,10 @@ snapshots:
 
   '@types/normalize-package-data@2.4.4': {}
 
-  '@types/prompts@2.0.1': {}
+  '@types/prompts@2.4.2':
+    dependencies:
+      '@types/node': 20.12.10
+      kleur: 3.0.3
 
   '@types/responselike@1.0.3':
     dependencies:
