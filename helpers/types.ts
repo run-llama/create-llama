@@ -54,7 +54,8 @@ export type TemplateUseCase =
   | "blog"
   | "form_filling"
   | "extractor"
-  | "contract_review";
+  | "contract_review"
+  | "blog";
 // Config for both file and folder
 export type FileSourceConfig =
   | {

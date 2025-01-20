@@ -42,6 +42,16 @@ export const EXAMPLE_GDPR: TemplateDataSource = {
   },
 };
 
+export const AI_REPORTS: TemplateDataSource = {
+  type: "file",
+  config: {
+    url: new URL(
+      "https://www.europarl.europa.eu/RegData/etudes/ATAG/2024/760392/EPRS_ATA(2024)760392_EN.pdf",
+    ),
+    filename: "EPRS_ATA_2024_760392_EN.pdf",
+  },
+};
+
 export function getDataSources(
   files?: string,
   exampleFile?: boolean,

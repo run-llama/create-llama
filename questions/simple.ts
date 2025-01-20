@@ -1,5 +1,6 @@
 import prompts from "prompts";
 import {
+  AI_REPORTS,
   EXAMPLE_10K_SEC_FILES,
   EXAMPLE_FILE,
   EXAMPLE_GDPR,
@@ -17,7 +18,8 @@ type AppType =
   | "form_filling"
   | "extractor"
   | "contract_review"
-  | "data_scientist";
+  | "data_scientist"
+  | "blog";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -51,6 +53,7 @@ export const askSimpleQuestions = async (
           title: "Contract Review (using Workflows)",
           value: "contract_review",
         },
+        { title: "Blog Writer (using Workflows)", value: "blog" },
       ],
     },
     questionHandlers,
@@ -60,7 +63,11 @@ export const askSimpleQuestions = async (
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
 
-  if (appType !== "extractor" && appType !== "contract_review") {
+  if (
+    appType !== "extractor" &&
+    appType !== "contract_review" &&
+    appType !== "blog"
+  ) {
     const { language: newLanguage } = await prompts(
       {
         type: "select",
@@ -187,6 +194,13 @@ const convertAnswers = async (
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_GDPR],
+    },
+    blog: {
+      template: "multiagent",
+      useCase: "blog",
+      tools: [],
+      frontend: true,
+      dataSources: [AI_REPORTS],
     },
   };
   const results = lookup[answers.appType];
