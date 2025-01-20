@@ -104,9 +104,11 @@ class WriterWorkflow(Workflow):
         )
         ctx.write_event_to_stream(
             DataEvent(
-                type="retrieve",
-                state="inprogress",
-                data={},
+                type="writer_card",
+                data={
+                    "event": "retrieve",
+                    "state": "inprogress",
+                },
             )
         )
         retriever = self.index.as_retriever(
@@ -116,10 +118,10 @@ class WriterWorkflow(Workflow):
         self.context_nodes.extend(nodes)
         ctx.write_event_to_stream(
             DataEvent(
-                type="retrieve",
-                state="done",
+                type="writer_card",
                 data={
-                    "nodes": nodes,
+                    "event": "retrieve",
+                    "state": "done",
                 },
             )
         )
@@ -144,9 +146,11 @@ class WriterWorkflow(Workflow):
         logger.info("Analyzing the retrieved information")
         ctx.write_event_to_stream(
             DataEvent(
-                type="analyze",
-                state="inprogress",
-                data={"message": "Analyze..."},
+                type="writer_card",
+                data={
+                    "event": "analyze",
+                    "state": "inprogress",
+                },
             )
         )
         res = await plan_research(
@@ -175,11 +179,11 @@ class WriterWorkflow(Workflow):
                 question_id = str(uuid.uuid4())
                 ctx.write_event_to_stream(
                     DataEvent(
-                        type="answer",
-                        state="pending",
+                        type="writer_card",
                         data={
+                            "event": "answer",
+                            "state": "pending",
                             "id": question_id,
-                            "type": "question",
                             "question": question,
                             "answer": None,
                         },
@@ -194,9 +198,11 @@ class WriterWorkflow(Workflow):
                 )
         ctx.write_event_to_stream(
             DataEvent(
-                type="analyze",
-                state="done",
-                data={"message": "Analyzed"},
+                type="writer_card",
+                data={
+                    "event": "analyze",
+                    "state": "done",
+                },
             )
         )
         return None
@@ -208,9 +214,13 @@ class WriterWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             DataEvent(
-                type="answer",
-                state="inprogress",
-                data={"id": ev.question_id, "question": ev.question},
+                type="writer_card",
+                data={
+                    "event": "answer",
+                    "state": "inprogress",
+                    "id": ev.question_id,
+                    "question": ev.question,
+                },
             )
         )
         try:
@@ -223,11 +233,11 @@ class WriterWorkflow(Workflow):
             answer = f"Got error when answering the question: {ev.question}"
         ctx.write_event_to_stream(
             DataEvent(
-                type="answer",
-                state="done",
+                type="writer_card",
                 data={
+                    "event": "answer",
+                    "state": "done",
                     "id": ev.question_id,
-                    "type": "question",
                     "question": ev.question,
                     "answer": answer,
                 },

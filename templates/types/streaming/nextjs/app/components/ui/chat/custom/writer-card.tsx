@@ -16,18 +16,21 @@ import {
 } from "../../collapsible";
 import { Markdown } from "./markdown";
 
+// Streaming event types
 type EventState = "pending" | "inprogress" | "done" | "error";
 
 type WriterEvent = {
-  type: "retrieve" | "analyze" | "answer";
-  state: EventState;
+  type: "writer_card";
   data: {
+    event: "retrieve" | "analyze" | "answer";
+    state: EventState;
     id?: string;
     question?: string;
     answer?: string | null;
   };
 };
 
+// UI state types
 type QuestionState = {
   id: string;
   question: string;
@@ -58,7 +61,7 @@ const transformState = (
   state: WriterState,
   event: WriterEvent,
 ): WriterState => {
-  switch (event.type) {
+  switch (event.data.event) {
     case "answer": {
       const { id, question, answer } = event.data;
       if (!id || !question) return state;
@@ -67,7 +70,7 @@ const transformState = (
         if (q.id !== id) return q;
         return {
           ...q,
-          state: event.state,
+          state: event.data.state,
           answer: answer ?? q.answer,
         };
       });
@@ -78,7 +81,7 @@ const transformState = (
               id,
               question,
               answer: answer ?? null,
-              state: event.state,
+              state: event.data.state,
               isOpen: false,
             },
           ]
@@ -97,9 +100,9 @@ const transformState = (
     case "analyze":
       return {
         ...state,
-        [event.type]: {
-          ...state[event.type],
-          state: event.state,
+        [event.data.event]: {
+          ...state[event.data.event],
+          state: event.data.state,
         },
       };
 
@@ -130,10 +133,13 @@ const writeEventsToState = (events: WriterEvent[] | undefined): WriterState => {
 
 export function WriterCard({ message }: { message: Message }) {
   const writerEvents = message.annotations as WriterEvent[] | undefined;
+  const hasWriterEvents = writerEvents?.some(
+    (event) => event.type === "writer_card",
+  );
 
   const state = useMemo(() => writeEventsToState(writerEvents), [writerEvents]);
 
-  if (!writerEvents?.length) {
+  if (!hasWriterEvents) {
     return null;
   }
 

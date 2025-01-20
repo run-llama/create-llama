@@ -1,7 +1,8 @@
-from typing import Any, Dict, List, Literal
+from typing import List, Literal, Optional
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.workflow import Event
+from pydantic import BaseModel
 
 from app.api.routers.models import SourceNodes
 
@@ -28,10 +29,17 @@ class WriteReportEvent(Event):
 
 
 # Stream events
-class DataEvent(Event):
-    type: Literal["retrieve", "analyze", "answer", "sources"]
+class WriterEventData(BaseModel):
+    event: Literal["retrieve", "analyze", "answer"]
     state: Literal["pending", "inprogress", "done", "error"]
-    data: Dict[str, Any]
+    id: Optional[str] = None
+    question: Optional[str] = None
+    answer: Optional[str] = None
+
+
+class DataEvent(Event):
+    type: Literal["writer_card"]
+    data: WriterEventData
 
     def to_response(self):
         return self.model_dump()
