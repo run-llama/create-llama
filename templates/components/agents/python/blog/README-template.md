@@ -1,16 +1,4 @@
-## Overview
-
-This example is using three agents to generate a blog post:
-
-- a researcher that retrieves content via a RAG pipeline,
-- a writer that specializes in writing blog posts and
-- a reviewer that is reviewing the blog post.
-
-There are three different methods how the agents can interact to reach their goal:
-
-1. [Choreography](./app/agents/choreography.py) - the agents decide themselves to delegate a task to another agent
-1. [Orchestrator](./app/agents/orchestrator.py) - a central orchestrator decides which agent should execute a task
-1. [Explicit Workflow](./app/agents/workflow.py) - a pre-defined workflow specific for the task is used to execute the tasks
+This is a [LlamaIndex](https://www.llamaindex.ai/) multi-agents project using [Workflows](https://docs.llamaindex.ai/en/stable/understanding/workflows/).
 
 ## Getting Started
 
@@ -35,25 +23,14 @@ Third, run the development server:
 poetry run dev
 ```
 
-Per default, the example is using the explicit workflow. You can change the example by setting the `EXAMPLE_TYPE` environment variable to `choreography` or `orchestrator`.
-The example provides one streaming API endpoint `/api/chat`.
-You can test the endpoint with the following curl request:
+## Use Case: Blog writer
 
-```
-curl --location 'localhost:8000/api/chat' \
---header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
-```
+The workflow writes blog posts based on documents in the [data](./data) directory. You can start with the included PDF about AI investment in 2024, or add your own documents and run generate script again.
 
-You can start editing the API by modifying `app/api/routers/chat.py` or `app/examples/workflow.py`. The API auto-updates as you save the files.
+After starting the server, go to [http://localhost:8000](http://localhost:8000) and send a message to the agent to write a blog post.
+E.g: "Write a post about AI investment in 2024"
 
-Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
-
-To start the app optimized for **production**, run:
-
-```
-poetry run prod
-```
+To update the workflow, you can edit the [workflow.py](./app/workflows/writer.py) file.
 
 ## Deployments
 
