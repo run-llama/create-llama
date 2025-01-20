@@ -111,9 +111,9 @@ async def write_report(
     You have research on the some perspective of the user request.
     You need to write a report for the user request based on the research.
     The report should be a great outline of the research and cover all the important points of the researched perspective.
-    + Have a great outline for a research report. The outline should cover the researched perspective.
+    + Have a great outline for a research report. The outline should cover the researched perspective. Don't use link in table of contents.
     + Represent in markdown format. If possible, use tables or figures to have better presentation.
-    + Never remove citation information (the [citation:id]() part in the provided context). You should keep it in the final report.
+    + Never remove citation information (the [citation:id]() part in the provided context). You should keep it in the final report and don't need to write a reference section.
     <User request>
     {user_request}
     </User request>
