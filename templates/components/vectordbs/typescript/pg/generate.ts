@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { PGVectorStore } from "llamaindex/vector-store/PGVectorStore";
+import { PGVectorStore } from "llamaindex/vector-store";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import {
