@@ -112,7 +112,7 @@ class WriterWorkflow(Workflow):
             )
         )
         retriever = self.index.as_retriever(
-            similarity_top_k=os.getenv("TOP_K", 5),
+            similarity_top_k=os.getenv("TOP_K", 10),
         )
         nodes = retriever.retrieve(self.user_request)
         self.context_nodes.extend(nodes)

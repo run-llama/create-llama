@@ -19,7 +19,7 @@ type AppType =
   | "extractor"
   | "contract_review"
   | "data_scientist"
-  | "blog";
+  | "deep_research";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -81,10 +81,10 @@ export const askSimpleQuestions = async (
             "Extract and review contracts to ensure compliance with regulations (GDPR)",
         },
         {
-          title: "🔀 Blog Writer",
-          value: "blog",
+          title: "🔀 Deep Research over own documents",
+          value: "deep_research",
           description:
-            "Write a blog post by analyzing the provided data from different perspectives and crafting a coherent blog post with citations to the data.",
+            "Research and analyze documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
         },
       ],
     },
@@ -98,7 +98,7 @@ export const askSimpleQuestions = async (
   if (
     appType !== "extractor" &&
     appType !== "contract_review" &&
-    appType !== "blog"
+    appType !== "deep_research"
   ) {
     const { language: newLanguage } = await prompts(
       {
@@ -227,9 +227,9 @@ const convertAnswers = async (
       frontend: false,
       dataSources: [EXAMPLE_GDPR],
     },
-    blog: {
+    deep_research: {
       template: "multiagent",
-      useCase: "blog",
+      useCase: "deep_research",
       tools: [],
       frontend: true,
       dataSources: [AI_REPORTS],

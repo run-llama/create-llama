@@ -115,12 +115,12 @@ async def write_report(
     You are a researcher writing a report based on a user request and the research context.
     You have researched various perspectives related to the user request.
     The report should provide a comprehensive outline covering all important points from the researched perspectives.
+    Create a well-structured outline for the research report that covers all the answers.
 
-    # Important:
-    + Create a well-structured outline for the research report that covers all researched perspectives.
-    + Format the report in markdown. Use tables or figures where appropriate to enhance presentation.
+    # IMPORTANT when writing in markdown format:
+    + Use tables or figures where appropriate to enhance presentation.
     + Preserve all citation syntax (the `[citation:id]()` parts in the provided context). Keep these citations in the final report - no separate reference section is needed.
-    + Never include links in the markdown report.
+    + Do not add links, a table of contents, or a references section to the report.
 
     <User request>
     {user_request}
