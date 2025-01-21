@@ -1,6 +1,5 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
-import { questionHandlers } from "../../questions/utils";
 
 const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
   "gpt-35-turbo": { openAIModel: "gpt-3.5-turbo" },
@@ -66,29 +65,49 @@ export async function askAzureQuestions({
     },
   };
 
-  if (askModels) {
-    const { model } = await prompts(
+  if (!config.apiKey) {
+    const { key } = await inquirer.prompt([
       {
-        type: "select",
+        type: "input",
+        name: "key",
+        message:
+          "Please provide your Azure OpenAI API key (or leave blank to use AZURE_OPENAI_API_KEY env variable):",
+      },
+    ]);
+    config.apiKey = key || process.env.AZURE_OPENAI_API_KEY;
+  }
+
+  if (!config.endpoint) {
+    const { endpoint } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "endpoint",
+        message:
+          "Please provide your Azure OpenAI endpoint (or leave blank to use AZURE_OPENAI_ENDPOINT env variable):",
+      },
+    ]);
+    config.endpoint = endpoint || process.env.AZURE_OPENAI_ENDPOINT;
+  }
+
+  if (askModels) {
+    const { model } = await inquirer.prompt([
+      {
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: getAvailableModelChoices(),
-        initial: 0,
+        choices: getAvailableModelChoices().map(toChoice),
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: getAvailableEmbeddingModelChoices(),
-        initial: 0,
+        choices: getAvailableEmbeddingModelChoices().map(toChoice),
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = getDimensions(embeddingModel);
   }
@@ -112,4 +131,8 @@ function getAvailableEmbeddingModelChoices() {
 
 function getDimensions(modelName: string) {
   return ALL_AZURE_OPENAI_EMBEDDING_MODELS[modelName].dimensions;
+}
+
+function toChoice(item: { title: string; value: string }) {
+  return { name: item.title, value: item.value };
 }

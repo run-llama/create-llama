@@ -1,6 +1,6 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions/utils";
+import { toChoice } from "../../questions/utils";
 
 const MODELS = ["HuggingFaceH4/zephyr-7b-alpha"];
 type ModelData = {
@@ -37,29 +37,37 @@ export async function askHuggingfaceQuestions({
     },
   };
 
-  if (askModels) {
-    const { model } = await prompts(
+  if (!config.apiKey) {
+    const { key } = await inquirer.prompt([
       {
-        type: "select",
-        name: "model",
-        message: "Which Hugging Face model would you like to use?",
-        choices: MODELS.map(toChoice),
-        initial: 0,
+        type: "input",
+        name: "key",
+        message:
+          "Please provide your Huggingface API key (or leave blank to use HF_API_KEY env variable):",
       },
-      questionHandlers,
-    );
+    ]);
+    config.apiKey = key || process.env.HF_API_KEY;
+  }
+
+  if (askModels) {
+    const { model } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "model",
+        message: "Which LLM model would you like to use?",
+        choices: MODELS.map(toChoice),
+      },
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
   }

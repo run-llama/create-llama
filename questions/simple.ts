@@ -1,4 +1,4 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import {
   EXAMPLE_10K_SEC_FILES,
   EXAMPLE_FILE,
@@ -8,7 +8,7 @@ import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
-import { askPostInstallAction, questionHandlers } from "./utils";
+import { askPostInstallAction } from "./utils";
 
 type AppType =
   | "rag"
@@ -29,78 +29,71 @@ type SimpleAnswers = {
 export const askSimpleQuestions = async (
   args: PureQuestionArgs,
 ): Promise<QuestionResults> => {
-  const { appType } = await prompts(
+  const { appType } = await inquirer.prompt([
     {
-      type: "select",
+      type: "list",
       name: "appType",
       message: "What app do you want to build?",
       choices: [
-        { title: "Agentic RAG", value: "rag" },
-        { title: "Data Scientist", value: "data_scientist" },
+        { name: "Agentic RAG", value: "rag" },
+        { name: "Data Scientist", value: "data_scientist" },
         {
-          title: "Financial Report Generator (using Workflows)",
+          name: "Financial Report Generator (using Workflows)",
           value: "financial_report_agent",
         },
         {
-          title: "Form Filler (using Workflows)",
+          name: "Form Filler (using Workflows)",
           value: "form_filling",
         },
-        { title: "Code Artifact Agent", value: "code_artifact" },
-        { title: "Information Extractor", value: "extractor" },
+        { name: "Code Artifact Agent", value: "code_artifact" },
+        { name: "Information Extractor", value: "extractor" },
         {
-          title: "Contract Review (using Workflows)",
+          name: "Contract Review (using Workflows)",
           value: "contract_review",
         },
       ],
     },
-    questionHandlers,
-  );
+  ]);
 
   let language: TemplateFramework = "fastapi";
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
 
   if (appType !== "extractor" && appType !== "contract_review") {
-    const { language: newLanguage } = await prompts(
+    const { language: newLanguage } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "language",
         message: "What language do you want to use?",
         choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
+          { name: "Python (FastAPI)", value: "fastapi" },
+          { name: "Typescript (NextJS)", value: "nextjs" },
         ],
       },
-      questionHandlers,
-    );
+    ]);
     language = newLanguage;
   }
 
-  const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+  const { useLlamaCloud: newUseLlamaCloud } = await inquirer.prompt([
     {
-      type: "toggle",
+      type: "confirm",
       name: "useLlamaCloud",
       message: "Do you want to use LlamaCloud services?",
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-      hint: "see https://www.llamaindex.ai/enterprise for more info",
+      default: false,
     },
-    questionHandlers,
-  );
+  ]);
   useLlamaCloud = newUseLlamaCloud;
 
   if (useLlamaCloud && !llamaCloudKey) {
     // Ask for LlamaCloud API key, if not set
-    const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+    const { llamaCloudKey: newLlamaCloudKey } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "llamaCloudKey",
         message:
           "Please provide your LlamaCloud API key (leave blank to skip):",
       },
-      questionHandlers,
-    );
+    ]);
     llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
   }
 

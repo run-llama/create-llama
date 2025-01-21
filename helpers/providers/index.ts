@@ -1,5 +1,4 @@
-import prompts from "prompts";
-import { questionHandlers } from "../../questions/utils";
+import inquirer from "inquirer";
 import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askAzureQuestions } from "./azure";
@@ -19,7 +18,9 @@ export type ModelConfigQuestionsParams = {
   framework?: TemplateFramework;
 };
 
-export type ModelConfigParams = Omit<ModelConfig, "provider">;
+export type ModelConfigParams = Omit<ModelConfig, "provider"> & {
+  endpoint?: string;
+};
 
 export async function askModelConfig({
   askModels,
@@ -29,29 +30,27 @@ export async function askModelConfig({
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
   if (askModels) {
     let choices = [
-      { title: "OpenAI", value: "openai" },
-      { title: "Groq", value: "groq" },
-      { title: "Ollama", value: "ollama" },
-      { title: "Anthropic", value: "anthropic" },
-      { title: "Gemini", value: "gemini" },
-      { title: "Mistral", value: "mistral" },
-      { title: "AzureOpenAI", value: "azure-openai" },
+      { name: "OpenAI", value: "openai" },
+      { name: "Groq", value: "groq" },
+      { name: "Ollama", value: "ollama" },
+      { name: "Anthropic", value: "anthropic" },
+      { name: "Gemini", value: "gemini" },
+      { name: "Mistral", value: "mistral" },
+      { name: "AzureOpenAI", value: "azure-openai" },
     ];
 
     if (framework === "fastapi") {
-      choices.push({ title: "T-Systems", value: "t-systems" });
-      choices.push({ title: "Huggingface", value: "huggingface" });
+      choices.push({ name: "T-Systems", value: "t-systems" });
+      choices.push({ name: "Huggingface", value: "huggingface" });
     }
-    const { provider } = await prompts(
+    const { provider } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "provider",
         message: "Which model provider would you like to use",
         choices: choices,
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     modelProvider = provider;
   }
 

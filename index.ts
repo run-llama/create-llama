@@ -2,9 +2,9 @@
 import { execSync } from "child_process";
 import { Command } from "commander";
 import fs from "fs";
+import inquirer from "inquirer";
 import path from "path";
 import { bold, cyan, green, red, yellow } from "picocolors";
-import prompts from "prompts";
 import terminalLink from "terminal-link";
 import checkForUpdate from "update-check";
 import { createApp } from "./create-app";
@@ -18,7 +18,6 @@ import { validateNpmName } from "./helpers/validate-pkg";
 import packageJson from "./package.json";
 import { askQuestions } from "./questions/index";
 import { QuestionArgs } from "./questions/types";
-import { onPromptState } from "./questions/utils";
 // Run the initialization function
 initializeGlobalAgent();
 
@@ -151,7 +150,7 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--tools <tools>",
+    "--tools  ",
     `
 
   Specify the tools you want to use by providing a comma-separated list. For example, 'wikipedia.WikipediaToolSpec,google.GoogleSearchToolSpec'. Use 'none' to not using any tools.
@@ -263,24 +262,15 @@ async function run(): Promise<void> {
   }
 
   if (!projectPath) {
-    const res = await prompts({
-      onState: onPromptState,
-      type: "text",
-      name: "path",
-      message: "What is your project named?",
-      initial: "my-app",
-      validate: (name) => {
-        const validation = validateNpmName(path.basename(path.resolve(name)));
-        if (validation.valid) {
-          return true;
-        }
-        return "Invalid project name: " + validation.problems![0];
+    const { path: projectPathAnswer } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "path",
+        message: "What is your project named?",
+        default: "my-llama-app",
       },
-    });
-
-    if (typeof res.path === "string") {
-      projectPath = res.path.trim();
-    }
+    ]);
+    projectPath = projectPathAnswer;
   }
 
   if (!projectPath) {

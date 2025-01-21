@@ -1,6 +1,6 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions/utils";
+import { toChoice } from "../../questions/utils";
 
 import got from "got";
 import ora from "ora";
@@ -97,43 +97,48 @@ export async function askGroqQuestions({
   };
 
   if (!config.apiKey) {
-    const { key } = await prompts(
+    const { key } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "key",
-        message:
-          "Please provide your Groq API key (or leave blank to use GROQ_API_KEY env variable):",
+        message: askModels
+          ? "Please provide your Groq API key (or leave blank to use GROQ_API_KEY env variable):"
+          : "Please provide your Groq API key (leave blank to skip):",
+        validate: (value: string) => {
+          if (askModels && !value) {
+            if (process.env.GROQ_API_KEY) {
+              return true;
+            }
+            return "GROQ_API_KEY env variable is not set - key is required";
+          }
+          return true;
+        },
       },
-      questionHandlers,
-    );
+    ]);
     config.apiKey = key || process.env.GROQ_API_KEY;
   }
 
   if (askModels) {
     const modelChoices = await getAvailableModelChoicesGroq(config.apiKey!);
 
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
         choices: modelChoices,
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions =
       EMBEDDING_MODELS[

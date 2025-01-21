@@ -1,9 +1,8 @@
 import got from "got";
+import inquirer from "inquirer";
 import ora from "ora";
 import { red } from "picocolors";
-import prompts from "prompts";
 import { ModelConfigParams } from ".";
-import { questionHandlers } from "../../questions/utils";
 
 export const TSYSTEMS_LLMHUB_API_URL =
   "https://llm-server.llmhub.t-systems.net/v2";
@@ -57,9 +56,9 @@ export async function askLLMHubQuestions({
   };
 
   if (!config.apiKey) {
-    const { key } = await prompts(
+    const { key } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "key",
         message: askModels
           ? "Please provide your LLMHub API key (or leave blank to use T_SYSTEMS_LLMHUB_API_KEY env variable):"
@@ -74,34 +73,41 @@ export async function askLLMHubQuestions({
           return true;
         },
       },
-      questionHandlers,
-    );
+    ]);
     config.apiKey = key || process.env.T_SYSTEMS_LLMHUB_API_KEY;
   }
 
   if (askModels) {
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: await getAvailableModelChoices(false, config.apiKey),
-        initial: 0,
+        choices: await getAvailableModelChoices(false, config.apiKey).then(
+          (choices) =>
+            choices.map((choice: { title: string; value: string }) => ({
+              name: choice.title,
+              value: choice.value,
+            })),
+        ),
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: await getAvailableModelChoices(true, config.apiKey),
-        initial: 0,
+        choices: await getAvailableModelChoices(true, config.apiKey).then(
+          (choices) =>
+            choices.map((choice: { title: string; value: string }) => ({
+              name: choice.title,
+              value: choice.value,
+            })),
+        ),
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = getDimensions(embeddingModel);
   }

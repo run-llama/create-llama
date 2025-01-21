@@ -1,5 +1,5 @@
+import inquirer, { QuestionCollection } from "inquirer";
 import { blue } from "picocolors";
-import prompts from "prompts";
 import { isCI } from ".";
 import { COMMUNITY_OWNER, COMMUNITY_REPO } from "../helpers/constant";
 import { EXAMPLE_FILE, EXAMPLE_GDPR } from "../helpers/datasources";
@@ -10,43 +10,36 @@ import { supportedTools, toolRequiresConfig } from "../helpers/tools";
 import { getDataSourceChoices } from "./datasources";
 import { getVectorDbChoices } from "./stores";
 import { QuestionArgs } from "./types";
-import {
-  askPostInstallAction,
-  onPromptState,
-  questionHandlers,
-  selectLocalContextData,
-} from "./utils";
+import { askPostInstallAction, selectLocalContextData } from "./utils";
 
 export const askProQuestions = async (program: QuestionArgs) => {
   if (!program.template) {
     const styledRepo = blue(
       `https://github.com/${COMMUNITY_OWNER}/${COMMUNITY_REPO}`,
     );
-    const { template } = await prompts(
+    const { template } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "template",
         message: "Which template would you like to use?",
         choices: [
-          { title: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
+          { name: "Agentic RAG (e.g. chat with docs)", value: "streaming" },
           {
-            title: "Multi-agent app (using workflows)",
+            name: "Multi-agent app (using workflows)",
             value: "multiagent",
           },
-          { title: "Fullstack python template with Reflex", value: "reflex" },
+          { name: "Fullstack python template with Reflex", value: "reflex" },
           {
-            title: `Community template from ${styledRepo}`,
+            name: `Community template from ${styledRepo}`,
             value: "community",
           },
           {
-            title: "Example using a LlamaPack",
+            name: "Example using a LlamaPack",
             value: "llamapack",
           },
         ],
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.template = template;
   }
 
@@ -55,19 +48,17 @@ export const askProQuestions = async (program: QuestionArgs) => {
       COMMUNITY_OWNER,
       COMMUNITY_REPO,
     );
-    const { communityProjectConfig } = await prompts(
+    const { communityProjectConfig } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "communityProjectConfig",
         message: "Select community template",
         choices: projectOptions.map(({ title, value }) => ({
-          title,
+          name: title,
           value: JSON.stringify(value), // serialize value to string in terminal
         })),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     const projectConfig = JSON.parse(communityProjectConfig);
     program.communityProjectConfig = projectConfig;
     return; // early return - no further questions needed for community projects
@@ -75,19 +66,17 @@ export const askProQuestions = async (program: QuestionArgs) => {
 
   if (program.template === "llamapack") {
     const availableLlamaPacks = await getAvailableLlamapackOptions();
-    const { llamapack } = await prompts(
+    const { llamapack } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "llamapack",
         message: "Select LlamaPack",
         choices: availableLlamaPacks.map((pack) => ({
-          title: pack.name,
+          name: pack.name,
           value: pack.folderPath,
         })),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.llamapack = llamapack;
     if (!program.postInstallAction) {
       program.postInstallAction = await askPostInstallAction(program);
@@ -101,42 +90,38 @@ export const askProQuestions = async (program: QuestionArgs) => {
     program.dataSources = [EXAMPLE_FILE];
     program.framework = "fastapi";
     // Ask for which Reflex use case to use
-    const { useCase } = await prompts(
+    const { useCase } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "useCase",
         message: "Which use case would you like to build?",
         choices: [
-          { title: "Structured Extractor", value: "extractor" },
+          { name: "Structured Extractor", value: "extractor" },
           {
-            title: "Contract review (using Workflow)",
+            name: "Contract review (using Workflow)",
             value: "contract_review",
           },
         ],
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.useCase = useCase;
   }
 
   if (!program.framework) {
     const choices = [
-      { title: "NextJS", value: "nextjs" },
-      { title: "Express", value: "express" },
-      { title: "FastAPI (Python)", value: "fastapi" },
+      { name: "NextJS", value: "nextjs" },
+      { name: "Express", value: "express" },
+      { name: "FastAPI (Python)", value: "fastapi" },
     ];
 
-    const { framework } = await prompts(
+    const { framework } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "framework",
         message: "Which framework would you like to use?",
         choices,
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.framework = framework;
   }
 
@@ -147,16 +132,15 @@ export const askProQuestions = async (program: QuestionArgs) => {
     // if a backend-only framework is selected, ask whether we should create a frontend
     if (program.frontend === undefined) {
       const styledNextJS = blue("NextJS");
-      const { frontend } = await prompts({
-        onState: onPromptState,
-        type: "toggle",
-        name: "frontend",
-        message: `Would you like to generate a ${styledNextJS} frontend for your FastAPI backend?`,
-        initial: false,
-        active: "Yes",
-        inactive: "No",
-      });
-      program.frontend = Boolean(frontend);
+      const { frontend } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "frontend",
+          message: `Would you like to generate a ${styledNextJS} frontend for your FastAPI backend?`,
+          default: false,
+        },
+      ]);
+      program.frontend = frontend;
     }
   } else {
     program.frontend = false;
@@ -169,23 +153,20 @@ export const askProQuestions = async (program: QuestionArgs) => {
   }
 
   if (!program.observability && program.template === "streaming") {
-    const { observability } = await prompts(
+    const { observability } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "observability",
         message: "Would you like to set up observability?",
         choices: [
-          { title: "No", value: "none" },
+          { name: "No", value: "none" },
           ...(program.framework === "fastapi"
-            ? [{ title: "LlamaTrace", value: "llamatrace" }]
+            ? [{ name: "LlamaTrace", value: "llamatrace" }]
             : []),
-          { title: "Traceloop", value: "traceloop" },
+          { name: "Traceloop", value: "traceloop" },
         ],
-        initial: 0,
       },
-      questionHandlers,
-    );
-
+    ]);
     program.observability = observability;
   }
 
@@ -196,34 +177,32 @@ export const askProQuestions = async (program: QuestionArgs) => {
     const choices =
       program.template === "reflex"
         ? [
-            { title: "Structured Extractor", value: "extractor" },
+            { name: "Structured Extractor", value: "extractor" },
             {
-              title: "Contract review (using Workflow)",
+              name: "Contract review (using Workflow)",
               value: "contract_review",
             },
           ]
         : [
             {
-              title: "Financial report (generate a financial report)",
+              name: "Financial report (generate a financial report)",
               value: "financial_report",
             },
             {
-              title: "Form filling (fill missing value in a CSV file)",
+              name: "Form filling (fill missing value in a CSV file)",
               value: "form_filling",
             },
-            { title: "Blog writer (Write a blog post)", value: "blog" },
+            { name: "Blog writer (Write a blog post)", value: "blog" },
           ];
 
-    const { useCase } = await prompts(
+    const { useCase } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "useCase",
         message: "Which use case would you like to use?",
         choices,
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.useCase = useCase;
   }
 
@@ -245,16 +224,14 @@ export const askProQuestions = async (program: QuestionArgs) => {
   }
 
   if (!program.vectorDb) {
-    const { vectorDb } = await prompts(
+    const { vectorDb } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "vectorDb",
         message: "Would you like to use a vector database?",
         choices: getVectorDbChoices(program.framework),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     program.vectorDb = vectorDb;
   }
 
@@ -274,18 +251,16 @@ export const askProQuestions = async (program: QuestionArgs) => {
         program.template,
       );
       if (choices.length === 0) break;
-      const { selectedSource } = await prompts(
+      const { selectedSource } = await inquirer.prompt([
         {
-          type: "select",
+          type: "list",
           name: "selectedSource",
           message: firstQuestion
             ? "Which data source would you like to use?"
             : "Would you like to add another data source?",
           choices,
-          initial: firstQuestion ? 1 : 0,
         },
-        questionHandlers,
-      );
+      ]);
 
       if (selectedSource === "no" || selectedSource === "none") {
         // user doesn't want another data source or any data source
@@ -310,12 +285,12 @@ export const askProQuestions = async (program: QuestionArgs) => {
           break;
         }
         case "web": {
-          const { baseUrl } = await prompts(
+          const { baseUrl } = await inquirer.prompt([
             {
-              type: "text",
+              type: "input",
               name: "baseUrl",
               message: "Please provide base URL of the website: ",
-              initial: "https://www.llamaindex.ai",
+              default: "https://www.llamaindex.ai",
               validate: (value: string) => {
                 if (!value.includes("://")) {
                   value = `https://${value}`;
@@ -330,8 +305,7 @@ export const askProQuestions = async (program: QuestionArgs) => {
                 return true;
               },
             },
-            questionHandlers,
-          );
+          ]);
 
           program.dataSources.push({
             type: "web",
@@ -344,13 +318,13 @@ export const askProQuestions = async (program: QuestionArgs) => {
           break;
         }
         case "db": {
-          const dbPrompts: prompts.PromptObject<string>[] = [
+          const dbPrompts: QuestionCollection[] = [
             {
-              type: "text",
+              type: "input",
               name: "uri",
               message:
                 "Please enter the connection string (URI) for the database.",
-              initial: "mysql+pymysql://user:pass@localhost:3306/mydb",
+              default: "mysql+pymysql://user:pass@localhost:3306/mydb",
               validate: (value: string) => {
                 if (!value) {
                   return "Please provide a valid connection string";
@@ -365,17 +339,17 @@ export const askProQuestions = async (program: QuestionArgs) => {
                 return true;
               },
             },
-            // Only ask for a query, user can provide more complex queries in the config file later
             {
-              type: (prev) => (prev ? "text" : null),
+              type: "input",
               name: "queries",
               message: "Please enter the SQL query to fetch data:",
-              initial: "SELECT * FROM mytable",
+              default: "SELECT * FROM mytable",
+              when: (answers: any) => !!answers.uri,
             },
           ];
           program.dataSources.push({
             type: "db",
-            config: await prompts(dbPrompts, questionHandlers),
+            config: await inquirer.prompt(dbPrompts),
           });
           break;
         }
@@ -394,18 +368,15 @@ export const askProQuestions = async (program: QuestionArgs) => {
     if (program.useLlamaParse === undefined && program.template !== "reflex") {
       // if already set useLlamaParse, don't ask again
       if (program.dataSources.some((ds) => ds.type === "file")) {
-        const { useLlamaParse } = await prompts(
+        const { useLlamaParse } = await inquirer.prompt([
           {
-            type: "toggle",
+            type: "confirm",
             name: "useLlamaParse",
             message:
               "Would you like to use LlamaParse (improved parser for RAG - requires API key)?",
-            initial: false,
-            active: "Yes",
-            inactive: "No",
+            default: false,
           },
-          questionHandlers,
-        );
+        ]);
         program.useLlamaParse = useLlamaParse;
       }
     }
@@ -416,15 +387,14 @@ export const askProQuestions = async (program: QuestionArgs) => {
     if (!program.llamaCloudKey && !isCI) {
       // if already set, don't ask again
       // Ask for LlamaCloud API key
-      const { llamaCloudKey } = await prompts(
+      const { llamaCloudKey } = await inquirer.prompt([
         {
-          type: "text",
+          type: "input",
           name: "llamaCloudKey",
           message:
             "Please provide your LlamaCloud API key (leave blank to skip):",
         },
-        questionHandlers,
-      );
+      ]);
       program.llamaCloudKey = llamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
     }
   }
@@ -437,16 +407,18 @@ export const askProQuestions = async (program: QuestionArgs) => {
       t.supportedFrameworks?.includes(program.framework),
     );
     const toolChoices = options.map((tool) => ({
-      title: `${tool.display}${toolRequiresConfig(tool) ? " (needs configuration)" : ""}`,
+      name: `${tool.display}${toolRequiresConfig(tool) ? " (needs configuration)" : ""}`,
       value: tool.name,
     }));
-    const { toolsName } = await prompts({
-      type: "multiselect",
-      name: "toolsName",
-      message:
-        "Would you like to build an agent using tools? If so, select the tools here, otherwise just press enter",
-      choices: toolChoices,
-    });
+    const { toolsName } = await inquirer.prompt([
+      {
+        type: "checkbox",
+        name: "toolsName",
+        message:
+          "Would you like to build an agent using tools? If so, select the tools here, otherwise just press enter",
+        choices: toolChoices,
+      },
+    ]);
     const tools = toolsName?.map((tool: string) =>
       supportedTools.find((t) => t.name === tool),
     );

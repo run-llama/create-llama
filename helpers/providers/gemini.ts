@@ -1,6 +1,6 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions/utils";
+import { toChoice } from "../../questions/utils";
 
 const MODELS = ["gemini-1.5-pro-latest", "gemini-pro", "gemini-pro-vision"];
 type ModelData = {
@@ -41,41 +41,46 @@ export async function askGeminiQuestions({
   };
 
   if (!config.apiKey) {
-    const { key } = await prompts(
+    const { key } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "key",
-        message:
-          "Please provide your Google API key (or leave blank to use GOOGLE_API_KEY env variable):",
+        message: askModels
+          ? "Please provide your Google API key (or leave blank to use GOOGLE_API_KEY env variable):"
+          : "Please provide your Google API key (leave blank to skip):",
+        validate: (value: string) => {
+          if (askModels && !value) {
+            if (process.env.GOOGLE_API_KEY) {
+              return true;
+            }
+            return "GOOGLE_API_KEY env variable is not set - key is required";
+          }
+          return true;
+        },
       },
-      questionHandlers,
-    );
+    ]);
     config.apiKey = key || process.env.GOOGLE_API_KEY;
   }
 
   if (askModels) {
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
         choices: MODELS.map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
   }

@@ -1,8 +1,8 @@
 import { execSync } from "child_process";
 import fs from "fs";
+import inquirer from "inquirer";
 import path from "path";
 import { red } from "picocolors";
-import prompts from "prompts";
 import { TemplateDataSourceType, TemplatePostInstallAction } from "../helpers";
 import { toolsRequireConfig } from "../helpers/tools";
 import { QuestionResults } from "./types";
@@ -115,7 +115,7 @@ export const onPromptState = (state: any) => {
 };
 
 export const toChoice = (value: string) => {
-  return { title: value, value };
+  return { name: value, value };
 };
 
 export const questionHandlers = {
@@ -131,15 +131,15 @@ export async function askPostInstallAction(
 ): Promise<TemplatePostInstallAction> {
   const actionChoices = [
     {
-      title: "Just generate code (~1 sec)",
+      name: "Just generate code (~1 sec)",
       value: "none",
     },
     {
-      title: "Start in VSCode (~1 sec)",
+      name: "Start in VSCode (~1 sec)",
       value: "VSCode",
     },
     {
-      title: "Generate code and install dependencies (~2 min)",
+      name: "Generate code and install dependencies (~2 min)",
       value: "dependencies",
     },
   ];
@@ -158,21 +158,18 @@ export async function askPostInstallAction(
     !toolsRequireConfig(args.tools)
   ) {
     actionChoices.push({
-      title: "Generate code, install dependencies, and run the app (~2 min)",
+      name: "Generate code, install dependencies, and run the app (~2 min)",
       value: "runApp",
     });
   }
 
-  const { action } = await prompts(
+  const { action } = await inquirer.prompt([
     {
-      type: "select",
+      type: "list",
       name: "action",
       message: "How would you like to proceed?",
       choices: actionChoices,
-      initial: 1,
     },
-    questionHandlers,
-  );
-
+  ]);
   return action;
 }
