@@ -69,13 +69,11 @@ class WriterWorkflow(Workflow):
     index: BaseIndex
     user_request: str
     stream: bool = True
-    max_retries: int = 2  # max retry on analyze
 
     def __init__(
         self,
         index: BaseIndex,
         chat_history: Optional[List[ChatMessage]] = None,
-        max_retries: int = 2,
         stream: bool = True,
         **kwargs,
     ):
@@ -89,7 +87,6 @@ class WriterWorkflow(Workflow):
                 chat_history=chat_history,
             ),
         )
-        self.max_retries = max_retries
 
     @step
     def retrieve(self, ctx: Context, ev: StartEvent) -> PlanResearchEvent:
@@ -156,11 +153,6 @@ class WriterWorkflow(Workflow):
                 },
             )
         )
-        # # Set max retry on analyze to avoid loop
-        # n_retries = await ctx.get("n_retries", 0)
-        # if n_retries > self.max_retries:
-        #     return ResearchFailedEvent()
-        # await ctx.set("n_retries", n_retries + 1)
         res = await plan_research(
             memory=self.memory,
             context_nodes=self.context_nodes,
