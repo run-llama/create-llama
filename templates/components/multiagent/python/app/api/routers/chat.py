@@ -38,6 +38,7 @@ async def chat(
         return VercelStreamResponse(
             request=request,
             chat_data=data,
+            background_tasks=background_tasks,
             event_handler=event_handler,
             events=workflow.stream_events(),
         )

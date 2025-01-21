@@ -12,12 +12,16 @@ from pydantic import BaseModel, Field
 
 
 class AnalysisDecision(BaseModel):
-    decision: Literal["research", "write"] = Field(
-        description="Whether to research more or write a report"
+    decision: Literal["research", "write", "cancel"] = Field(
+        description="Whether to continue research, write a report, or cancel the research after several retries"
     )
     research_questions: Optional[List[str]] = Field(
-        description="The questions to be researched if the decision is to research more. Maximum 3 questions. Set it as null or empty if the decision is to write a report.",
+        description="Questions to research if continuing research. Maximum 3 questions. Set to null or empty if writing a report.",
         default_factory=list,
+    )
+    cancel_reason: Optional[str] = Field(
+        description="The reason for cancellation if the decision is to cancel research.",
+        default=None,
     )
 
 
@@ -28,15 +32,16 @@ async def plan_research(
 ) -> AnalysisDecision:
     analyze_prompt = PromptTemplate(
         """
-      You are a professor who are guiding a student to research on a specific request/problem. 
-      Your task is to decide the plan for the student to research on the request.
-      The action can be:
-      + Provide a list of questions to the student to research on, the purpose is to clarify the request.
-      + Write a report if the student already has already enough research on the topic and also albe to resolve the starter request.
+      You are a professor who is guiding a researcher to research a specific request/problem.
+      Your task is to decide on a research plan for the researcher.
+      The possible actions are:
+      + Provide a list of questions for the researcher to investigate, with the purpose of clarifying the request.
+      + Write a report if the researcher has already gathered enough research on the topic and can resolve the initial request.
+      + Cancel the research if most of the answers from researchers indicate there is insufficient information to research the request. Do not attempt more than 3 research iterations or too many questions.
       The workflow should be:
-      + Always start with providing some starter questions to the student to research on. 
-      + Analyze the provided answers with the starter topic/request. If the answers are not enough to resolve the starter request, provide more questions to the student to research on.
-      + If the answers are enough to resolve the starter request, ask the student to write a report.
+      + Always begin by providing some initial questions for the researcher to investigate.
+      + Analyze the provided answers against the initial topic/request. If the answers are insufficient to resolve the initial request, provide additional questions for the researcher to investigate.
+      + If the answers are sufficient to resolve the initial request, instruct the researcher to write a report.
       <User request>
       {user_request}
       </User request>
@@ -71,9 +76,9 @@ async def research(
     context_nodes: List[NodeWithScore],
 ) -> str:
     prompt = """
-    You are a researcher who are inprogress of answering the question.
-    The purpose is to answer the question based on the collected information, no prior knowledge or making up any new information.
-    Always add citations to the sentence/point/paragraph to the id of the provided content.
+    You are a researcher who is in the process of answering the question.
+    The purpose is to answer the question based on the collected information, without using prior knowledge or making up any new information.
+    Always add citations to the sentence/point/paragraph using the id of the provided content.
     The citation should follow this format: [citation:id]() where id is the id of the content.
     
     E.g:
@@ -107,13 +112,16 @@ async def write_report(
     stream: bool = False,
 ) -> CompletionResponse | CompletionResponseAsyncGen:
     report_prompt = """
-    You are a researcher who are writing a paper for a user request.
-    You have research on the some perspective of the user request.
-    You need to write a report for the user request based on the research.
-    The report should be a great outline of the research and cover all the important points of the researched perspective.
-    + Have a great outline for a research report. The outline should cover the researched perspective. Don't use link in table of contents.
-    + Represent in markdown format. If possible, use tables or figures to have better presentation.
-    + Never remove citation information (the [citation:id]() part in the provided context). You should keep it in the final report and don't need to write a reference section.
+    You are a researcher writing a report based on a user request and the research context.
+    You have researched various perspectives related to the user request.
+    The report should provide a comprehensive outline covering all important points from the researched perspectives.
+
+    # Important:
+    + Create a well-structured outline for the research report that covers all researched perspectives.
+    + Format the report in markdown. Use tables or figures where appropriate to enhance presentation.
+    + Preserve all citation syntax (the `[citation:id]()` parts in the provided context). Keep these citations in the final report - no separate reference section is needed.
+    + Never include links in the markdown report.
+
     <User request>
     {user_request}
     </User request>
@@ -122,7 +130,7 @@ async def write_report(
     {research_context}
     </Research context>
 
-    Now, write a report for the user request based on the research.
+    Now, write a report addressing the user request based on the research provided following the format and guidelines above.
     """
     research_context = "\n".join(
         [f"{message.role}: {message.content}" for message in memory.get_all()]
