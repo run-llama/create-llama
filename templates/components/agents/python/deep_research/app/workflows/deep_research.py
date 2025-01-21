@@ -159,6 +159,15 @@ class DeepResearchWorkflow(Workflow):
             user_request=self.user_request,
         )
         if res.decision == "cancel":
+            ctx.write_event_to_stream(
+                DataEvent(
+                    type="deep_research_event",
+                    data={
+                        "event": "analyze",
+                        "state": "done",
+                    },
+                )
+            )
             return StopEvent(
                 result=res.cancel_reason,
             )
