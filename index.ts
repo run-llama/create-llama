@@ -150,17 +150,16 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--tools  ",
+    "--tools <tools>",
     `
 
   Specify the tools you want to use by providing a comma-separated list. For example, 'wikipedia.WikipediaToolSpec,google.GoogleSearchToolSpec'. Use 'none' to not using any tools.
 `,
-    (tools, _) => {
-      if (tools === "none") {
+    (tools) => {
+      if (!tools || tools === "none") {
         return [];
-      } else {
-        return getTools(tools.split(","));
       }
+      return getTools(tools.split(","));
     },
   )
   .option(
