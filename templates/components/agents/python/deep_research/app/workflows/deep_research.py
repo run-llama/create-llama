@@ -112,7 +112,7 @@ class DeepResearchWorkflow(Workflow):
             )
         )
         retriever = self.index.as_retriever(
-            similarity_top_k=os.getenv("TOP_K", 10),
+            similarity_top_k=int(os.getenv("TOP_K", 10)),
         )
         nodes = retriever.retrieve(self.user_request)
         self.context_nodes.extend(nodes)
@@ -266,7 +266,7 @@ class DeepResearchWorkflow(Workflow):
     @step
     async def collect_answers(
         self, ctx: Context, ev: CollectAnswersEvent
-    ) -> ReportEvent:
+    ) -> PlanResearchEvent:
         """
         Collect answers to all questions
         """
