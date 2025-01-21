@@ -51,6 +51,7 @@ export type TemplateDataSourceType = "file" | "web" | "db";
 export type TemplateObservability = "none" | "traceloop" | "llamatrace";
 export type TemplateUseCase =
   | "financial_report"
+  | "blog"
   | "deep_research"
   | "form_filling"
   | "extractor"

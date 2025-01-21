@@ -25,10 +25,10 @@ poetry run dev
 
 ## Use Case: Deep Research over own documents
 
-The workflow writes blog posts based on documents in the [data](./data) directory. You can start with the included PDF about AI investment in 2024, or add your own documents and run generate script again.
+The workflow performs deep research by retrieving and analyzing documents from the [data](./data) directory from multiple perspectives. The project includes a sample PDF about AI investment in 2024 to help you get started. You can also add your own documents by placing them in the data directory and running the generate script again to index them.
 
 After starting the server, go to [http://localhost:8000](http://localhost:8000) and send a message to the agent to write a blog post.
-E.g: "Write a post about AI investment in 2024"
+E.g: "AI investment in 2024"
 
 To update the workflow, you can edit the [deep_research.py](./app/workflows/deep_research.py) file.
 
