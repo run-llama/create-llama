@@ -42,49 +42,49 @@ export const askSimpleQuestions = async (
           title: "🤖 Agentic RAG",
           value: "rag",
           description:
-            "Build a chatbot that can answer questions based on provided documents.",
+            "Chatbot that answers questions based on provided documents.",
         },
         {
           title: "🤖 Data Scientist",
           value: "data_scientist",
           description:
-            "An data scientist agent that can analyze data and generate visualizations by using a code interpreter.",
+            "Agent that analyzes data and generates visualizations by using a code interpreter.",
         },
         {
           title: "🤖 Code Artifact Agent",
           value: "code_artifact",
           description:
-            "An agent that can write code, run it in a sandboxed environment, and finally show the output in the chat UI.",
+            "Agent that writes code, runs it in a sandbox, and shows the output in the chat UI.",
         },
         {
           title: "🤖 Information Extractor",
           value: "extractor",
           description:
-            "Extract information from provided documents and return it as a structured JSON object by defining a Pydantic model.",
+            "Extracts information from documents and returns it as a structured JSON object.",
         },
         {
           title: "🔀 Financial Report Generator",
           value: "financial_report_agent",
           description:
-            "Generate a financial report by analyzing the provided 10-K SEC data and use a code interpreter to create charts or conduct further analysis.",
+            "Generates a financial report by analyzing the provided 10-K SEC data. Uses a code interpreter to create charts or to conduct further analysis.",
         },
         {
           title: "🔀 Financial 10k SEC Form Filler",
           value: "form_filling",
           description:
-            "Extract information from 10k SEC data and use it to fill out a CSV form template.",
+            "Extracts information from 10k SEC data and uses it to fill out a CSV form.",
         },
         {
-          title: "🔀 Contract Review",
+          title: "🔀 Contract Reviewer",
           value: "contract_review",
           description:
-            "Extract and review contracts to ensure compliance with regulations (GDPR)",
+            "Extracts and reviews contracts to ensure compliance with GDPR regulations",
         },
         {
-          title: "🔀 Deep Research over own documents",
+          title: "🔀 Deep Researcher",
           value: "deep_research",
           description:
-            "Research and analyze documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
+            "Researches and analyzes provided documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
         },
       ],
     },
