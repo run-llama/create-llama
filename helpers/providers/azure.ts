@@ -95,7 +95,7 @@ export async function askAzureQuestions({
         type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: getAvailableModelChoices().map(toChoice),
+        choices: getAvailableModelChoices(),
       },
     ]);
     config.model = model;
@@ -105,7 +105,7 @@ export async function askAzureQuestions({
         type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: getAvailableEmbeddingModelChoices().map(toChoice),
+        choices: getAvailableEmbeddingModelChoices(),
       },
     ]);
     config.embeddingModel = embeddingModel;
@@ -117,22 +117,18 @@ export async function askAzureQuestions({
 
 function getAvailableModelChoices() {
   return Object.keys(ALL_AZURE_OPENAI_CHAT_MODELS).map((key) => ({
-    title: key,
+    name: key,
     value: key,
   }));
 }
 
 function getAvailableEmbeddingModelChoices() {
   return Object.keys(ALL_AZURE_OPENAI_EMBEDDING_MODELS).map((key) => ({
-    title: key,
+    name: key,
     value: key,
   }));
 }
 
 function getDimensions(modelName: string) {
   return ALL_AZURE_OPENAI_EMBEDDING_MODELS[modelName].dimensions;
-}
-
-function toChoice(item: { title: string; value: string }) {
-  return { name: item.title, value: item.value };
 }

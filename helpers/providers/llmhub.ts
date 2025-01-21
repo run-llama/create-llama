@@ -83,13 +83,7 @@ export async function askLLMHubQuestions({
         type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
-        choices: await getAvailableModelChoices(false, config.apiKey).then(
-          (choices) =>
-            choices.map((choice: { title: string; value: string }) => ({
-              name: choice.title,
-              value: choice.value,
-            })),
-        ),
+        choices: await getAvailableModelChoices(false, config.apiKey),
       },
     ]);
     config.model = model;
@@ -99,13 +93,7 @@ export async function askLLMHubQuestions({
         type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
-        choices: await getAvailableModelChoices(true, config.apiKey).then(
-          (choices) =>
-            choices.map((choice: { title: string; value: string }) => ({
-              name: choice.title,
-              value: choice.value,
-            })),
-        ),
+        choices: await getAvailableModelChoices(true, config.apiKey),
       },
     ]);
     config.embeddingModel = embeddingModel;
@@ -147,7 +135,7 @@ async function getAvailableModelChoices(
       )
       .map((el: any) => {
         return {
-          title: el.id,
+          name: el.id,
           value: el.id,
         };
       });
