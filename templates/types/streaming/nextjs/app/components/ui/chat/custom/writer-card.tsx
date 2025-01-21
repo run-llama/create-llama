@@ -1,3 +1,5 @@
+"use client";
+
 import { Message } from "@llamaindex/chat-ui";
 import {
   AlertCircle,
@@ -14,6 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../collapsible";
+import { cn } from "../../lib/utils";
 import { Markdown } from "./markdown";
 
 // Streaming event types
@@ -49,11 +52,16 @@ type WriterState = {
   };
 };
 
+interface WriterCardProps {
+  message: Message;
+  className?: string;
+}
+
 const stateIcon: Record<EventState, React.ReactNode> = {
-  pending: <Clock className="w-4 h-4 text-yellow-500" />,
-  inprogress: <CircleDashed className="w-4 h-4 text-blue-500 animate-spin" />,
-  done: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-  error: <AlertCircle className="w-4 h-4 text-red-500" />,
+  pending: <Clock className="h-4 w-4 text-yellow-500" />,
+  inprogress: <CircleDashed className="h-4 w-4 text-blue-500 animate-spin" />,
+  done: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  error: <AlertCircle className="h-4 w-4 text-red-500" />,
 };
 
 // Transform the state based on the event without mutations
@@ -131,7 +139,7 @@ const writeEventsToState = (events: WriterEvent[] | undefined): WriterState => {
   );
 };
 
-export function WriterCard({ message }: { message: Message }) {
+export function WriterCard({ message, className }: WriterCardProps) {
   const writerEvents = message.annotations as WriterEvent[] | undefined;
   const hasWriterEvents = writerEvents?.some(
     (event) => event.type === "writer_card",
@@ -144,11 +152,16 @@ export function WriterCard({ message }: { message: Message }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-5 space-y-6 text-gray-800 w-full">
+    <div
+      className={cn(
+        "rounded-lg border bg-card text-card-foreground shadow-sm p-5 space-y-6 w-full",
+        className,
+      )}
+    >
       {state.retrieve.state !== null && (
-        <div className="border-t border-gray-200 pt-4">
-          <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-            <Search className="w-5 h-5" />
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Search className="h-5 w-5" />
             <span>
               {state.retrieve.state === "inprogress"
                 ? "Searching..."
@@ -159,9 +172,9 @@ export function WriterCard({ message }: { message: Message }) {
       )}
 
       {state.analyze.state !== null && (
-        <div className="border-t border-gray-200 pt-4">
-          <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-            <NotebookPen className="w-5 h-5" />
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <NotebookPen className="h-5 w-5" />
             <span>
               {state.analyze.state === "inprogress"
                 ? "Analyzing..."
@@ -170,22 +183,22 @@ export function WriterCard({ message }: { message: Message }) {
           </h3>
           {state.analyze.questions.length > 0 && (
             <div className="space-y-2">
-              {state.analyze.questions.map((question) => (
+              {state.analyze.questions.map((question: QuestionState) => (
                 <Collapsible key={question.id}>
                   <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center gap-2 p-3 hover:bg-gray-50 transition-colors rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2 p-3 hover:bg-accent transition-colors rounded-lg border">
                       <div className="flex-shrink-0">
                         {stateIcon[question.state]}
                       </div>
                       <span className="font-medium text-left flex-1">
                         {question.question}
                       </span>
-                      <ChevronDown className="w-5 h-5 transition-transform ui-expanded:rotate-180" />
+                      <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
                     </div>
                   </CollapsibleTrigger>
                   {question.answer && (
                     <CollapsibleContent>
-                      <div className="p-3 border border-t-0 border-gray-200 rounded-b-lg">
+                      <div className="p-3 border border-t-0 rounded-b-lg">
                         <Markdown content={question.answer} />
                       </div>
                     </CollapsibleContent>

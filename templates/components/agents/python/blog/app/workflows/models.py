@@ -26,7 +26,7 @@ class WriteReportEvent(Event):
     pass
 
 
-# Stream events
+# Events that are streamed to the frontend and rendered there
 class WriterEventData(BaseModel):
     event: Literal["retrieve", "analyze", "answer"]
     state: Literal["pending", "inprogress", "done", "error"]
