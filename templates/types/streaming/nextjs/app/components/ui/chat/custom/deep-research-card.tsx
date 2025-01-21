@@ -22,8 +22,8 @@ import { Markdown } from "./markdown";
 // Streaming event types
 type EventState = "pending" | "inprogress" | "done" | "error";
 
-type WriterEvent = {
-  type: "writer_card";
+type DeepResearchEvent = {
+  type: "deep_research_event";
   data: {
     event: "retrieve" | "analyze" | "answer";
     state: EventState;
@@ -42,7 +42,7 @@ type QuestionState = {
   isOpen: boolean;
 };
 
-type WriterState = {
+type DeepResearchCardState = {
   retrieve: {
     state: EventState | null;
   };
@@ -52,7 +52,7 @@ type WriterState = {
   };
 };
 
-interface WriterCardProps {
+interface DeepResearchCardProps {
   message: Message;
   className?: string;
 }
@@ -66,9 +66,9 @@ const stateIcon: Record<EventState, React.ReactNode> = {
 
 // Transform the state based on the event without mutations
 const transformState = (
-  state: WriterState,
-  event: WriterEvent,
-): WriterState => {
+  state: DeepResearchCardState,
+  event: DeepResearchEvent,
+): DeepResearchCardState => {
   switch (event.data.event) {
     case "answer": {
       const { id, question, answer } = event.data;
@@ -119,8 +119,10 @@ const transformState = (
   }
 };
 
-// Convert writer events to state
-const writeEventsToState = (events: WriterEvent[] | undefined): WriterState => {
+// Convert deep research events to state
+const deepResearchEventsToState = (
+  events: DeepResearchEvent[] | undefined,
+): DeepResearchCardState => {
   if (!events?.length) {
     return {
       retrieve: { state: null },
@@ -128,26 +130,35 @@ const writeEventsToState = (events: WriterEvent[] | undefined): WriterState => {
     };
   }
 
-  const initialState: WriterState = {
+  const initialState: DeepResearchCardState = {
     retrieve: { state: null },
     analyze: { state: null, questions: [] },
   };
 
   return events.reduce(
-    (acc: WriterState, event: WriterEvent) => transformState(acc, event),
+    (acc: DeepResearchCardState, event: DeepResearchEvent) =>
+      transformState(acc, event),
     initialState,
   );
 };
 
-export function WriterCard({ message, className }: WriterCardProps) {
-  const writerEvents = message.annotations as WriterEvent[] | undefined;
-  const hasWriterEvents = writerEvents?.some(
-    (event) => event.type === "writer_card",
+export function DeepResearchCard({
+  message,
+  className,
+}: DeepResearchCardProps) {
+  const deepResearchEvents = message.annotations as
+    | DeepResearchEvent[]
+    | undefined;
+  const hasDeepResearchEvents = deepResearchEvents?.some(
+    (event) => event.type === "deep_research_event",
   );
 
-  const state = useMemo(() => writeEventsToState(writerEvents), [writerEvents]);
+  const state = useMemo(
+    () => deepResearchEventsToState(deepResearchEvents),
+    [deepResearchEvents],
+  );
 
-  if (!hasWriterEvents) {
+  if (!hasDeepResearchEvents) {
     return null;
   }
 

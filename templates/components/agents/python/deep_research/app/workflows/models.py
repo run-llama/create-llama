@@ -22,12 +22,12 @@ class CollectAnswersEvent(Event):
     answer: str
 
 
-class WriteReportEvent(Event):
+class ReportEvent(Event):
     pass
 
 
 # Events that are streamed to the frontend and rendered there
-class WriterEventData(BaseModel):
+class DeepResearchEventData(BaseModel):
     event: Literal["retrieve", "analyze", "answer"]
     state: Literal["pending", "inprogress", "done", "error"]
     id: Optional[str] = None
@@ -36,8 +36,8 @@ class WriterEventData(BaseModel):
 
 
 class DataEvent(Event):
-    type: Literal["writer_card"]
-    data: WriterEventData
+    type: Literal["deep_research_event"]
+    data: DeepResearchEventData
 
     def to_response(self):
         return self.model_dump()

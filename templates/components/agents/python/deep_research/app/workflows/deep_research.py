@@ -18,14 +18,14 @@ from llama_index.core.workflow import (
 
 from app.engine.index import IndexConfig, get_index
 from app.workflows.agents import plan_research, research, write_report
+from app.workflows.events import SourceNodesEvent
 from app.workflows.models import (
     CollectAnswersEvent,
     DataEvent,
     PlanResearchEvent,
+    ReportEvent,
     ResearchEvent,
-    WriteReportEvent,
 )
-from app.workflows.events import SourceNodesEvent
 
 logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
@@ -43,16 +43,16 @@ def create_workflow(
             "Index is not found. Try run generation script to create the index first."
         )
 
-    return WriterWorkflow(
+    return DeepResearchWorkflow(
         index=index,
         chat_history=chat_history,
         timeout=120.0,
     )
 
 
-class WriterWorkflow(Workflow):
+class DeepResearchWorkflow(Workflow):
     """
-    A workflow to research and write a post for a specific topic.
+    A workflow to research and analyze documents from multiple perspectives and write a comprehensive report.
 
     Requirements:
     - An indexed documents containing the knowledge base related to the topic
@@ -61,7 +61,7 @@ class WriterWorkflow(Workflow):
     1. Retrieve information from the knowledge base
     2. Analyze the retrieved information and provide questions for answering
     3. Answer the questions
-    4. Write the post based on the research results
+    4. Write the report based on the research results
     """
 
     memory: SimpleComposableMemory
@@ -104,7 +104,7 @@ class WriterWorkflow(Workflow):
         )
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "retrieve",
                     "state": "inprogress",
@@ -118,7 +118,7 @@ class WriterWorkflow(Workflow):
         self.context_nodes.extend(nodes)
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "retrieve",
                     "state": "done",
@@ -139,14 +139,14 @@ class WriterWorkflow(Workflow):
     @step
     async def analyze(
         self, ctx: Context, ev: PlanResearchEvent
-    ) -> ResearchEvent | WriteReportEvent | StopEvent:
+    ) -> ResearchEvent | ReportEvent | StopEvent:
         """
         Analyze the retrieved information
         """
         logger.info("Analyzing the retrieved information")
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "analyze",
                     "state": "inprogress",
@@ -169,7 +169,7 @@ class WriterWorkflow(Workflow):
                     content="No more idea to analyze. We should report the answers.",
                 )
             )
-            ctx.send_event(WriteReportEvent())
+            ctx.send_event(ReportEvent())
         else:
             await ctx.set("n_questions", len(res.research_questions))
             self.memory.put(
@@ -183,7 +183,7 @@ class WriterWorkflow(Workflow):
                 question_id = str(uuid.uuid4())
                 ctx.write_event_to_stream(
                     DataEvent(
-                        type="writer_card",
+                        type="deep_research_event",
                         data={
                             "event": "answer",
                             "state": "pending",
@@ -202,7 +202,7 @@ class WriterWorkflow(Workflow):
                 )
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "analyze",
                     "state": "done",
@@ -218,7 +218,7 @@ class WriterWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "answer",
                     "state": "inprogress",
@@ -237,7 +237,7 @@ class WriterWorkflow(Workflow):
             answer = f"Got error when answering the question: {ev.question}"
         ctx.write_event_to_stream(
             DataEvent(
-                type="writer_card",
+                type="deep_research_event",
                 data={
                     "event": "answer",
                     "state": "done",
@@ -257,7 +257,7 @@ class WriterWorkflow(Workflow):
     @step
     async def collect_answers(
         self, ctx: Context, ev: CollectAnswersEvent
-    ) -> WriteReportEvent:
+    ) -> ReportEvent:
         """
         Collect answers to all questions
         """
@@ -285,7 +285,7 @@ class WriterWorkflow(Workflow):
         return PlanResearchEvent()
 
     @step
-    async def report(self, ctx: Context, ev: WriteReportEvent) -> StopEvent:
+    async def report(self, ctx: Context, ev: ReportEvent) -> StopEvent:
         """
         Report the answers
         """

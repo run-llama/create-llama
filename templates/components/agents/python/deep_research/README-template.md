@@ -30,7 +30,7 @@ The workflow writes blog posts based on documents in the [data](./data) director
 After starting the server, go to [http://localhost:8000](http://localhost:8000) and send a message to the agent to write a blog post.
 E.g: "Write a post about AI investment in 2024"
 
-To update the workflow, you can edit the [writer.py](./app/workflows/writer.py) file.
+To update the workflow, you can edit the [deep_research.py](./app/workflows/deep_research.py) file.
 
 By default, the workflow retrieves 10 results from your documents. To customize the amount of information covered in the answer, you can adjust the `TOP_K` environment variable in the `.env` file. A higher value will retrieve more results from your documents, potentially providing more comprehensive answers.
 
