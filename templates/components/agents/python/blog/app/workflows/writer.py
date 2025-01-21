@@ -23,9 +23,9 @@ from app.workflows.models import (
     DataEvent,
     PlanResearchEvent,
     ResearchEvent,
-    SourceNodesEvent,
     WriteReportEvent,
 )
+from app.workflows.events import SourceNodesEvent
 
 logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)

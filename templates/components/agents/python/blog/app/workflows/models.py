@@ -4,8 +4,6 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.workflow import Event
 from pydantic import BaseModel
 
-from app.api.routers.models import SourceNodes
-
 
 # Workflow events
 class PlanResearchEvent(Event):
@@ -43,18 +41,3 @@ class DataEvent(Event):
 
     def to_response(self):
         return self.model_dump()
-
-
-class SourceNodesEvent(Event):
-    nodes: List[NodeWithScore]
-
-    def to_response(self):
-        return {
-            "type": "sources",
-            "data": {
-                "nodes": [
-                    SourceNodes.from_source_node(node).model_dump()
-                    for node in self.nodes
-                ]
-            },
-        }
