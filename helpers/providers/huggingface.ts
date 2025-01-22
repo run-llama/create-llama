@@ -42,7 +42,7 @@ export async function askHuggingfaceQuestions({
       {
         type: "list",
         name: "model",
-        message: "Which LLM model would you like to use?",
+        message: "Which Hugging Face model would you like to use?",
         choices: MODELS.map(toChoice),
       },
     ]);

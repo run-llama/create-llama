@@ -56,7 +56,7 @@ export async function askAnthropicQuestions({
     },
   };
 
-  if (!config.apiKey && !process.env.CI) {
+  if (!config.apiKey) {
     const { key } = await inquirer.prompt([
       {
         type: "input",

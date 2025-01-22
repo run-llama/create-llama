@@ -267,6 +267,13 @@ async function run(): Promise<void> {
         name: "path",
         message: "What is your project named?",
         default: "my-app",
+        validate(name) {
+          const validation = validateNpmName(path.basename(path.resolve(name)));
+          if (validation.valid) {
+            return true;
+          }
+          return "Invalid project name" + validation.problems![0];
+        },
       },
     ]);
     projectPath = projectPathAnswer;

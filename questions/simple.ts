@@ -78,8 +78,8 @@ export const askSimpleQuestions = async (
     {
       type: "confirm",
       name: "useLlamaCloud",
-      message:
-        "Do you want to use LlamaCloud services? (see https://www.llamaindex.ai/enterprise for more info)",
+      message: "Do you want to use LlamaCloud services?",
+      suffix: " (see https://www.llamaindex.ai/enterprise for more info)",
       default: false,
     },
   ]);
