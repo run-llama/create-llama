@@ -89,10 +89,11 @@ class DeepResearchWorkflow(Workflow):
         )
 
     @step
-    def retrieve(self, ctx: Context, ev: StartEvent) -> PlanResearchEvent:
+    async def retrieve(self, ctx: Context, ev: StartEvent) -> PlanResearchEvent:
         """
         Initiate the workflow: memory, tools, agent
         """
+        await ctx.set("total_questions", 0)
         self.user_request = ev.get("input")
         self.memory.put_messages(
             messages=[
@@ -132,9 +133,7 @@ class DeepResearchWorkflow(Workflow):
                 nodes=nodes,
             )
         )
-        return PlanResearchEvent(
-            context_nodes=self.context_nodes,
-        )
+        return PlanResearchEvent()
 
     @step
     async def analyze(
@@ -153,10 +152,12 @@ class DeepResearchWorkflow(Workflow):
                 },
             )
         )
+        total_questions = await ctx.get("total_questions")
         res = await plan_research(
             memory=self.memory,
             context_nodes=self.context_nodes,
             user_request=self.user_request,
+            total_questions=total_questions,
         )
         if res.decision == "cancel":
             ctx.write_event_to_stream(
@@ -172,6 +173,22 @@ class DeepResearchWorkflow(Workflow):
                 result=res.cancel_reason,
             )
         elif res.decision == "write":
+            # Writing a report without any research context is not allowed.
+            # It's a LLM hallucination.
+            if total_questions == 0:
+                ctx.write_event_to_stream(
+                    DataEvent(
+                        type="deep_research_event",
+                        data={
+                            "event": "analyze",
+                            "state": "done",
+                        },
+                    )
+                )
+                return StopEvent(
+                    result="Sorry, I have a problem when analyzing the retrieved information. Please try again.",
+                )
+
             self.memory.put(
                 message=ChatMessage(
                     role=MessageRole.ASSISTANT,
@@ -180,7 +197,11 @@ class DeepResearchWorkflow(Workflow):
             )
             ctx.send_event(ReportEvent())
         else:
-            await ctx.set("n_questions", len(res.research_questions))
+            total_questions += len(res.research_questions)
+            await ctx.set("total_questions", total_questions)  # For tracking
+            await ctx.set(
+                "waiting_questions", len(res.research_questions)
+            )  # For waiting questions to be answered
             self.memory.put(
                 message=ChatMessage(
                     role=MessageRole.ASSISTANT,
@@ -270,7 +291,7 @@ class DeepResearchWorkflow(Workflow):
         """
         Collect answers to all questions
         """
-        num_questions = await ctx.get("n_questions")
+        num_questions = await ctx.get("waiting_questions")
         results = ctx.collect_events(
             ev,
             expected=[CollectAnswersEvent] * num_questions,
@@ -284,7 +305,7 @@ class DeepResearchWorkflow(Workflow):
                     content=f"<Question>{result.question}</Question>\n<Answer>{result.answer}</Answer>",
                 )
             )
-        await ctx.set("n_questions", 0)
+        await ctx.set("waiting_questions", 0)
         self.memory.put(
             message=ChatMessage(
                 role=MessageRole.ASSISTANT,

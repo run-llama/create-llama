@@ -16,7 +16,10 @@ class AnalysisDecision(BaseModel):
         description="Whether to continue research, write a report, or cancel the research after several retries"
     )
     research_questions: Optional[List[str]] = Field(
-        description="Questions to research if continuing research. Maximum 3 questions. Set to null or empty if writing a report.",
+        description="""
+        If the decision is to research, provide a list of questions to research that related to the user request.
+        Maximum 3 questions. Set to null or empty if writing a report or cancel the research.
+        """,
         default_factory=list,
     )
     cancel_reason: Optional[str] = Field(
@@ -29,23 +32,23 @@ async def plan_research(
     memory: SimpleComposableMemory,
     context_nodes: List[Node],
     user_request: str,
+    total_questions: int,
 ) -> AnalysisDecision:
-    analyze_prompt = PromptTemplate(
-        """
+    analyze_prompt = """
       You are a professor who is guiding a researcher to research a specific request/problem.
       Your task is to decide on a research plan for the researcher.
+
       The possible actions are:
       + Provide a list of questions for the researcher to investigate, with the purpose of clarifying the request.
       + Write a report if the researcher has already gathered enough research on the topic and can resolve the initial request.
       + Cancel the research if most of the answers from researchers indicate there is insufficient information to research the request. Do not attempt more than 3 research iterations or too many questions.
+
       The workflow should be:
       + Always begin by providing some initial questions for the researcher to investigate.
       + Analyze the provided answers against the initial topic/request. If the answers are insufficient to resolve the initial request, provide additional questions for the researcher to investigate.
       + If the answers are sufficient to resolve the initial request, instruct the researcher to write a report.
-      <User request>
-      {user_request}
-      </User request>
 
+      Here are the context: 
       <Collected information>
       {context_str}
       </Collected information>
@@ -53,8 +56,29 @@ async def plan_research(
       <Conversation context>
       {conversation_context}
       </Conversation context>
+
+      {enhanced_prompt}
+
+      Now, provide your decision in the required format for this user request:
+      <User request>
+      {user_request}
+      </User request>
       """
-    )
+    # Manually craft the prompt to avoid LLM hallucination
+    enhanced_prompt = ""
+    if total_questions == 0:
+        # Avoid writing a report without any research context
+        enhanced_prompt = """
+        
+        The student has no questions to research. Let start by asking some questions.
+        """
+    elif total_questions > 6:
+        # Avoid asking too many questions (when the data is not ready for writing a report)
+        enhanced_prompt = """
+
+        The student has researched {total_questions} questions. Should cancel the research if the context is not enough to write a report.
+        """
+
     conversation_context = "\n".join(
         [f"{message.role}: {message.content}" for message in memory.get_all()]
     )
@@ -63,10 +87,11 @@ async def plan_research(
     )
     res = await Settings.llm.astructured_predict(
         output_cls=AnalysisDecision,
-        prompt=analyze_prompt,
+        prompt=PromptTemplate(template=analyze_prompt),
         user_request=user_request,
         context_str=context_str,
         conversation_context=conversation_context,
+        enhanced_prompt=enhanced_prompt,
     )
     return res
 
