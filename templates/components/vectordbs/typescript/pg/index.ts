@@ -14,6 +14,9 @@ export async function getDataSource(params?: any) {
     },
     schemaName: PGVECTOR_SCHEMA,
     tableName: PGVECTOR_TABLE,
+    dimensions: process.env.EMBEDDING_DIM
+      ? parseInt(process.env.EMBEDDING_DIM)
+      : undefined,
   });
   return await VectorStoreIndex.fromVectorStore(pgvs);
 }

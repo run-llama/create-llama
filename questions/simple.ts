@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
 import {
+  AI_REPORTS,
   EXAMPLE_10K_SEC_FILES,
   EXAMPLE_FILE,
   EXAMPLE_GDPR,
@@ -17,7 +18,8 @@ type AppType =
   | "form_filling"
   | "extractor"
   | "contract_review"
-  | "data_scientist";
+  | "data_scientist"
+  | "deep_research";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -54,6 +56,10 @@ export const askSimpleQuestions = async (
           name: " Contract Review",
           value: "contract_review",
         },
+        {
+          name: " Deep Researcher",
+          value: "deep_research",
+        },
       ],
     },
   ]);
@@ -62,7 +68,11 @@ export const askSimpleQuestions = async (
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
 
-  if (appType !== "extractor" && appType !== "contract_review") {
+  if (
+    appType !== "extractor" &&
+    appType !== "contract_review" &&
+    appType !== "deep_research"
+  ) {
     const { language: newLanguage } = await inquirer.prompt([
       {
         type: "list",
@@ -184,6 +194,13 @@ const convertAnswers = async (
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_GDPR],
+    },
+    deep_research: {
+      template: "multiagent",
+      useCase: "deep_research",
+      tools: [],
+      frontend: true,
+      dataSources: [AI_REPORTS],
     },
   };
   const results = lookup[answers.appType];

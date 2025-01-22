@@ -5,6 +5,7 @@ import {
   useChatMessage,
   useChatUI,
 } from "@llamaindex/chat-ui";
+import { DeepResearchCard } from "./custom/deep-research-card";
 import { Markdown } from "./custom/markdown";
 import { ToolAnnotations } from "./tools/chat-tools";
 
@@ -21,6 +22,11 @@ export function ChatMessageContent() {
           sources={getSourceAnnotationData(message.annotations)?.[0]}
         />
       ),
+    },
+    // add the deep research card
+    {
+      position: ContentPosition.CHAT_EVENTS,
+      component: <DeepResearchCard message={message} />,
     },
     {
       // add the tool annotations after events

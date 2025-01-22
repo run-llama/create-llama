@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.27
+
+### Patch Changes
+
+- b4e41aa: Add deep research over own documents use case (Python)
+
 ## 0.3.26
 
 ### Patch Changes
