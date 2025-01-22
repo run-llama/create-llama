@@ -1,6 +1,7 @@
 # flake8: noqa: E402
-from app.config import DATA_DIR, STATIC_DIR
 from dotenv import load_dotenv
+
+from app.config import DATA_DIR, STATIC_DIR
 
 load_dotenv()
 
@@ -8,13 +9,15 @@ import logging
 import os
 
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
 from app.api.routers import api_router
 from app.middlewares.frontend import FrontendProxyMiddleware
 from app.observability import init_observability
 from app.settings import init_settings
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
 
 servers = []
 app_name = os.getenv("FLY_APP_NAME")
@@ -27,6 +30,16 @@ init_observability()
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
 logger = logging.getLogger("uvicorn")
+
+# Add CORS middleware for development
+if environment == "dev":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex="http://localhost:\d+|http://0\.0\.0\.0:\d+",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 def mount_static_files(directory, path, html=False):

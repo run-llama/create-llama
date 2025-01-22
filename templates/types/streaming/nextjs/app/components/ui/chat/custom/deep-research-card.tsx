@@ -4,7 +4,6 @@ import { Message } from "@llamaindex/chat-ui";
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
   CircleDashed,
   Clock,
   NotebookPen,
@@ -12,10 +11,12 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../collapsible";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../../accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "../../card";
 import { cn } from "../../lib/utils";
 import { Markdown } from "./markdown";
 
@@ -163,63 +164,53 @@ export function DeepResearchCard({
   }
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm p-5 space-y-6 w-full",
-        className,
-      )}
-    >
-      {state.retrieve.state !== null && (
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+    <Card className={cn("w-full", className)}>
+      <CardHeader className="space-y-4">
+        {state.retrieve.state !== null && (
+          <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            <span>
-              {state.retrieve.state === "inprogress"
-                ? "Searching..."
-                : "Search completed"}
-            </span>
-          </h3>
-        </div>
-      )}
-
-      {state.analyze.state !== null && (
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+            {state.retrieve.state === "inprogress"
+              ? "Searching..."
+              : "Search completed"}
+          </CardTitle>
+        )}
+        {state.analyze.state !== null && (
+          <CardTitle className="flex items-center gap-2 border-t pt-4">
             <NotebookPen className="h-5 w-5" />
-            <span>
-              {state.analyze.state === "inprogress"
-                ? "Analyzing..."
-                : "Analysis"}
-            </span>
-          </h3>
-          {state.analyze.questions.length > 0 && (
-            <div className="space-y-2">
-              {state.analyze.questions.map((question: QuestionState) => (
-                <Collapsible key={question.id}>
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center gap-2 p-3 hover:bg-accent transition-colors rounded-lg border">
-                      <div className="flex-shrink-0">
-                        {stateIcon[question.state]}
-                      </div>
-                      <span className="font-medium text-left flex-1">
-                        {question.question}
-                      </span>
-                      <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
+            {state.analyze.state === "inprogress" ? "Analyzing..." : "Analysis"}
+          </CardTitle>
+        )}
+      </CardHeader>
+
+      <CardContent>
+        {state.analyze.questions.length > 0 && (
+          <Accordion type="single" collapsible className="space-y-2">
+            {state.analyze.questions.map((question: QuestionState) => (
+              <AccordionItem
+                key={question.id}
+                value={question.id}
+                className="border rounded-lg [&[data-state=open]>div]:rounded-b-none"
+              >
+                <AccordionTrigger className="hover:bg-accent hover:no-underline py-3 px-3 gap-2">
+                  <div className="flex items-center gap-2 w-full">
+                    <div className="flex-shrink-0">
+                      {stateIcon[question.state]}
                     </div>
-                  </CollapsibleTrigger>
-                  {question.answer && (
-                    <CollapsibleContent>
-                      <div className="p-3 border border-t-0 rounded-b-lg">
-                        <Markdown content={question.answer} />
-                      </div>
-                    </CollapsibleContent>
-                  )}
-                </Collapsible>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+                    <span className="font-medium text-left flex-1">
+                      {question.question}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                {question.answer && (
+                  <AccordionContent className="border-t px-3 py-3">
+                    <Markdown content={question.answer} />
+                  </AccordionContent>
+                )}
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
+      </CardContent>
+    </Card>
   );
 }
