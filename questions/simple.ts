@@ -1,5 +1,6 @@
 import prompts from "prompts";
 import {
+  AI_REPORTS,
   EXAMPLE_10K_SEC_FILES,
   EXAMPLE_FILE,
   EXAMPLE_GDPR,
@@ -17,7 +18,8 @@ type AppType =
   | "form_filling"
   | "extractor"
   | "contract_review"
-  | "data_scientist";
+  | "data_scientist"
+  | "deep_research";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -34,22 +36,55 @@ export const askSimpleQuestions = async (
       type: "select",
       name: "appType",
       message: "What app do you want to build?",
+      hint: "🤖: Agent, 🔀: Workflow",
       choices: [
-        { title: "Agentic RAG", value: "rag" },
-        { title: "Data Scientist", value: "data_scientist" },
         {
-          title: "Financial Report Generator (using Workflows)",
+          title: "🤖 Agentic RAG",
+          value: "rag",
+          description:
+            "Chatbot that answers questions based on provided documents.",
+        },
+        {
+          title: "🤖 Data Scientist",
+          value: "data_scientist",
+          description:
+            "Agent that analyzes data and generates visualizations by using a code interpreter.",
+        },
+        {
+          title: "🤖 Code Artifact Agent",
+          value: "code_artifact",
+          description:
+            "Agent that writes code, runs it in a sandbox, and shows the output in the chat UI.",
+        },
+        {
+          title: "🤖 Information Extractor",
+          value: "extractor",
+          description:
+            "Extracts information from documents and returns it as a structured JSON object.",
+        },
+        {
+          title: "🔀 Financial Report Generator",
           value: "financial_report_agent",
+          description:
+            "Generates a financial report by analyzing the provided 10-K SEC data. Uses a code interpreter to create charts or to conduct further analysis.",
         },
         {
-          title: "Form Filler (using Workflows)",
+          title: "🔀 Financial 10k SEC Form Filler",
           value: "form_filling",
+          description:
+            "Extracts information from 10k SEC data and uses it to fill out a CSV form.",
         },
-        { title: "Code Artifact Agent", value: "code_artifact" },
-        { title: "Information Extractor", value: "extractor" },
         {
-          title: "Contract Review (using Workflows)",
+          title: "🔀 Contract Reviewer",
           value: "contract_review",
+          description:
+            "Extracts and reviews contracts to ensure compliance with GDPR regulations",
+        },
+        {
+          title: "🔀 Deep Researcher",
+          value: "deep_research",
+          description:
+            "Researches and analyzes provided documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
         },
       ],
     },
@@ -60,7 +95,11 @@ export const askSimpleQuestions = async (
   let llamaCloudKey = args.llamaCloudKey;
   let useLlamaCloud = false;
 
-  if (appType !== "extractor" && appType !== "contract_review") {
+  if (
+    appType !== "extractor" &&
+    appType !== "contract_review" &&
+    appType !== "deep_research"
+  ) {
     const { language: newLanguage } = await prompts(
       {
         type: "select",
@@ -187,6 +226,13 @@ const convertAnswers = async (
       tools: [],
       frontend: false,
       dataSources: [EXAMPLE_GDPR],
+    },
+    deep_research: {
+      template: "multiagent",
+      useCase: "deep_research",
+      tools: [],
+      frontend: true,
+      dataSources: [AI_REPORTS],
     },
   };
   const results = lookup[answers.appType];

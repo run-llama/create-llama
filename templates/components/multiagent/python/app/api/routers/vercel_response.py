@@ -4,10 +4,12 @@ import logging
 from typing import AsyncGenerator, Awaitable, List
 
 from aiostream import stream
+from fastapi import BackgroundTasks, Request
+from fastapi.responses import StreamingResponse
+from llama_index.core.schema import NodeWithScore
+
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
-from fastapi import Request
-from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger("uvicorn")
 
@@ -21,9 +23,17 @@ class VercelStreamResponse(StreamingResponse):
     DATA_PREFIX = "8:"
     ERROR_PREFIX = "3:"
 
-    def __init__(self, request: Request, chat_data: ChatData, *args, **kwargs):
+    def __init__(
+        self,
+        request: Request,
+        chat_data: ChatData,
+        background_tasks: BackgroundTasks,
+        *args,
+        **kwargs,
+    ):
         self.request = request
         self.chat_data = chat_data
+        self.background_tasks = background_tasks
         content = self.content_generator(*args, **kwargs)
         super().__init__(content=content)
 
@@ -78,6 +88,9 @@ class VercelStreamResponse(StreamingResponse):
                         for token in content:
                             final_response += str(token)
                             yield self.convert_text(token)
+                else:
+                    final_response += str(result)
+                    yield self.convert_text(result)
 
             # Generate next questions if next question prompt is configured
             question_data = await self._generate_next_questions(
@@ -85,8 +98,6 @@ class VercelStreamResponse(StreamingResponse):
             )
             if question_data:
                 yield self.convert_data(question_data)
-
-            # TODO: stream sources
 
         # Yield the events from the event handler
         async def _event_generator():
@@ -96,9 +107,29 @@ class VercelStreamResponse(StreamingResponse):
                     logger.debug(event_response)
                 if event_response is not None:
                     yield self.convert_data(event_response)
+                if event_response.get("type") == "sources":
+                    self._process_response_nodes(event.nodes, self.background_tasks)
 
         combine = stream.merge(_chat_response_generator(), _event_generator())
         return combine
+
+    @staticmethod
+    def _process_response_nodes(
+        source_nodes: List[NodeWithScore],
+        background_tasks: BackgroundTasks,
+    ):
+        try:
+            # Start background tasks to download documents from LlamaCloud if needed
+            from app.engine.service import LLamaCloudFileService  # type: ignore
+
+            LLamaCloudFileService.download_files_from_nodes(
+                source_nodes, background_tasks
+            )
+        except ImportError:
+            logger.debug(
+                "LlamaCloud is not configured. Skipping post processing of nodes"
+            )
+            pass
 
     @classmethod
     def convert_text(cls, token: str):
