@@ -34,7 +34,6 @@
     "papaparse": "^5.4.1",
     "supports-color": "^8.1.1",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7",
     "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
     "marked": "^14.1.2"

@@ -202,7 +202,7 @@ export function DeepResearchCard({
                   </div>
                 </AccordionTrigger>
                 {question.answer && (
-                  <AccordionContent className="border-t pt-3">
+                  <AccordionContent className="border-t px-3 py-3">
                     <Markdown content={question.answer} />
                   </AccordionContent>
                 )}
