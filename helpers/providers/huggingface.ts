@@ -37,18 +37,6 @@ export async function askHuggingfaceQuestions({
     },
   };
 
-  if (!config.apiKey) {
-    const { key } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "key",
-        message:
-          "Please provide your Huggingface API key (or leave blank to use HF_API_KEY env variable):",
-      },
-    ]);
-    config.apiKey = key || process.env.HF_API_KEY;
-  }
-
   if (askModels) {
     const { model } = await inquirer.prompt([
       {

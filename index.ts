@@ -266,7 +266,7 @@ async function run(): Promise<void> {
         type: "input",
         name: "path",
         message: "What is your project named?",
-        default: "my-llama-app",
+        default: "my-app",
       },
     ]);
     projectPath = projectPathAnswer;

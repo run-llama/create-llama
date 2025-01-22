@@ -65,30 +65,6 @@ export async function askAzureQuestions({
     },
   };
 
-  if (!config.apiKey) {
-    const { key } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "key",
-        message:
-          "Please provide your Azure OpenAI API key (or leave blank to use AZURE_OPENAI_API_KEY env variable):",
-      },
-    ]);
-    config.apiKey = key || process.env.AZURE_OPENAI_API_KEY;
-  }
-
-  if (!config.endpoint) {
-    const { endpoint } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "endpoint",
-        message:
-          "Please provide your Azure OpenAI endpoint (or leave blank to use AZURE_OPENAI_ENDPOINT env variable):",
-      },
-    ]);
-    config.endpoint = endpoint || process.env.AZURE_OPENAI_ENDPOINT;
-  }
-
   if (askModels) {
     const { model } = await inquirer.prompt([
       {

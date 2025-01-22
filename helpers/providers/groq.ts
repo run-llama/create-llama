@@ -101,18 +101,8 @@ export async function askGroqQuestions({
       {
         type: "input",
         name: "key",
-        message: askModels
-          ? "Please provide your Groq API key (or leave blank to use GROQ_API_KEY env variable):"
-          : "Please provide your Groq API key (leave blank to skip):",
-        validate: (value: string) => {
-          if (askModels && !value) {
-            if (process.env.GROQ_API_KEY) {
-              return true;
-            }
-            return "GROQ_API_KEY env variable is not set - key is required";
-          }
-          return true;
-        },
+        message:
+          "Please provide your Groq API key (or leave blank to use GROQ_API_KEY env variable):",
       },
     ]);
     config.apiKey = key || process.env.GROQ_API_KEY;

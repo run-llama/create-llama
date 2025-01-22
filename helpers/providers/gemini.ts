@@ -45,18 +45,8 @@ export async function askGeminiQuestions({
       {
         type: "input",
         name: "key",
-        message: askModels
-          ? "Please provide your Google API key (or leave blank to use GOOGLE_API_KEY env variable):"
-          : "Please provide your Google API key (leave blank to skip):",
-        validate: (value: string) => {
-          if (askModels && !value) {
-            if (process.env.GOOGLE_API_KEY) {
-              return true;
-            }
-            return "GOOGLE_API_KEY env variable is not set - key is required";
-          }
-          return true;
-        },
+        message:
+          "Please provide your Google API key (or leave blank to use GOOGLE_API_KEY env variable):",
       },
     ]);
     config.apiKey = key || process.env.GOOGLE_API_KEY;

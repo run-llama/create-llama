@@ -61,18 +61,8 @@ export async function askAnthropicQuestions({
       {
         type: "input",
         name: "key",
-        message: askModels
-          ? "Please provide your Anthropic API key (or leave blank to use ANTHROPIC_API_KEY env variable):"
-          : "Please provide your Anthropic API key (leave blank to skip):",
-        validate: (value: string) => {
-          if (askModels && !value) {
-            if (process.env.ANTHROPIC_API_KEY) {
-              return true;
-            }
-            return "ANTHROPIC_API_KEY env variable is not set - key is required";
-          }
-          return true;
-        },
+        message:
+          "Please provide your Anthropic API key (or leave blank to use ANTHROPIC_API_KEY env variable):",
       },
     ]);
     config.apiKey = key || process.env.ANTHROPIC_API_KEY;

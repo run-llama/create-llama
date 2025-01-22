@@ -18,9 +18,7 @@ export type ModelConfigQuestionsParams = {
   framework?: TemplateFramework;
 };
 
-export type ModelConfigParams = Omit<ModelConfig, "provider"> & {
-  endpoint?: string;
-};
+export type ModelConfigParams = Omit<ModelConfig, "provider">;
 
 export async function askModelConfig({
   askModels,
