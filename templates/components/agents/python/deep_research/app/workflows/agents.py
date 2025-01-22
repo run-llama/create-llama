@@ -74,7 +74,7 @@ async def plan_research(
         """
     elif total_questions > 6:
         # Avoid asking too many questions (when the data is not ready for writing a report)
-        enhanced_prompt = """
+        enhanced_prompt = f"""
 
         The student has researched {total_questions} questions. Should cancel the research if the context is not enough to write a report.
         """
