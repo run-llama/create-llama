@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.3.28
+
+### Patch Changes
+
+- 4e06714: Fix the error: Unable to view file sources due to CORS.
+
 ## 0.3.27
 
 ### Patch Changes
