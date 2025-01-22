@@ -35,7 +35,7 @@ logger = logging.getLogger("uvicorn")
 if environment == "dev":
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:*", "http://0.0.0.0:*"],
+        allow_origin_regex="http://localhost:\d+|http://0\.0\.0\.0:\d+",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
