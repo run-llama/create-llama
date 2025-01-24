@@ -1,12 +1,16 @@
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator, Awaitable, List
+from typing import List
 
-from aiostream import stream
 from fastapi import BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
+from llama_index.core.agent.workflow.workflow_events import (
+    AgentStream,
+    ToolCall,
+)
 from llama_index.core.schema import NodeWithScore
+from llama_index.core.workflow import Event
 
 from app.api.routers.models import ChatData, Message
 from app.api.services.suggestion import NextQuestionSuggestion
@@ -38,24 +42,50 @@ class VercelStreamResponse(StreamingResponse):
         super().__init__(content=content)
 
     async def content_generator(self, event_handler, events):
-        stream = self._create_stream(
-            self.request, self.chat_data, event_handler, events
-        )
-        is_stream_started = False
         try:
-            async with stream.stream() as streamer:
-                async for output in streamer:
-                    if not is_stream_started:
-                        is_stream_started = True
-                        # Stream a blank message to start the stream
-                        yield self.convert_text("")
-
-                    yield output
+            async for event in events:
+                if isinstance(event, ToolCall):
+                    if hasattr(event, "tool_output"):
+                        yield self.convert_data(
+                            {
+                                "type": "tools",
+                                "data": {
+                                    "toolOutput": {
+                                        "output": event.tool_output.content,
+                                        "isError": event.tool_output.is_error,
+                                    },
+                                    "toolCall": {
+                                        "id": event.tool_id,
+                                        "name": event.tool_name,
+                                        "input": event.tool_kwargs["input"],
+                                    },
+                                },
+                            }
+                        )
+                    else:
+                        yield self.convert_data(
+                            {
+                                "type": "events",
+                                "data": {
+                                    "title": f"Calling tool: {event.tool_name} with input: {event.tool_kwargs['input']}",
+                                },
+                            }
+                        )
+                if isinstance(event, AgentStream):
+                    yield self.convert_text(event.delta)
+                if hasattr(event, "to_response"):
+                    event_response = event.to_response()
+                    if event_response is not None:
+                        yield self.convert_data(event_response)
+                    # TODO: Add a standard way to process nodes
+                    if event_response.get("type") == "sources":
+                        self._process_response_nodes(event.nodes, self.background_tasks)
         except asyncio.CancelledError:
             logger.warning("Workflow has been cancelled!")
         except Exception as e:
             logger.error(
-                f"Unexpected error in content_generator: {str(e)}", exc_info=True
+                f"Unexpected error in content_generator: {str(e)}",
+                exc_info=True,
             )
             yield self.convert_error(
                 "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
@@ -64,54 +94,21 @@ class VercelStreamResponse(StreamingResponse):
             await event_handler.cancel_run()
             logger.info("The stream has been stopped!")
 
-    def _create_stream(
-        self,
-        request: Request,
-        chat_data: ChatData,
-        event_handler: Awaitable,
-        events: AsyncGenerator,
-        verbose: bool = True,
-    ):
-        # Yield the text response
-        async def _chat_response_generator():
-            result = await event_handler
-            final_response = ""
+    @classmethod
+    def convert_text(cls, token: str):
+        # Escape newlines and double quotes to avoid breaking the stream
+        token = json.dumps(token)
+        return f"{cls.TEXT_PREFIX}{token}\n"
 
-            if isinstance(result, AsyncGenerator):
-                async for token in result:
-                    final_response += str(token.delta)
-                    yield self.convert_text(token.delta)
-            else:
-                if hasattr(result, "response"):
-                    content = result.response.message.content
-                    if content:
-                        for token in content:
-                            final_response += str(token)
-                            yield self.convert_text(token)
-                else:
-                    final_response += str(result)
-                    yield self.convert_text(result)
+    @classmethod
+    def convert_data(cls, data: dict):
+        data_str = json.dumps(data)
+        return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
-            # Generate next questions if next question prompt is configured
-            question_data = await self._generate_next_questions(
-                chat_data.messages, final_response
-            )
-            if question_data:
-                yield self.convert_data(question_data)
-
-        # Yield the events from the event handler
-        async def _event_generator():
-            async for event in events:
-                event_response = event.to_response()
-                if verbose:
-                    logger.debug(event_response)
-                if event_response is not None:
-                    yield self.convert_data(event_response)
-                if event_response.get("type") == "sources":
-                    self._process_response_nodes(event.nodes, self.background_tasks)
-
-        combine = stream.merge(_chat_response_generator(), _event_generator())
-        return combine
+    @classmethod
+    def convert_error(cls, error: str):
+        error_str = json.dumps(error)
+        return f"{cls.ERROR_PREFIX}{error_str}\n"
 
     @staticmethod
     def _process_response_nodes(
@@ -131,24 +128,9 @@ class VercelStreamResponse(StreamingResponse):
             )
             pass
 
-    @classmethod
-    def convert_text(cls, token: str):
-        # Escape newlines and double quotes to avoid breaking the stream
-        token = json.dumps(token)
-        return f"{cls.TEXT_PREFIX}{token}\n"
-
-    @classmethod
-    def convert_data(cls, data: dict):
-        data_str = json.dumps(data)
-        return f"{cls.DATA_PREFIX}[{data_str}]\n"
-
-    @classmethod
-    def convert_error(cls, error: str):
-        error_str = json.dumps(error)
-        return f"{cls.ERROR_PREFIX}{error_str}\n"
-
     @staticmethod
     async def _generate_next_questions(chat_history: List[Message], response: str):
+        # TODO: Can refactor this by adding a final NextQuestionSuggestion step to the workflow
         questions = await NextQuestionSuggestion.suggest_next_questions(
             chat_history, response
         )
