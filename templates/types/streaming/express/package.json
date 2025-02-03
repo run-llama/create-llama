@@ -29,7 +29,8 @@
     "@apidevtools/swagger-parser": "^10.1.0",
     "formdata-node": "^6.0.3",
     "marked": "^14.1.2",
-    "papaparse": "^5.4.1"
+    "papaparse": "^5.4.1",
+    "wikipedia": "^2.1.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.16",
