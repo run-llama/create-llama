@@ -33,7 +33,6 @@ logger.setLevel(logging.INFO)
 
 
 def create_workflow(
-    chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
     **kwargs,
 ) -> Workflow:
@@ -46,7 +45,6 @@ def create_workflow(
 
     return DeepResearchWorkflow(
         index=index,
-        chat_history=chat_history,
         timeout=120.0,
     )
 
@@ -74,17 +72,13 @@ class DeepResearchWorkflow(Workflow):
     def __init__(
         self,
         index: BaseIndex,
-        chat_history: Optional[List[ChatMessage]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.index = index
         self.context_nodes = []
-        self.chat_history = chat_history
         self.memory = SimpleComposableMemory.from_defaults(
-            primary_memory=ChatMemoryBuffer.from_defaults(
-                chat_history=chat_history,
-            ),
+            primary_memory=ChatMemoryBuffer.from_defaults(),
         )
 
     @step
@@ -93,8 +87,14 @@ class DeepResearchWorkflow(Workflow):
         Initiate the workflow: memory, tools, agent
         """
         self.stream = ev.get("stream", True)
+        self.user_request = ev.get("user_msg")
+        chat_history = ev.get("chat_history")
+        if chat_history is not None:
+            self.memory.put_messages(chat_history)
+
         await ctx.set("total_questions", 0)
-        self.user_request = ev.get("input")
+
+        # Add user message to memory
         self.memory.put_messages(
             messages=[
                 ChatMessage(
