@@ -72,8 +72,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-python
+          name: playwright-report-python-${{ matrix.runs-on }}
           path: ./playwright-report/
+          overwrite: true
           retention-days: 30
 
   e2e-typescript:
