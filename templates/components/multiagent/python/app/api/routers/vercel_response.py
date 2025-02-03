@@ -42,22 +42,36 @@ class VercelStreamResponse(StreamingResponse):
                     yield self.convert_text("")
 
                 # Text
-                if isinstance(event, AgentStream):
-                    yield self.convert_text(event.delta)
-                elif isinstance(event, StopEvent):
-                    if event.result is not None:
-                        yield self.convert_text(str(event.result))
-                    else:
-                        yield self.convert_text("")
+                if isinstance(event, AgentStream | StopEvent):
+                    async for chunk in self._stream_text(event):
+                        yield chunk
                 # Data
+                elif hasattr(event, "to_response"):
+                    yield self.convert_data(event.to_response())
                 else:
-                    if hasattr(event, "to_response"):
-                        yield self.convert_data(event.to_response())
-                    else:
-                        yield self.convert_data(event.model_dump())
+                    yield self.convert_data(event.model_dump())
         except Exception as e:
             logger.error(f"Error in stream response: {e}")
             yield self.convert_error(str(e))
+
+    async def _stream_text(
+        self, event: AgentStream | StopEvent
+    ) -> AsyncGenerator[str, None]:
+        """
+        Accept stream text from either AgentStream or StopEvent with string or AsyncGenerator result
+        """
+        if isinstance(event, AgentStream):
+            yield self.convert_text(event.delta)
+        elif isinstance(event, StopEvent):
+            if isinstance(event.result, str):
+                yield self.convert_text(event.result)
+            elif isinstance(event.result, AsyncGenerator):
+                async for chunk in event.result:
+                    if isinstance(chunk, str):
+                        yield self.convert_text(chunk)
+                    # elif isinstance(chunk, CompletionResponse):
+                    elif hasattr(chunk, "delta"):
+                        yield self.convert_text(chunk.delta)
 
     @classmethod
     def convert_text(cls, token: str) -> str:

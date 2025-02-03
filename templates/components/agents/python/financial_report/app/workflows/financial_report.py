@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional
 
 from llama_index.core import Settings
-from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -164,18 +163,8 @@ class FinancialReportWorkflow(Workflow):
             chat_history,
         )
         if not response.has_tool_calls():
-            # If no tool call, return the response generator
             if self.stream:
-                async for chunk in response.generator:
-                    ctx.write_event_to_stream(
-                        AgentStream(
-                            delta=chunk.delta,
-                            response="",
-                            current_agent_name="",
-                            tool_calls=[],
-                            raw=chunk,
-                        )
-                    )
+                return StopEvent(result=response.generator)
             else:
                 return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
