@@ -34,7 +34,7 @@ async def chat(
             filters=filters,
         )
 
-        handler = workflow.run(input=last_message_content, streaming=True)
+        handler = workflow.run(input=last_message_content, stream=True)
         return VercelStreamResponse(
             request=request,
             chat_data=data,

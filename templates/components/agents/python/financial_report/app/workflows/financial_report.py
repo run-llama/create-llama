@@ -130,7 +130,7 @@ class FinancialReportWorkflow(Workflow):
 
     @step()
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
-        self.stream = ev.streaming
+        self.stream = ev.get("stream", True)
         ctx.data["input"] = ev.input
 
         if self.system_prompt:

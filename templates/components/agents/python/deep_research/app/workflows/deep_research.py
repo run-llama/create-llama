@@ -92,7 +92,7 @@ class DeepResearchWorkflow(Workflow):
         """
         Initiate the workflow: memory, tools, agent
         """
-        self.stream = ev.get("streaming", True)
+        self.stream = ev.get("stream", True)
         await ctx.set("total_questions", 0)
         self.user_request = ev.get("input")
         self.memory.put_messages(

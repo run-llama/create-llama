@@ -88,6 +88,7 @@ class FormFillingWorkflow(Workflow):
     Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
     If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
     """
+    stream: bool = True
 
     def __init__(
         self,
@@ -119,6 +120,7 @@ class FormFillingWorkflow(Workflow):
 
     @step()
     async def start(self, ctx: Context, ev: StartEvent) -> InputEvent:
+        self.stream = ev.get("stream", True)
         ctx.data["input"] = ev.input
 
         if self.system_prompt:
@@ -150,7 +152,10 @@ class FormFillingWorkflow(Workflow):
             chat_history,
         )
         if not response.has_tool_calls():
-            return StopEvent(result=response.generator)
+            if self.stream:
+                return StopEvent(result=response.generator)
+            else:
+                return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
         if response.is_calling_different_tools():
