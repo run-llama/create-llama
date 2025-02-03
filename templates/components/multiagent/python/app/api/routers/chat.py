@@ -34,13 +34,12 @@ async def chat(
             filters=filters,
         )
 
-        event_handler = workflow.run(input=last_message_content, streaming=True)
+        handler = workflow.run(input=last_message_content, streaming=True)
         return VercelStreamResponse(
             request=request,
             chat_data=data,
             background_tasks=background_tasks,
-            event_handler=event_handler,
-            events=workflow.stream_events(),
+            event_streams=handler.stream_events(),
         )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)

@@ -3,6 +3,7 @@ import os
 import uuid
 from typing import Any, Dict, List, Optional
 
+from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.memory.simple_composable_memory import SimpleComposableMemory
@@ -74,13 +75,11 @@ class DeepResearchWorkflow(Workflow):
         self,
         index: BaseIndex,
         chat_history: Optional[List[ChatMessage]] = None,
-        stream: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.index = index
         self.context_nodes = []
-        self.stream = stream
         self.chat_history = chat_history
         self.memory = SimpleComposableMemory.from_defaults(
             primary_memory=ChatMemoryBuffer.from_defaults(
@@ -93,6 +92,7 @@ class DeepResearchWorkflow(Workflow):
         """
         Initiate the workflow: memory, tools, agent
         """
+        self.stream = ev.get("streaming", True)
         await ctx.set("total_questions", 0)
         self.user_request = ev.get("input")
         self.memory.put_messages(
@@ -325,6 +325,17 @@ class DeepResearchWorkflow(Workflow):
             user_request=self.user_request,
             stream=self.stream,
         )
+        if self.stream:
+            async for chunk in res:  # type: ignore
+                ctx.write_event_to_stream(
+                    AgentStream(
+                        delta=chunk.delta,
+                        response=chunk.text,
+                        current_agent_name="report",
+                        tool_calls=[],
+                        raw=None,
+                    )
+                )
         return StopEvent(
             result=res,
         )

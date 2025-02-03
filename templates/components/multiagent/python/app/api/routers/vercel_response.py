@@ -1,26 +1,18 @@
-import asyncio
 import json
 import logging
-from typing import List
+from typing import AsyncGenerator, List, Type
 
-from fastapi import BackgroundTasks, Request
+from fastapi import Request
 from fastapi.responses import StreamingResponse
-from llama_index.core.agent.workflow.workflow_events import (
-    AgentStream,
-    ToolCall,
-)
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.workflow import Event
-
-from app.api.routers.models import ChatData, Message
-from app.api.services.suggestion import NextQuestionSuggestion
+from llama_index.core.agent.workflow.workflow_events import AgentStream
+from llama_index.core.workflow import Event, StopEvent
 
 logger = logging.getLogger("uvicorn")
 
 
 class VercelStreamResponse(StreamingResponse):
     """
-    Base class to convert the response from the chat engine to the streaming format expected by Vercel
+    Converts preprocessed events into Vercel-compatible streaming response format.
     """
 
     TEXT_PREFIX = "0:"
@@ -30,113 +22,57 @@ class VercelStreamResponse(StreamingResponse):
     def __init__(
         self,
         request: Request,
-        chat_data: ChatData,
-        background_tasks: BackgroundTasks,
+        event_streams: AsyncGenerator[Event, None],
+        excluded_events: List[Type[Event]] = [],
         *args,
         **kwargs,
     ):
         self.request = request
-        self.chat_data = chat_data
-        self.background_tasks = background_tasks
-        content = self.content_generator(*args, **kwargs)
+        self.event_streams = event_streams
+        self.excluded_events = excluded_events
+        content = self.content_generator()
         super().__init__(content=content)
 
-    async def content_generator(self, event_handler, events):
+    async def content_generator(self):
+        """Generate Vercel-formatted content from preprocessed events."""
+        stream_started = False
         try:
-            async for event in events:
-                if isinstance(event, ToolCall):
-                    if hasattr(event, "tool_output"):
-                        yield self.convert_data(
-                            {
-                                "type": "tools",
-                                "data": {
-                                    "toolOutput": {
-                                        "output": event.tool_output.content,
-                                        "isError": event.tool_output.is_error,
-                                    },
-                                    "toolCall": {
-                                        "id": event.tool_id,
-                                        "name": event.tool_name,
-                                        "input": event.tool_kwargs["input"],
-                                    },
-                                },
-                            }
-                        )
-                    else:
-                        yield self.convert_data(
-                            {
-                                "type": "events",
-                                "data": {
-                                    "title": f"Calling tool: {event.tool_name} with input: {event.tool_kwargs['input']}",
-                                },
-                            }
-                        )
+            async for event in self.event_streams:
+                if not stream_started:
+                    # Start the stream with an empty message
+                    stream_started = True
+                    yield self.convert_text("")
+
+                # Text
                 if isinstance(event, AgentStream):
                     yield self.convert_text(event.delta)
-                if hasattr(event, "to_response"):
-                    event_response = event.to_response()
-                    if event_response is not None:
-                        yield self.convert_data(event_response)
-                    # TODO: Add a standard way to process nodes
-                    if event_response.get("type") == "sources":
-                        self._process_response_nodes(event.nodes, self.background_tasks)
-        except asyncio.CancelledError:
-            logger.warning("Workflow has been cancelled!")
+                elif isinstance(event, StopEvent):
+                    yield self.convert_text(str(event.result))
+                # Data
+                else:
+                    if hasattr(event, "to_response"):
+                        yield self.convert_data(event.to_response())
+                    else:
+                        yield self.convert_data(event.model_dump())
         except Exception as e:
-            logger.error(
-                f"Unexpected error in content_generator: {str(e)}",
-                exc_info=True,
-            )
-            yield self.convert_error(
-                "An unexpected error occurred while processing your request, preventing the creation of a final answer. Please try again."
-            )
-        finally:
-            await event_handler.cancel_run()
-            logger.info("The stream has been stopped!")
+            logger.error(f"Error in stream response: {e}")
+            yield self.convert_error(str(e))
 
     @classmethod
-    def convert_text(cls, token: str):
+    def convert_text(cls, token: str) -> str:
+        """Convert text event to Vercel format."""
         # Escape newlines and double quotes to avoid breaking the stream
         token = json.dumps(token)
         return f"{cls.TEXT_PREFIX}{token}\n"
 
     @classmethod
-    def convert_data(cls, data: dict):
+    def convert_data(cls, data: dict) -> str:
+        """Convert data event to Vercel format."""
         data_str = json.dumps(data)
         return f"{cls.DATA_PREFIX}[{data_str}]\n"
 
     @classmethod
-    def convert_error(cls, error: str):
+    def convert_error(cls, error: str) -> str:
+        """Convert error event to Vercel format."""
         error_str = json.dumps(error)
         return f"{cls.ERROR_PREFIX}{error_str}\n"
-
-    @staticmethod
-    def _process_response_nodes(
-        source_nodes: List[NodeWithScore],
-        background_tasks: BackgroundTasks,
-    ):
-        try:
-            # Start background tasks to download documents from LlamaCloud if needed
-            from app.engine.service import LLamaCloudFileService  # type: ignore
-
-            LLamaCloudFileService.download_files_from_nodes(
-                source_nodes, background_tasks
-            )
-        except ImportError:
-            logger.debug(
-                "LlamaCloud is not configured. Skipping post processing of nodes"
-            )
-            pass
-
-    @staticmethod
-    async def _generate_next_questions(chat_history: List[Message], response: str):
-        # TODO: Can refactor this by adding a final NextQuestionSuggestion step to the workflow
-        questions = await NextQuestionSuggestion.suggest_next_questions(
-            chat_history, response
-        )
-        if questions:
-            return {
-                "type": "suggested_questions",
-                "data": questions,
-            }
-        return None
