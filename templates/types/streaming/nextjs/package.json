@@ -36,7 +36,8 @@
     "tailwind-merge": "^2.6.0",
     "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
-    "marked": "^14.1.2"
+    "marked": "^14.1.2",
+    "wikipedia": "^2.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",

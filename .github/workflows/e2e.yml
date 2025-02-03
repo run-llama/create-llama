@@ -69,11 +69,12 @@ jobs:
           DATASOURCE: ${{ matrix.datasources }}
         working-directory: .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-python
+          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}
           path: ./playwright-report/
+          overwrite: true
           retention-days: 30
 
   e2e-typescript:
@@ -136,9 +137,10 @@ jobs:
           DATASOURCE: ${{ matrix.datasources }}
         working-directory: .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-typescript
+          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}-node${{ matrix.node-version }}
           path: ./playwright-report/
+          overwrite: true
           retention-days: 30

@@ -1,5 +1,4 @@
 import { BaseToolWithCall } from "llamaindex";
-import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
@@ -18,6 +17,7 @@ import { ImgGeneratorTool, ImgGeneratorToolParams } from "./img-gen";
 import { InterpreterTool, InterpreterToolParams } from "./interpreter";
 import { OpenAPIActionTool } from "./openapi-action";
 import { WeatherTool, WeatherToolParams } from "./weather";
+import { WikipediaTool, WikipediaToolParams } from "./wikipedia";
 
 type ToolCreator = (config: unknown) => Promise<BaseToolWithCall[]>;
 
@@ -27,12 +27,13 @@ export async function createTools(toolConfig: {
 }): Promise<BaseToolWithCall[]> {
   // add local tools from the 'tools' folder (if configured)
   const tools = await createLocalTools(toolConfig.local);
-  // add tools from LlamaIndexTS (if configured)
-  tools.push(...(await ToolsFactory.createTools(toolConfig.llamahub)));
   return tools;
 }
 
 const toolFactory: Record<string, ToolCreator> = {
+  "wikipedia.WikipediaToolSpec": async (config: unknown) => {
+    return [new WikipediaTool(config as WikipediaToolParams)];
+  },
   weather: async (config: unknown) => {
     return [new WeatherTool(config as WeatherToolParams)];
   },

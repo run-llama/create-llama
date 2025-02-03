@@ -325,9 +325,16 @@ export const writeToolsConfig = async (
       yaml.stringify(configContent),
     );
   } else {
+    // For Typescript, we treat llamahub tools as local tools
+    const tsConfigContent = {
+      local: {
+        ...configContent.local,
+        ...configContent.llamahub,
+      },
+    };
     await fs.writeFile(
       path.join(configPath, "tools.json"),
-      JSON.stringify(configContent, null, 2),
+      JSON.stringify(tsConfigContent, null, 2),
     );
   }
 };
