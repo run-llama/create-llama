@@ -1,14 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from app.engine.index import IndexConfig, get_index
-from app.engine.tools import ToolFactory
-from app.engine.tools.query_engine import get_query_engine_tool
-from app.workflows.events import AgentRunEvent
-from app.workflows.tools import (
-    call_tools,
-    chat_with_tools,
-)
 from llama_index.core import Settings
+from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -20,6 +13,15 @@ from llama_index.core.workflow import (
     StopEvent,
     Workflow,
     step,
+)
+
+from app.engine.index import IndexConfig, get_index
+from app.engine.tools import ToolFactory
+from app.engine.tools.query_engine import get_query_engine_tool
+from app.workflows.events import AgentRunEvent
+from app.workflows.tools import (
+    call_tools,
+    chat_with_tools,
 )
 
 
@@ -91,6 +93,7 @@ class FinancialReportWorkflow(Workflow):
     It's good to using appropriate tools for the user request and always use the information from the tools, don't make up anything yourself.
     For the query engine tool, you should break down the user request into a list of queries and call the tool with the queries.
     """
+    stream: bool = True
 
     def __init__(
         self,
@@ -128,6 +131,7 @@ class FinancialReportWorkflow(Workflow):
 
     @step()
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
+        self.stream = ev.streaming
         ctx.data["input"] = ev.input
 
         if self.system_prompt:
@@ -161,7 +165,19 @@ class FinancialReportWorkflow(Workflow):
         )
         if not response.has_tool_calls():
             # If no tool call, return the response generator
-            return StopEvent(result=response.generator)
+            if self.stream:
+                async for chunk in response.generator:
+                    ctx.write_event_to_stream(
+                        AgentStream(
+                            delta=chunk.delta,
+                            response="",
+                            current_agent_name="",
+                            tool_calls=[],
+                            raw=chunk,
+                        )
+                    )
+            else:
+                return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
         if response.is_calling_different_tools():

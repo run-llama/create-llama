@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import AsyncGenerator, List, Type
+from typing import AsyncGenerator
 
 from fastapi import Request
 from fastapi.responses import StreamingResponse
@@ -23,13 +23,11 @@ class VercelStreamResponse(StreamingResponse):
         self,
         request: Request,
         event_streams: AsyncGenerator[Event, None],
-        excluded_events: List[Type[Event]] = [],
         *args,
         **kwargs,
     ):
         self.request = request
         self.event_streams = event_streams
-        self.excluded_events = excluded_events
         content = self.content_generator()
         super().__init__(content=content)
 
@@ -47,7 +45,10 @@ class VercelStreamResponse(StreamingResponse):
                 if isinstance(event, AgentStream):
                     yield self.convert_text(event.delta)
                 elif isinstance(event, StopEvent):
-                    yield self.convert_text(str(event.result))
+                    if event.result is not None:
+                        yield self.convert_text(str(event.result))
+                    else:
+                        yield self.convert_text("")
                 # Data
                 else:
                     if hasattr(event, "to_response"):
