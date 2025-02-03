@@ -1,5 +1,4 @@
 import { BaseToolWithCall } from "llamaindex";
-import { ToolsFactory } from "llamaindex/tools/ToolsFactory";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { CodeGeneratorTool, CodeGeneratorToolParams } from "./code-generator";
@@ -28,8 +27,6 @@ export async function createTools(toolConfig: {
 }): Promise<BaseToolWithCall[]> {
   // add local tools from the 'tools' folder (if configured)
   const tools = await createLocalTools(toolConfig.local);
-  // add tools from LlamaIndexTS (if configured)
-  tools.push(...(await ToolsFactory.createTools(toolConfig.llamahub)));
   return tools;
 }
 
