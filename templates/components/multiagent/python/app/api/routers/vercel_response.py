@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from typing import AsyncGenerator
@@ -5,7 +6,8 @@ from typing import AsyncGenerator
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from llama_index.core.agent.workflow.workflow_events import AgentStream
-from llama_index.core.workflow import Event, StopEvent
+from llama_index.core.workflow import StopEvent
+from llama_index.core.workflow.handler import WorkflowHandler
 
 logger = logging.getLogger("uvicorn")
 
@@ -22,12 +24,12 @@ class VercelStreamResponse(StreamingResponse):
     def __init__(
         self,
         request: Request,
-        event_streams: AsyncGenerator[Event, None],
+        handler: WorkflowHandler,
         *args,
         **kwargs,
     ):
         self.request = request
-        self.event_streams = event_streams
+        self.handler = handler
         content = self.content_generator()
         super().__init__(content=content)
 
@@ -35,7 +37,7 @@ class VercelStreamResponse(StreamingResponse):
         """Generate Vercel-formatted content from preprocessed events."""
         stream_started = False
         try:
-            async for event in self.event_streams:
+            async for event in self.handler.stream_events():
                 if not stream_started:
                     # Start the stream with an empty message
                     stream_started = True
@@ -50,9 +52,13 @@ class VercelStreamResponse(StreamingResponse):
                     yield self.convert_data(event.to_response())
                 else:
                     yield self.convert_data(event.model_dump())
+        except asyncio.CancelledError:
+            logger.warning("Client cancelled the request!")
+            await self.handler.cancel_run()
         except Exception as e:
             logger.error(f"Error in stream response: {e}")
             yield self.convert_error(str(e))
+            await self.handler.cancel_run()
 
     async def _stream_text(
         self, event: AgentStream | StopEvent
@@ -69,7 +75,6 @@ class VercelStreamResponse(StreamingResponse):
                 async for chunk in event.result:
                     if isinstance(chunk, str):
                         yield self.convert_text(chunk)
-                    # elif isinstance(chunk, CompletionResponse):
                     elif hasattr(chunk, "delta"):
                         yield self.convert_text(chunk.delta)
 

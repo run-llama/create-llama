@@ -39,7 +39,7 @@ async def chat(
             request=request,
             chat_data=data,
             background_tasks=background_tasks,
-            event_streams=handler.stream_events(),
+            handler=handler,
         )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
