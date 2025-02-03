@@ -141,4 +141,5 @@ jobs:
         with:
           name: playwright-report-typescript-${{ matrix.runs-on }}
           path: ./playwright-report/
+          overwrite: true
           retention-days: 30
