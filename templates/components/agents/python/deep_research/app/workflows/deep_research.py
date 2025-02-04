@@ -3,7 +3,6 @@ import os
 import uuid
 from typing import Any, Dict, List, Optional
 
-from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.memory.simple_composable_memory import SimpleComposableMemory
@@ -319,23 +318,11 @@ class DeepResearchWorkflow(Workflow):
         """
         Report the answers
         """
-        logger.info("Writing the report")
         res = await write_report(
             memory=self.memory,
             user_request=self.user_request,
             stream=self.stream,
         )
-        if self.stream:
-            async for chunk in res:  # type: ignore
-                ctx.write_event_to_stream(
-                    AgentStream(
-                        delta=chunk.delta,
-                        response=chunk.text,
-                        current_agent_name="report",
-                        tool_calls=[],
-                        raw=None,
-                    )
-                )
         return StopEvent(
             result=res,
         )
