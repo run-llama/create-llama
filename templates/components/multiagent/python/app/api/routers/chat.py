@@ -2,6 +2,9 @@ import logging
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
+from app.api.callbacks.llamacloud import LlamaCloudFileDownload
+from app.api.callbacks.next_question import SuggestNextQuestions
+from app.api.callbacks.stream_handler import StreamHandler
 from app.api.routers.models import (
     ChatData,
 )
@@ -39,10 +42,13 @@ async def chat(
             stream=True,
         )
         return VercelStreamResponse(
-            request=request,
-            chat_data=data,
-            background_tasks=background_tasks,
-            handler=handler,
+            stream_handler=StreamHandler(
+                workflow_handler=handler,
+                callbacks=[
+                    LlamaCloudFileDownload.from_default(background_tasks),
+                    SuggestNextQuestions.from_default(data),
+                ],
+            ),
         )
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
