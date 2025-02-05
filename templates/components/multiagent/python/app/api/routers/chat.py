@@ -8,7 +8,6 @@ from app.api.callbacks.stream_handler import StreamHandler
 from app.api.routers.models import (
     ChatData,
 )
-from app.api.routers.vercel_response import VercelStreamResponse
 from app.engine.query_filter import generate_filters
 from app.workflows import create_workflow
 
@@ -41,15 +40,13 @@ async def chat(
             chat_history=messages,
             stream=True,
         )
-        return VercelStreamResponse(
-            stream_handler=StreamHandler(
-                workflow_handler=handler,
-                callbacks=[
-                    LlamaCloudFileDownload.from_default(background_tasks),
-                    SuggestNextQuestions.from_default(data),
-                ],
-            ),
-        )
+        return StreamHandler.from_default(
+            handler=handler,
+            callbacks=[
+                LlamaCloudFileDownload.from_default(background_tasks),
+                SuggestNextQuestions.from_default(data),
+            ],
+        ).vercel_stream()
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
