@@ -1,13 +1,5 @@
 from typing import Any, Dict, List, Optional
 
-from app.engine.index import IndexConfig, get_index
-from app.engine.tools import ToolFactory
-from app.engine.tools.query_engine import get_query_engine_tool
-from app.workflows.events import AgentRunEvent
-from app.workflows.tools import (
-    call_tools,
-    chat_with_tools,
-)
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -22,9 +14,17 @@ from llama_index.core.workflow import (
     step,
 )
 
+from app.engine.index import IndexConfig, get_index
+from app.engine.tools import ToolFactory
+from app.engine.tools.query_engine import get_query_engine_tool
+from app.workflows.events import AgentRunEvent
+from app.workflows.tools import (
+    call_tools,
+    chat_with_tools,
+)
+
 
 def create_workflow(
-    chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
     **kwargs,
 ) -> Workflow:
@@ -45,7 +45,6 @@ def create_workflow(
         query_engine_tool=query_engine_tool,
         code_interpreter_tool=code_interpreter_tool,
         document_generator_tool=document_generator_tool,
-        chat_history=chat_history,
     )
 
 
@@ -91,6 +90,7 @@ class FinancialReportWorkflow(Workflow):
     It's good to using appropriate tools for the user request and always use the information from the tools, don't make up anything yourself.
     For the query engine tool, you should break down the user request into a list of queries and call the tool with the queries.
     """
+    stream: bool = True
 
     def __init__(
         self,
@@ -99,12 +99,10 @@ class FinancialReportWorkflow(Workflow):
         document_generator_tool: FunctionTool,
         llm: Optional[FunctionCallingLLM] = None,
         timeout: int = 360,
-        chat_history: Optional[List[ChatMessage]] = None,
         system_prompt: Optional[str] = None,
     ):
         super().__init__(timeout=timeout)
         self.system_prompt = system_prompt or self._default_system_prompt
-        self.chat_history = chat_history or []
         self.query_engine_tool = query_engine_tool
         self.code_interpreter_tool = code_interpreter_tool
         self.document_generator_tool = document_generator_tool
@@ -122,22 +120,25 @@ class FinancialReportWorkflow(Workflow):
         ]
         self.llm: FunctionCallingLLM = llm or Settings.llm
         assert isinstance(self.llm, FunctionCallingLLM)
-        self.memory = ChatMemoryBuffer.from_defaults(
-            llm=self.llm, chat_history=self.chat_history
-        )
+        self.memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
 
     @step()
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
-        ctx.data["input"] = ev.input
+        self.stream = ev.get("stream", True)
+        user_msg = ev.get("user_msg")
+        chat_history = ev.get("chat_history")
+
+        if chat_history is not None:
+            self.memory.put_messages(chat_history)
+
+        # Add user message to memory
+        self.memory.put(ChatMessage(role=MessageRole.USER, content=user_msg))
 
         if self.system_prompt:
             system_msg = ChatMessage(
                 role=MessageRole.SYSTEM, content=self.system_prompt
             )
             self.memory.put(system_msg)
-
-        # Add user input to memory
-        self.memory.put(ChatMessage(role=MessageRole.USER, content=ev.input))
 
         return InputEvent(input=self.memory.get())
 
@@ -160,8 +161,10 @@ class FinancialReportWorkflow(Workflow):
             chat_history,
         )
         if not response.has_tool_calls():
-            # If no tool call, return the response generator
-            return StopEvent(result=response.generator)
+            if self.stream:
+                return StopEvent(result=response.generator)
+            else:
+                return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
         if response.is_calling_different_tools():

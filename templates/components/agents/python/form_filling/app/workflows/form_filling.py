@@ -25,7 +25,6 @@ from app.workflows.tools import (
 
 
 def create_workflow(
-    chat_history: Optional[List[ChatMessage]] = None,
     params: Optional[Dict[str, Any]] = None,
     **kwargs,
 ) -> Workflow:
@@ -45,7 +44,6 @@ def create_workflow(
         query_engine_tool=query_engine_tool,
         extractor_tool=extractor_tool,  # type: ignore
         filling_tool=filling_tool,  # type: ignore
-        chat_history=chat_history,
     )
 
     return workflow
@@ -88,6 +86,7 @@ class FormFillingWorkflow(Workflow):
     Only use provided data - never make up any information yourself. Fill N/A if an answer is not found.
     If there is no query engine tool or the gathered information has many N/A values indicating the questions don't match the data, respond with a warning and ask the user to upload a different file or connect to a knowledge base.
     """
+    stream: bool = True
 
     def __init__(
         self,
@@ -96,12 +95,10 @@ class FormFillingWorkflow(Workflow):
         filling_tool: FunctionTool,
         llm: Optional[FunctionCallingLLM] = None,
         timeout: int = 360,
-        chat_history: Optional[List[ChatMessage]] = None,
         system_prompt: Optional[str] = None,
     ):
         super().__init__(timeout=timeout)
         self.system_prompt = system_prompt or self._default_system_prompt
-        self.chat_history = chat_history or []
         self.query_engine_tool = query_engine_tool
         self.extractor_tool = extractor_tool
         self.filling_tool = filling_tool
@@ -113,13 +110,18 @@ class FormFillingWorkflow(Workflow):
         self.llm: FunctionCallingLLM = llm or Settings.llm
         if not isinstance(self.llm, FunctionCallingLLM):
             raise ValueError("FormFillingWorkflow only supports FunctionCallingLLM.")
-        self.memory = ChatMemoryBuffer.from_defaults(
-            llm=self.llm, chat_history=self.chat_history
-        )
+        self.memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
 
     @step()
     async def start(self, ctx: Context, ev: StartEvent) -> InputEvent:
-        ctx.data["input"] = ev.input
+        self.stream = ev.get("stream", True)
+        user_msg = ev.get("user_msg", "")
+        chat_history = ev.get("chat_history", [])
+
+        if chat_history:
+            self.memory.put_messages(chat_history)
+
+        self.memory.put(ChatMessage(role=MessageRole.USER, content=user_msg))
 
         if self.system_prompt:
             system_msg = ChatMessage(
@@ -127,12 +129,7 @@ class FormFillingWorkflow(Workflow):
             )
             self.memory.put(system_msg)
 
-        user_input = ev.input
-        user_msg = ChatMessage(role=MessageRole.USER, content=user_input)
-        self.memory.put(user_msg)
-
-        chat_history = self.memory.get()
-        return InputEvent(input=chat_history)
+        return InputEvent(input=self.memory.get())
 
     @step()
     async def handle_llm_input(  # type: ignore
@@ -150,7 +147,10 @@ class FormFillingWorkflow(Workflow):
             chat_history,
         )
         if not response.has_tool_calls():
-            return StopEvent(result=response.generator)
+            if self.stream:
+                return StopEvent(result=response.generator)
+            else:
+                return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
         # add an error message to tell the AI to process step by step
         if response.is_calling_different_tools():

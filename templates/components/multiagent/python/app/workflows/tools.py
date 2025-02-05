@@ -3,7 +3,6 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator, Callable, Optional
 
-from app.workflows.events import AgentRunEvent, AgentRunEventType
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.tools import (
@@ -14,6 +13,8 @@ from llama_index.core.tools import (
 )
 from llama_index.core.workflow import Context
 from pydantic import BaseModel, ConfigDict
+
+from app.workflows.events import AgentRunEvent, AgentRunEventType
 
 logger = logging.getLogger("uvicorn")
 
@@ -51,7 +52,9 @@ class ChatWithToolsResponse(BaseModel):
         assert self.generator is not None
         full_response = ""
         async for chunk in self.generator:
-            full_response += chunk.message.content
+            content = chunk.message.content
+            if content:
+                full_response += content
         return full_response
 
 
