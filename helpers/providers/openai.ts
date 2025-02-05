@@ -1,10 +1,9 @@
 import got from "got";
+import inquirer from "inquirer";
 import ora from "ora";
 import { red } from "picocolors";
-import prompts from "prompts";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
 import { isCI } from "../../questions";
-import { questionHandlers } from "../../questions/utils";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
@@ -32,9 +31,9 @@ export async function askOpenAIQuestions({
   };
 
   if (!config.apiKey && !isCI) {
-    const { key } = await prompts(
+    const { key } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "key",
         message: askModels
           ? "Please provide your OpenAI API key (or leave blank to use OPENAI_API_KEY env variable):"
@@ -49,34 +48,29 @@ export async function askOpenAIQuestions({
           return true;
         },
       },
-      questionHandlers,
-    );
+    ]);
     config.apiKey = key || process.env.OPENAI_API_KEY;
   }
 
   if (askModels) {
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
         choices: await getAvailableModelChoices(false, config.apiKey),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: await getAvailableModelChoices(true, config.apiKey),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = getDimensions(embeddingModel);
   }
@@ -116,7 +110,7 @@ async function getAvailableModelChoices(
       )
       .map((el: any) => {
         return {
-          title: el.id,
+          name: el.id,
           value: el.id,
         };
       });

@@ -1,6 +1,5 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
-import { questionHandlers } from "../../questions/utils";
 
 const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
   "gpt-35-turbo": { openAIModel: "gpt-3.5-turbo" },
@@ -67,28 +66,24 @@ export async function askAzureQuestions({
   };
 
   if (askModels) {
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which LLM model would you like to use?",
         choices: getAvailableModelChoices(),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: getAvailableEmbeddingModelChoices(),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = getDimensions(embeddingModel);
   }
@@ -98,14 +93,14 @@ export async function askAzureQuestions({
 
 function getAvailableModelChoices() {
   return Object.keys(ALL_AZURE_OPENAI_CHAT_MODELS).map((key) => ({
-    title: key,
+    name: key,
     value: key,
   }));
 }
 
 function getAvailableEmbeddingModelChoices() {
   return Object.keys(ALL_AZURE_OPENAI_EMBEDDING_MODELS).map((key) => ({
-    title: key,
+    name: key,
     value: key,
   }));
 }
