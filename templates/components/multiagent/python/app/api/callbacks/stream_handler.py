@@ -2,7 +2,6 @@ import logging
 from typing import List, Optional
 
 from llama_index.core.workflow.handler import WorkflowHandler
-from app.api.routers.vercel_response import VercelStreamResponse
 
 from app.api.callbacks.base import EventCallback
 
@@ -25,6 +24,8 @@ class StreamHandler:
 
     def vercel_stream(self):
         """Create a streaming response with Vercel format."""
+        from app.api.routers.vercel_response import VercelStreamResponse
+
         return VercelStreamResponse(stream_handler=self)
 
     async def cancel_run(self):
