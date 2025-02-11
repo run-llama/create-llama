@@ -3,15 +3,16 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from llama_index.core.llms import MessageRole
 
-from app.api.routers.events import EventCallbackHandler
+from app.api.callbacks.llamacloud import LlamaCloudFileDownload
+from app.api.callbacks.next_question import SuggestNextQuestions
+from app.api.callbacks.stream_handler import StreamHandler
 from app.api.routers.models import (
     ChatData,
     Message,
     Result,
     SourceNodes,
 )
-from app.api.routers.vercel_response import VercelStreamResponse
-from app.engine.engine import get_chat_engine
+from app.engine.engine import get_engine
 from app.engine.query_filter import generate_filters
 
 chat_router = r = APIRouter()
@@ -36,15 +37,19 @@ async def chat(
         logger.info(
             f"Creating chat engine with filters: {str(filters)}",
         )
-        event_handler = EventCallbackHandler()
-        chat_engine = get_chat_engine(
-            filters=filters, params=params, event_handlers=[event_handler]
+        engine = get_engine(filters=filters, params=params)
+        handler = engine.run(
+            user_msg=last_message_content,
+            chat_history=messages,
+            stream=True,
         )
-        response = chat_engine.astream_chat(last_message_content, messages)
-
-        return VercelStreamResponse(
-            request, event_handler, response, data, background_tasks
-        )
+        return StreamHandler.from_default(
+            handler=handler,
+            callbacks=[
+                LlamaCloudFileDownload.from_default(background_tasks),
+                SuggestNextQuestions.from_default(data),
+            ],
+        ).vercel_stream()
     except Exception as e:
         logger.exception("Error in chat engine", exc_info=True)
         raise HTTPException(
@@ -53,6 +58,7 @@ async def chat(
         ) from e
 
 
+# TODO: Update non-streaming endpoint
 # non-streaming endpoint - delete if not needed
 @r.post("/request")
 async def chat_request(
