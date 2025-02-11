@@ -3,7 +3,6 @@ from typing import List
 
 from llama_index.core.agent.workflow import AgentWorkflow
 
-# from llama_index.core.agent import AgentRunner
 from llama_index.core.settings import Settings
 from llama_index.core.tools import BaseTool
 
@@ -28,6 +27,9 @@ def get_engine(params=None, **kwargs):
     # Add additional tools
     configured_tools: List[BaseTool] = ToolFactory.from_env()
     tools.extend(configured_tools)
+
+    if len(tools) == 0:
+        raise RuntimeError("Please provide at least one tool!")
 
     return AgentWorkflow.from_tools_or_functions(
         tools_or_functions=tools,  # type: ignore
