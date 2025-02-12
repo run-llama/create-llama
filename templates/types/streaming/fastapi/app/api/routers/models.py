@@ -317,7 +317,6 @@ class SourceNodes(BaseModel):
 
 class Result(BaseModel):
     result: Message
-    nodes: List[SourceNodes]
 
 
 class ChatConfig(BaseModel):
