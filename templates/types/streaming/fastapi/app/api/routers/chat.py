@@ -59,25 +59,26 @@ async def chat(
 
 
 # TODO: Update non-streaming endpoint
-# non-streaming endpoint - delete if not needed
-@r.post("/request")
-async def chat_request(
-    data: ChatData,
-) -> Result:
-    last_message_content = data.get_last_message_content()
-    messages = data.get_history_messages()
+# Would be better if we use same chat.py endpoint for both agent and multiagent templates
+# # non-streaming endpoint - delete if not needed
+# @r.post("/request")
+# async def chat_request(
+#     data: ChatData,
+# ) -> Result:
+#     last_message_content = data.get_last_message_content()
+#     messages = data.get_history_messages()
 
-    doc_ids = data.get_chat_document_ids()
-    filters = generate_filters(doc_ids)
-    params = data.data or {}
-    logger.info(
-        f"Creating chat engine with filters: {str(filters)}",
-    )
+#     doc_ids = data.get_chat_document_ids()
+#     filters = generate_filters(doc_ids)
+#     params = data.data or {}
+#     logger.info(
+#         f"Creating chat engine with filters: {str(filters)}",
+#     )
 
-    chat_engine = get_chat_engine(filters=filters, params=params)
+#     chat_engine = get_chat_engine(filters=filters, params=params)
 
-    response = await chat_engine.achat(last_message_content, messages)
-    return Result(
-        result=Message(role=MessageRole.ASSISTANT, content=response.response),
-        nodes=SourceNodes.from_source_nodes(response.source_nodes),
-    )
+#     response = await chat_engine.achat(last_message_content, messages)
+#     return Result(
+#         result=Message(role=MessageRole.ASSISTANT, content=response.response),
+#         nodes=SourceNodes.from_source_nodes(response.source_nodes),
+#     )

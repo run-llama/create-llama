@@ -19,10 +19,12 @@ export const getDataSourceChoices = (
     });
   }
   if (selectedDataSource === undefined || selectedDataSource.length === 0) {
-    choices.push({
-      title: "No datasource",
-      value: "none",
-    });
+    if (framework !== "fastapi") {
+      choices.push({
+        title: "No datasource",
+        value: "none",
+      });
+    }
     choices.push({
       title:
         process.platform !== "linux"
