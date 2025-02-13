@@ -1,6 +1,6 @@
 "use client";
 
-import { Message } from "@llamaindex/chat-ui";
+import { getCustomAnnotationData, useChatMessage } from "@llamaindex/chat-ui";
 import {
   AlertCircle,
   CheckCircle2,
@@ -54,7 +54,6 @@ type DeepResearchCardState = {
 };
 
 interface DeepResearchCardProps {
-  message: Message;
   className?: string;
 }
 
@@ -143,25 +142,19 @@ const deepResearchEventsToState = (
   );
 };
 
-export function DeepResearchCard({
-  message,
-  className,
-}: DeepResearchCardProps) {
-  const deepResearchEvents = message.annotations as
-    | DeepResearchEvent[]
-    | undefined;
-  const hasDeepResearchEvents = deepResearchEvents?.some(
-    (event) => event.type === "deep_research_event",
-  );
+export function DeepResearchCard({ className }: DeepResearchCardProps) {
+  const { message } = useChatMessage();
 
-  const state = useMemo(
-    () => deepResearchEventsToState(deepResearchEvents),
-    [deepResearchEvents],
-  );
+  const state = useMemo(() => {
+    const deepResearchEvents = getCustomAnnotationData<DeepResearchEvent>(
+      message.annotations,
+      (annotation) => annotation?.type === "deep_research_event",
+    );
+    if (!deepResearchEvents.length) return null;
+    return deepResearchEventsToState(deepResearchEvents);
+  }, [message.annotations]);
 
-  if (!hasDeepResearchEvents) {
-    return null;
-  }
+  if (!state) return null;
 
   return (
     <Card className={cn("w-full", className)}>
