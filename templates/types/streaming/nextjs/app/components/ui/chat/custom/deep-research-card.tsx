@@ -1,6 +1,6 @@
 "use client";
 
-import { getCustomAnnotationData, useChatMessage } from "@llamaindex/chat-ui";
+import { getCustomAnnotation, useChatMessage } from "@llamaindex/chat-ui";
 import {
   AlertCircle,
   CheckCircle2,
@@ -146,7 +146,7 @@ export function DeepResearchCard({ className }: DeepResearchCardProps) {
   const { message } = useChatMessage();
 
   const state = useMemo(() => {
-    const deepResearchEvents = getCustomAnnotationData<DeepResearchEvent>(
+    const deepResearchEvents = getCustomAnnotation<DeepResearchEvent>(
       message.annotations,
       (annotation) => annotation?.type === "deep_research_event",
     );
