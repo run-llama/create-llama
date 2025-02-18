@@ -1,22 +1,24 @@
 import {
-  ALL_AVAILABLE_MISTRAL_MODELS,
+  ALL_AVAILABLE_ANTHROPIC_MODELS,
   Anthropic,
+} from "@llamaindex/anthropic";
+import {
   GEMINI_EMBEDDING_MODEL,
   GEMINI_MODEL,
   Gemini,
   GeminiEmbedding,
-  Groq,
+} from "@llamaindex/google";
+import { Groq } from "@llamaindex/groq";
+import { HuggingFaceEmbedding } from "@llamaindex/huggingface";
+import {
+  ALL_AVAILABLE_MISTRAL_MODELS,
   MistralAI,
   MistralAIEmbedding,
   MistralAIEmbeddingModelType,
-  OpenAI,
-  OpenAIEmbedding,
-  Settings,
-} from "llamaindex";
-import { HuggingFaceEmbedding } from "llamaindex/embeddings/HuggingFaceEmbedding";
-import { OllamaEmbedding } from "llamaindex/embeddings/OllamaEmbedding";
-import { ALL_AVAILABLE_ANTHROPIC_MODELS } from "llamaindex/llm/anthropic";
-import { Ollama } from "llamaindex/llm/ollama";
+} from "@llamaindex/mistral";
+import { Ollama, OllamaEmbedding } from "@llamaindex/ollama";
+import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
+import { Settings } from "llamaindex";
 
 const CHUNK_SIZE = 512;
 const CHUNK_OVERLAP = 20;
