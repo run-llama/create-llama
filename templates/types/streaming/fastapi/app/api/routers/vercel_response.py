@@ -51,9 +51,7 @@ class VercelStreamResponse(StreamingResponse):
                     event_response = event.to_response()
                     yield self.convert_data(event_response)
                 else:
-                    yield self.convert_data(
-                        {"type": "agent", "data": event.model_dump()}
-                    )
+                    yield self.convert_data(event.model_dump())
 
         except asyncio.CancelledError:
             logger.warning("Client cancelled the request!")
