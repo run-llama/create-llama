@@ -57,14 +57,6 @@ class AddNodeUrl(EventCallback):
         # fallback to URL in metadata (e.g. for websites)
         return metadata.get("URL")
 
-    def convert_to_source_nodes(self, event: Any) -> Any:
-        if self._is_retrieval_result_event(event):
-            for node_score in event.tool_output.raw_output.source_nodes:
-                node_score.node.metadata["url"] = self._get_url_from_metadata(
-                    node_score.node.metadata
-                )
-        return event
-
     @classmethod
     def from_default(cls) -> "AddNodeUrl":
         return cls()
