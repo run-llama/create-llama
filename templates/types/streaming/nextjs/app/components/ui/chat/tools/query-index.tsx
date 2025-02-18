@@ -1,7 +1,11 @@
 "use client";
 
-import { getCustomAnnotation, useChatMessage } from "@llamaindex/chat-ui";
-import { ChatEvents } from "@llamaindex/chat-ui/widgets";
+import {
+  getCustomAnnotation,
+  SourceNode,
+  useChatMessage,
+} from "@llamaindex/chat-ui";
+import { ChatEvents, ChatSources } from "@llamaindex/chat-ui/widgets";
 import { useMemo } from "react";
 import { z } from "zod";
 
@@ -78,4 +82,39 @@ export function RetrieverComponent() {
       })}
     </div>
   );
+}
+
+/**
+ * Render the source nodes whenever we got query_index tool with output
+ */
+export function ChatSourcesComponent() {
+  const { message } = useChatMessage();
+
+  const queryIndexEvents = getCustomAnnotation<QueryIndex>(
+    message.annotations,
+    (annotation) => {
+      const result = QueryIndexSchema.safeParse(annotation);
+      return result.success && !!result.data.tool_output;
+    },
+  );
+
+  const sources: SourceNode[] = useMemo(() => {
+    return (
+      queryIndexEvents?.flatMap((event) => {
+        const sourceNodes =
+          (event.tool_output?.raw_output?.source_nodes as any[]) || [];
+        return sourceNodes.map((node) => {
+          return {
+            id: node.node.id_,
+            metadata: node.node.metadata,
+            score: node.score,
+            text: node.node.text,
+            url: node.node.metadata.url,
+          };
+        });
+      }) || []
+    );
+  }, [queryIndexEvents]);
+
+  return <ChatSources data={{ nodes: sources }} />;
 }

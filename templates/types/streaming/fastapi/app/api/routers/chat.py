@@ -7,6 +7,7 @@ from llama_index.core.llms import MessageRole
 
 from app.api.callbacks.llamacloud import LlamaCloudFileDownload
 from app.api.callbacks.next_question import SuggestNextQuestions
+from app.api.callbacks.source_nodes import AddNodeUrl
 from app.api.callbacks.stream_handler import StreamHandler
 from app.api.routers.models import (
     ChatData,
@@ -49,6 +50,7 @@ async def chat(
             callbacks=[
                 LlamaCloudFileDownload.from_default(background_tasks),
                 SuggestNextQuestions.from_default(data),
+                AddNodeUrl.from_default(),
             ],
         ).vercel_stream()
     except Exception as e:

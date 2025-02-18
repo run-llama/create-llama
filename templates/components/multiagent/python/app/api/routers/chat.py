@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from app.api.callbacks.llamacloud import LlamaCloudFileDownload
 from app.api.callbacks.next_question import SuggestNextQuestions
 from app.api.callbacks.stream_handler import StreamHandler
+from app.api.callbacks.add_node_url import AddNodeUrl
 from app.api.routers.models import (
     ChatData,
 )
@@ -45,6 +46,7 @@ async def chat(
             callbacks=[
                 LlamaCloudFileDownload.from_default(background_tasks),
                 SuggestNextQuestions.from_default(data),
+                AddNodeUrl.from_default(),
             ],
         ).vercel_stream()
     except Exception as e:
