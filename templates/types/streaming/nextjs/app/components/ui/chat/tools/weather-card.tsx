@@ -1,3 +1,8 @@
+import { getCustomAnnotation, useChatMessage } from "@llamaindex/chat-ui";
+import { ChatEvents } from "@llamaindex/chat-ui/widgets";
+import { useMemo } from "react";
+import { z } from "zod";
+
 export interface WeatherData {
   latitude: number;
   longitude: number;
@@ -208,6 +213,84 @@ export function WeatherCard({ data }: { data: WeatherData }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// A new component for the weather tool which uses the WeatherCard component with the new data schema from agent workflow events
+const WeatherToolSchema = z.object({
+  tool_name: z.literal("get_weather_information"),
+  tool_kwargs: z.object({
+    location: z.string(),
+  }),
+  tool_id: z.string(),
+  tool_output: z.optional(
+    z
+      .object({
+        content: z.string(),
+        tool_name: z.string(),
+        raw_input: z.record(z.unknown()),
+        raw_output: z.custom<WeatherData>(),
+        is_error: z.boolean().optional(),
+      })
+      .optional(),
+  ),
+  return_direct: z.boolean().optional(),
+});
+
+type WeatherTool = z.infer<typeof WeatherToolSchema>;
+
+type GroupedWeatherQuery = {
+  initial: WeatherTool;
+  output?: WeatherTool;
+};
+
+export function WeatherToolComponent() {
+  const { message } = useChatMessage();
+
+  const weatherEvents = getCustomAnnotation<WeatherTool>(
+    message.annotations,
+    (annotation: unknown) => {
+      const result = WeatherToolSchema.safeParse(annotation);
+      return result.success;
+    },
+  );
+
+  // Group events by tool_id
+  const groupedWeatherQueries = useMemo(() => {
+    const groups = new Map<string, GroupedWeatherQuery>();
+
+    weatherEvents?.forEach((event: WeatherTool) => {
+      groups.set(event.tool_id, { initial: event });
+    });
+
+    return Array.from(groups.values());
+  }, [weatherEvents]);
+
+  return (
+    <div className="space-y-4">
+      {groupedWeatherQueries.map(({ initial }) => {
+        if (!initial.tool_output?.raw_output) {
+          return (
+            <ChatEvents
+              key={initial.tool_id}
+              data={[
+                {
+                  title: `Loading weather information for ${initial.tool_kwargs.location}...`,
+                },
+              ]}
+              showLoading={true}
+            />
+          );
+        }
+
+        return (
+          <WeatherCard
+            key={initial.tool_id}
+            data={initial.tool_output.raw_output as WeatherData}
+          />
+        );
+      })}
     </div>
   );
 }
