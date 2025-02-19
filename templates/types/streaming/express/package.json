@@ -16,14 +16,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@aws-crypto/sha256-js": "^5.2.0",
-    "pathe": "^1.1.2",
     "ai": "^4.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "duck-duck-scrape": "^2.2.5",
     "express": "^4.18.2",
-    "llamaindex": "^0.9.0",
+    "llamaindex": "^0.9.1",
     "pdf2json": "^3.0.5",
     "ajv": "^8.12.0",
     "@e2b/code-interpreter": "^1.0.4",
