@@ -103,7 +103,13 @@ class Annotation(BaseModel):
 class Message(BaseModel):
     role: MessageRole
     content: str
-    annotations: List[Annotation] | None = None
+    annotations: Optional[List[Annotation]] = None
+
+    @validator("annotations", pre=True)
+    def validate_annotations(cls, v):
+        if v is None:
+            return v
+        return [item for item in v if isinstance(item, Annotation)]
 
 
 class ChatData(BaseModel):
