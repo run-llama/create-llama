@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { QdrantVectorStore } from "@llamaindex/qdrant";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { QdrantVectorStore } from "llamaindex/vector-store/QdrantVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars, getQdrantClient } from "./shared";

@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { PineconeVectorStore } from "@llamaindex/pinecone";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { PineconeVectorStore } from "llamaindex/vector-store/PineconeVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
