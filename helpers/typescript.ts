@@ -342,7 +342,7 @@ async function updatePackageJson({
       "@llamaindex/milvus": "^0.1.0",
     },
     mongo: {
-      mongodb: "^6.7.0",
+      mongodb: "6.7.0",
       "@llamaindex/mongodb": "^0.0.5",
     },
     none: {},
