@@ -6,7 +6,7 @@ import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { InstallTemplateArgs, TemplateVectorDB } from "./types";
+import { InstallTemplateArgs, ModelProvider, TemplateVectorDB } from "./types";
 
 /**
  * Install a LlamaIndex internal template to a given `root` directory.
@@ -27,6 +27,7 @@ export const installTSTemplate = async ({
   dataSources,
   useLlamaParse,
   useCase,
+  modelConfig,
 }: InstallTemplateArgs & { backend: boolean }) => {
   console.log(bold(`Using ${packageManager}.`));
 
@@ -181,6 +182,12 @@ export const installTSTemplate = async ({
     cwd: path.join(compPath, "loaders", "typescript", loaderFolder),
   });
 
+  // copy provider settings
+  await copy("**", enginePath, {
+    parents: true,
+    cwd: path.join(compPath, "providers", "typescript", modelConfig.provider),
+  });
+
   // Select and copy engine code based on data sources and tools
   let engine;
   tools = tools ?? [];
@@ -240,6 +247,7 @@ export const installTSTemplate = async ({
     observability,
     vectorDb,
     backend,
+    modelConfig,
   });
 
   if (
@@ -248,6 +256,68 @@ export const installTSTemplate = async ({
   ) {
     await installTSDependencies(packageJson, packageManager, isOnline);
   }
+};
+
+const providerDependencies: {
+  [key in ModelProvider]?: Record<string, string>;
+} = {
+  openai: {
+    "@llamaindex/openai": "^0.1.52",
+  },
+  gemini: {
+    "@llamaindex/google": "^0.0.7",
+  },
+  ollama: {
+    "@llamaindex/ollama": "^0.0.40",
+  },
+  mistral: {
+    "@llamaindex/mistral": "^0.0.5",
+  },
+  "azure-openai": {
+    "@llamaindex/openai": "^0.1.52",
+  },
+  groq: {
+    "@llamaindex/groq": "^0.0.51",
+    "@llamaindex/huggingface": "^0.0.36", // groq uses huggingface as default embedding model
+  },
+  anthropic: {
+    "@llamaindex/anthropic": "^0.1.0",
+    "@llamaindex/huggingface": "^0.0.36", // anthropic uses huggingface as default embedding model
+  },
+};
+
+const vectorDbDependencies: Record<TemplateVectorDB, Record<string, string>> = {
+  astra: {
+    "@llamaindex/astra": "^0.0.5",
+  },
+  chroma: {
+    "@llamaindex/chroma": "^0.0.5",
+  },
+  llamacloud: {},
+  milvus: {
+    "@zilliz/milvus2-sdk-node": "^2.4.6",
+    "@llamaindex/milvus": "^0.1.0",
+  },
+  mongo: {
+    mongodb: "6.7.0",
+    "@llamaindex/mongodb": "^0.0.5",
+  },
+  none: {},
+  pg: {
+    pg: "^8.12.0",
+    pgvector: "^0.2.0",
+    "@llamaindex/postgres": "^0.0.33",
+  },
+  pinecone: {
+    "@llamaindex/pinecone": "^0.0.5",
+  },
+  qdrant: {
+    "@qdrant/js-client-rest": "^1.11.0",
+    "@llamaindex/qdrant": "^0.1.0",
+  },
+  weaviate: {
+    "@llamaindex/weaviate": "^0.0.5",
+  },
 };
 
 async function updatePackageJson({
@@ -260,6 +330,7 @@ async function updatePackageJson({
   observability,
   vectorDb,
   backend,
+  modelConfig,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -269,6 +340,7 @@ async function updatePackageJson({
   | "ui"
   | "observability"
   | "vectorDb"
+  | "modelConfig"
 > & {
   relativeEngineDestPath: string;
   backend: boolean;
@@ -311,63 +383,25 @@ async function updatePackageJson({
     };
   }
 
-  if (framework === "nextjs" && backend) {
-    // add reader and provider packages for fullstack nextjs
+  if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
       "@llamaindex/readers": "^2.0.0",
-      "@llamaindex/anthropic": "^0.1.0",
-      "@llamaindex/google": "^0.0.7",
-      "@llamaindex/groq": "^0.0.51",
-      "@llamaindex/huggingface": "^0.0.36",
-      "@llamaindex/mistral": "^0.0.5",
-      "@llamaindex/ollama": "^0.0.40",
-      "@llamaindex/openai": "^0.1.52",
     };
-  }
 
-  const vectorDbDependencies: Record<
-    TemplateVectorDB,
-    Record<string, string>
-  > = {
-    astra: {
-      "@llamaindex/astra": "^0.0.5",
-    },
-    chroma: {
-      "@llamaindex/chroma": "^0.0.5",
-    },
-    llamacloud: {},
-    milvus: {
-      "@zilliz/milvus2-sdk-node": "^2.4.6",
-      "@llamaindex/milvus": "^0.1.0",
-    },
-    mongo: {
-      mongodb: "6.7.0",
-      "@llamaindex/mongodb": "^0.0.5",
-    },
-    none: {},
-    pg: {
-      pg: "^8.12.0",
-      pgvector: "^0.2.0",
-      "@llamaindex/postgres": "^0.0.33",
-    },
-    pinecone: {
-      "@llamaindex/pinecone": "^0.0.5",
-    },
-    qdrant: {
-      "@qdrant/js-client-rest": "^1.11.0",
-      "@llamaindex/qdrant": "^0.1.0",
-    },
-    weaviate: {
-      "@llamaindex/weaviate": "^0.0.5",
-    },
-  };
+    if (vectorDb && vectorDb in vectorDbDependencies) {
+      packageJson.dependencies = {
+        ...packageJson.dependencies,
+        ...vectorDbDependencies[vectorDb],
+      };
+    }
 
-  if (vectorDb && vectorDb in vectorDbDependencies) {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      ...vectorDbDependencies[vectorDb],
-    };
+    if (modelConfig.provider && modelConfig.provider in providerDependencies) {
+      packageJson.dependencies = {
+        ...packageJson.dependencies,
+        ...providerDependencies[modelConfig.provider],
+      };
+    }
   }
 
   if (observability === "traceloop") {
