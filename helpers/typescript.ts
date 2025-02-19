@@ -6,7 +6,7 @@ import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
-import { InstallTemplateArgs } from "./types";
+import { InstallTemplateArgs, TemplateVectorDB } from "./types";
 
 /**
  * Install a LlamaIndex internal template to a given `root` directory.
@@ -239,6 +239,7 @@ export const installTSTemplate = async ({
     ui,
     observability,
     vectorDb,
+    backend,
   });
 
   if (
@@ -258,6 +259,7 @@ async function updatePackageJson({
   ui,
   observability,
   vectorDb,
+  backend,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -269,6 +271,7 @@ async function updatePackageJson({
   | "vectorDb"
 > & {
   relativeEngineDestPath: string;
+  backend: boolean;
 }): Promise<any> {
   const packageJsonFile = path.join(root, "package.json");
   const packageJson: any = JSON.parse(
@@ -308,31 +311,62 @@ async function updatePackageJson({
     };
   }
 
-  if (vectorDb === "pg") {
+  if (framework === "nextjs" && backend) {
+    // add reader and provider packages for fullstack nextjs
     packageJson.dependencies = {
       ...packageJson.dependencies,
+      "@llamaindex/readers": "^2.0.0",
+      "@llamaindex/anthropic": "^0.1.0",
+      "@llamaindex/google": "^0.0.7",
+      "@llamaindex/groq": "^0.0.51",
+      "@llamaindex/huggingface": "^0.0.36",
+      "@llamaindex/mistral": "^0.0.5",
+      "@llamaindex/ollama": "^0.0.40",
+      "@llamaindex/openai": "^0.1.52",
+    };
+  }
+
+  const vectorDbDependencies: Record<
+    TemplateVectorDB,
+    Record<string, string>
+  > = {
+    astra: {
+      "@llamaindex/astra": "^0.0.5",
+    },
+    chroma: {
+      "@llamaindex/chroma": "^0.0.5",
+    },
+    llamacloud: {},
+    milvus: {
+      "@zilliz/milvus2-sdk-node": "^2.4.6",
+      "@llamaindex/milvus": "^0.1.0",
+    },
+    mongo: {
+      mongodb: "^6.7.0",
+      "@llamaindex/mongodb": "^0.0.5",
+    },
+    none: {},
+    pg: {
       pg: "^8.12.0",
       pgvector: "^0.2.0",
-    };
-  }
-
-  if (vectorDb === "qdrant") {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
+      "@llamaindex/postgres": "^0.0.33",
+    },
+    pinecone: {
+      "@llamaindex/pinecone": "^0.0.5",
+    },
+    qdrant: {
       "@qdrant/js-client-rest": "^1.11.0",
-    };
-  }
-  if (vectorDb === "mongo") {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      mongodb: "^6.7.0",
-    };
-  }
+      "@llamaindex/qdrant": "^0.1.0",
+    },
+    weaviate: {
+      "@llamaindex/weaviate": "^0.0.5",
+    },
+  };
 
-  if (vectorDb === "milvus") {
+  if (vectorDb && vectorDb in vectorDbDependencies) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@zilliz/milvus2-sdk-node": "^2.4.6",
+      ...vectorDbDependencies[vectorDb],
     };
   }
 
