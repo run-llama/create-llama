@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from app.api.callbacks.llamacloud import LlamaCloudFileDownload
 from app.api.callbacks.next_question import SuggestNextQuestions
 from app.api.callbacks.stream_handler import StreamHandler
-from app.api.callbacks.add_node_url import AddNodeUrl
+from app.api.callbacks.source_nodes import AddNodeUrl
 from app.api.routers.models import (
     ChatData,
 )
