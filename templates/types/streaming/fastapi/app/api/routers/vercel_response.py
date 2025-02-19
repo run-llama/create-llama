@@ -68,7 +68,8 @@ class VercelStreamResponse(StreamingResponse):
         Accept stream text from either AgentStream or StopEvent with string or AsyncGenerator result
         """
         if isinstance(event, AgentStream):
-            yield event.delta
+            if event.delta.strip():  # Only yield non-empty deltas
+                yield event.delta
         elif isinstance(event, StopEvent):
             if isinstance(event.result, str):
                 yield event.result
@@ -76,7 +77,9 @@ class VercelStreamResponse(StreamingResponse):
                 async for chunk in event.result:
                     if isinstance(chunk, str):
                         yield chunk
-                    elif hasattr(chunk, "delta"):
+                    elif (
+                        hasattr(chunk, "delta") and chunk.delta.strip()
+                    ):  # Only yield non-empty deltas
                         yield chunk.delta
 
     @classmethod
