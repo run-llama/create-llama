@@ -1,5 +1,5 @@
+import { PGVectorStore } from "@llamaindex/postgres";
 import { VectorStoreIndex } from "llamaindex";
-import { PGVectorStore } from "llamaindex/vector-store/PGVectorStore";
 import {
   PGVECTOR_SCHEMA,
   PGVECTOR_TABLE,

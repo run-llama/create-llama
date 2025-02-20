@@ -1,6 +1,6 @@
+import { PGVectorStore } from "@llamaindex/postgres";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { PGVectorStore } from "llamaindex/vector-store/PGVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import {

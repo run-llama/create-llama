@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter
 from app.engine.index import IndexConfig, get_index
 from llama_index.core.base.base_query_engine import BaseQueryEngine
+from llama_index.core.base.response.schema import Response
 
 
 query_router = r = APIRouter()
@@ -25,5 +26,5 @@ async def query_request(
     query: str,
 ) -> str:
     query_engine = get_query_engine()
-    response = await query_engine.aquery(query)
+    response: Response = await query_engine.aquery(query)
     return response.response

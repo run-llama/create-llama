@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { ChromaVectorStore } from "@llamaindex/chroma";
 import { VectorStoreIndex } from "llamaindex";
-import { ChromaVectorStore } from "llamaindex/vector-store/ChromaVectorStore";
 import { checkRequiredEnvVars } from "./shared";
 
 export async function getDataSource(params?: any) {
