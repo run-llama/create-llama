@@ -470,12 +470,6 @@ export const installPythonTemplate = async ({
       }
     }
 
-    // Copy engine code
-    await copy("**", enginePath, {
-      parents: true,
-      cwd: path.join(compPath, "engines", "python", engine),
-    });
-
     // Copy router code
     await copyRouterCode(root, tools ?? []);
   }

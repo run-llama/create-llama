@@ -99,6 +99,8 @@ class CallbackEvent(BaseModel):
             return None
 
 
+# TODO: Add an adapter for workflow events
+# and remove callback handler
 class EventCallbackHandler(BaseCallbackHandler):
     _aqueue: asyncio.Queue
     is_done: bool = False
