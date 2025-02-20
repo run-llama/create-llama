@@ -37,7 +37,11 @@ async function generateDatasource() {
 }
 
 (async () => {
-  initSettings();
-  await generateDatasource();
-  console.log("Finished generating storage.");
+  try {
+    initSettings();
+    await generateDatasource();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();
