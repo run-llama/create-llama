@@ -35,9 +35,12 @@ async function loadAndIndex() {
 }
 
 (async () => {
-  checkRequiredEnvVars();
-  initSettings();
-  await loadAndIndex();
-  console.log("Finished generating storage.");
-  process.exit(0);
+  try {
+    checkRequiredEnvVars();
+    initSettings();
+    await loadAndIndex();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();
