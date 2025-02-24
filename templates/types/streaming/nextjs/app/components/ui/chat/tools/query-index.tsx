@@ -16,15 +16,25 @@ const QueryIndexSchema = z.object({
   }),
   tool_id: z.string(),
   tool_output: z.optional(
-    z
-      .object({
-        content: z.string(),
-        tool_name: z.string(),
-        raw_input: z.record(z.unknown()),
-        raw_output: z.record(z.unknown()),
-        is_error: z.boolean().optional(),
-      })
-      .optional(),
+    z.object({
+      content: z.string(),
+      tool_name: z.string(),
+      raw_output: z.object({
+        source_nodes: z.array(
+          z.object({
+            node: z.object({
+              id_: z.string(),
+              metadata: z.object({
+                url: z.string(),
+              }),
+              text: z.string(),
+            }),
+            score: z.number(),
+          }),
+        ),
+      }),
+      is_error: z.boolean().optional(),
+    }),
   ),
   return_direct: z.boolean().optional(),
 });
@@ -69,7 +79,7 @@ export function RetrieverComponent() {
 
           if (initial.tool_output) {
             eventData.push({
-              title: `Got ${JSON.stringify((initial.tool_output?.raw_output as any).source_nodes?.length ?? 0)} sources for query: ${initial.tool_kwargs.input}`,
+              title: `Got ${JSON.stringify(initial.tool_output?.raw_output.source_nodes?.length ?? 0)} sources for query: ${initial.tool_kwargs.input}`,
             });
           }
 
@@ -103,8 +113,7 @@ export function ChatSourcesComponent() {
   const sources: SourceNode[] = useMemo(() => {
     return (
       queryIndexEvents?.flatMap((event) => {
-        const sourceNodes =
-          (event.tool_output?.raw_output?.source_nodes as any[]) || [];
+        const sourceNodes = event.tool_output?.raw_output?.source_nodes || [];
         return sourceNodes.map((node) => {
           return {
             id: node.node.id_,
