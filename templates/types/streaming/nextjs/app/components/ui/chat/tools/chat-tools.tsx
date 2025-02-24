@@ -1,7 +1,7 @@
 import {
   Message,
   MessageAnnotation,
-  getAnnotationData,
+  getChatUIAnnotation,
   useChatUI,
 } from "@llamaindex/chat-ui";
 import { JSONValue } from "ai";
@@ -20,7 +20,7 @@ export function ToolAnnotations({ message }: { message: Message }) {
   // Get the tool data from the message annotations
   const annotations = message.annotations as MessageAnnotation[] | undefined;
   const toolData = annotations
-    ? (getAnnotationData(annotations, "tools") as unknown as ToolData[])
+    ? (getChatUIAnnotation(annotations, "tools") as unknown as ToolData[])
     : null;
   return toolData?.[0] ? (
     <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />
@@ -87,7 +87,7 @@ function getArtifactVersion(
   let versionIndex = 1;
   for (const m of messages) {
     const toolData = m.annotations
-      ? (getAnnotationData(m.annotations, "tools") as unknown as ToolData[])
+      ? (getChatUIAnnotation(m.annotations, "tools") as unknown as ToolData[])
       : null;
 
     if (toolData?.some((t) => t.toolCall.name === "artifact")) {
