@@ -2,6 +2,7 @@ import {
   Message,
   MessageAnnotation,
   getChatUIAnnotation,
+  useChatMessage,
   useChatUI,
 } from "@llamaindex/chat-ui";
 import { JSONValue } from "ai";
@@ -9,10 +10,11 @@ import { useMemo } from "react";
 import { Artifact, CodeArtifact } from "./artifact";
 import { WeatherCard, WeatherData } from "./weather-card";
 
-export function ToolAnnotations({ message }: { message: Message }) {
+export function ToolAnnotations() {
   // TODO: This is a bit of a hack to get the artifact version. better to generate the version in the tool call and
   // store it in CodeArtifact
   const { messages } = useChatUI();
+  const { message } = useChatMessage();
   const artifactVersion = useMemo(
     () => getArtifactVersion(messages, message),
     [messages, message],
