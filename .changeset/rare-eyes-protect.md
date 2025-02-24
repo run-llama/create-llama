@@ -1,5 +1,5 @@
 ---
-"create-llama": minor
+"create-llama": patch
 ---
 
 bump: chat-ui and tailwind v4
