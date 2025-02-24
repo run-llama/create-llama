@@ -58,29 +58,31 @@ export function RetrieverComponent() {
   }, [queryIndexEvents]);
 
   return (
-    <div className="space-y-4">
-      {groupedIndexQueries.map(({ initial }) => {
-        const eventData = [
-          {
-            title: `Searching index with query: ${initial.tool_kwargs.input}`,
-          },
-        ];
+    groupedIndexQueries.length > 0 && (
+      <div className="space-y-4">
+        {groupedIndexQueries.map(({ initial }) => {
+          const eventData = [
+            {
+              title: `Searching index with query: ${initial.tool_kwargs.input}`,
+            },
+          ];
 
-        if (initial.tool_output) {
-          eventData.push({
-            title: `Got ${JSON.stringify((initial.tool_output?.raw_output as any).source_nodes?.length ?? 0)} sources for query: ${initial.tool_kwargs.input}`,
-          });
-        }
+          if (initial.tool_output) {
+            eventData.push({
+              title: `Got ${JSON.stringify((initial.tool_output?.raw_output as any).source_nodes?.length ?? 0)} sources for query: ${initial.tool_kwargs.input}`,
+            });
+          }
 
-        return (
-          <ChatEvents
-            key={initial.tool_id}
-            data={eventData}
-            showLoading={!initial.tool_output}
-          />
-        );
-      })}
-    </div>
+          return (
+            <ChatEvents
+              key={initial.tool_id}
+              data={eventData}
+              showLoading={!initial.tool_output}
+            />
+          );
+        })}
+      </div>
+    )
   );
 }
 

@@ -182,38 +182,41 @@ export function WeatherCard({ data }: { data: WeatherData }) {
   );
 
   return (
-    <div className="bg-[#61B9F2] rounded-2xl shadow-xl p-5 space-y-4 text-white w-fit">
-      <div className="flex justify-between">
-        <div className="space-y-2">
-          <div className="text-xl">{currentDayString}</div>
-          <div className="text-5xl font-semibold flex gap-4">
-            <span>
-              {data.current.temperature_2m} {data.current_units.temperature_2m}
-            </span>
-            {weatherCodeDisplayMap[data.current.weather_code].icon}
-          </div>
-        </div>
-        <span className="text-xl">
-          {weatherCodeDisplayMap[data.current.weather_code].status}
-        </span>
-      </div>
-      <div className="gap-2 grid grid-cols-6">
-        {data.daily.time.map((time, index) => {
-          if (index === 0) return null; // skip the current day
-          return (
-            <div key={time} className="flex flex-col items-center gap-4">
-              <span>{displayDay(time)}</span>
-              <div className="text-4xl">
-                {weatherCodeDisplayMap[data.daily.weather_code[index]].icon}
-              </div>
-              <span className="text-sm">
-                {weatherCodeDisplayMap[data.daily.weather_code[index]].status}
+    data && (
+      <div className="bg-[#61B9F2] rounded-2xl shadow-xl p-5 space-y-4 text-white w-fit">
+        <div className="flex justify-between">
+          <div className="space-y-2">
+            <div className="text-xl">{currentDayString}</div>
+            <div className="text-5xl font-semibold flex gap-4">
+              <span>
+                {data.current.temperature_2m}{" "}
+                {data.current_units.temperature_2m}
               </span>
+              {weatherCodeDisplayMap[data.current.weather_code].icon}
             </div>
-          );
-        })}
+          </div>
+          <span className="text-xl">
+            {weatherCodeDisplayMap[data.current.weather_code].status}
+          </span>
+        </div>
+        <div className="gap-2 grid grid-cols-6">
+          {data.daily.time.map((time, index) => {
+            if (index === 0) return null; // skip the current day
+            return (
+              <div key={time} className="flex flex-col items-center gap-4">
+                <span>{displayDay(time)}</span>
+                <div className="text-4xl">
+                  {weatherCodeDisplayMap[data.daily.weather_code[index]].icon}
+                </div>
+                <span className="text-sm">
+                  {weatherCodeDisplayMap[data.daily.weather_code[index]].status}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    )
   );
 }
 
@@ -268,29 +271,31 @@ export function WeatherToolComponent() {
   }, [weatherEvents]);
 
   return (
-    <div className="space-y-4">
-      {groupedWeatherQueries.map(({ initial }) => {
-        if (!initial.tool_output?.raw_output) {
+    groupedWeatherQueries.length > 0 && (
+      <div className="space-y-4">
+        {groupedWeatherQueries.map(({ initial }) => {
+          if (!initial.tool_output?.raw_output) {
+            return (
+              <ChatEvents
+                key={initial.tool_id}
+                data={[
+                  {
+                    title: `Loading weather information for ${initial.tool_kwargs.location}...`,
+                  },
+                ]}
+                showLoading={true}
+              />
+            );
+          }
+
           return (
-            <ChatEvents
+            <WeatherCard
               key={initial.tool_id}
-              data={[
-                {
-                  title: `Loading weather information for ${initial.tool_kwargs.location}...`,
-                },
-              ]}
-              showLoading={true}
+              data={initial.tool_output.raw_output as WeatherData}
             />
           );
-        }
-
-        return (
-          <WeatherCard
-            key={initial.tool_id}
-            data={initial.tool_output.raw_output as WeatherData}
-          />
-        );
-      })}
-    </div>
+        })}
+      </div>
+    )
   );
 }

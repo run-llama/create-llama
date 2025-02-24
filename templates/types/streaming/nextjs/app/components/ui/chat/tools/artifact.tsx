@@ -438,13 +438,15 @@ export function ArtifactToolComponent() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col gap-4">
-      {artifactOutputEvent && (
-        <Artifact
-          artifact={artifactOutputEvent.tool_output.raw_output}
-          version={artifactVersion}
-        />
-      )}
-    </div>
+    artifactOutputEvent && (
+      <div className="flex flex-col gap-4">
+        {artifactOutputEvent && (
+          <Artifact
+            artifact={artifactOutputEvent.tool_output.raw_output}
+            version={artifactVersion}
+          />
+        )}
+      </div>
+    )
   );
 }
