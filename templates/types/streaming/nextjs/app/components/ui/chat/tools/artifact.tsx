@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  getCustomAnnotation,
+  useChatMessage,
+  useChatUI,
+} from "@llamaindex/chat-ui";
 import { Check, ChevronDown, Code, Copy, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { Button, buttonVariants } from "../../button";
 import {
   Collapsible,
@@ -385,4 +391,60 @@ function closePanel() {
   artifactPanels.forEach((panel) => {
     panel.classList.add("hidden");
   });
+}
+
+const ArtifactToolSchema = z.object({
+  tool_name: z.literal("artifact"),
+  tool_kwargs: z.object({
+    query: z.string(),
+  }),
+  tool_id: z.string(),
+  tool_output: z.object({
+    content: z.string(),
+    tool_name: z.string(),
+    raw_input: z.object({
+      args: z.array(z.unknown()),
+      kwargs: z.object({
+        query: z.string(),
+      }),
+    }),
+    raw_output: z.custom<CodeArtifact>(),
+    is_error: z.boolean(),
+  }),
+  return_direct: z.boolean().optional(),
+});
+
+type ArtifactTool = z.infer<typeof ArtifactToolSchema>;
+
+export function ArtifactToolComponent() {
+  const { message } = useChatMessage();
+  const { messages } = useChatUI();
+
+  const artifactOutputEvent = getCustomAnnotation<ArtifactTool>(
+    message.annotations,
+    (annotation: unknown) => {
+      const result = ArtifactToolSchema.safeParse(annotation);
+      return result.success;
+    },
+  ).at(0);
+
+  const artifactVersion = useMemo(() => {
+    const artifactToolCalls = messages.filter((m) =>
+      m.annotations?.some(
+        (a: unknown) => (a as ArtifactTool).tool_name === "artifact",
+      ),
+    );
+    return artifactToolCalls.length;
+  }, [messages]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {artifactOutputEvent && (
+        <Artifact
+          artifact={artifactOutputEvent.tool_output.raw_output}
+          version={artifactVersion}
+        />
+      )}
+    </div>
+  );
 }
