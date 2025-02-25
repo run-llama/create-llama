@@ -1,4 +1,4 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import {
   AI_REPORTS,
   EXAMPLE_10K_SEC_FILES,
@@ -9,7 +9,7 @@ import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
-import { askPostInstallAction, questionHandlers } from "./utils";
+import { askPostInstallAction } from "./utils";
 
 type AppType =
   | "rag"
@@ -31,65 +31,38 @@ type SimpleAnswers = {
 export const askSimpleQuestions = async (
   args: PureQuestionArgs,
 ): Promise<QuestionResults> => {
-  const { appType } = await prompts(
+  const { appType } = await inquirer.prompt([
     {
-      type: "select",
+      type: "list",
       name: "appType",
       message: "What app do you want to build?",
-      hint: "🤖: Agent, 🔀: Workflow",
+      pageSize: Infinity,
       choices: [
+        new inquirer.Separator("Agents"),
+        { name: " Agentic RAG", value: "rag" },
+        { name: " Data Scientist", value: "data_scientist" },
+        { name: " Code Artifact Agent", value: "code_artifact" },
+        { name: " Information Extractor", value: "extractor" },
+        new inquirer.Separator("Agentic Document Workflows"),
         {
-          title: "🤖 Agentic RAG",
-          value: "rag",
-          description:
-            "Chatbot that answers questions based on provided documents.",
-        },
-        {
-          title: "🤖 Data Scientist",
-          value: "data_scientist",
-          description:
-            "Agent that analyzes data and generates visualizations by using a code interpreter.",
-        },
-        {
-          title: "🤖 Code Artifact Agent",
-          value: "code_artifact",
-          description:
-            "Agent that writes code, runs it in a sandbox, and shows the output in the chat UI.",
-        },
-        {
-          title: "🤖 Information Extractor",
-          value: "extractor",
-          description:
-            "Extracts information from documents and returns it as a structured JSON object.",
-        },
-        {
-          title: "🔀 Financial Report Generator",
+          name: " Financial Report Generator",
           value: "financial_report_agent",
-          description:
-            "Generates a financial report by analyzing the provided 10-K SEC data. Uses a code interpreter to create charts or to conduct further analysis.",
         },
         {
-          title: "🔀 Financial 10k SEC Form Filler",
+          name: " Financial 10k SEC Form Filler",
           value: "form_filling",
-          description:
-            "Extracts information from 10k SEC data and uses it to fill out a CSV form.",
         },
         {
-          title: "🔀 Contract Reviewer",
+          name: " Contract Review",
           value: "contract_review",
-          description:
-            "Extracts and reviews contracts to ensure compliance with GDPR regulations",
         },
         {
-          title: "🔀 Deep Researcher",
+          name: " Deep Researcher",
           value: "deep_research",
-          description:
-            "Researches and analyzes provided documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
         },
       ],
     },
-    questionHandlers,
-  );
+  ]);
 
   let language: TemplateFramework = "fastapi";
   let llamaCloudKey = args.llamaCloudKey;
@@ -100,46 +73,41 @@ export const askSimpleQuestions = async (
     appType !== "contract_review" &&
     appType !== "deep_research"
   ) {
-    const { language: newLanguage } = await prompts(
+    const { language: newLanguage } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "language",
         message: "What language do you want to use?",
         choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
+          { name: "Python (FastAPI)", value: "fastapi" },
+          { name: "Typescript (NextJS)", value: "nextjs" },
         ],
       },
-      questionHandlers,
-    );
+    ]);
     language = newLanguage;
   }
 
-  const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+  const { useLlamaCloud: newUseLlamaCloud } = await inquirer.prompt([
     {
-      type: "toggle",
+      type: "confirm",
       name: "useLlamaCloud",
       message: "Do you want to use LlamaCloud services?",
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-      hint: "see https://www.llamaindex.ai/enterprise for more info",
+      suffix: " (see https://www.llamaindex.ai/enterprise for more info)",
+      default: false,
     },
-    questionHandlers,
-  );
+  ]);
   useLlamaCloud = newUseLlamaCloud;
 
   if (useLlamaCloud && !llamaCloudKey) {
     // Ask for LlamaCloud API key, if not set
-    const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+    const { llamaCloudKey: newLlamaCloudKey } = await inquirer.prompt([
       {
-        type: "text",
+        type: "input",
         name: "llamaCloudKey",
         message:
           "Please provide your LlamaCloud API key (leave blank to skip):",
       },
-      questionHandlers,
-    );
+    ]);
     llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
   }
 
