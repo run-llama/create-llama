@@ -1,10 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { WeaviateVectorStore } from "@llamaindex/weaviate";
 import * as dotenv from "dotenv";
-import {
-  VectorStoreIndex,
-  WeaviateVectorStore,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { DEFAULT_INDEX_NAME, checkRequiredEnvVars } from "./shared";
@@ -26,8 +23,12 @@ async function loadAndIndex() {
 }
 
 (async () => {
-  checkRequiredEnvVars();
-  initSettings();
-  await loadAndIndex();
-  console.log("Finished generating storage.");
+  try {
+    checkRequiredEnvVars();
+    initSettings();
+    await loadAndIndex();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();

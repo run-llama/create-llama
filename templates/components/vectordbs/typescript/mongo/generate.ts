@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { MongoDBAtlasVectorSearch } from "@llamaindex/mongodb";
 import * as dotenv from "dotenv";
 import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
-import { MongoDBAtlasVectorSearch } from "llamaindex/vector-store/MongoDBAtlasVectorStore";
 import { MongoClient } from "mongodb";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
@@ -45,8 +45,12 @@ async function loadAndIndex() {
 }
 
 (async () => {
-  checkRequiredEnvVars();
-  initSettings();
-  await loadAndIndex();
-  console.log("Finished generating storage.");
+  try {
+    checkRequiredEnvVars();
+    initSettings();
+    await loadAndIndex();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();

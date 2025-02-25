@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { AstraDBVectorStore } from "@llamaindex/astra";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { AstraDBVectorStore } from "llamaindex/vector-store/AstraDBVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
@@ -37,8 +37,12 @@ async function loadAndIndex() {
 }
 
 (async () => {
-  checkRequiredEnvVars();
-  initSettings();
-  await loadAndIndex();
-  console.log("Finished generating storage.");
+  try {
+    checkRequiredEnvVars();
+    initSettings();
+    await loadAndIndex();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();

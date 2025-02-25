@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
+import { ChromaVectorStore } from "@llamaindex/chroma";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
-import { ChromaVectorStore } from "llamaindex/vector-store/ChromaVectorStore";
 import { getDocuments } from "./loader";
 import { initSettings } from "./settings";
 import { checkRequiredEnvVars } from "./shared";
@@ -30,8 +30,12 @@ async function loadAndIndex() {
 }
 
 (async () => {
-  checkRequiredEnvVars();
-  initSettings();
-  await loadAndIndex();
-  console.log("Finished generating storage.");
+  try {
+    checkRequiredEnvVars();
+    initSettings();
+    await loadAndIndex();
+    console.log("Finished generating storage.");
+  } catch (error) {
+    console.error("Error generating storage.", error);
+  }
 })();

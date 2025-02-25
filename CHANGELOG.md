@@ -1,5 +1,17 @@
 # create-llama
 
+## 0.4.0
+
+### Minor Changes
+
+- 61204a1: chore: bump LITS 0.9
+
+### Patch Changes
+
+- 9e723c3: Standardize the code of the workflow use case (Python)
+- d5da55b: feat: add components.json to use CLI
+- c1552eb: chore: move wikipedia tool to create-llama
+
 ## 0.3.28
 
 ### Patch Changes

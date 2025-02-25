@@ -1,8 +1,8 @@
-import { LlamaParseReader } from "llamaindex";
 import {
   FILE_EXT_TO_READER,
   SimpleDirectoryReader,
-} from "llamaindex/readers/index";
+} from "@llamaindex/readers/directory";
+import { LlamaParseReader } from "llamaindex";
 
 export const DATA_DIR = "./data";
 
