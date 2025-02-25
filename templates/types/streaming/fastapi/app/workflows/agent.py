@@ -2,7 +2,6 @@ import os
 from typing import List
 
 from llama_index.core.agent.workflow import AgentWorkflow
-
 from llama_index.core.settings import Settings
 from llama_index.core.tools import BaseTool
 
@@ -11,7 +10,7 @@ from app.engine.tools import ToolFactory
 from app.engine.tools.query_engine import get_query_engine_tool
 
 
-def get_engine(params=None, **kwargs):
+def create_workflow(params=None, **kwargs):
     if params is None:
         params = {}
     system_prompt = os.getenv("SYSTEM_PROMPT")
