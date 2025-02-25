@@ -4,6 +4,8 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.workflow import Event
 from pydantic import BaseModel
 
+from app.api.routers.models import SourceNodes
+
 
 # Workflow events
 class PlanResearchEvent(Event):
