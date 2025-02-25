@@ -444,32 +444,11 @@ export const installPythonTemplate = async ({
     cwd: path.join(compPath, "settings", "python"),
   });
 
-  // Copy services
   if (template == "streaming" || template == "multiagent") {
+    // Copy services
     await copy("**", path.join(root, "app", "api", "services"), {
       cwd: path.join(compPath, "services", "python"),
     });
-  }
-  // Copy engine code
-  if (template === "streaming" || template === "multiagent") {
-    // Select and copy engine code based on data sources and tools
-    let engine;
-    // Multiagent always uses agent engine
-    if (template === "multiagent") {
-      engine = "agent";
-    } else {
-      // For streaming, use chat engine by default
-      // Unless tools are selected, in which case use agent engine
-      if (dataSources.length > 0 && (!tools || tools.length === 0)) {
-        console.log(
-          "\nNo tools selected - use optimized context chat engine\n",
-        );
-        engine = "chat";
-      } else {
-        engine = "agent";
-      }
-    }
-
     // Copy router code
     await copyRouterCode(root, tools ?? []);
   }
