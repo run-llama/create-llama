@@ -12,12 +12,18 @@ export function ChatMessageContent() {
       <RetrieverComponent />
       <WeatherToolComponent />
       <DeepResearchCard />
+      {/* For backward compatibility with the events from AgentRunner
+       * ToolAnnotations will be removed when we migrate to AgentWorkflow completely
+       */}
       <ToolAnnotations />
       <ArtifactToolComponent />
       <ChatMessage.Content.Image />
       <ChatMessage.Content.Markdown />
       <ChatMessage.Content.DocumentFile />
       <ChatSourcesComponent />
+      {/* For backward compatibility with the events from AgentRunner.
+       * The Source component will be removed when we migrate to AgentWorkflow completely
+       */}
       <ChatMessage.Content.Source />
       <ChatMessage.Content.SuggestedQuestions />
     </ChatMessage.Content>
