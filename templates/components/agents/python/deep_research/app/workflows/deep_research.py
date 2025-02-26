@@ -18,13 +18,13 @@ from llama_index.core.workflow import (
 
 from app.engine.index import IndexConfig, get_index
 from app.workflows.agents import plan_research, research, write_report
-from app.workflows.events import SourceNodesEvent
 from app.workflows.models import (
     CollectAnswersEvent,
     DataEvent,
     PlanResearchEvent,
     ReportEvent,
     ResearchEvent,
+    SourceNodesEvent,
 )
 
 logger = logging.getLogger("uvicorn")

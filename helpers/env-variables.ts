@@ -483,11 +483,12 @@ const getSystemPromptEnv = (
     });
   }
   if (tools?.length == 0 && (dataSources?.length ?? 0 > 0)) {
-    const citationPrompt = `'You have provided information from a knowledge base that has been passed to you in nodes of information.
-Each node has useful metadata such as node ID, file name, page, etc.
-Please add the citation to the data node for each sentence or paragraph that you reference in the provided information.
-The citation format is: . [citation:<node_id>]()
-Where the <node_id> is the unique identifier of the data node.
+    const citationPrompt = `'You have provided information from a knowledge base that separates the information into multiple nodes.
+Always add a citation to each sentence or paragraph that you reference in the provided information using the node_id field in the header of each node.
+
+The citation format is: [citation:<node_id>]
+Where the <node_id> is the node_id field in the header of each node.
+Always separate the citation by a space.
 
 Example:
 We have two nodes:
@@ -497,11 +498,9 @@ We have two nodes:
   node_id: abc
   file_name: animal.pdf
 
-User question: Tell me a fun fact about Llama.
-Your answer:
-A baby llama is called "Cria" [citation:xyz]().
-It often live in desert [citation:abc]().
-It\\'s cute animal.
+Your answer with citations:
+A baby llama is called "Cria" [citation:xyz]
+It often lives in desert [citation:abc] [citation:xyz]
 '`;
     systemPromptEnv.push({
       name: "SYSTEM_CITATION_PROMPT",

@@ -1,25 +1,22 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
-from llama_index.core.llms import MessageRole
 
-from app.api.routers.events import EventCallbackHandler
+from app.api.callbacks.llamacloud import LlamaCloudFileDownload
+from app.api.callbacks.next_question import SuggestNextQuestions
+from app.api.callbacks.source_nodes import AddNodeUrl
+from app.api.callbacks.stream_handler import StreamHandler
 from app.api.routers.models import (
     ChatData,
-    Message,
-    Result,
-    SourceNodes,
 )
-from app.api.routers.vercel_response import VercelStreamResponse
-from app.engine.engine import get_chat_engine
 from app.engine.query_filter import generate_filters
+from app.workflows import create_workflow
 
 chat_router = r = APIRouter()
 
 logger = logging.getLogger("uvicorn")
 
 
-# streaming endpoint - delete if not needed
 @r.post("")
 async def chat(
     request: Request,
@@ -28,50 +25,66 @@ async def chat(
 ):
     try:
         last_message_content = data.get_last_message_content()
-        messages = data.get_history_messages()
+        messages = data.get_history_messages(include_agent_messages=True)
 
         doc_ids = data.get_chat_document_ids()
         filters = generate_filters(doc_ids)
         params = data.data or {}
-        logger.info(
-            f"Creating chat engine with filters: {str(filters)}",
-        )
-        event_handler = EventCallbackHandler()
-        chat_engine = get_chat_engine(
-            filters=filters, params=params, event_handlers=[event_handler]
-        )
-        response = chat_engine.astream_chat(last_message_content, messages)
 
-        return VercelStreamResponse(
-            request, event_handler, response, data, background_tasks
+        workflow = create_workflow(
+            params=params,
+            filters=filters,
         )
+
+        handler = workflow.run(
+            user_msg=last_message_content,
+            chat_history=messages,
+            stream=True,
+        )
+        return StreamHandler.from_default(
+            handler=handler,
+            callbacks=[
+                LlamaCloudFileDownload.from_default(background_tasks),
+                SuggestNextQuestions.from_default(data),
+                AddNodeUrl.from_default(),
+            ],
+        ).vercel_stream()
     except Exception as e:
-        logger.exception("Error in chat engine", exc_info=True)
+        logger.exception("Error in chat", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error in chat engine: {e}",
+            detail=f"Error in chat: {e}",
         ) from e
 
 
 # non-streaming endpoint - delete if not needed
 @r.post("/request")
 async def chat_request(
+    request: Request,
     data: ChatData,
-) -> Result:
-    last_message_content = data.get_last_message_content()
-    messages = data.get_history_messages()
+):
+    try:
+        last_message_content = data.get_last_message_content()
+        messages = data.get_history_messages(include_agent_messages=True)
 
-    doc_ids = data.get_chat_document_ids()
-    filters = generate_filters(doc_ids)
-    params = data.data or {}
-    logger.info(
-        f"Creating chat engine with filters: {str(filters)}",
-    )
+        doc_ids = data.get_chat_document_ids()
+        filters = generate_filters(doc_ids)
+        params = data.data or {}
 
-    chat_engine = get_chat_engine(filters=filters, params=params)
+        workflow = create_workflow(
+            params=params,
+            filters=filters,
+        )
 
-    response = await chat_engine.achat(last_message_content, messages)
-    return Result(
-        result=Message(role=MessageRole.ASSISTANT, content=response.response),
-        nodes=SourceNodes.from_source_nodes(response.source_nodes),
-    )
+        handler = workflow.run(
+            user_msg=last_message_content,
+            chat_history=messages,
+            stream=False,
+        )
+        return await handler
+    except Exception as e:
+        logger.exception("Error in chat request", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in chat request: {e}",
+        ) from e

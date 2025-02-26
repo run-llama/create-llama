@@ -157,53 +157,57 @@ export function DeepResearchCard({ className }: DeepResearchCardProps) {
   if (!state) return null;
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader className="space-y-4">
-        {state.retrieve.state !== null && (
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            {state.retrieve.state === "inprogress"
-              ? "Searching..."
-              : "Search completed"}
-          </CardTitle>
-        )}
-        {state.analyze.state !== null && (
-          <CardTitle className="flex items-center gap-2 border-t pt-4">
-            <NotebookPen className="h-5 w-5" />
-            {state.analyze.state === "inprogress" ? "Analyzing..." : "Analysis"}
-          </CardTitle>
-        )}
-      </CardHeader>
+    state.analyze.questions.length > 0 && (
+      <Card className={cn("w-full", className)}>
+        <CardHeader className="space-y-4">
+          {state.retrieve.state !== null && (
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              {state.retrieve.state === "inprogress"
+                ? "Searching..."
+                : "Search completed"}
+            </CardTitle>
+          )}
+          {state.analyze.state !== null && (
+            <CardTitle className="flex items-center gap-2 border-t pt-4">
+              <NotebookPen className="h-5 w-5" />
+              {state.analyze.state === "inprogress"
+                ? "Analyzing..."
+                : "Analysis"}
+            </CardTitle>
+          )}
+        </CardHeader>
 
-      <CardContent>
-        {state.analyze.questions.length > 0 && (
-          <Accordion type="single" collapsible className="space-y-2">
-            {state.analyze.questions.map((question: QuestionState) => (
-              <AccordionItem
-                key={question.id}
-                value={question.id}
-                className="border rounded-lg [&[data-state=open]>div]:rounded-b-none"
-              >
-                <AccordionTrigger className="hover:bg-accent hover:no-underline py-3 px-3 gap-2">
-                  <div className="flex items-center gap-2 w-full">
-                    <div className="flex-shrink-0">
-                      {stateIcon[question.state]}
+        <CardContent>
+          {state.analyze.questions.length > 0 && (
+            <Accordion type="single" collapsible className="space-y-2">
+              {state.analyze.questions.map((question: QuestionState) => (
+                <AccordionItem
+                  key={question.id}
+                  value={question.id}
+                  className="border rounded-lg [&[data-state=open]>div]:rounded-b-none"
+                >
+                  <AccordionTrigger className="hover:bg-accent hover:no-underline py-3 px-3 gap-2">
+                    <div className="flex items-center gap-2 w-full">
+                      <div className="flex-shrink-0">
+                        {stateIcon[question.state]}
+                      </div>
+                      <span className="font-medium text-left flex-1">
+                        {question.question}
+                      </span>
                     </div>
-                    <span className="font-medium text-left flex-1">
-                      {question.question}
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                {question.answer && (
-                  <AccordionContent className="border-t px-3 py-3">
-                    <Markdown content={question.answer} />
-                  </AccordionContent>
-                )}
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
-      </CardContent>
-    </Card>
+                  </AccordionTrigger>
+                  {question.answer && (
+                    <AccordionContent className="border-t px-3 py-3">
+                      <Markdown content={question.answer} />
+                    </AccordionContent>
+                  )}
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </CardContent>
+      </Card>
+    )
   );
 }
