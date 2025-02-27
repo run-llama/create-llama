@@ -1,5 +1,5 @@
 import { initObservability } from "@/app/observability";
-import { LlamaIndexAdapter, Message, StreamData } from "ai";
+import { createDataStreamResponse, LlamaIndexAdapter, Message } from "ai";
 import { ChatMessage, Settings } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 import { createChatEngine } from "./engine/chat";
@@ -20,7 +20,6 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   // Init Vercel AI StreamData and timeout
-  const vercelStreamData = new StreamData();
 
   try {
     const body = await request.json();
@@ -42,39 +41,42 @@ export async function POST(request: NextRequest) {
 
     // retrieve user message content from Vercel/AI format
     const userMessageContent = retrieveMessageContent(messages);
+    const chatHistory = messages.slice(0, -1) as ChatMessage[];
 
-    // Setup callbacks
-    const callbackManager = createCallbackManager(vercelStreamData);
-    const chatHistory: ChatMessage[] = messages.slice(0, -1) as ChatMessage[];
+    return createDataStreamResponse({
+      async execute(vercelStreamData) {
+        // Setup callbacks
+        const callbackManager = createCallbackManager(vercelStreamData);
 
-    // Calling LlamaIndex's ChatEngine to get a streamed response
-    const response = await Settings.withCallbackManager(callbackManager, () => {
-      return chatEngine.chat({
-        message: userMessageContent,
-        chatHistory,
-        stream: true,
-      });
-    });
-
-    const onCompletion = (content: string) => {
-      chatHistory.push({ role: "assistant", content: content });
-      generateNextQuestions(chatHistory)
-        .then((questions: string[]) => {
-          if (questions.length > 0) {
-            vercelStreamData.appendMessageAnnotation({
-              type: "suggested_questions",
-              data: questions,
+        // Calling LlamaIndex's ChatEngine to get a streamed response
+        const response = await Settings.withCallbackManager(
+          callbackManager,
+          () => {
+            return chatEngine.chat({
+              message: userMessageContent,
+              chatHistory,
+              stream: true,
             });
-          }
-        })
-        .finally(() => {
-          vercelStreamData.close();
-        });
-    };
+          },
+        );
 
-    return LlamaIndexAdapter.toDataStreamResponse(response, {
-      data: vercelStreamData,
-      callbacks: { onCompletion },
+        const onFinal = (content: string) => {
+          chatHistory.push({ role: "assistant", content: content });
+          generateNextQuestions(chatHistory).then((questions: string[]) => {
+            if (questions.length > 0) {
+              vercelStreamData.writeMessageAnnotation({
+                type: "suggested_questions",
+                data: questions,
+              });
+            }
+          });
+        };
+
+        LlamaIndexAdapter.mergeIntoDataStream(response, {
+          dataStream: vercelStreamData,
+          callbacks: { onFinal },
+        });
+      },
     });
   } catch (error) {
     console.error("[LlamaIndex]", error);

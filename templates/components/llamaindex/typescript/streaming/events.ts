@@ -1,4 +1,4 @@
-import { StreamData } from "ai";
+import { DataStreamWriter } from "ai";
 import {
   CallbackManager,
   LLamaCloudFileService,
@@ -15,7 +15,7 @@ import { downloadFile } from "./file";
 const LLAMA_CLOUD_DOWNLOAD_FOLDER = "output/llamacloud";
 
 export function appendSourceData(
-  data: StreamData,
+  data: DataStreamWriter,
   sourceNodes?: NodeWithScore<Metadata>[],
 ) {
   if (!sourceNodes?.length) return;
@@ -27,7 +27,7 @@ export function appendSourceData(
       url: getNodeUrl(node.node.metadata),
       text: node.node.getContent(MetadataMode.NONE),
     }));
-    data.appendMessageAnnotation({
+    data.writeMessageAnnotation({
       type: "sources",
       data: {
         nodes,
@@ -38,9 +38,9 @@ export function appendSourceData(
   }
 }
 
-export function appendEventData(data: StreamData, title?: string) {
+export function appendEventData(data: DataStreamWriter, title?: string) {
   if (!title) return;
-  data.appendMessageAnnotation({
+  data.writeMessageAnnotation({
     type: "events",
     data: {
       title,
@@ -49,11 +49,11 @@ export function appendEventData(data: StreamData, title?: string) {
 }
 
 export function appendToolData(
-  data: StreamData,
+  data: DataStreamWriter,
   toolCall: ToolCall,
   toolOutput: ToolOutput,
 ) {
-  data.appendMessageAnnotation({
+  data.writeMessageAnnotation({
     type: "tools",
     data: {
       toolCall: {
@@ -69,7 +69,7 @@ export function appendToolData(
   });
 }
 
-export function createCallbackManager(stream: StreamData) {
+export function createCallbackManager(stream: DataStreamWriter) {
   const callbackManager = new CallbackManager();
 
   callbackManager.on("retrieve-end", (data) => {
