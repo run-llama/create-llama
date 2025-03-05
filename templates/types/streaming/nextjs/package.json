@@ -26,7 +26,7 @@
     "duck-duck-scrape": "^2.2.5",
     "formdata-node": "^6.0.3",
     "got": "^14.4.1",
-    "llamaindex": "^0.9.1",
+    "llamaindex": "https://pkg.pr.new/run-llama/LlamaIndexTS/llamaindex@1705",
     "lucide-react": "^0.460.0",
     "next": "^15.1.3",
     "react": "^19.0.0",
@@ -34,7 +34,6 @@
     "papaparse": "^5.4.1",
     "supports-color": "^8.1.1",
     "tailwind-merge": "^2.6.0",
-    "tiktoken": "^1.0.15",
     "uuid": "^9.0.1",
     "marked": "^14.1.2",
     "wikipedia": "^2.1.2"
