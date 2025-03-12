@@ -24,7 +24,7 @@ class AddNodeUrl(EventCallback):
 
     def _is_retrieval_result_event(self, event: Any) -> bool:
         if isinstance(event, ToolCallResult):
-            if event.tool_name == "query_index":
+            if event.tool_name == "query_engine":
                 return True
         return False
 

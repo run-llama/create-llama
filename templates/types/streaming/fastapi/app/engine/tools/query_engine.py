@@ -64,7 +64,7 @@ def get_query_engine_tool(
         description (optional): The description of the tool.
     """
     if name is None:
-        name = "query_index"
+        name = "query_engine"
     if description is None:
         description = (
             "Use this tool to retrieve information about the text corpus from an index."

@@ -10,7 +10,7 @@ import { useMemo } from "react";
 import { z } from "zod";
 
 type QueryIndex = {
-  toolName: "query_index" | "query_engine";
+  toolName: "query_engine";
   toolKwargs: {
     query: string;
   };
@@ -24,7 +24,7 @@ type QueryIndex = {
 };
 
 const TypeScriptSchema = z.object({
-  toolName: z.union([z.literal("query_index"), z.literal("query_engine")]),
+  toolName: z.literal("query_engine"),
   toolKwargs: z.object({
     query: z.string(),
   }),
@@ -41,7 +41,7 @@ const TypeScriptSchema = z.object({
 
 const PythonSchema = z
   .object({
-    tool_name: z.union([z.literal("query_index"), z.literal("query_engine")]),
+    tool_name: z.literal("query_engine"),
     tool_kwargs: z.object({
       input: z.string(),
     }),
