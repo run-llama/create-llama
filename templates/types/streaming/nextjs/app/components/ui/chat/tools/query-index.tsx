@@ -141,17 +141,11 @@ export function ChatSourcesComponent() {
   const queryIndexEvents = getCustomAnnotation<QueryIndex>(
     message.annotations,
     (annotation) => {
-      // If it looks like TypeScript format, validate it and check for toolOutput
-      if ("toolName" in annotation) {
-        const result = TypeScriptSchema.safeParse(annotation);
-        return result.success && !!result.data.toolOutput;
-      }
-
-      // Otherwise try to transform from Python format
-      const result = PythonSchema.safeParse(annotation);
+      const schema = "toolName" in annotation ? TypeScriptSchema : PythonSchema;
+      const result = schema.safeParse(annotation);
       if (!result.success) return false;
 
-      // Replace the raw annotation with transformed data
+      // If the schema has transformed the annotation, replace the original
       Object.assign(annotation, result.data);
       return !!result.data.toolOutput;
     },
