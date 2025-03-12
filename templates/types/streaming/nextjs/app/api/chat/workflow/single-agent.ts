@@ -108,14 +108,14 @@ export class FunctionCallingAgent extends Workflow<
     ctx: HandlerContext<FunctionCallingAgentContextData>,
     ev: StartEvent<AgentInput>,
   ): Promise<InputEvent> => {
-    const { message, streaming } = ev.data;
+    const { userInput, chatHistory, streaming } = ev.data;
     ctx.data.streaming = streaming ?? false;
-    this.writeEvent(`Start to work on: ${message}`, ctx);
+    this.writeEvent(`Start to work on: ${userInput}`, ctx);
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
-    this.memory.put({ role: "user", content: message });
-    return new InputEvent({ input: this.chatHistory });
+    this.memory.put({ role: "user", content: userInput });
+    return new InputEvent({ input: await this.chatHistory });
   };
 
   handleLLMInput = async (
@@ -125,7 +125,7 @@ export class FunctionCallingAgent extends Workflow<
     const toolCallResponse = await chatWithTools(
       this.llm,
       this.tools,
-      this.chatHistory,
+      await this.chatHistory,
     );
     if (toolCallResponse.toolCallMessage) {
       this.memory.put(toolCallResponse.toolCallMessage);
@@ -164,7 +164,7 @@ export class FunctionCallingAgent extends Workflow<
       this.memory.put(msg);
     }
 
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.chatHistory });
   };
 
   writeEvent = (

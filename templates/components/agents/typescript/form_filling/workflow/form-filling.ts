@@ -133,14 +133,14 @@ export class FormFillingWorkflow extends Workflow<
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
   ): Promise<InputEvent> => {
-    const { message } = ev.data;
+    const { userInput, chatHistory } = ev.data;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
-    this.memory.put({ role: "user", content: message });
+    this.memory.put({ role: "user", content: userInput });
 
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 
   handleLLMInput = async (
@@ -163,7 +163,7 @@ export class FormFillingWorkflow extends Workflow<
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.hasToolCall()) {
-      return new StopEvent(toolCallResponse.responseGenerator);
+      return new StopEvent(toolCallResponse.responseGenerator as any);
     }
 
     if (toolCallResponse.hasMultipleTools()) {
@@ -172,7 +172,7 @@ export class FormFillingWorkflow extends Workflow<
         content:
           "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });
-      return new InputEvent({ input: this.memory.getMessages() });
+      return new InputEvent({ input: await this.memory.getMessages() });
     }
 
     // Put the LLM tool call message into the memory
@@ -224,7 +224,7 @@ export class FormFillingWorkflow extends Workflow<
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 
   handleFindAnswers = async (
@@ -252,7 +252,7 @@ export class FormFillingWorkflow extends Workflow<
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 
   handleFillMissingCells = async (
@@ -270,6 +270,6 @@ export class FormFillingWorkflow extends Workflow<
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 }

@@ -1,16 +1,14 @@
 import { initObservability } from "@/app/observability";
-import { LlamaIndexAdapter, Message, StreamData } from "ai";
-import { ChatMessage, Settings } from "llamaindex";
+import { LlamaIndexAdapter, type Message } from "ai";
 import { NextRequest, NextResponse } from "next/server";
-import { createChatEngine } from "./engine/chat";
 import { initSettings } from "./engine/settings";
 import {
+  convertToChatHistory,
   isValidMessages,
-  retrieveDocumentIds,
   retrieveMessageContent,
 } from "./llamaindex/streaming/annotations";
-import { createCallbackManager } from "./llamaindex/streaming/events";
-import { generateNextQuestions } from "./llamaindex/streaming/suggestion";
+import { createWorkflow } from "./workflow";
+import { createStreamFromWorkflowContext } from "./workflow/stream";
 
 initObservability();
 initSettings();
@@ -19,12 +17,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  // Init Vercel AI StreamData and timeout
-  const vercelStreamData = new StreamData();
-
   try {
     const body = await request.json();
-    const { messages, data }: { messages: Message[]; data?: any } = body;
+    const { messages }: { messages: Message[]; data?: any } = body;
     if (!isValidMessages(messages)) {
       return NextResponse.json(
         {
@@ -35,46 +30,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // retrieve document ids from the annotations of all messages (if any)
-    const ids = retrieveDocumentIds(messages);
-    // create chat engine with index using the document ids
-    const chatEngine = await createChatEngine(ids, data);
+    const chatHistory = convertToChatHistory(messages);
+    const userInput = retrieveMessageContent(messages) as string;
 
-    // retrieve user message content from Vercel/AI format
-    const userMessageContent = retrieveMessageContent(messages);
+    // There is a different between passing chatHistory when creating the workflow and when running it
+    // between AgentWorkflow and other workflows
+    // TODO: Fix this
+    const workflow = await createWorkflow({ chatHistory });
 
-    // Setup callbacks
-    const callbackManager = createCallbackManager(vercelStreamData);
-    const chatHistory: ChatMessage[] = messages.slice(0, -1) as ChatMessage[];
-
-    // Calling LlamaIndex's ChatEngine to get a streamed response
-    const response = await Settings.withCallbackManager(callbackManager, () => {
-      return chatEngine.chat({
-        message: userMessageContent,
-        chatHistory,
-        stream: true,
-      });
+    const context = workflow.run({
+      userInput,
+      chatHistory,
     });
-
-    const onCompletion = (content: string) => {
-      chatHistory.push({ role: "assistant", content: content });
-      generateNextQuestions(chatHistory)
-        .then((questions: string[]) => {
-          if (questions.length > 0) {
-            vercelStreamData.appendMessageAnnotation({
-              type: "suggested_questions",
-              data: questions,
-            });
-          }
-        })
-        .finally(() => {
-          vercelStreamData.close();
-        });
-    };
-
-    return LlamaIndexAdapter.toDataStreamResponse(response, {
-      data: vercelStreamData,
-      callbacks: { onCompletion },
+    const { stream, dataStream } = await createStreamFromWorkflowContext(
+      context as any,
+    );
+    return LlamaIndexAdapter.toDataStreamResponse(stream, {
+      data: dataStream,
     });
   } catch (error) {
     console.error("[LlamaIndex]", error);

@@ -1,8 +1,9 @@
 import { WorkflowEvent } from "@llamaindex/workflow";
-import { MessageContent } from "llamaindex";
+import { ChatMessage, MessageContent } from "llamaindex";
 
 export type AgentInput = {
-  message: MessageContent;
+  userInput: MessageContent;
+  chatHistory: ChatMessage[];
   streaming?: boolean;
 };
 
