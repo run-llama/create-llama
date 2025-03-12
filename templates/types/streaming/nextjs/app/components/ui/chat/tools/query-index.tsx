@@ -9,36 +9,64 @@ import { ChatEvents, ChatSources } from "@llamaindex/chat-ui/widgets";
 import { useMemo } from "react";
 import { z } from "zod";
 
-const QueryIndexSchema = z.object({
-  tool_name: z.literal("query_index"),
+type QueryIndex = {
+  toolName: "query_index" | "query_engine";
+  toolKwargs: {
+    query: string;
+  };
+  toolId: string;
+  toolOutput?: {
+    id: string;
+    result: string;
+    isError: boolean;
+  };
+  returnDirect: boolean;
+};
+
+const TypeScriptSchema = z.object({
+  toolName: z.union([z.literal("query_index"), z.literal("query_engine")]),
+  toolKwargs: z.object({
+    query: z.string(),
+  }),
+  toolId: z.string(),
+  toolOutput: z.object({
+    id: z.string(),
+    result: z.string(),
+    isError: z.boolean(),
+  }).optional(),
+  returnDirect: z.boolean(),
+});
+
+const PythonSchema = z.object({
+  tool_name: z.union([z.literal("query_index"), z.literal("query_engine")]),
   tool_kwargs: z.object({
     input: z.string(),
   }),
   tool_id: z.string(),
-  tool_output: z.optional(
-    z.object({
-      content: z.string(),
-      tool_name: z.string(),
-      raw_output: z.object({
-        source_nodes: z.array(
-          z.object({
-            node: z.object({
-              id_: z.string(),
-              metadata: z.object({
-                url: z.string(),
-              }),
-              text: z.string(),
-            }),
-            score: z.number(),
-          }),
-        ),
-      }),
-      is_error: z.boolean().optional(),
+  tool_output: z.object({
+    content: z.string(),
+    tool_name: z.string(),
+    raw_output: z.object({
+      source_nodes: z.array(z.any()),
     }),
-  ),
+    is_error: z.boolean().optional(),
+  }).optional(),
   return_direct: z.boolean().optional(),
+}).transform((data): QueryIndex => {
+  return {
+    toolName: data.tool_name,
+    toolKwargs: {
+      query: data.tool_kwargs.input,
+    },
+    toolId: data.tool_id,
+    toolOutput: data.tool_output ? {
+      id: data.tool_id,
+      result: data.tool_output.content,
+      isError: data.tool_output.is_error || false,
+    } : undefined,
+    returnDirect: data.return_direct || false,
+  };
 });
-type QueryIndex = z.infer<typeof QueryIndexSchema>;
 
 type GroupedIndexQuery = {
   initial: QueryIndex;
@@ -51,19 +79,22 @@ export function RetrieverComponent() {
   const queryIndexEvents = getCustomAnnotation<QueryIndex>(
     message.annotations,
     (annotation) => {
-      const result = QueryIndexSchema.safeParse(annotation);
-      return result.success;
+      const schema = 'toolName' in annotation ? TypeScriptSchema : PythonSchema;
+      const result = schema.safeParse(annotation);
+      if (!result.success) return false;
+
+      // If the schema has transformed the annotation, replace the original
+      // annotation with the transformed data
+      Object.assign(annotation, result.data);
+      return true;
     },
   );
 
-  // Group events by tool_id and render them in a single ChatEvents component
   const groupedIndexQueries = useMemo(() => {
     const groups = new Map<string, GroupedIndexQuery>();
-
     queryIndexEvents?.forEach((event) => {
-      groups.set(event.tool_id, { initial: event });
+      groups.set(event.toolId, { initial: event });
     });
-
     return Array.from(groups.values());
   }, [queryIndexEvents]);
 
@@ -73,21 +104,21 @@ export function RetrieverComponent() {
         {groupedIndexQueries.map(({ initial }) => {
           const eventData = [
             {
-              title: `Searching index with query: ${initial.tool_kwargs.input}`,
+              title: `Searching index with query: ${initial.toolKwargs.query}`,
             },
           ];
 
-          if (initial.tool_output) {
+          if (initial.toolOutput) {
             eventData.push({
-              title: `Got ${JSON.stringify(initial.tool_output?.raw_output.source_nodes?.length ?? 0)} sources for query: ${initial.tool_kwargs.input}`,
+              title: `Got result for query: ${initial.toolKwargs.query}`,
             });
           }
 
           return (
             <ChatEvents
-              key={initial.tool_id}
+              key={initial.toolId}
               data={eventData}
-              showLoading={!initial.tool_output}
+              showLoading={!initial.toolOutput}
             />
           );
         })}
@@ -96,35 +127,30 @@ export function RetrieverComponent() {
   );
 }
 
-/**
- * Render the source nodes whenever we got query_index tool with output
- */
 export function ChatSourcesComponent() {
   const { message } = useChatMessage();
 
   const queryIndexEvents = getCustomAnnotation<QueryIndex>(
     message.annotations,
     (annotation) => {
-      const result = QueryIndexSchema.safeParse(annotation);
-      return result.success && !!result.data.tool_output;
+      // If it looks like TypeScript format, validate it and check for toolOutput
+      if ('toolName' in annotation) {
+        const result = TypeScriptSchema.safeParse(annotation);
+        return result.success && !!result.data.toolOutput;
+      }
+
+      // Otherwise try to transform from Python format
+      const result = PythonSchema.safeParse(annotation);
+      if (!result.success) return false;
+
+      // Replace the raw annotation with transformed data
+      Object.assign(annotation, result.data);
+      return !!result.data.toolOutput;
     },
   );
 
   const sources: SourceNode[] = useMemo(() => {
-    return (
-      queryIndexEvents?.flatMap((event) => {
-        const sourceNodes = event.tool_output?.raw_output?.source_nodes || [];
-        return sourceNodes.map((node) => {
-          return {
-            id: node.node.id_,
-            metadata: node.node.metadata,
-            score: node.score,
-            text: node.node.text,
-            url: node.node.metadata.url,
-          };
-        });
-      }) || []
-    );
+    return [];  // TypeScript format doesn't use source nodes
   }, [queryIndexEvents]);
 
   return <ChatSources data={{ nodes: sources }} />;
