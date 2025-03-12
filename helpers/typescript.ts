@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { bold, cyan, red, yellow } from "picocolors";
+import { bold, cyan, yellow } from "picocolors";
 import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
 import { templatesDir } from "./dir";
@@ -123,56 +123,25 @@ export const installTSTemplate = async ({
     cwd: path.join(compPath, "vectordbs", "typescript", vectorDb ?? "none"),
   });
 
-  if (template === "multiagent") {
-    const multiagentPath = path.join(compPath, "multiagent", "typescript");
+  if (template === "multiagent" && useCase) {
+    // Copy use case code for multiagent template
+    console.log("\nCopying use case:", useCase, "\n");
+    const useCasePath = path.join(compPath, "agents", "typescript", useCase);
+    const useCaseCodePath = path.join(useCasePath, "workflow");
 
-    // copy workflow code for multiagent template
+    // Copy use case codes
     await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
       parents: true,
-      cwd: path.join(multiagentPath, "workflow"),
+      cwd: useCaseCodePath,
+      rename: assetRelocator,
     });
 
-    // Copy use case code for multiagent template
-    if (useCase) {
-      console.log("\nCopying use case:", useCase, "\n");
-      const useCasePath = path.join(compPath, "agents", "typescript", useCase);
-      const useCaseCodePath = path.join(useCasePath, "workflow");
-
-      // Copy use case codes
-      await copy("**", path.join(root, relativeEngineDestPath, "workflow"), {
-        parents: true,
-        cwd: useCaseCodePath,
-        rename: assetRelocator,
-      });
-
-      // Copy use case files to project root
-      await copy("*.*", path.join(root), {
-        parents: true,
-        cwd: useCasePath,
-        rename: assetRelocator,
-      });
-    } else {
-      console.log(
-        red(
-          `There is no use case selected for ${template} template. Please pick a use case to use via --use-case flag.`,
-        ),
-      );
-      process.exit(1);
-    }
-
-    if (framework === "nextjs") {
-      // patch route.ts file
-      await copy("**", path.join(root, relativeEngineDestPath), {
-        parents: true,
-        cwd: path.join(multiagentPath, "nextjs"),
-      });
-    } else if (framework === "express") {
-      // patch chat.controller.ts file
-      await copy("**", path.join(root, relativeEngineDestPath), {
-        parents: true,
-        cwd: path.join(multiagentPath, "express"),
-      });
-    }
+    // Copy use case files to project root
+    await copy("*.*", path.join(root), {
+      parents: true,
+      cwd: useCasePath,
+      rename: assetRelocator,
+    });
   }
 
   // copy loader component (TS only supports llama_parse and file for now)

@@ -131,14 +131,14 @@ export class FinancialReportWorkflow extends Workflow<
     ctx: HandlerContext<null>,
     ev: StartEvent<AgentInput>,
   ): Promise<InputEvent> => {
-    const { message } = ev.data;
+    const { userInput, chatHistory } = ev.data;
 
     if (this.systemPrompt) {
       this.memory.put({ role: "system", content: this.systemPrompt });
     }
-    this.memory.put({ role: "user", content: message });
+    this.memory.put({ role: "user", content: userInput });
 
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 
   handleLLMInput = async (
@@ -162,7 +162,7 @@ export class FinancialReportWorkflow extends Workflow<
     const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.hasToolCall()) {
-      return new StopEvent(toolCallResponse.responseGenerator);
+      return new StopEvent(toolCallResponse.responseGenerator as any);
     }
 
     if (toolCallResponse.hasMultipleTools()) {
@@ -171,7 +171,7 @@ export class FinancialReportWorkflow extends Workflow<
         content:
           "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });
-      return new InputEvent({ input: this.memory.getMessages() });
+      return new InputEvent({ input: await this.memory.getMessages() });
     }
 
     // Put the LLM tool call message into the memory
@@ -263,7 +263,7 @@ export class FinancialReportWorkflow extends Workflow<
       // Clone the current chat history
       // Add the analysis system prompt and the message from the researcher
       const newChatHistory = [
-        ...this.memory.getMessages(),
+        ...(await this.memory.getMessages()),
         { role: "system", content: analysisPrompt },
         ev.data.input,
       ];
@@ -276,10 +276,10 @@ export class FinancialReportWorkflow extends Workflow<
       if (!toolCallResponse.hasToolCall()) {
         this.memory.put(await toolCallResponse.asFullResponse());
         return new InputEvent({
-          input: this.memory.getMessages(),
+          input: await this.memory.getMessages(),
         });
       } else {
-        this.memory.put(toolCallResponse.toolCallMessage);
+        this.memory.put(toolCallResponse.toolCallMessage as ChatMessage);
         toolCalls = toolCallResponse.toolCalls;
       }
     }
@@ -296,7 +296,7 @@ export class FinancialReportWorkflow extends Workflow<
     }
 
     return new InputEvent({
-      input: this.memory.getMessages(),
+      input: await this.memory.getMessages(),
     });
   };
 
@@ -315,6 +315,6 @@ export class FinancialReportWorkflow extends Workflow<
     for (const toolMsg of toolMsgs) {
       this.memory.put(toolMsg);
     }
-    return new InputEvent({ input: this.memory.getMessages() });
+    return new InputEvent({ input: await this.memory.getMessages() });
   };
 }
