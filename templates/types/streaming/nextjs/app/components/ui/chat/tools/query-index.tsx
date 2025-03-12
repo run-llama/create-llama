@@ -29,44 +29,52 @@ const TypeScriptSchema = z.object({
     query: z.string(),
   }),
   toolId: z.string(),
-  toolOutput: z.object({
-    id: z.string(),
-    result: z.string(),
-    isError: z.boolean(),
-  }).optional(),
+  toolOutput: z
+    .object({
+      id: z.string(),
+      result: z.string(),
+      isError: z.boolean(),
+    })
+    .optional(),
   returnDirect: z.boolean(),
 });
 
-const PythonSchema = z.object({
-  tool_name: z.union([z.literal("query_index"), z.literal("query_engine")]),
-  tool_kwargs: z.object({
-    input: z.string(),
-  }),
-  tool_id: z.string(),
-  tool_output: z.object({
-    content: z.string(),
-    tool_name: z.string(),
-    raw_output: z.object({
-      source_nodes: z.array(z.any()),
+const PythonSchema = z
+  .object({
+    tool_name: z.union([z.literal("query_index"), z.literal("query_engine")]),
+    tool_kwargs: z.object({
+      input: z.string(),
     }),
-    is_error: z.boolean().optional(),
-  }).optional(),
-  return_direct: z.boolean().optional(),
-}).transform((data): QueryIndex => {
-  return {
-    toolName: data.tool_name,
-    toolKwargs: {
-      query: data.tool_kwargs.input,
-    },
-    toolId: data.tool_id,
-    toolOutput: data.tool_output ? {
-      id: data.tool_id,
-      result: data.tool_output.content,
-      isError: data.tool_output.is_error || false,
-    } : undefined,
-    returnDirect: data.return_direct || false,
-  };
-});
+    tool_id: z.string(),
+    tool_output: z
+      .object({
+        content: z.string(),
+        tool_name: z.string(),
+        raw_output: z.object({
+          source_nodes: z.array(z.any()),
+        }),
+        is_error: z.boolean().optional(),
+      })
+      .optional(),
+    return_direct: z.boolean().optional(),
+  })
+  .transform((data): QueryIndex => {
+    return {
+      toolName: data.tool_name,
+      toolKwargs: {
+        query: data.tool_kwargs.input,
+      },
+      toolId: data.tool_id,
+      toolOutput: data.tool_output
+        ? {
+            id: data.tool_id,
+            result: data.tool_output.content,
+            isError: data.tool_output.is_error || false,
+          }
+        : undefined,
+      returnDirect: data.return_direct || false,
+    };
+  });
 
 type GroupedIndexQuery = {
   initial: QueryIndex;
@@ -79,7 +87,7 @@ export function RetrieverComponent() {
   const queryIndexEvents = getCustomAnnotation<QueryIndex>(
     message.annotations,
     (annotation) => {
-      const schema = 'toolName' in annotation ? TypeScriptSchema : PythonSchema;
+      const schema = "toolName" in annotation ? TypeScriptSchema : PythonSchema;
       const result = schema.safeParse(annotation);
       if (!result.success) return false;
 
@@ -134,7 +142,7 @@ export function ChatSourcesComponent() {
     message.annotations,
     (annotation) => {
       // If it looks like TypeScript format, validate it and check for toolOutput
-      if ('toolName' in annotation) {
+      if ("toolName" in annotation) {
         const result = TypeScriptSchema.safeParse(annotation);
         return result.success && !!result.data.toolOutput;
       }
@@ -150,7 +158,7 @@ export function ChatSourcesComponent() {
   );
 
   const sources: SourceNode[] = useMemo(() => {
-    return [];  // TypeScript format doesn't use source nodes
+    return []; // TypeScript format doesn't use source nodes
   }, [queryIndexEvents]);
 
   return <ChatSources data={{ nodes: sources }} />;
