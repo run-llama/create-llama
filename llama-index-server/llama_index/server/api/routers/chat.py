@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import AsyncGenerator, Callable, Union
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from llama_index.core.agent.workflow.workflow_events import AgentStream
@@ -25,29 +25,33 @@ def chat_router(
 
     @router.post("")
     async def chat(request: ChatRequest) -> StreamingResponse:
-        user_message = request.messages[-1].to_llamaindex_message()
-        chat_history = [
-            message.to_llamaindex_message() for message in request.messages[:-1]
-        ]
-        workflow = workflow_factory()
-        workflow_handler = workflow.run(
-            user_msg=user_message.content,
-            chat_history=chat_history,
-        )
+        try:
+            user_message = request.messages[-1].to_llamaindex_message()
+            chat_history = [
+                message.to_llamaindex_message() for message in request.messages[:-1]
+            ]
+            workflow = workflow_factory()
+            workflow_handler = workflow.run(
+                user_msg=user_message.content,
+                chat_history=chat_history,
+            )
 
-        callbacks: list[EventCallback] = [
-            SourceNodesFromToolCall(),
-        ]
-        if request.config and request.config.next_question_suggestions:
-            callbacks.append(SuggestNextQuestions(request))
-        stream_handler = StreamHandler(
-            workflow_handler=workflow_handler,
-            callbacks=callbacks,
-        )
+            callbacks: list[EventCallback] = [
+                SourceNodesFromToolCall(),
+            ]
+            if request.config and request.config.next_question_suggestions:
+                callbacks.append(SuggestNextQuestions(request))
+            stream_handler = StreamHandler(
+                workflow_handler=workflow_handler,
+                callbacks=callbacks,
+            )
 
-        return VercelStreamResponse(
-            content_generator=_stream_content(stream_handler, request, logger),
-        )
+            return VercelStreamResponse(
+                content_generator=_stream_content(stream_handler, request, logger),
+            )
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=str(e))
 
     return router
 
