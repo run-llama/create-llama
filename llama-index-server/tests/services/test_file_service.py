@@ -76,7 +76,12 @@ class TestFileService:
 
         # Assert
         expected_path = os.path.join("test_dir", f"test_{test_uuid}.txt")
+        mock_makedirs.assert_called_once_with(
+            os.path.dirname(expected_path), exist_ok=True
+        )
+        mock_file_open.assert_called_once_with(expected_path, "wb")
         mock_file_open().write.assert_called_once_with(b"Hello World")
+        assert result.path == expected_path
         assert result.type == "txt"
 
     @patch("uuid.uuid4")
@@ -98,6 +103,11 @@ class TestFileService:
 
         # Assert
         expected_path = os.path.join("test_dir", f"test_file__{test_uuid}.txt")
+        mock_makedirs.assert_called_once_with(
+            os.path.dirname(expected_path), exist_ok=True
+        )
+        mock_file_open.assert_called_once_with(expected_path, "wb")
+        assert result.path == expected_path
         assert result.name == f"test_file__{test_uuid}.txt"
 
     @patch("uuid.uuid4")
@@ -143,6 +153,11 @@ class TestFileService:
 
         # Assert
         expected_path = os.path.join("test_dir", f"test_{test_uuid}.txt")
+        mock_makedirs.assert_called_once_with(
+            os.path.dirname(expected_path), exist_ok=True
+        )
+        mock_file_open.assert_called_once_with(expected_path, "wb")
+        assert result.path == expected_path
         expected_url = os.path.join(
             "https://custom-url.com/files", "test_dir", f"test_{test_uuid}.txt"
         )
