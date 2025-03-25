@@ -108,3 +108,15 @@ jobs:
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
         run: poetry publish --build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: llama-index-server-v${{ steps.get_version.outputs.current_version }}
+          name: "llama-index-server v${{ steps.get_version.outputs.current_version }}"
+          body: |
+            Release of llama-index-server v${{ steps.get_version.outputs.current_version }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
