@@ -8,6 +8,7 @@ node_modules
 
 # testing
 coverage
+.coverage
 
 # next.js
 .next/
@@ -48,6 +49,13 @@ e2e/cache
 
 # Python
 .mypy_cache/
+venv/
+.venv/
+dist/
+.__pycache__
+__pycache__
+.python-version
+.ui
 
 # build artifacts
 create-llama-*.tgz

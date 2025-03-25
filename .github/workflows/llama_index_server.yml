@@ -1,0 +1,126 @@
+name: Build Package
+
+on:
+  pull_request:
+    paths:
+      - "llama-index-server/**"
+      - ".github/workflows/llama_index_server.yml"
+
+env:
+  POETRY_VERSION: "1.8.3"
+  PYTHON_VERSION: "3.9"
+
+jobs:
+  unit-test:
+    name: Unit Tests
+    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          poetry env use python
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: llama-index-server
+        run: poetry install --with test
+
+      - name: Run unit tests with coverage
+        shell: bash
+        working-directory: llama-index-server
+        run: |
+          poetry run pytest tests/ \
+            --cov=llama_index_server \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./llama-index-server/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+
+  type-check:
+    name: Type Check
+    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "poetry"
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          poetry env use python
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: llama-index-server
+        run: poetry install --with dev
+
+      - name: Run mypy
+        shell: bash
+        working-directory: llama-index-server
+        run: poetry run mypy llama_index_server/
+
+  build:
+    needs: [unit-test, type-check]
+    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Poetry
+        run: pipx install poetry==${{ env.POETRY_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Clear python cache
+        shell: bash
+        run: poetry cache clear --all pypi
+      - name: Build package
+        shell: bash
+        working-directory: llama-index-server
+        run: poetry build
+      - name: Test installing built package
+        shell: bash
+        working-directory: llama-index-server
+        run: python -m pip install .
+      - name: Test import
+        shell: bash
+        working-directory: ${{ vars.RUNNER_TEMP }}
+        run: python -c "import llama_index_server"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: llama-index-server/dist/
