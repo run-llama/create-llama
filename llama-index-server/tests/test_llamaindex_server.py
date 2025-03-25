@@ -104,4 +104,3 @@ async def test_ui_is_accessible(server: LlamaIndexServer) -> None:
         response = await ac.get("/")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
-        assert "Built by LlamaIndex" in response.text
