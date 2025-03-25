@@ -2,10 +2,11 @@ import logging
 import shutil
 from pathlib import Path
 from typing import Optional
+
 import requests
 
 # TODO: Update to npm registry once we have a release of @llamaindex/server
-CHAT_UI_VERSION = "1759"
+CHAT_UI_VERSION = "1780"
 
 
 def download_chat_ui(
@@ -15,7 +16,6 @@ def download_chat_ui(
         logger = logging.getLogger("uvicorn")
     path = Path(target_path)
     temp_dir = _download_package(_get_download_link(CHAT_UI_VERSION))
-    print("Downloaded chat ui to", temp_dir)
     _copy_ui_files(temp_dir, path)
     logger.info("Chat UI downloaded and copied to static folder")
 
