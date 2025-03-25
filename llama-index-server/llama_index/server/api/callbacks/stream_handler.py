@@ -29,14 +29,20 @@ class StreamHandler:
         """Stream events through the processor chain."""
         try:
             async for event in self.workflow_handler.stream_events():
+                events_to_process = [event]
                 for callback in self.callbacks:
-                    callback_output = await callback.run(event)
+                    next_events: list[Any] = []
+                    for evt in events_to_process:
+                        callback_output = await callback.run(evt)
+                        if isinstance(callback_output, (list, tuple)):
+                            next_events.extend(callback_output)
+                        elif callback_output is not None:
+                            next_events.append(callback_output)
+                    events_to_process = next_events
 
-                    if isinstance(callback_output, (list, tuple)):
-                        for output_event in callback_output:
-                            yield output_event
-                    else:
-                        yield callback_output
+                # Yield all processed events
+                for evt in events_to_process:
+                    yield evt
 
             # After all events are processed, call on_complete for each callback
             for callback in self.callbacks:
