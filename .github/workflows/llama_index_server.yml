@@ -11,6 +11,9 @@ jobs:
   unit-test:
     name: Unit Tests
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: llama-index-server
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -35,12 +38,10 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        working-directory: llama-index-server
         run: poetry install --with test
 
       - name: Run unit tests with coverage
         shell: bash
-        working-directory: llama-index-server
         run: |
           poetry run pytest tests/ \
             --cov=llama_index_server \
@@ -59,6 +60,9 @@ jobs:
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: llama-index-server
     steps:
       - uses: actions/checkout@v4
 
@@ -79,17 +83,18 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        working-directory: llama-index-server
         run: poetry install --with dev
 
       - name: Run mypy
         shell: bash
-        working-directory: llama-index-server
         run: poetry run mypy llama_index_server/
 
   build:
     needs: [unit-test, type-check]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: llama-index-server
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
@@ -103,11 +108,9 @@ jobs:
         run: poetry cache clear --all pypi
       - name: Build package
         shell: bash
-        working-directory: llama-index-server
         run: poetry build
       - name: Test installing built package
         shell: bash
-        working-directory: llama-index-server
         run: python -m pip install .
       - name: Test import
         shell: bash
