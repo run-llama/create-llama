@@ -87,7 +87,7 @@ jobs:
 
       - name: Run mypy
         shell: bash
-        run: poetry run mypy llama_index_server/
+        run: poetry run mypy llama_index
 
   build:
     needs: [unit-test, type-check]
@@ -120,4 +120,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dist
-          path: llama-index-server/dist/
+          path: dist/
