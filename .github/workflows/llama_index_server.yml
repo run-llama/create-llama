@@ -107,5 +107,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: llama-index-server
+          path: llama-index-server/dist/
