@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: poetry install --with test
+        run: poetry install --with dev
 
       - name: Run unit tests with coverage
         shell: bash
