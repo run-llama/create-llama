@@ -192,7 +192,7 @@ class DocumentGenerator:
 
         cls._write_to_file(content, file_path)
 
-        return f"{os.getenv('FILESERVER_URL_PREFIX')}/{file_path}"
+        return f"{os.getenv('FILESERVER_URL_PREFIX')}/{OUTPUT_DIR}/{file_name}.{file_extension}"
 
     @staticmethod
     def _write_to_file(content: BytesIO, file_path: str) -> None:
