@@ -1,21 +1,26 @@
-name: Python Release
+name: Release llama-index-server
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
     paths:
       - "llama-index-server/**"
-      - ".github/workflows/python-release.yml"
+      - ".github/workflows/release_llama_index_server.yml"
+  pull_request:
+    types:
+      - closed
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
-    name: Python Release
+    name: Create Release PR
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./llama-index-server
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout Repository
@@ -35,6 +40,17 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
+      - name: Setup Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Bump patch version
+        run: |
+          poetry version patch
+          git add pyproject.toml
+          git commit -m "chore(release): bump version to $(poetry version -s)"
+
       - name: Get current version
         id: get_version
         run: |
@@ -45,14 +61,50 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(release): prepare release ${{ steps.get_version.outputs.current_version }}"
-          title: "Release llama-index-server v${{ steps.get_version.outputs.current_version }}"
+          commit-message: "Release: llama-index-server v${{ steps.get_version.outputs.current_version }}"
+          title: "Release: llama-index-server v${{ steps.get_version.outputs.current_version }}"
           body: |
             This PR was automatically created to release a new version of the llama-index-server package.
 
             Version: ${{ steps.get_version.outputs.current_version }}
 
             Please review the changes and merge to trigger the release.
-          branch: release/python-v${{ steps.get_version.outputs.current_version }}
+          branch: release/llama-index-server-v${{ steps.get_version.outputs.current_version }}
           base: main
-          labels: release, python
+          labels: release, llama-index-server
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./llama-index-server
+    if: |
+      github.event_name == 'pull_request' && 
+      github.event.pull_request.merged == true && 
+      startsWith(github.event.pull_request.title, 'Release: llama-index-server') &&
+      startsWith(github.event.pull_request.head.ref, 'release/llama-index-server-v')
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Build package
+        run: poetry build
+
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
+        run: poetry publish --build
