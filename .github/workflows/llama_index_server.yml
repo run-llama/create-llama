@@ -2,9 +2,6 @@ name: Build Package
 
 on:
   pull_request:
-    paths:
-      - "llama-index-server/**"
-      - ".github/workflows/llama_index_server.yml"
 
 env:
   POETRY_VERSION: "1.8.3"
@@ -13,7 +10,6 @@ env:
 jobs:
   unit-test:
     name: Unit Tests
-    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -62,7 +58,6 @@ jobs:
 
   type-check:
     name: Type Check
-    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +89,6 @@ jobs:
 
   build:
     needs: [unit-test, type-check]
-    if: ${{ contains(github.event.pull_request.files.*.path, 'llama-index-server/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
