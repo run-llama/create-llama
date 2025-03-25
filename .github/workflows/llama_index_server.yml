@@ -43,19 +43,7 @@ jobs:
       - name: Run unit tests with coverage
         shell: bash
         run: |
-          poetry run pytest tests/ \
-            --cov=llama_index_server \
-            --cov-report=xml \
-            --cov-report=term-missing \
-            -v
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./llama-index-server/coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+          poetry run pytest tests
 
   type-check:
     name: Type Check
