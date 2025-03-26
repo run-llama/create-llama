@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from typing import Any, Callable, Optional
-import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -114,7 +113,6 @@ class LlamaIndexServer(FastAPI):
             if not os.path.exists(config_path):
                 self.logger.error("Config file not found")
                 return
-            # Render and write the config
             config_content = f"window.LLAMAINDEX = {json.dumps(self._ui_config, indent=2)};"
             with open(config_path, "w") as f:
                 f.write(config_content)
