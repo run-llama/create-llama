@@ -103,13 +103,18 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Build package
-        run: poetry build
+      - name: Get current version
+        id: get_version
+        run: |
+          version=$(poetry version -s)
+          echo "current_version=${version}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to PyPI
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.POETRY_PYPI_TOKEN_PYPI }}
-        run: poetry publish --build --no-interaction
+      - name: Build and publish to PyPI
+        uses: JRubics/poetry-publish@v2.1
+        with:
+          python_version: "3.11"
+          pypi_token: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
+          ignore_dev_requirements: "yes"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
