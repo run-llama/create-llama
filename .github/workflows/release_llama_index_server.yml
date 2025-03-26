@@ -113,7 +113,7 @@ jobs:
         uses: JRubics/poetry-publish@v2.1
         with:
           python_version: "3.11"
-          pypi_token: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
           package_directory: "llama-index-server"
           poetry_install_options: "--without dev"
 
