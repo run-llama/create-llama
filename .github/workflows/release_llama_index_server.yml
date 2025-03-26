@@ -114,7 +114,8 @@ jobs:
         with:
           python_version: "3.11"
           pypi_token: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
-          ignore_dev_requirements: "yes"
+          package_directory: "llama-index-server"
+          poetry_install_options: "--without dev"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
