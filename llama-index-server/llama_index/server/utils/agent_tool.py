@@ -15,8 +15,14 @@ from llama_index.core.tools import (
 )
 from llama_index.core.workflow import Context
 from llama_index.server.api.models import AgentRunEvent, AgentRunEventType
+from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
 
 logger = logging.getLogger("uvicorn")
+
+
+class ToolCallOutput(BaseModel):
+    tool_call_id: str
+    tool_output: ToolOutput
 
 
 class ContextAwareTool(FunctionTool, ABC):
@@ -97,27 +103,26 @@ async def call_tools(
     tools: list[BaseTool],
     tool_calls: list[ToolSelection],
     emit_agent_events: bool = True,
-) -> list[ChatMessage]:
+) -> list[ToolCallOutput]:
+    """
+    Call tools and return the tool call responses.
+    """
     if len(tool_calls) == 0:
         return []
-
     tools_by_name = {tool.metadata.get_name(): tool for tool in tools}
     if len(tool_calls) == 1:
-        return [
-            await call_tool(
-                ctx,
-                tools_by_name[tool_calls[0].tool_name],
-                tool_calls[0],
-                lambda msg: ctx.write_event_to_stream(
-                    AgentRunEvent(
-                        name=agent_name,
-                        msg=msg,
-                    )
-                ),
+        if emit_agent_events:
+            ctx.write_event_to_stream(
+                AgentRunEvent(
+                    name=agent_name,
+                    msg=f"{tool_calls[0].tool_name}: {tool_calls[0].tool_kwargs}",
+                )
             )
+        return [
+            await call_tool(ctx, tools_by_name[tool_calls[0].tool_name], tool_calls[0])
         ]
     # Multiple tool calls, show progress
-    tool_msgs: list[ChatMessage] = []
+    tool_call_outputs: list[ToolCallOutput] = []
 
     progress_id = str(uuid.uuid4())
     total_steps = len(tool_calls)
@@ -131,21 +136,32 @@ async def call_tools(
     for i, tool_call in enumerate(tool_calls):
         tool = tools_by_name.get(tool_call.tool_name)
         if not tool:
-            tool_msgs.append(
-                ChatMessage(
-                    role=MessageRole.ASSISTANT,
-                    content=f"Tool {tool_call.tool_name} does not exist",
+            tool_call_outputs.append(
+                ToolCallOutput(
+                    tool_call_id=tool_call.tool_id,
+                    tool_output=ToolOutput(
+                        is_error=True,
+                        content=f"Tool {tool_call.tool_name} does not exist",
+                        tool_name=tool_call.tool_name,
+                        raw_input=tool_call.tool_kwargs,
+                        raw_output={
+                            "error": f"Tool {tool_call.tool_name} does not exist",
+                        },
+                    ),
                 )
             )
             continue
-        tool_msg = await call_tool(
+
+        tool_call_output = await call_tool(
             ctx,
             tool,
             tool_call,
-            event_emitter=lambda msg: ctx.write_event_to_stream(
+        )
+        if emit_agent_events:
+            ctx.write_event_to_stream(
                 AgentRunEvent(
                     name=agent_name,
-                    msg=msg,
+                    msg=f"{tool_call.tool_name}: {tool_call.tool_kwargs}",
                     event_type=AgentRunEventType.PROGRESS,
                     data={
                         "id": progress_id,
@@ -153,48 +169,55 @@ async def call_tools(
                         "current": i,
                     },
                 )
-            ),
-        )
-        tool_msgs.append(tool_msg)
-    return tool_msgs
+            )
+        tool_call_outputs.append(tool_call_output)
+    return tool_call_outputs
 
 
 async def call_tool(
     ctx: Context,
     tool: BaseTool,
     tool_call: ToolSelection,
-    event_emitter: Optional[Callable[[str], None]],
-) -> ChatMessage:
-    if event_emitter:
-        event_emitter(f"Calling tool {tool_call.tool_name}, {tool_call.tool_kwargs!s}")
+) -> ToolCallOutput:
+    ctx.write_event_to_stream(
+        ToolCall(
+            tool_name=tool_call.tool_name,
+            tool_id=tool_call.tool_id,
+            tool_kwargs=tool_call.tool_kwargs,
+        )
+    )
     try:
         if isinstance(tool, ContextAwareTool):
             if ctx is None:
                 raise ValueError("Context is required for context aware tool")
             # inject context for calling an context aware tool
-            response = await tool.acall(ctx=ctx, **tool_call.tool_kwargs)
+            output = await tool.acall(ctx=ctx, **tool_call.tool_kwargs)
         else:
-            response = await tool.acall(**tool_call.tool_kwargs)  # type: ignore
-        return ChatMessage(
-            role=MessageRole.TOOL,
-            content=str(response.raw_output),
-            additional_kwargs={
-                "tool_call_id": tool_call.tool_id,
-                "name": tool.metadata.get_name(),
-            },
-        )
+            output = await tool.acall(**tool_call.tool_kwargs)  # type: ignore
     except Exception as e:
         logger.error(f"Got error in tool {tool_call.tool_name}: {e!s}")
-        if event_emitter:
-            event_emitter(f"Got error in tool {tool_call.tool_name}: {e!s}")
-        return ChatMessage(
-            role=MessageRole.TOOL,
+        output = ToolOutput(
+            is_error=True,
             content=f"Error: {e!s}",
-            additional_kwargs={
-                "tool_call_id": tool_call.tool_id,
-                "name": tool.metadata.get_name(),
+            tool_name=tool.metadata.get_name(),
+            raw_input=tool_call.tool_kwargs,
+            raw_output={
+                "error": str(e),
             },
         )
+    ctx.write_event_to_stream(
+        ToolCallResult(
+            tool_name=tool_call.tool_name,
+            tool_kwargs=tool_call.tool_kwargs,
+            tool_id=tool_call.tool_id,
+            tool_output=output,
+            return_direct=False,
+        )
+    )
+    return ToolCallOutput(
+        tool_call_id=tool_call.tool_id,
+        tool_output=output,
+    )
 
 
 async def _tool_call_generator(
