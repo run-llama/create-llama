@@ -20,7 +20,9 @@ jobs:
     defaults:
       run:
         working-directory: ./llama-index-server
-    if: github.event_name == 'push'
+    if: |
+      github.event_name == 'push' && 
+      !startsWith(github.ref, 'refs/heads/release/llama-index-server-v')
 
     steps:
       - name: Checkout Repository
@@ -106,7 +108,7 @@ jobs:
 
       - name: Publish to PyPI
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.POETRY_PYPI_TOKEN_PYPI }}
         run: poetry publish --build --no-interaction
 
       - name: Create GitHub Release
