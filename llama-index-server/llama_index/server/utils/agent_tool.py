@@ -1,11 +1,11 @@
 import logging
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, AsyncGenerator, Callable, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.tools import (
     BaseTool,
