@@ -69,7 +69,7 @@ class LlamaIndexServer(FastAPI):
     def _ui_config(self) -> dict:
         return {
             "CHAT_API": f"{self.api_prefix}/chat",
-            "STARTER_QUESTIONS": self.starter_questions
+            "STARTER_QUESTIONS": self.starter_questions,
         }
 
     # Default routers
@@ -113,7 +113,9 @@ class LlamaIndexServer(FastAPI):
             if not os.path.exists(config_path):
                 self.logger.error("Config file not found")
                 return
-            config_content = f"window.LLAMAINDEX = {json.dumps(self._ui_config, indent=2)};"
+            config_content = (
+                f"window.LLAMAINDEX = {json.dumps(self._ui_config, indent=2)};"
+            )
             with open(config_path, "w") as f:
                 f.write(config_content)
         except Exception as e:
