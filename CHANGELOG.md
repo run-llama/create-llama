@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.4.1
+
+### Patch Changes
+
+- 0e4ecfa: fix: add trycatch for generating error
+- ee69ce7: bump: chat-ui and tailwind v4
+
 ## 0.4.0
 
 ### Minor Changes
