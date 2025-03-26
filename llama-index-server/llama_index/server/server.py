@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Any, Callable, Optional
@@ -15,6 +16,7 @@ class LlamaIndexServer(FastAPI):
     workflow_factory: Callable[..., Workflow]
     api_prefix: str = "/api"
     include_ui: Optional[bool]
+    starter_questions: Optional[list[str]]
     verbose: bool = False
     ui_path: str = ".ui"
 
@@ -25,6 +27,7 @@ class LlamaIndexServer(FastAPI):
         use_default_routers: Optional[bool] = False,
         env: Optional[str] = None,
         include_ui: Optional[bool] = None,
+        starter_questions: Optional[list[str]] = None,
         verbose: bool = False,
         *args: Any,
         **kwargs: Any,
@@ -38,6 +41,7 @@ class LlamaIndexServer(FastAPI):
             use_default_routers: Whether to use the default routers (chat, mount `data` and `output` directories).
             env: The environment to run the server in.
             include_ui: Whether to show an chat UI in the root path.
+            starter_questions: A list of starter questions to display in the chat UI.
             verbose: Whether to show verbose logs.
         """
         super().__init__(*args, **kwargs)
@@ -46,6 +50,7 @@ class LlamaIndexServer(FastAPI):
         self.logger = logger or logging.getLogger("uvicorn")
         self.verbose = verbose
         self.include_ui = include_ui  # Store the explicitly passed value first
+        self.starter_questions = starter_questions
 
         if use_default_routers:
             self.add_default_routers()
@@ -59,6 +64,13 @@ class LlamaIndexServer(FastAPI):
 
         if self.include_ui:
             self.mount_ui()
+
+    @property
+    def _ui_config(self) -> dict:
+        return {
+            "CHAT_API": f"{self.api_prefix}/chat",
+            "STARTER_QUESTIONS": self.starter_questions,
+        }
 
     # Default routers
     def add_default_routers(self) -> None:
@@ -90,6 +102,24 @@ class LlamaIndexServer(FastAPI):
                 )
                 download_chat_ui(logger=self.logger, target_path=self.ui_path)
             self._mount_static_files(directory=self.ui_path, path="/", html=True)
+            self._override_ui_config()
+
+    def _override_ui_config(self) -> None:
+        """
+        Override the UI config by writing a complete configuration file.
+        """
+        try:
+            config_path = os.path.join(self.ui_path, "config.js")
+            if not os.path.exists(config_path):
+                self.logger.error("Config file not found")
+                return
+            config_content = (
+                f"window.LLAMAINDEX = {json.dumps(self._ui_config, indent=2)};"
+            )
+            with open(config_path, "w") as f:
+                f.write(config_content)
+        except Exception as e:
+            self.logger.error(f"Error overriding UI config: {e}")
 
     def mount_data_dir(self, data_dir: str = "data") -> None:
         """
