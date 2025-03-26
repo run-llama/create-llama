@@ -107,7 +107,7 @@ jobs:
       - name: Publish to PyPI
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.LLAMA_INDEX_PYPI_TOKEN }}
-        run: poetry publish --build
+        run: poetry publish --build --no-interaction
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
