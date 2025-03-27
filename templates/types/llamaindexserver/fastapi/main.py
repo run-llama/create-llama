@@ -18,10 +18,6 @@ def create_app():
         workflow_factory=create_workflow,  # Factory function that creates a new workflow for each request
         use_default_routers=True,  # Optional, default is `True` to use default routers from LlamaIndexServer
         api_prefix="/api",  # Optional, default is `/api`
-        starter_questions=[
-            "Why is sky blue?",
-            "What is the weather now in LA?",
-        ],  # Optional
         env=env,
         logger=logger,
     )
@@ -37,8 +33,10 @@ app = create_app()
 
 def run(env: str):
     os.environ["APP_ENV"] = env
+    app_host = os.getenv("APP_HOST", "0.0.0.0")
+    app_port = os.getenv("APP_PORT", 8000)
 
     if env == "dev":
-        subprocess.run(["fastapi", "dev"])
+        subprocess.run(["fastapi", "dev", "--host", app_host, "--port", app_port])
     else:
-        subprocess.run(["fastapi", "run"])
+        subprocess.run(["fastapi", "run", "--host", app_host, "--port", app_port])
