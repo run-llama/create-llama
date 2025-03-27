@@ -90,7 +90,7 @@ export async function createApp({
   // Install backend
   await installTemplate({ ...args, backend: true });
 
-  if (frontend && framework === "fastapi") {
+  if (frontend && framework === "fastapi" && template !== "llamaindexserver") {
     // install frontend
     const frontendRoot = path.join(root, ".frontend");
     await makeDir(frontendRoot);

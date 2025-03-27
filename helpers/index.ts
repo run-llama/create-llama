@@ -180,11 +180,13 @@ export const installTemplate = async (
   }
 
   // write tools configuration
-  await writeToolsConfig(
-    props.root,
-    props.tools,
-    props.framework === "fastapi" ? ConfigFileType.YAML : ConfigFileType.JSON,
-  );
+  if (props.template !== "llamaindexserver") {
+    await writeToolsConfig(
+      props.root,
+      props.tools,
+      props.framework === "fastapi" ? ConfigFileType.YAML : ConfigFileType.JSON,
+    );
+  }
 
   if (props.backend) {
     // This is a backend, so we need to copy the test data and create the env file.

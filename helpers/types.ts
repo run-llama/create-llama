@@ -24,7 +24,8 @@ export type TemplateType =
   | "community"
   | "llamapack"
   | "multiagent"
-  | "reflex";
+  | "reflex"
+  | "llamaindexserver";
 export type TemplateFramework = "nextjs" | "express" | "fastapi";
 export type TemplateUI = "html" | "shadcn";
 export type TemplateVectorDB =
@@ -55,7 +56,8 @@ export type TemplateUseCase =
   | "deep_research"
   | "form_filling"
   | "extractor"
-  | "contract_review";
+  | "contract_review"
+  | "agentic_rag";
 // Config for both file and folder
 export type FileSourceConfig =
   | {
