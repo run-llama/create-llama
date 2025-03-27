@@ -11,6 +11,8 @@ type AppType = "agentic_rag" | "financial_report" | "deep_research";
 type SimpleAnswers = {
   appType: AppType;
   language: TemplateFramework;
+  useLlamaCloud: boolean;
+  llamaCloudKey?: string;
 };
 
 export const askSimpleQuestions = async (
@@ -46,10 +48,63 @@ export const askSimpleQuestions = async (
   );
 
   let language: TemplateFramework = "fastapi";
+  let llamaCloudKey = args.llamaCloudKey;
+
+  let useLlamaCloud = false;
+
+  if (
+    appType !== "extractor" &&
+    appType !== "contract_review" &&
+    appType !== "deep_research"
+  ) {
+    const { language: newLanguage } = await prompts(
+      {
+        type: "select",
+        name: "language",
+        message: "What language do you want to use?",
+        choices: [
+          { title: "Python (FastAPI)", value: "fastapi" },
+          { title: "Typescript (NextJS)", value: "nextjs" },
+        ],
+      },
+      questionHandlers,
+    );
+    language = newLanguage;
+  }
+
+  const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+    {
+      type: "toggle",
+      name: "useLlamaCloud",
+      message: "Do you want to use LlamaCloud services?",
+      initial: false,
+      active: "Yes",
+      inactive: "No",
+      hint: "see https://www.llamaindex.ai/enterprise for more info",
+    },
+    questionHandlers,
+  );
+  useLlamaCloud = newUseLlamaCloud;
+
+  if (useLlamaCloud && !llamaCloudKey) {
+    // Ask for LlamaCloud API key, if not set
+    const { llamaCloudKey: newLlamaCloudKey } = await prompts(
+      {
+        type: "text",
+        name: "llamaCloudKey",
+        message:
+          "Please provide your LlamaCloud API key (leave blank to skip):",
+      },
+      questionHandlers,
+    );
+    llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
+  }
 
   const results = await convertAnswers(args, {
     appType,
     language,
+    useLlamaCloud,
+    llamaCloudKey,
   });
 
   results.postInstallAction = await askPostInstallAction(results);
@@ -99,6 +154,9 @@ const convertAnswers = async (
     framework: answers.language,
     useCase: answers.appType,
     ui: "shadcn",
+    llamaCloudKey: answers.llamaCloudKey,
+    useLlamaParse: answers.useLlamaCloud,
+    vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
     ...results,
     modelConfig:
       results.modelConfig ??

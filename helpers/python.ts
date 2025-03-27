@@ -520,7 +520,8 @@ const installLegacyPythonTemplate = async ({
 const installLlamaIndexServerTemplate = async ({
   root,
   useCase,
-}: Pick<InstallTemplateArgs, "root" | "useCase">) => {
+  useLlamaParse,
+}: Pick<InstallTemplateArgs, "root" | "useCase" | "useLlamaParse">) => {
   if (!useCase) {
     console.log(
       red(
@@ -534,6 +535,32 @@ const installLlamaIndexServerTemplate = async ({
     parents: true,
     cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
   });
+
+  if (useLlamaParse) {
+    await copy("index.py", path.join(root, "app"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "python",
+      ),
+    });
+    // TODO: Consider moving generate.py to app folder.
+    await copy("generate.py", path.join(root), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "python",
+      ),
+    });
+  }
 };
 
 export const installPythonTemplate = async ({
@@ -578,7 +605,11 @@ export const installPythonTemplate = async ({
   });
 
   if (template === "llamaindexserver") {
-    await installLlamaIndexServerTemplate({ root, useCase });
+    await installLlamaIndexServerTemplate({
+      root,
+      useCase,
+      useLlamaParse,
+    });
   } else {
     await installLegacyPythonTemplate({
       root,
