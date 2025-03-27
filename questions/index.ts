@@ -17,6 +17,5 @@ export const askQuestions = async (
     return args as unknown as QuestionResults;
   }
   const results = await askSimpleQuestions(args);
-  console.log(results);
   return results;
 };

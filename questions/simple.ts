@@ -1,6 +1,7 @@
 import prompts from "prompts";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
+import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
@@ -71,7 +72,7 @@ const convertAnswers = async (
   };
   const lookup: Record<
     AppType,
-    Pick<QuestionResults, "template" | "dataSources" | "useCase"> & {
+    Pick<QuestionResults, "template" | "tools" | "dataSources" | "useCase"> & {
       modelConfig?: ModelConfig;
     }
   > = {
@@ -82,11 +83,13 @@ const convertAnswers = async (
     financial_report: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
+      tools: getTools(["interpreter", "document_generator"]),
       modelConfig: MODEL_GPT4o,
     },
     deep_research: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
+      tools: [],
       modelConfig: MODEL_GPT4o,
     },
   };

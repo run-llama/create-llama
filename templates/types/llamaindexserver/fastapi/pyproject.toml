@@ -17,11 +17,6 @@ python-dotenv = "^1.0.0"
 pydantic = "<2.10"
 aiostream = "^0.5.2"
 llama-index-core = "^0.12.24"
-llama-index-embeddings-openai = "^0.3.1"
-llama-index-llms-openai = "^0.3.26"
-e2b-code-interpreter = "^1.1.1"
-xhtml2pdf = "^0.2.17"
-markdown = "^3.7"
 llama-index-server = "^0.1.5"
 
 [tool.poetry.group.dev.dependencies]

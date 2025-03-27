@@ -397,22 +397,6 @@ const getFrameworkEnvs = (
           : `http://localhost:${sPort}/api/files`,
     },
   ];
-  if (framework === "fastapi") {
-    result.push(
-      ...[
-        {
-          name: "APP_HOST",
-          description: "The address to start the backend app.",
-          value: "0.0.0.0",
-        },
-        {
-          name: "APP_PORT",
-          description: "The port to start the backend app.",
-          value: sPort,
-        },
-      ],
-    );
-  }
   if (framework === "nextjs") {
     result.push({
       name: "NEXT_PUBLIC_CHAT_API",

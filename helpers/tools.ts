@@ -124,7 +124,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "e2b_code_interpreter",
-        version: "1.0.3",
+        version: "1.1.1",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
@@ -155,7 +155,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "e2b_code_interpreter",
-        version: "1.0.3",
+        version: "1.1.1",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],

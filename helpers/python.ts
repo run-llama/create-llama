@@ -587,6 +587,7 @@ export const installPythonTemplate = async ({
       dataSources,
       tools,
       useCase,
+      observability,
     });
   }
 

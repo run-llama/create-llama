@@ -1,7 +1,7 @@
 import { callPackageManager } from "./install";
 
 import path from "path";
-import { cyan } from "picocolors";
+import picocolors, { cyan } from "picocolors";
 
 import fsExtra from "fs-extra";
 import { writeLoadersConfig } from "./datasources";
@@ -41,7 +41,11 @@ const checkForGenerateScript = (
     missingSettings.push("your LLAMA_CLOUD_API_KEY");
   }
 
-  if (vectorDb !== "none" && vectorDb !== "llamacloud") {
+  if (
+    vectorDb !== undefined &&
+    vectorDb !== "none" &&
+    vectorDb !== "llamacloud"
+  ) {
     missingSettings.push("your Vector DB environment variables");
   }
 
@@ -92,7 +96,7 @@ async function generateContextData(
     }
 
     const settingsMessage = `After setting ${missingSettings.join(" and ")}, run ${runGenerate} to generate the context data.`;
-    console.log(`\n${settingsMessage}\n\n`);
+    console.log(picocolors.yellow(`\n${settingsMessage}\n\n`));
   }
 }
 
@@ -166,6 +170,17 @@ export const installTemplate = async (
 
   if (props.framework === "fastapi") {
     await installPythonTemplate(props);
+  } else {
+    await installTSTemplate(props);
+  }
+
+  // write configurations
+  if (props.template !== "llamaindexserver") {
+    await writeToolsConfig(
+      props.root,
+      props.tools,
+      props.framework === "fastapi" ? ConfigFileType.YAML : ConfigFileType.JSON,
+    );
     if (props.vectorDb !== "llamacloud") {
       // write loaders configuration (currently Python only)
       // not needed for LlamaCloud as it has its own loaders
@@ -175,28 +190,13 @@ export const installTemplate = async (
         props.useLlamaParse,
       );
     }
-  } else {
-    await installTSTemplate(props);
-  }
-
-  // write tools configuration
-  if (props.template !== "llamaindexserver") {
-    await writeToolsConfig(
-      props.root,
-      props.tools,
-      props.framework === "fastapi" ? ConfigFileType.YAML : ConfigFileType.JSON,
-    );
   }
 
   if (props.backend) {
     // This is a backend, so we need to copy the test data and create the env file.
 
     // Copy the environment file to the target directory.
-    if (
-      props.template === "streaming" ||
-      props.template === "multiagent" ||
-      props.template === "reflex"
-    ) {
+    if (props.template !== "community" && props.template !== "llamapack") {
       await createBackendEnvFile(props.root, props);
     }
 
