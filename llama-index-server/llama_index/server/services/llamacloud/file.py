@@ -8,10 +8,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
+from pydantic import BaseModel
+
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.models import SourceNodes
 from llama_index.server.services.llamacloud.index import get_client
-from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
@@ -20,14 +21,14 @@ class LlamaCloudFile(BaseModel):
     file_name: str
     pipeline_id: str
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, LlamaCloudFile):
             return NotImplemented
         return (
             self.file_name == other.file_name and self.pipeline_id == other.pipeline_id
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.file_name, self.pipeline_id))
 
 
@@ -102,7 +103,7 @@ class LlamaCloudFileService:
         cls,
         file: LlamaCloudFile,
         force_download: bool = False,
-    ):
+    ) -> None:
         client = get_client()
         file_name = file.file_name
         pipeline_id = file.pipeline_id
@@ -132,7 +133,7 @@ class LlamaCloudFileService:
     @classmethod
     def download_files_from_nodes(
         cls, nodes: List[NodeWithScore], background_tasks: BackgroundTasks
-    ):
+    ) -> None:
         files = cls._get_files_to_download(nodes)
         for file in files:
             logger.info(f"Adding download of {file.file_name} to background tasks")
@@ -143,8 +144,8 @@ class LlamaCloudFileService:
         source_nodes = SourceNodes.from_source_nodes(nodes)
         llama_cloud_files = [
             LlamaCloudFile(
-                file_name=node.metadata.get("file_name"),
-                pipeline_id=node.metadata.get("pipeline_id"),
+                file_name=node.metadata.get("file_name"),  # type: ignore
+                pipeline_id=node.metadata.get("pipeline_id"),  # type: ignore
             )
             for node in source_nodes
             if (
@@ -164,7 +165,7 @@ class LlamaCloudFileService:
         return os.path.join(cls.LOCAL_STORE_PATH, cls._get_file_name(name, pipeline_id))
 
     @classmethod
-    def _download_file(cls, url: str, local_file_path: str):
+    def _download_file(cls, url: str, local_file_path: str) -> None:
         logger.info(f"Saving file to {local_file_path}")
         # Create directory if it doesn't exist
         os.makedirs(cls.LOCAL_STORE_PATH, exist_ok=True)

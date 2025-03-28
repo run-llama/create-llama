@@ -2,6 +2,7 @@ import logging
 from typing import Any, List
 
 from fastapi import BackgroundTasks
+
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.callbacks.base import EventCallback
 from llama_index.server.services.llamacloud.file import LlamaCloudFileService
@@ -15,7 +16,7 @@ class LlamaCloudFileDownload(EventCallback):
     Only work if LlamaCloud service code is available.
     """
 
-    def __init__(self, background_tasks: BackgroundTasks):
+    def __init__(self, background_tasks: BackgroundTasks) -> None:
         self.background_tasks = background_tasks
 
     async def run(self, event: Any) -> Any:
@@ -25,7 +26,7 @@ class LlamaCloudFileDownload(EventCallback):
                 await self._process_response_nodes(event.nodes)
         return event
 
-    async def _process_response_nodes(self, source_nodes: List[NodeWithScore]):
+    async def _process_response_nodes(self, source_nodes: List[NodeWithScore]) -> None:
         try:
             LlamaCloudFileService.download_files_from_nodes(
                 source_nodes, self.background_tasks

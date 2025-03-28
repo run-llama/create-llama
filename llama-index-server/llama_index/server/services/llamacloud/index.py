@@ -1,15 +1,19 @@
 import logging
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from llama_cloud import PipelineType
+from pydantic import BaseModel, Field, field_validator
+
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
 from llama_index.core.settings import Settings
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    from llama_cloud.client import LlamaCloud
 
 logger = logging.getLogger("uvicorn")
 
@@ -33,7 +37,7 @@ class LlamaCloudConfig(BaseModel):
         description="The name of the LlamaCloud project",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         if "api_key" not in kwargs:
             kwargs["api_key"] = os.getenv("LLAMA_CLOUD_API_KEY")
         if "base_url" not in kwargs:
@@ -49,7 +53,7 @@ class LlamaCloudConfig(BaseModel):
     # Validate and throw error if the env variables are not set before starting the app
     @field_validator("pipeline", "project", "api_key", mode="before")
     @classmethod
-    def validate_fields(cls, value):
+    def validate_fields(cls, value: Any) -> Any:
         if value is None:
             raise ValueError(
                 "Please set LLAMA_CLOUD_INDEX_NAME, LLAMA_CLOUD_PROJECT_NAME and LLAMA_CLOUD_API_KEY"
@@ -85,9 +89,9 @@ class IndexConfig(BaseModel):
 
 
 def get_index(
-    config: IndexConfig = None,
+    config: Optional[IndexConfig] = None,
     create_if_missing: bool = False,
-):
+) -> Optional[LlamaCloudIndex]:
     if config is None:
         config = IndexConfig()
     # Check whether the index exists
@@ -103,14 +107,14 @@ def get_index(
         return None
 
 
-def get_client():
+def get_client() -> "LlamaCloud":
     config = LlamaCloudConfig()
     return llama_cloud_get_client(**config.to_client_kwargs())
 
 
 def _create_index(
     config: IndexConfig,
-):
+) -> None:
     client = get_client()
     pipeline_name = config.llama_cloud_pipeline_config.pipeline
 

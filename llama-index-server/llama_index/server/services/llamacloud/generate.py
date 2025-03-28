@@ -1,10 +1,11 @@
 import logging
 from typing import Optional
 
+from tqdm import tqdm
+
 from llama_index.core.readers import SimpleDirectoryReader
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
 from llama_index.server.services.llamacloud.file import LlamaCloudFileService
-from tqdm import tqdm
 
 
 def load_to_llamacloud(
@@ -12,7 +13,7 @@ def load_to_llamacloud(
     data_dir: Optional[str] = None,
     recursive: Optional[bool] = None,
     logger: Optional[logging.Logger] = None,
-):
+) -> None:
     if logger is None:
         logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger()
