@@ -8,42 +8,50 @@ import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
 import { InstallTemplateArgs, ModelProvider, TemplateVectorDB } from "./types";
 
-/**
- * Install a LlamaIndex internal template to a given `root` directory.
- */
-export const installTSTemplate = async ({
-  appName,
+const installLlamaIndexServerTemplate = async ({
   root,
-  packageManager,
-  isOnline,
+  useCase,
+  useLlamaParse,
+}: Pick<InstallTemplateArgs, "root" | "useCase" | "useLlamaParse">) => {
+  if (!useCase) {
+    console.log(
+      red(
+        `There is no use case selected. Please pick a use case to use via --use-case flag.`,
+      ),
+    );
+    process.exit(1);
+  }
+
+  await copy("**", path.join(root, "src", "app"), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "workflows",
+      "typescript",
+      useCase,
+    ),
+  });
+};
+
+const installLegacyTSTemplate = async ({
+  root,
   template,
+  backend,
   framework,
   ui,
   vectorDb,
-  postInstallAction,
-  backend,
   observability,
   tools,
   dataSources,
   useLlamaParse,
   useCase,
   modelConfig,
-}: InstallTemplateArgs & { backend: boolean }) => {
-  console.log(bold(`Using ${packageManager}.`));
-
-  /**
-   * Copy the template files to the target directory.
-   */
-  console.log("\nInitializing project with template:", template, "\n");
-  const templatePath = path.join(templatesDir, "types", "streaming", framework);
-  const copySource = ["**"];
-
-  await copy(copySource, root, {
-    parents: true,
-    cwd: templatePath,
-    rename: assetRelocator,
-  });
-
+  relativeEngineDestPath,
+}: InstallTemplateArgs & {
+  backend: boolean;
+  relativeEngineDestPath: string;
+}) => {
   /**
    * If next.js is used, update its configuration if necessary
    */
@@ -98,10 +106,6 @@ export const installTSTemplate = async ({
   }
 
   const compPath = path.join(templatesDir, "components");
-  const relativeEngineDestPath =
-    framework === "nextjs"
-      ? path.join("app", "api", "chat")
-      : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
   // copy llamaindex code for TS templates
@@ -236,12 +240,81 @@ export const installTSTemplate = async ({
     await fs.rm(path.join(root, "app", "api"), { recursive: true });
     await fs.rm(path.join(root, "config"), { recursive: true, force: true });
   }
+};
+
+/**
+ * Install a LlamaIndex internal template to a given `root` directory.
+ */
+export const installTSTemplate = async ({
+  appName,
+  root,
+  packageManager,
+  isOnline,
+  template,
+  framework,
+  ui,
+  vectorDb,
+  postInstallAction,
+  backend,
+  observability,
+  tools,
+  dataSources,
+  useLlamaParse,
+  useCase,
+  modelConfig,
+}: InstallTemplateArgs & { backend: boolean }) => {
+  console.log(bold(`Using ${packageManager}.`));
+
+  /**
+   * Copy the template files to the target directory.
+   */
+  console.log("\nInitializing project with template:", template, "\n");
+  const templatePath = path.join(templatesDir, "types", template, framework);
+  const copySource = ["**"];
+
+  await copy(copySource, root, {
+    parents: true,
+    cwd: templatePath,
+    rename: assetRelocator,
+  });
+
+  const relativeEngineDestPath =
+    framework === "nextjs"
+      ? path.join("app", "api", "chat")
+      : path.join("src", "controllers");
+
+  if (template === "llamaindexserver") {
+    await installLlamaIndexServerTemplate({
+      root,
+      useCase,
+      useLlamaParse,
+    });
+  } else {
+    await installLegacyTSTemplate({
+      appName,
+      root,
+      packageManager,
+      isOnline,
+      template,
+      backend,
+      framework,
+      ui,
+      vectorDb,
+      observability,
+      tools,
+      dataSources,
+      useLlamaParse,
+      useCase,
+      modelConfig,
+      relativeEngineDestPath,
+    });
+  }
 
   const packageJson = await updatePackageJson({
     root,
     appName,
     dataSources,
-    relativeEngineDestPath,
+    relativeEngineDestPath: "",
     framework,
     ui,
     observability,
