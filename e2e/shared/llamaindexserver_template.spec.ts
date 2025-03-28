@@ -16,15 +16,15 @@ const templateFramework: TemplateFramework = process.env.FRAMEWORK
 const dataSource: string = "--example-file";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
+const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["financial_report", "blog", "form_filling"];
+const templateUseCases = ["financial_report", "agentic_rag", "form_filling"];
 
 for (const useCase of templateUseCases) {
-  test.describe(`Test multiagent template ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
+  test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
-      process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
-      "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
+      process.env.DATASOURCE === "--no-files",
+      "The llamaindexserver template currently only works with files. We also only run on Linux to speed up tests.",
     );
     let port: number;
     let cwd: string;
@@ -38,7 +38,7 @@ for (const useCase of templateUseCases) {
       cwd = await createTestDir();
       const result = await runCreateLlama({
         cwd,
-        templateType: "multiagent",
+        templateType: "llamaindexserver",
         templateFramework,
         dataSource,
         vectorDb,
