@@ -20,12 +20,12 @@ npm run generate
 Third, run the development server:
 
 ```
-npm run start
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the chat UI.
 
-## Use Case: Filling Financial CSV Template
+## Use Case
 
 You can start by sending an request on the chat UI to create a report comparing the finances of Apple and Tesla.
 Or you can test the `/api/chat` endpoint with the following curl request:

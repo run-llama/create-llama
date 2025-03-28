@@ -7,6 +7,8 @@ initSettings();
 
 new LlamaIndexServer({
   workflow: workflowFactory,
+  appTitle: "LlamaIndex App",
+  useLlamaCloud: false,
   starterQuestions: [
     "Research about Apple and Tesla revenue",
     "How to improve the revenue of Apple and Tesla",

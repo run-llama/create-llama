@@ -1,5 +1,5 @@
 {
-  "name": "ts",
+  "name": "llamaindex-server",
   "version": "0.1.0",
   "scripts": {
     "generate": "tsx src/generate.ts",
@@ -9,10 +9,10 @@
   "dependencies": {
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/readers": "^2.0.0",
-    "@llamaindex/server": "https://pkg.pr.new/run-llama/LlamaIndexTS/@llamaindex/server@1795",
+    "@llamaindex/server": "0.0.4",
     "@llamaindex/tools": "0.0.2",
-    "llamaindex": "0.9.13",
     "dotenv": "^16.4.7",
+    "llamaindex": "0.9.13",
     "zod": "^3.23.8"
   },
   "devDependencies": {

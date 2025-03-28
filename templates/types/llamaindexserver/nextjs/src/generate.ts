@@ -1,5 +1,5 @@
-import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
 import "dotenv/config";
+import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
 import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
 import { initSettings } from "./app/settings";
 

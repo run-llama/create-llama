@@ -14,7 +14,9 @@ export async function getIndex(params?: any) {
     (storageContext.docStore as SimpleDocumentStore).toDict(),
   ).length;
   if (numberOfDocs === 0) {
-    return null;
+    throw new Error(
+      "Index not found. Please run `pnpm run generate` to generate the embeddings of the documents",
+    );
   }
 
   return await VectorStoreIndex.init({ storageContext });
