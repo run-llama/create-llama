@@ -2,8 +2,9 @@ import asyncio
 import logging
 from typing import AsyncGenerator, Callable, Union
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
@@ -11,7 +12,6 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.callbacks.llamacloud import LlamaCloudFileDownload
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
@@ -24,10 +24,7 @@ def chat_router(
     router = APIRouter(prefix="/chat")
 
     @router.post("")
-    async def chat(
-        request: ChatRequest,
-        background_tasks: BackgroundTasks,
-    ) -> StreamingResponse:
+    async def chat(request: ChatRequest) -> StreamingResponse:
         try:
             user_message = request.messages[-1].to_llamaindex_message()
             chat_history = [
@@ -41,7 +38,6 @@ def chat_router(
 
             callbacks: list[EventCallback] = [
                 SourceNodesFromToolCall(),
-                LlamaCloudFileDownload(background_tasks),
             ]
             if request.config and request.config.next_question_suggestions:
                 callbacks.append(SuggestNextQuestions(request))

@@ -6,6 +6,7 @@ from typing import Any, Callable, Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers.chat import chat_router
 from llama_index.server.chat_ui import download_chat_ui
@@ -23,7 +24,7 @@ class LlamaIndexServer(FastAPI):
         self,
         workflow_factory: Callable[..., Workflow],
         logger: Optional[logging.Logger] = None,
-        use_default_routers: Optional[bool] = True,
+        use_default_routers: Optional[bool] = False,
         env: Optional[str] = None,
         include_ui: Optional[bool] = None,
         starter_questions: Optional[list[str]] = None,
@@ -50,9 +51,8 @@ class LlamaIndexServer(FastAPI):
         self.verbose = verbose
         self.include_ui = include_ui  # Store the explicitly passed value first
         self.starter_questions = starter_questions
-        self.use_default_routers = use_default_routers or True
 
-        if self.use_default_routers:
+        if use_default_routers:
             self.add_default_routers()
 
         if str(env).lower() == "dev":
