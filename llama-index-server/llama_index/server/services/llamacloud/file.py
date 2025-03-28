@@ -136,9 +136,7 @@ class LlamaCloudFileService:
         files = cls._get_files_to_download(nodes)
         for file in files:
             logger.info(f"Adding download of {file.file_name} to background tasks")
-            background_tasks.add_task(
-                cls.download_pipeline_file, file
-            )
+            background_tasks.add_task(cls.download_pipeline_file, file)
 
     @classmethod
     def _get_files_to_download(cls, nodes: List[NodeWithScore]) -> Set[LlamaCloudFile]:
