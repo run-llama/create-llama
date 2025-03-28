@@ -113,7 +113,12 @@ export async function runCreateLlama({
   if (observability) {
     commandArgs.push("--observability", observability);
   }
-  if ((templateType === "multiagent" || templateType === "reflex") && useCase) {
+  if (
+    (templateType === "multiagent" ||
+      templateType === "reflex" ||
+      templateType === "llamaindexserver") &&
+    useCase
+  ) {
     commandArgs.push("--use-case", useCase);
   }
 
