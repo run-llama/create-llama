@@ -10,7 +10,7 @@ const reportAgent = agent({
   tools: [
     documentGenerator({
       outputDir: "output/tools",
-      fileServerURLPrefix: "http://localhost:3000/api/file/",
+      fileServerURLPrefix: "/api/files",
     }),
   ],
 });

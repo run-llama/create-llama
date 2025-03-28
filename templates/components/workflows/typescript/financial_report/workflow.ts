@@ -32,13 +32,8 @@ const FILE_SERVER_URL_PREFIX = "/api/files";
 
 export async function workflowFactory() {
   const index = await getIndex();
-  if (!index) {
-    throw new Error(
-      "Index not found. Please run `pnpm run generate` to generate the embeddings of the documents",
-    );
-  }
 
-  const queryEngineTool = index?.queryTool({
+  const queryEngineTool = index.queryTool({
     metadata: {
       name: "query_document",
       description: `This tool can retrieve information about Apple and Tesla financial data`,

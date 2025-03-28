@@ -8,6 +8,7 @@ import {
   Metadata,
   MetadataMode,
   NodeWithScore,
+  PromptTemplate,
   Settings,
   StartEvent,
   StopEvent as StopEventBase,
@@ -28,7 +29,8 @@ const MAX_QUESTIONS = 6; // max number of questions to research, research will s
 const TIMEOUT = 360; // timeout in seconds
 const TOP_K = 10; // number of nodes to retrieve from the vector store
 
-const CREATE_PLAN_RESEARCH_PROMPT = `
+const createPlanResearchPrompt = new PromptTemplate({
+  template: `
 You are a professor who is guiding a researcher to research a specific request/problem.
 Your task is to decide on a research plan for the researcher.
 
@@ -57,9 +59,17 @@ Now, provide your decision in the required format for this user request:
 <User request>
 {user_request}
 </User request>
-`;
+`,
+  templateVars: [
+    "context_str",
+    "conversation_context",
+    "enhanced_prompt",
+    "user_request",
+  ],
+});
 
-const RESEARCH_PROMPT = `
+const researchPrompt = new PromptTemplate({
+  template: `
 You are a researcher who is in the process of answering the question.
 The purpose is to answer the question based on the collected information, without using prior knowledge or making up any new information.
 Always add citations to the sentence/point/paragraph using the id of the provided content.
@@ -80,7 +90,9 @@ And your answer uses the content, then the citation should be:
 </Collected information>
 
 No prior knowledge, just use the provided context to answer the question: {question}
-`;
+`,
+  templateVars: ["context_str", "question"],
+});
 
 const WRITE_REPORT_PROMPT = `
 You are a researcher writing a report based on a user request and the research context.
@@ -177,11 +189,6 @@ class DeepResearchWorkflow extends Workflow<
     await this.memory.put({ role: "user", content: userInput });
 
     const index = await getIndex();
-    if (!index) {
-      throw new Error(
-        "Index not found. Please run `pnpm run generate` to generate the embeddings of the documents",
-      );
-    }
 
     this.#index = index;
   }
@@ -391,13 +398,12 @@ class DeepResearchWorkflow extends Workflow<
       .map((message) => `${message.role}: ${message.content}`)
       .join("\n");
 
-    const prompt = CREATE_PLAN_RESEARCH_PROMPT.replace(
-      "{context_str}",
-      this.contextStr,
-    )
-      .replace("{conversation_context}", conversationContext)
-      .replace("{enhanced_prompt}", this.enhancedPrompt)
-      .replace("{user_request}", this.userRequest);
+    const prompt = createPlanResearchPrompt.format({
+      context_str: this.contextStr,
+      conversation_context: conversationContext,
+      enhanced_prompt: this.enhancedPrompt,
+      user_request: this.userRequest,
+    });
 
     const responseFormat = z.object({
       decision: z.enum(["research", "write", "cancel"]),
@@ -418,10 +424,10 @@ class DeepResearchWorkflow extends Workflow<
   }
 
   async answerQuestion(question: string) {
-    const prompt = RESEARCH_PROMPT.replace("{question}", question).replace(
-      "{context_str}",
-      this.contextStr,
-    );
+    const prompt = researchPrompt.format({
+      context_str: this.contextStr,
+      question,
+    });
     const result = await this.llm.complete({ prompt });
     return result.text;
   }
