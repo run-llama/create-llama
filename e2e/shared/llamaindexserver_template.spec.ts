@@ -18,7 +18,7 @@ const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["financial_report", "agentic_rag", "form_filling"];
+const templateUseCases = ["financial_report", "agentic_rag", "deep_research"];
 
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
@@ -72,7 +72,7 @@ for (const useCase of templateUseCases) {
       test.skip(
         templatePostInstallAction !== "runApp" ||
           useCase === "financial_report" ||
-          useCase === "form_filling" ||
+          useCase === "deep_research" ||
           templateFramework === "express",
         "Skip chat tests for financial report and form filling.",
       );
@@ -86,6 +86,12 @@ for (const useCase of templateUseCases) {
       await page.click("form button[type=submit]");
 
       const response = await responsePromise;
+      console.log(`Response status: ${response.status()}`);
+      const responseBody = await response
+        .text()
+        .catch((e) => `Error reading body: ${e}`);
+      console.log(`Response body: ${responseBody}`);
+
       expect(response.ok()).toBeTruthy();
     });
 

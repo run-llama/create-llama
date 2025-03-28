@@ -16,6 +16,7 @@ def create_app():
     # generates a FastAPI instance that can be extended
     app = LlamaIndexServer(
         workflow_factory=create_workflow,  # Factory function that creates a new workflow for each request
+        use_default_routers=True,
         api_prefix="/api",  # Optional, default is `/api`
         env=env,
         logger=logger,
