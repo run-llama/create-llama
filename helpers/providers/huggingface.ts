@@ -1,6 +1,6 @@
-import prompts from "prompts";
+import inquirer from "inquirer";
 import { ModelConfigParams } from ".";
-import { questionHandlers, toChoice } from "../../questions/utils";
+import { toChoice } from "../../questions/utils";
 
 const MODELS = ["HuggingFaceH4/zephyr-7b-alpha"];
 type ModelData = {
@@ -38,28 +38,24 @@ export async function askHuggingfaceQuestions({
   };
 
   if (askModels) {
-    const { model } = await prompts(
+    const { model } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "model",
         message: "Which Hugging Face model would you like to use?",
         choices: MODELS.map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.model = model;
 
-    const { embeddingModel } = await prompts(
+    const { embeddingModel } = await inquirer.prompt([
       {
-        type: "select",
+        type: "list",
         name: "embeddingModel",
         message: "Which embedding model would you like to use?",
         choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
-        initial: 0,
       },
-      questionHandlers,
-    );
+    ]);
     config.embeddingModel = embeddingModel;
     config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
   }
