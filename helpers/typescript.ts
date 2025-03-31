@@ -42,17 +42,31 @@ const installLlamaIndexServerTemplate = async ({
     ),
   });
 
-  await copy("index.ts", path.join(root, "src", "app"), {
-    parents: true,
-    cwd: path.join(
-      templatesDir,
-      "components",
-      "vectordbs",
-      "typescript",
-      vectorDb,
-    ),
-    rename: () => "data.ts",
-  });
+  if (vectorDb === "llamacloud") {
+    await copy("generate.ts", path.join(root, "src"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "typescript",
+      ),
+    });
+
+    await copy("index.ts", path.join(root, "src", "app"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "typescript",
+        vectorDb,
+      ),
+      rename: () => "data.ts",
+    });
+  }
 
   await copy("generate.ts", path.join(root, "src"), {
     parents: true,

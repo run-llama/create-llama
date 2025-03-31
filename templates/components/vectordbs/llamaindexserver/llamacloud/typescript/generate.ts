@@ -1,13 +1,35 @@
 import * as dotenv from "dotenv";
+import "dotenv/config";
 import * as fs from "fs/promises";
 import { LLamaCloudFileService } from "llamaindex";
 import * as path from "path";
-import { getDataSource } from "./index";
-import { DATA_DIR } from "./loader";
-import { initSettings } from "./settings";
-import { checkRequiredEnvVars } from "./shared";
+import { getIndex } from "./app/data";
+import { initSettings } from "./app/settings";
 
 dotenv.config();
+
+const REQUIRED_ENV_VARS = [
+  "LLAMA_CLOUD_INDEX_NAME",
+  "LLAMA_CLOUD_PROJECT_NAME",
+  "LLAMA_CLOUD_API_KEY",
+];
+
+export function checkRequiredEnvVars() {
+  const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => {
+    return !process.env[envVar];
+  });
+
+  if (missingEnvVars.length > 0) {
+    console.log(
+      `The following environment variables are required but missing: ${missingEnvVars.join(
+        ", ",
+      )}`,
+    );
+    throw new Error(
+      `Missing environment variables: ${missingEnvVars.join(", ")}`,
+    );
+  }
+}
 
 async function* walk(dir: string): AsyncGenerator<string> {
   const directory = await fs.opendir(dir);
@@ -24,14 +46,14 @@ async function* walk(dir: string): AsyncGenerator<string> {
 }
 
 async function loadAndIndex() {
-  const index = await getDataSource();
+  const index = await getIndex();
   // ensure the index is available or create a new one
   await index.ensureIndex({ verbose: true });
   const projectId = await index.getProjectId();
   const pipelineId = await index.getPipelineId();
 
   // walk through the data directory and upload each file to LlamaCloud
-  for await (const filePath of walk(DATA_DIR)) {
+  for await (const filePath of walk("data")) {
     const buffer = await fs.readFile(filePath);
     const filename = path.basename(filePath);
     try {

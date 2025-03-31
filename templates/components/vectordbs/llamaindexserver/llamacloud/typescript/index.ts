@@ -7,7 +7,7 @@ type LlamaCloudDataSourceParams = {
   };
 };
 
-export async function getDataSource(params?: LlamaCloudDataSourceParams) {
+export async function getIndex(params?: LlamaCloudDataSourceParams) {
   const { project, pipeline } = params?.llamaCloudPipeline ?? {};
   const projectName = project ?? process.env.LLAMA_CLOUD_PROJECT_NAME;
   const pipelineName = pipeline ?? process.env.LLAMA_CLOUD_INDEX_NAME;
