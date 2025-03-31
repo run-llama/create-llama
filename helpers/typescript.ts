@@ -350,13 +350,14 @@ export const installTSTemplate = async ({
     root,
     appName,
     dataSources,
-    relativeEngineDestPath: "",
+    relativeEngineDestPath,
     framework,
     ui,
     observability,
     vectorDb,
     backend,
     modelConfig,
+    template,
   });
 
   if (
@@ -440,6 +441,7 @@ async function updatePackageJson({
   vectorDb,
   backend,
   modelConfig,
+  template,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -450,6 +452,7 @@ async function updatePackageJson({
   | "observability"
   | "vectorDb"
   | "modelConfig"
+  | "template"
 > & {
   relativeEngineDestPath: string;
   backend: boolean;
@@ -461,7 +464,7 @@ async function updatePackageJson({
   packageJson.name = appName;
   packageJson.version = "0.1.0";
 
-  if (relativeEngineDestPath) {
+  if (relativeEngineDestPath && template !== "llamaindexserver") {
     // TODO: move script to {root}/scripts for all frameworks
     // add generate script if using context engine
     packageJson.scripts = {
