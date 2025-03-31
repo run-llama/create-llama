@@ -1,22 +1,22 @@
-import { SimpleDocumentStore, VectorStoreIndex } from "llamaindex";
-import { storageContextFromDefaults } from "llamaindex/storage/StorageContext";
+import {
+  SimpleDocumentStore,
+  storageContextFromDefaults,
+  VectorStoreIndex,
+} from "llamaindex";
 
-export async function getDataSource(params?: any) {
-  const persistDir = process.env.STORAGE_CACHE_DIR;
-  if (!persistDir) {
-    throw new Error("STORAGE_CACHE_DIR environment variable is required!");
-  }
+export async function getIndex(params?: any) {
   const storageContext = await storageContextFromDefaults({
-    persistDir,
+    persistDir: "storage",
   });
 
   const numberOfDocs = Object.keys(
     (storageContext.docStore as SimpleDocumentStore).toDict(),
   ).length;
   if (numberOfDocs === 0) {
-    return null;
+    throw new Error(
+      "Index not found. Please run `pnpm run generate` to generate the embeddings of the documents",
+    );
   }
-  return await VectorStoreIndex.init({
-    storageContext,
-  });
+
+  return await VectorStoreIndex.init({ storageContext });
 }

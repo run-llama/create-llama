@@ -11,12 +11,21 @@ import { InstallTemplateArgs, ModelProvider, TemplateVectorDB } from "./types";
 const installLlamaIndexServerTemplate = async ({
   root,
   useCase,
-  useLlamaParse,
-}: Pick<InstallTemplateArgs, "root" | "useCase" | "useLlamaParse">) => {
+  vectorDb,
+}: Pick<InstallTemplateArgs, "root" | "useCase" | "vectorDb">) => {
   if (!useCase) {
     console.log(
       red(
         `There is no use case selected. Please pick a use case to use via --use-case flag.`,
+      ),
+    );
+    process.exit(1);
+  }
+
+  if (!vectorDb) {
+    console.log(
+      red(
+        `There is no vector db selected. Please pick a vector db to use via --vector-db flag.`,
       ),
     );
     process.exit(1);
@@ -30,6 +39,29 @@ const installLlamaIndexServerTemplate = async ({
       "workflows",
       "typescript",
       useCase,
+    ),
+  });
+
+  await copy("index.ts", path.join(root, "src", "app"), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "vectordbs",
+      "typescript",
+      vectorDb,
+    ),
+    rename: () => "data.ts",
+  });
+
+  await copy("generate.ts", path.join(root, "src"), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "vectordbs",
+      "typescript",
+      vectorDb,
     ),
   });
 };
@@ -287,7 +319,7 @@ export const installTSTemplate = async ({
     await installLlamaIndexServerTemplate({
       root,
       useCase,
-      useLlamaParse,
+      vectorDb,
     });
   } else {
     await installLegacyTSTemplate({

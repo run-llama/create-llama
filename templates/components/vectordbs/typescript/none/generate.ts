@@ -1,47 +1,25 @@
-import { VectorStoreIndex } from "llamaindex";
-import { storageContextFromDefaults } from "llamaindex/storage/StorageContext";
-
-import * as dotenv from "dotenv";
-
-import { getDocuments } from "./loader";
-import { initSettings } from "./settings";
-
-// Load environment variables from local .env file
-dotenv.config();
-
-async function getRuntime(func: any) {
-  const start = Date.now();
-  await func();
-  const end = Date.now();
-  return end - start;
-}
+import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
+import "dotenv/config";
+import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
+import { initSettings } from "./app/settings";
 
 async function generateDatasource() {
   console.log(`Generating storage context...`);
   // Split documents, create embeddings and store them in the storage context
-  const persistDir = process.env.STORAGE_CACHE_DIR;
-  if (!persistDir) {
-    throw new Error("STORAGE_CACHE_DIR environment variable is required!");
-  }
-  const ms = await getRuntime(async () => {
-    const storageContext = await storageContextFromDefaults({
-      persistDir,
-    });
-    const documents = await getDocuments();
-
-    await VectorStoreIndex.fromDocuments(documents, {
-      storageContext,
-    });
+  const storageContext = await storageContextFromDefaults({
+    persistDir: "storage",
   });
-  console.log(`Storage context successfully generated in ${ms / 1000}s.`);
+  // load documents from current directoy into an index
+  const reader = new SimpleDirectoryReader();
+  const documents = await reader.loadData("data");
+
+  await VectorStoreIndex.fromDocuments(documents, {
+    storageContext,
+  });
+  console.log("Storage context successfully generated.");
 }
 
 (async () => {
-  try {
-    initSettings();
-    await generateDatasource();
-    console.log("Finished generating storage.");
-  } catch (error) {
-    console.error("Error generating storage.", error);
-  }
+  initSettings();
+  await generateDatasource();
 })();
