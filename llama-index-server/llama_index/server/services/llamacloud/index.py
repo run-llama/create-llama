@@ -88,9 +88,9 @@ class IndexConfig(BaseModel):
         }
 
     @classmethod
-    def from_chat_request(cls, chat_request: ChatRequest) -> "IndexConfig":
+    def from_default(cls, chat_request: Optional[ChatRequest] = None) -> "IndexConfig":
         default_config = cls()
-        if chat_request.data is not None:
+        if chat_request is not None and chat_request.data is not None:
             llamacloud_config = chat_request.data.get("llamaCloudPipeline")
             if llamacloud_config is not None:
                 default_config.llama_cloud_pipeline_config.pipeline = llamacloud_config[
@@ -106,10 +106,7 @@ def get_index(
     chat_request: Optional[ChatRequest] = None,
     create_if_missing: bool = False,
 ) -> Optional[LlamaCloudIndex]:
-    if chat_request is None:
-        config = IndexConfig()
-    else:
-        config = IndexConfig.from_chat_request(chat_request)
+    config = IndexConfig.from_default(chat_request)
     # Check whether the index exists
     try:
         index = LlamaCloudIndex(**config.to_index_kwargs())
