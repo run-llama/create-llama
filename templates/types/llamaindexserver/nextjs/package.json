@@ -12,7 +12,7 @@
     "@llamaindex/server": "https://pkg.pr.new/run-llama/LlamaIndexTS/@llamaindex/server@1796",
     "@llamaindex/tools": "0.0.2",
     "dotenv": "^16.4.7",
-    "llamaindex": "0.9.13",
+    "llamaindex": "https://pkg.pr.new/run-llama/LlamaIndexTS/llamaindex@1796",
     "zod": "^3.23.8"
   },
   "devDependencies": {
