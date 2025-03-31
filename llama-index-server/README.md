@@ -1,6 +1,13 @@
 # LlamaIndex Server
 
-LlamaIndexServer is a FastAPI application that allows you to quickly launch your workflow as an API server.
+LlamaIndexServer is a FastAPI-based application that allows you to quickly launch your workflow as an API server with an optional chat UI. It provides a complete environment for running LlamaIndex workflows with both API endpoints and a user interface for interaction.
+
+## Features
+
+- Serving a workflow as a chatbot
+- Built on FastAPI for high performance and easy API development
+- Optional built-in chat UI
+- Prebuilt development code
 
 ## Installation
 
@@ -8,7 +15,7 @@ LlamaIndexServer is a FastAPI application that allows you to quickly launch your
 pip install llama-index-server
 ```
 
-## Usage
+## Quick Start
 
 ```python
 # main.py
@@ -32,13 +39,17 @@ def create_workflow() -> Workflow:
     )
 
 
-# Create an API server the workflow
+# Create an API server for the workflow
 app = LlamaIndexServer(
-    workflow_factory=create_workflow  # Supports Workflow or AgentWorkflow
+    workflow_factory=create_workflow,  # Supports Workflow or AgentWorkflow
+    env="dev",  # Enable development mode
+    include_ui=True,  # Include chat UI
+    starter_questions=["What can you do?", "How do I use this?"],
+    verbose=True
 )
 ```
 
-## Running the server
+## Running the Server
 
 - In the same directory as `main.py`, run the following command to start the server:
 
@@ -46,10 +57,74 @@ app = LlamaIndexServer(
   fastapi dev
   ```
 
-- Making a request to the server
+- Making a request to the server:
 
   ```bash
   curl -X POST "http://localhost:8000/api/chat" -H "Content-Type: application/json" -d '{"message": "What is the weather in Tokyo?"}'
   ```
 
 - See the API documentation at `http://localhost:8000/docs`
+- Access the chat UI at `http://localhost:8000/` (Make sure you set the `env="dev"` or `include_ui=True` in the server configuration)
+
+## Configuration Options
+
+The LlamaIndexServer accepts the following configuration parameters:
+
+- `workflow_factory`: A callable that creates a workflow instance for each request
+- `logger`: Optional logger instance (defaults to uvicorn logger)
+- `use_default_routers`: Whether to include default routers (chat, data, output)
+- `env`: Environment setting ('dev' enables CORS and UI by default)
+- `include_ui`: Whether to include the chat UI
+- `starter_questions`: List of starter questions for the chat UI
+- `verbose`: Enable verbose logging
+- `api_prefix`: API route prefix (default: "/api")
+- `ui_path`: Path for downloaded UI static files (default: ".ui")
+
+## Default Routers and Features
+
+### Chat Router
+
+The server includes a default chat router at `/api/chat` for handling chat interactions.
+
+### Static File Serving
+
+The server automatically mounts:
+
+- Data directory at `/api/files/data`
+- Output directory at `/api/files/output`
+
+### Chat UI
+
+When enabled, the server provides a chat interface at the root path (`/`) with:
+
+- Configurable starter questions
+- Real-time chat interface
+- API endpoint integration
+
+## Development Mode
+
+In development mode (`env="dev"`), the server:
+
+- Enables CORS for all origins
+- Automatically includes the chat UI
+- Provides more verbose logging
+
+## API Endpoints
+
+The server provides the following default endpoints:
+
+- `/api/chat`: Chat interaction endpoint
+- `/api/files/data/*`: Access to data directory files
+- `/api/files/output/*`: Access to output directory files
+
+## Best Practices
+
+1. Always provide a workflow factory that creates fresh workflow instances
+2. Use environment variables for sensitive configuration
+3. Enable verbose logging during development
+4. Configure CORS appropriately for your deployment environment
+5. Use starter questions to guide users in the chat UI
+
+## Getting Started with a New Project
+
+Want to start a new project with LlamaIndexServer? Check out our [create-llama](https://github.com/run-llama/create-llama/) tool to quickly generate a new project with LlamaIndexServer.
