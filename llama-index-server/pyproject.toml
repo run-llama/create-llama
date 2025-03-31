@@ -33,7 +33,7 @@ python = ">=3.9,<4.0"
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 cachetools = "^5.5.2"
 requests = "^2.32.3"
-llama-index-core = "^0.12.0"
+llama-index-core = "0.12.25"
 llama-index-readers-file = "^0.4.6"
 llama-index-indices-managed-llama-cloud = "^0.6.3"
 
