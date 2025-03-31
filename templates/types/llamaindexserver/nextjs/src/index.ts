@@ -10,7 +10,7 @@ new LlamaIndexServer({
   appTitle: "LlamaIndex App",
   useLlamaCloud: false,
   starterQuestions: [
+    "Key challenges for Apple and Tesla?",
     "Research about Apple and Tesla revenue",
-    "How to improve the revenue of Apple and Tesla",
   ],
 }).start();

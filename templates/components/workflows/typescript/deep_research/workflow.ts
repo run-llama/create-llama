@@ -5,6 +5,7 @@ import {
   ChatMemoryBuffer,
   ChatResponseChunk,
   HandlerContext,
+  LlamaCloudIndex,
   Metadata,
   MetadataMode,
   NodeWithScore,
@@ -22,7 +23,9 @@ import { z } from "zod";
 import { getIndex } from "../data";
 
 // workflow factory
-export const workflowFactory = () => new DeepResearchWorkflow();
+export const workflowFactory = (reqBody: any) => {
+  return new DeepResearchWorkflow(reqBody?.data);
+};
 
 // workflow configs
 const MAX_QUESTIONS = 6; // max number of questions to research, research will stop when this number is reached
@@ -136,15 +139,17 @@ class DeepResearchWorkflow extends Workflow<
   string
 > {
   #llm = Settings.llm as ToolCallLLM;
-  #index?: VectorStoreIndex;
+  #index?: VectorStoreIndex | LlamaCloudIndex;
+  requestData?: any;
 
   userRequest: string = "";
   totalQuestions: number = 0;
   contextNodes: NodeWithScore<Metadata>[] = [];
   memory: ChatMemoryBuffer = new ChatMemoryBuffer({ llm: Settings.llm });
 
-  constructor() {
+  constructor(requestData: any) {
     super({ timeout: TIMEOUT });
+    this.requestData = requestData;
     this.addWorkflowSteps();
   }
 
@@ -188,7 +193,7 @@ class DeepResearchWorkflow extends Workflow<
     await this.memory.set(chatHistory);
     await this.memory.put({ role: "user", content: userInput });
 
-    const index = await getIndex();
+    const index = await getIndex(this.requestData);
 
     this.#index = index;
   }

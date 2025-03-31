@@ -30,8 +30,8 @@ const OUT_DIR = "output/tools";
 const UPLOADED_FILE_DIR = "output/uploaded";
 const FILE_SERVER_URL_PREFIX = "/api/files";
 
-export async function workflowFactory() {
-  const index = await getIndex();
+export async function workflowFactory(reqBody: any) {
+  const index = await getIndex(reqBody?.data);
 
   const queryEngineTool = index.queryTool({
     metadata: {
