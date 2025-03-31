@@ -28,6 +28,7 @@ class ChatAPIMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[ChatAPIMessage]
+    data: Optional[Any] = None
     config: Optional[ChatConfig] = ChatConfig()
 
     @field_validator("messages")
