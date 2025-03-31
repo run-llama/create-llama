@@ -2,7 +2,6 @@ import logging
 from typing import Any, List
 
 from fastapi import BackgroundTasks
-
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.callbacks.base import EventCallback
 from llama_index.server.services.llamacloud.file import LlamaCloudFileService
@@ -13,7 +12,6 @@ logger = logging.getLogger("uvicorn")
 class LlamaCloudFileDownload(EventCallback):
     """
     Processor for handling LlamaCloud file downloads from source nodes.
-    Only work if LlamaCloud service code is available.
     """
 
     def __init__(self, background_tasks: BackgroundTasks) -> None:
