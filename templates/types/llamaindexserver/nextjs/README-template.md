@@ -25,6 +25,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the chat UI.
 
+## Configure LLM and Embedding Model
+
+You can config LLM model and Embedding model in the [settings file](src\app\settings.ts). By default, `gpt-4o-mini` is used for LLM and `text-embedding-ada-002` is used for Embedding model.
+
 ## Use Case
 
 You can start by sending an request on the chat UI to create a report comparing the finances of Apple and Tesla.
@@ -45,3 +49,15 @@ To learn more about LlamaIndex, take a look at the following resources:
 - [Workflows Introduction](https://ts.llamaindex.ai/docs/llamaindex/guide/workflow) - learn about LlamaIndexTS workflows.
 
 You can check out [the LlamaIndexTS GitHub repository](https://github.com/run-llama/LlamaIndexTS) - your feedback and contributions are welcome!
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
