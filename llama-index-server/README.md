@@ -127,4 +127,4 @@ The server provides the following default endpoints:
 
 ## Getting Started with a New Project
 
-Want to start a new project with LlamaIndexServer? Check out our [create-llama](https://github.com/run-llama/create-llama/) tool to quickly generate a new project with LlamaIndexServer.
+Want to start a new project with LlamaIndexServer? Check out our [create-llama](https://github.com/run-llama/create-llama) tool to quickly generate a new project with LlamaIndexServer.
