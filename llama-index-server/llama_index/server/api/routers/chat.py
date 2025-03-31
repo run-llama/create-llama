@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 import os
 from typing import AsyncGenerator, Callable, Union
@@ -35,7 +36,12 @@ def chat_router(
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
-            workflow = workflow_factory()
+            # detect if the workflow factory has chat_request as a parameter
+            factory_sig = inspect.signature(workflow_factory)
+            if "chat_request" in factory_sig.parameters:
+                workflow = workflow_factory(chat_request=request)
+            else:
+                workflow = workflow_factory()
             workflow_handler = workflow.run(
                 user_msg=user_message.content,
                 chat_history=chat_history,
