@@ -1,9 +1,13 @@
-import { toSourceEvent } from "@llamaindex/server";
+import {
+  ReportEvent,
+  StopEvent,
+  toSourceEvent,
+  toStreamGenerator,
+} from "@llamaindex/server";
 import {
   AgentInputData,
   AgentWorkflowContext,
   ChatMemoryBuffer,
-  ChatResponseChunk,
   HandlerContext,
   LlamaCloudIndex,
   Metadata,
@@ -12,7 +16,6 @@ import {
   PromptTemplate,
   Settings,
   StartEvent,
-  StopEvent as StopEventBase,
   ToolCallLLM,
   VectorStoreIndex,
   Workflow,
@@ -23,8 +26,9 @@ import { z } from "zod";
 import { getIndex } from "./data";
 
 // workflow factory
-export const workflowFactory = (reqBody: any) => {
-  return new DeepResearchWorkflow(reqBody?.data);
+export const workflowFactory = async (reqBody: any) => {
+  const index = await getIndex(reqBody);
+  return new DeepResearchWorkflow(index);
 };
 
 // workflow configs
@@ -115,8 +119,6 @@ type ResearchResult = ResearchQuestion & { answer: string };
 
 class PlanResearchEvent extends WorkflowEvent<{}> {}
 class ResearchEvent extends WorkflowEvent<ResearchQuestion[]> {}
-class ReportEvent extends WorkflowEvent<{}> {}
-class StopEvent extends StopEventBase<AsyncGenerator<ChatResponseChunk>> {}
 
 // annotations events
 type DeepResearchEventData = {
@@ -140,16 +142,15 @@ class DeepResearchWorkflow extends Workflow<
 > {
   #llm = Settings.llm as ToolCallLLM;
   #index?: VectorStoreIndex | LlamaCloudIndex;
-  requestData?: any;
 
   userRequest: string = "";
   totalQuestions: number = 0;
   contextNodes: NodeWithScore<Metadata>[] = [];
   memory: ChatMemoryBuffer = new ChatMemoryBuffer({ llm: Settings.llm });
 
-  constructor(requestData: any) {
+  constructor(index: VectorStoreIndex | LlamaCloudIndex) {
     super({ timeout: TIMEOUT });
-    this.requestData = requestData;
+    this.#index = index;
     this.addWorkflowSteps();
   }
 
@@ -192,10 +193,6 @@ class DeepResearchWorkflow extends Workflow<
 
     await this.memory.set(chatHistory);
     await this.memory.put({ role: "user", content: userInput });
-
-    const index = await getIndex(this.requestData);
-
-    this.#index = index;
   }
 
   handleStartWorkflow = async (
@@ -250,7 +247,7 @@ class DeepResearchWorkflow extends Workflow<
         }),
       );
       return new StopEvent(
-        this.toStreamGenerator(
+        toStreamGenerator(
           cancelReason ?? "Research cancelled without any reason.",
         ),
       );
@@ -361,7 +358,7 @@ class DeepResearchWorkflow extends Workflow<
 
     const stream = await this.llm.chat({ messages, stream: true });
 
-    return new StopEvent(this.toStreamGenerator(stream));
+    return new StopEvent(toStreamGenerator(stream));
   };
 
   get llm() {
@@ -435,16 +432,5 @@ class DeepResearchWorkflow extends Workflow<
     });
     const result = await this.llm.complete({ prompt });
     return result.text;
-  }
-
-  async *toStreamGenerator(input: AsyncIterable<ChatResponseChunk> | string) {
-    if (typeof input === "string") {
-      yield { delta: input } as ChatResponseChunk;
-      return;
-    }
-
-    for await (const chunk of input) {
-      yield chunk;
-    }
   }
 }

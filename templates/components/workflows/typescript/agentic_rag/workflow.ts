@@ -1,31 +1,16 @@
-import { agent, multiAgent } from "llamaindex";
+import { agent } from "llamaindex";
+import { getIndex } from "./data";
 
-import { documentGenerator, wiki } from "@llamaindex/tools";
+export const workflowFactory = async (reqBody: any) => {
+  const index = await getIndex(reqBody?.data);
 
-const reportAgent = agent({
-  name: "ReportAgent",
-  description:
-    "Responsible for crafting well-written blog posts based on research findings",
-  systemPrompt: `You are a professional writer. Your task is to create an engaging blog post using the research content provided. Once complete, save the post to a file using the document_generator tool.`,
-  tools: [
-    documentGenerator({
-      outputDir: "output/tools",
-      fileServerURLPrefix: "/api/files",
-    }),
-  ],
-});
-
-const researchAgent = agent({
-  name: "ResearchAgent",
-  description:
-    "Responsible for gathering relevant information from the internet",
-  systemPrompt: `You are a research agent. Your role is to gather information from the internet using the provided tools and then transfer this information to the report agent for content creation.`,
-  tools: [wiki()],
-  canHandoffTo: [reportAgent],
-});
-
-export const workflowFactory = () =>
-  multiAgent({
-    agents: [researchAgent, reportAgent],
-    rootAgent: researchAgent,
+  const queryEngineTool = index.queryTool({
+    metadata: {
+      name: "query_document",
+      description: `This tool can retrieve information about Apple and Tesla financial data`,
+    },
+    includeSourceNodes: true,
   });
+
+  return agent({ tools: [queryEngineTool] });
+};
