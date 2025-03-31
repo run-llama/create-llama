@@ -23,7 +23,7 @@ const templateUseCases = ["financial_report", "agentic_rag", "deep_research"];
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
-      process.env.DATASOURCE === "--no-files",
+      process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
       "The llamaindexserver template currently only works with files. We also only run on Linux to speed up tests.",
     );
     let port: number;
