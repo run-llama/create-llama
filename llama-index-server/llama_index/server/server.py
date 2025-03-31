@@ -67,11 +67,14 @@ class LlamaIndexServer(FastAPI):
 
     @property
     def _ui_config(self) -> dict:
-        return {
+        config = {
             "CHAT_API": f"{self.api_prefix}/chat",
             "STARTER_QUESTIONS": self.starter_questions,
-            "LLAMA_CLOUD_API": "/api/chat/config/llamacloud",
         }
+        is_llamacloud_configured = os.getenv("LLAMA_CLOUD_API_KEY") is not None
+        if is_llamacloud_configured:
+            config["LLAMA_CLOUD_API"] = "/api/chat/config/llamacloud"
+        return config
 
     # Default routers
     def add_default_routers(self) -> None:
