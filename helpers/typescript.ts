@@ -61,23 +61,13 @@ const installLlamaIndexServerTemplate = async ({
         templatesDir,
         "components",
         "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
         "typescript",
-        vectorDb,
       ),
       rename: () => "data.ts",
     });
   }
-
-  await copy("generate.ts", path.join(root, "src"), {
-    parents: true,
-    cwd: path.join(
-      templatesDir,
-      "components",
-      "vectordbs",
-      "typescript",
-      vectorDb,
-    ),
-  });
 };
 
 const installLegacyTSTemplate = async ({
