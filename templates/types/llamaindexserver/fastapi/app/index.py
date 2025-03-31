@@ -1,10 +1,11 @@
 import logging
 import os
-
-from pydantic import BaseModel
+from typing import Optional
 
 from llama_index.core.indices import load_index_from_storage
+from llama_index.server.api.models import ChatRequest
 from llama_index.server.tools.index.utils import get_storage_context
+from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
@@ -12,10 +13,13 @@ logger = logging.getLogger("uvicorn")
 class IndexConfig(BaseModel):
     storage_dir: str = "storage"
 
+    @classmethod
+    def from_chat_request(cls, chat_request: ChatRequest) -> "IndexConfig":
+        return cls()
 
-def get_index(config: IndexConfig = None):
-    if config is None:
-        config = IndexConfig()
+
+def get_index(chat_request: Optional[ChatRequest] = None):
+    config = IndexConfig.from_chat_request(chat_request)
     storage_dir = config.storage_dir
     # check if storage already exists
     if not os.path.exists(storage_dir):
