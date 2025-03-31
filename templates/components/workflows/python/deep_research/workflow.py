@@ -3,7 +3,7 @@ import os
 import uuid
 from typing import List, Literal, Optional
 
-from app.index import IndexConfig, get_index
+from app.index import get_index
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -24,15 +24,15 @@ from llama_index.core.workflow import (
     step,
 )
 from llama_index.server.api.models import SourceNodesEvent
+from llama_index.server.api.models import ChatRequest
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 
 
-def create_workflow() -> Workflow:
-    index_config = IndexConfig()
-    index = get_index(index_config)
+def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
+    index = get_index(chat_request=chat_request)
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."

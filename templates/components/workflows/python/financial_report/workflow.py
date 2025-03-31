@@ -15,7 +15,7 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import AgentRunEvent
+from llama_index.server.api.models import AgentRunEvent, ChatRequest
 from llama_index.server.tools.document_generator import DocumentGenerator
 from llama_index.server.tools.index import get_query_engine_tool
 from llama_index.server.tools.interpreter import E2BCodeInterpreter
@@ -25,8 +25,8 @@ from llama_index.server.utils.agent_tool import (
 )
 
 
-def create_workflow(verbose: bool = False) -> Workflow:
-    index = get_index()
+def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
+    index = get_index(chat_request=chat_request)
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."
@@ -43,7 +43,6 @@ def create_workflow(verbose: bool = False) -> Workflow:
         query_engine_tool=query_engine_tool,
         code_interpreter_tool=code_interpreter_tool,
         document_generator_tool=document_generator_tool,
-        verbose=verbose,
         timeout=180,
     )
 
