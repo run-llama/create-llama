@@ -20,7 +20,7 @@ import {
 } from "llamaindex";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { getIndex } from "../data";
+import { getIndex } from "./data";
 
 // workflow factory
 export const workflowFactory = (reqBody: any) => {

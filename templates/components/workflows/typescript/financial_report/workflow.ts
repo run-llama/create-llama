@@ -23,7 +23,7 @@ import {
   Workflow,
   WorkflowEvent,
 } from "llamaindex";
-import { getIndex } from "../data";
+import { getIndex } from "./data";
 
 const TIMEOUT = 360 * 1000;
 const OUT_DIR = "output/tools";
