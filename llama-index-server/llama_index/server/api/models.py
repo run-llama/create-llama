@@ -3,11 +3,10 @@ import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
-
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger("uvicorn")
 

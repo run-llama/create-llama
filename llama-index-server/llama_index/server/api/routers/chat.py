@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -15,6 +16,7 @@ from llama_index.server.api.callbacks.llamacloud import LlamaCloudFileDownload
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
 def chat_router(
@@ -56,6 +58,28 @@ def chat_router(
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
+
+    if LlamaCloudFileService.is_configured():
+
+        @router.get("/config/llamacloud")
+        async def chat_llama_cloud_config() -> dict:
+            if not os.getenv("LLAMA_CLOUD_API_KEY"):
+                raise HTTPException(
+                    status_code=500, detail="LlamaCloud API KEY is not configured"
+                )
+            projects = LlamaCloudFileService.get_all_projects_with_pipelines()
+            pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+            project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+            pipeline_config = None
+            if pipeline and project:
+                pipeline_config = {
+                    "pipeline": pipeline,
+                    "project": project,
+                }
+            return {
+                "projects": projects,
+                "pipeline": pipeline_config,
+            }
 
     return router
 

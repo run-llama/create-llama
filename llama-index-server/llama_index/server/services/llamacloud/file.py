@@ -8,11 +8,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
-from pydantic import BaseModel
-
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.models import SourceNodes
 from llama_index.server.services.llamacloud.index import get_client
+from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
@@ -176,3 +175,10 @@ class LlamaCloudFileService:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
         logger.info("File downloaded successfully")
+
+    @classmethod
+    def is_configured(cls) -> bool:
+        try:
+            return os.environ.get("LLAMA_CLOUD_API_KEY") is not None
+        except Exception:
+            return False

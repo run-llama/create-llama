@@ -70,6 +70,7 @@ class LlamaIndexServer(FastAPI):
         return {
             "CHAT_API": f"{self.api_prefix}/chat",
             "STARTER_QUESTIONS": self.starter_questions,
+            "LLAMA_CLOUD_API": "/api/chat/config/llamacloud",
         }
 
     # Default routers
