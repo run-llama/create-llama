@@ -14,12 +14,12 @@ class IndexConfig(BaseModel):
     storage_dir: str = "storage"
 
     @classmethod
-    def from_chat_request(cls, chat_request: ChatRequest) -> "IndexConfig":
+    def from_default(cls, chat_request: Optional[ChatRequest] = None) -> "IndexConfig":
         return cls()
 
 
 def get_index(chat_request: Optional[ChatRequest] = None):
-    config = IndexConfig.from_chat_request(chat_request)
+    config = IndexConfig.from_default(chat_request)
     storage_dir = config.storage_dir
     # check if storage already exists
     if not os.path.exists(storage_dir):
