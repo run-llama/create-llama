@@ -153,7 +153,6 @@ class FinancialReportWorkflow(Workflow):
         """
         # Always use the latest chat history from the input
         chat_history: list[ChatMessage] = ev.input
-
         # Get tool calls
         response = await chat_with_tools(
             self.llm,
@@ -271,6 +270,7 @@ class FinancialReportWorkflow(Workflow):
                 return InputEvent(input=self.memory.get())
             else:
                 tool_calls = response.tool_calls
+                self.memory.put(response.tool_call_message)
 
         # Call tools
         tool_call_outputs = await call_tools(

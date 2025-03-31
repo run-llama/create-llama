@@ -531,7 +531,7 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("**", path.join(root, "app"), {
+  await copy("workflow.py", path.join(root, "app"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
   });
@@ -561,6 +561,12 @@ const installLlamaIndexServerTemplate = async ({
       ),
     });
   }
+  // Copy README.md
+  await copy("README-template.md", path.join(root), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+    rename: assetRelocator,
+  });
 };
 
 export const installPythonTemplate = async ({
