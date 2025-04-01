@@ -16,6 +16,7 @@ from llama_index.core.workflow import (
     step,
 )
 from llama_index.server.api.models import AgentRunEvent, ChatRequest
+from llama_index.server.settings import server_settings
 from llama_index.server.tools.document_generator import DocumentGenerator
 from llama_index.server.tools.index import get_query_engine_tool
 from llama_index.server.tools.interpreter import E2BCodeInterpreter
@@ -32,12 +33,15 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
             "Index is not found. Try run generation script to create the index first."
         )
     query_engine_tool = get_query_engine_tool(index=index)
-
-    code_interpreter_tool = E2BCodeInterpreter(
-        api_key=os.getenv("E2B_API_KEY"),
-        filesever_url_prefix=os.getenv("FILESERVER_URL_PREFIX", "/api/files"),
+    e2b_api_key = os.getenv("E2B_API_KEY")
+    if e2b_api_key is None:
+        raise ValueError(
+            "E2B_API_KEY is not found. Try run generation script to create the index first."
+        )
+    code_interpreter_tool = E2BCodeInterpreter(api_key=e2b_api_key).to_tool()
+    document_generator_tool = DocumentGenerator(
+        file_server_url_prefix=server_settings.file_server_url_prefix,
     ).to_tool()
-    document_generator_tool = DocumentGenerator().to_tool()
 
     return FinancialReportWorkflow(
         query_engine_tool=query_engine_tool,

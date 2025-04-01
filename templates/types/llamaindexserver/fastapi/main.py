@@ -13,11 +13,8 @@ logger = logging.getLogger("uvicorn")
 def create_app():
     env = os.environ.get("APP_ENV")
 
-    # generates a FastAPI instance that can be extended
     app = LlamaIndexServer(
-        workflow_factory=create_workflow,  # Factory function that creates a new workflow for each request
-        use_default_routers=True,
-        api_prefix="/api",  # Optional, default is `/api`
+        workflow_factory=create_workflow,  # A factory function that creates a new workflow for each request
         env=env,
         logger=logger,
     )
