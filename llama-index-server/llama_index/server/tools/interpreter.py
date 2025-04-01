@@ -4,10 +4,9 @@ import os
 import uuid
 from typing import Any, List, Optional
 
-from pydantic import BaseModel
-
 from llama_index.core.tools import FunctionTool
 from llama_index.server.services.file import DocumentFile, FileService
+from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn")
 
@@ -34,34 +33,24 @@ class E2BCodeInterpreter:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        filesever_url_prefix: Optional[str] = None,
+        api_key: str,
         output_dir: Optional[str] = None,
         uploaded_files_dir: Optional[str] = None,
     ):
         """
         Args:
-            api_key: The API key for the E2B Code Interpreter. If not provided, it will be read from the environment variable `E2B_API_KEY`.
-            filesever_url_prefix: The prefix for the file server or loaded from env: `FILESERVER_URL_PREFIX`, default is `/api/files`.
+            api_key: The API key for the E2B Code Interpreter.
             output_dir: The directory for the output files. Default is `output/tools`.
             uploaded_files_dir: The directory for the files to be uploaded to the sandbox. Default is `output/uploaded`.
         """
         self._validate_package()
-        if api_key is None:
-            api_key = os.getenv("E2B_API_KEY")
-        if filesever_url_prefix is None:
-            filesever_url_prefix = os.getenv("FILESERVER_URL_PREFIX", "/api/files")
         if not api_key:
             raise ValueError(
-                "E2B_API_KEY key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key"
+                "api_key is required to run code interpreter. Get it here: https://e2b.dev/docs/getting-started/api-key"
             )
-        if output_dir is not None:
-            self.output_dir = output_dir
-        if uploaded_files_dir is not None:
-            self.uploaded_files_dir = uploaded_files_dir
-        self.filesever_url_prefix = filesever_url_prefix
-        self.interpreter = None
         self.api_key = api_key
+        self.output_dir = output_dir or "output/tools"
+        self.uploaded_files_dir = uploaded_files_dir or "output/uploaded"
 
     @classmethod
     def _validate_package(cls) -> None:

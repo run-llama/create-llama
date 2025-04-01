@@ -9,11 +9,11 @@ from fastapi.staticfiles import StaticFiles
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers.chat import chat_router
 from llama_index.server.chat_ui import download_chat_ui
+from llama_index.server.settings import server_settings
 
 
 class LlamaIndexServer(FastAPI):
     workflow_factory: Callable[..., Workflow]
-    api_prefix: str = "/api"
     include_ui: Optional[bool]
     starter_questions: Optional[list[str]]
     verbose: bool = False
@@ -27,6 +27,8 @@ class LlamaIndexServer(FastAPI):
         env: Optional[str] = None,
         include_ui: Optional[bool] = None,
         starter_questions: Optional[list[str]] = None,
+        server_url: Optional[str] = None,
+        api_prefix: Optional[str] = None,
         verbose: bool = False,
         *args: Any,
         **kwargs: Any,
@@ -41,6 +43,8 @@ class LlamaIndexServer(FastAPI):
             env: The environment to run the server in.
             include_ui: Whether to show an chat UI in the root path.
             starter_questions: A list of starter questions to display in the chat UI.
+            server_url: The URL of the server.
+            api_prefix: The prefix for the API endpoints.
             verbose: Whether to show verbose logs.
         """
         super().__init__(*args, **kwargs)
@@ -51,6 +55,12 @@ class LlamaIndexServer(FastAPI):
         self.include_ui = include_ui  # Store the explicitly passed value first
         self.starter_questions = starter_questions
         self.use_default_routers = use_default_routers or True
+
+        # Update the settings
+        if server_url:
+            server_settings.set_url(server_url)
+        if api_prefix:
+            server_settings.set_api_prefix(api_prefix)
 
         if self.use_default_routers:
             self.add_default_routers()
@@ -68,12 +78,14 @@ class LlamaIndexServer(FastAPI):
     @property
     def _ui_config(self) -> dict:
         config = {
-            "CHAT_API": f"{self.api_prefix}/chat",
+            "CHAT_API": f"{server_settings.api_url}/chat",
             "STARTER_QUESTIONS": self.starter_questions,
         }
         is_llamacloud_configured = os.getenv("LLAMA_CLOUD_API_KEY") is not None
         if is_llamacloud_configured:
-            config["LLAMA_CLOUD_API"] = "/api/chat/config/llamacloud"
+            config["LLAMA_CLOUD_API"] = (
+                f"{server_settings.api_url}/chat/config/llamacloud"
+            )
         return config
 
     # Default routers
@@ -91,7 +103,7 @@ class LlamaIndexServer(FastAPI):
                 self.workflow_factory,
                 self.logger,
             ),
-            prefix=self.api_prefix,
+            prefix=server_settings.api_prefix,
         )
 
     def mount_ui(self) -> None:
@@ -130,7 +142,9 @@ class LlamaIndexServer(FastAPI):
         Mount the data directory.
         """
         self._mount_static_files(
-            directory=data_dir, path=f"{self.api_prefix}/files/data", html=True
+            directory=data_dir,
+            path=f"{server_settings.api_prefix}/files/data",
+            html=True,
         )
 
     def mount_output_dir(self, output_dir: str = "output") -> None:
@@ -138,7 +152,9 @@ class LlamaIndexServer(FastAPI):
         Mount the output directory.
         """
         self._mount_static_files(
-            directory=output_dir, path=f"{self.api_prefix}/files/output", html=True
+            directory=output_dir,
+            path=f"{server_settings.api_prefix}/files/output",
+            html=True,
         )
 
     def _mount_static_files(

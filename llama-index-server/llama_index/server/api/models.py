@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
+from llama_index.server.settings import server_settings
 from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger("uvicorn")
@@ -98,13 +99,11 @@ class SourceNodes(BaseModel):
 
     @classmethod
     def get_url_from_metadata(
-        cls, metadata: Dict[str, Any], data_dir: Optional[str] = None
+        cls,
+        metadata: Dict[str, Any],
+        data_dir: Optional[str] = None,
     ) -> Optional[str]:
-        url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-        if not url_prefix:
-            logger.warning(
-                "Warning: FILESERVER_URL_PREFIX not set in environment variables. Can't use file server"
-            )
+        url_prefix = server_settings.file_server_url_prefix
         if data_dir is None:
             data_dir = "data"
         file_name = metadata.get("file_name")
