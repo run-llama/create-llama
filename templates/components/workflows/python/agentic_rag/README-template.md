@@ -41,10 +41,6 @@ To start the app optimized for **production**, run:
 poetry run prod
 ```
 
-## Deployments
-
-For production deployments, check the [DEPLOY.md](DEPLOY.md) file.
-
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
