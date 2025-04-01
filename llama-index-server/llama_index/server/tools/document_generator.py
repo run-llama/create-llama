@@ -99,6 +99,11 @@ HTML_TEMPLATE = """
 
 
 class DocumentGenerator:
+    def __init__(self, file_server_url_prefix: str):
+        if not file_server_url_prefix:
+            raise ValueError("file_server_url_prefix is required")
+        self.file_server_url_prefix = file_server_url_prefix
+
     @classmethod
     def _generate_html_content(cls, original_content: str) -> str:
         """
@@ -155,9 +160,8 @@ class DocumentGenerator:
             content=html_content,
         )
 
-    @classmethod
     def generate_document(
-        cls, original_content: str, document_type: str, file_name: str
+        self, original_content: str, document_type: str, file_name: str
     ) -> str:
         """
         To generate document as PDF or HTML file.
@@ -175,24 +179,26 @@ class DocumentGenerator:
                 f"Invalid document type: {document_type}. Must be 'pdf' or 'html'."
             )
         # Always generate html content first
-        html_content = cls._generate_html_content(original_content)
+        html_content = self._generate_html_content(original_content)
 
         # Based on the type of document, generate the corresponding file
         if doc_type == DocumentType.PDF:
-            content = cls._generate_pdf(html_content)
+            content = self._generate_pdf(html_content)
             file_extension = "pdf"
         elif doc_type == DocumentType.HTML:
-            content = BytesIO(cls._generate_html(html_content).encode("utf-8"))
+            content = BytesIO(self._generate_html(html_content).encode("utf-8"))
             file_extension = "html"
         else:
             raise ValueError(f"Unexpected document type: {document_type}")
 
-        file_name = cls._validate_file_name(file_name)
+        file_name = self._validate_file_name(file_name)
         file_path = os.path.join(OUTPUT_DIR, f"{file_name}.{file_extension}")
 
-        cls._write_to_file(content, file_path)
+        self._write_to_file(content, file_path)
 
-        return f"{os.getenv('FILESERVER_URL_PREFIX')}/{OUTPUT_DIR}/{file_name}.{file_extension}"
+        return (
+            f"{self.file_server_url_prefix}/{OUTPUT_DIR}/{file_name}.{file_extension}"
+        )
 
     @staticmethod
     def _write_to_file(content: BytesIO, file_path: str) -> None:

@@ -33,8 +33,10 @@ python = ">=3.9,<4.0"
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 cachetools = "^5.5.2"
 requests = "^2.32.3"
-llama-index-core = "^0.12.0"
+pydantic-settings = "^2.8.1"
+llama-index-core = "0.12.25"
 llama-index-readers-file = "^0.4.6"
+llama-index-indices-managed-llama-cloud = "^0.6.3"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "<=23.9.1,>=23.7.0"}
@@ -59,3 +61,4 @@ types-requests = "2.28.11.8"  # TODO: unpin when mypy>0.991
 types-setuptools = "67.1.0.0"
 xhtml2pdf = "^0.2.17"
 pytest-cov = "^6.0.0"
+llama-cloud = "^0.1.17"

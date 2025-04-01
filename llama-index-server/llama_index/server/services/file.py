@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 from typing import List, Optional, Union
 
+from llama_index.server.settings import server_settings
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -85,20 +86,10 @@ class FileService:
 
         logger.info(f"Saved file to {file_path}")
 
-        file_url_prefix = os.getenv("FILESERVER_URL_PREFIX")
-        if file_url_prefix is None:
-            logger.warning(
-                "FILESERVER_URL_PREFIX is not set. Some features may not work correctly."
-            )
-            file_url_prefix = "http://localhost:8000/api/files"
         file_size = os.path.getsize(file_path)
-
-        file_url = os.path.join(
-            file_url_prefix,
-            save_dir,
-            new_file_name,
+        file_url = (
+            f"{server_settings.file_server_url_prefix}/{save_dir}/{new_file_name}"
         )
-
         return DocumentFile(
             id=file_id,
             name=new_file_name,
@@ -108,6 +99,15 @@ class FileService:
             url=file_url,
             refs=None,
         )
+
+    @classmethod
+    def get_file_url(cls, file_name: str, save_dir: Optional[str] = None) -> str:
+        """
+        Get the URL of a file.
+        """
+        if save_dir is None:
+            save_dir = os.path.join("output", "uploaded")
+        return f"{server_settings.file_server_url_prefix}/{save_dir}/{file_name}"
 
 
 def _sanitize_file_name(file_name: str) -> str:
