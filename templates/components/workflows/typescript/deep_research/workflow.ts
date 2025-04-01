@@ -1,6 +1,5 @@
 import {
-  ReportEvent,
-  StopEvent,
+  DeepResearchEvent,
   toSourceEvent,
   toStreamGenerator,
 } from "@llamaindex/server";
@@ -8,6 +7,7 @@ import {
   AgentInputData,
   AgentWorkflowContext,
   ChatMemoryBuffer,
+  ChatResponseChunk,
   HandlerContext,
   LlamaCloudIndex,
   Metadata,
@@ -16,6 +16,7 @@ import {
   PromptTemplate,
   Settings,
   StartEvent,
+  StopEvent as StopEventBase,
   ToolCallLLM,
   VectorStoreIndex,
   Workflow,
@@ -119,20 +120,8 @@ type ResearchResult = ResearchQuestion & { answer: string };
 
 class PlanResearchEvent extends WorkflowEvent<{}> {}
 class ResearchEvent extends WorkflowEvent<ResearchQuestion[]> {}
-
-// annotations events
-type DeepResearchEventData = {
-  event: "retrieve" | "analyze" | "answer";
-  state: "pending" | "inprogress" | "done" | "error";
-  id?: string;
-  question?: string;
-  answer?: string;
-};
-
-class DeepResearchEvent extends WorkflowEvent<{
-  type: "deep_research_event";
-  data: DeepResearchEventData;
-}> {}
+class ReportEvent extends WorkflowEvent<{}> {}
+class StopEvent extends StopEventBase<AsyncGenerator<ChatResponseChunk>> {}
 
 // workflow definition
 class DeepResearchWorkflow extends Workflow<
