@@ -10,7 +10,7 @@
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/readers": "^2.0.0",
     "@llamaindex/server": "https://pkg.pr.new/run-llama/LlamaIndexTS/@llamaindex/server@1796",
-    "@llamaindex/tools": "0.0.2",
+    "@llamaindex/tools": "https://pkg.pr.new/run-llama/LlamaIndexTS/@llamaindex/tools@1796",
     "dotenv": "^16.4.7",
     "llamaindex": "https://pkg.pr.new/run-llama/LlamaIndexTS/llamaindex@1796",
     "zod": "^3.23.8"

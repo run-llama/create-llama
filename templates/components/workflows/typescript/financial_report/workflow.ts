@@ -26,9 +26,6 @@ import {
 import { getIndex } from "./data";
 
 const TIMEOUT = 360 * 1000;
-const OUT_DIR = "output/tools";
-const UPLOADED_FILE_DIR = "output/uploaded";
-const FILE_SERVER_URL_PREFIX = "/api/files";
 
 export async function workflowFactory(reqBody: any) {
   const index = await getIndex(reqBody?.data);
@@ -47,14 +44,8 @@ export async function workflowFactory(reqBody: any) {
 
   const codeInterpreterTool = interpreter({
     apiKey: process.env.E2B_API_KEY!,
-    uploadedFilesDir: UPLOADED_FILE_DIR,
-    outputDir: OUT_DIR,
-    fileServerURLPrefix: FILE_SERVER_URL_PREFIX,
   });
-  const documentGeneratorTool = documentGenerator({
-    outputDir: "output/tools",
-    fileServerURLPrefix: FILE_SERVER_URL_PREFIX,
-  });
+  const documentGeneratorTool = documentGenerator();
 
   return new FinancialReportWorkflow({
     queryEngineTool,
