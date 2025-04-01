@@ -34,11 +34,11 @@ class ServerSettings(BaseSettings):
 
     def set_url(self, v: str) -> None:
         self.url = v
-        self.validate_url(v) # type: ignore
+        self.validate_url(v)  # type: ignore
 
     def set_api_prefix(self, v: str) -> None:
         self.api_prefix = v
-        self.validate_api_prefix(v) # type: ignore
+        self.validate_api_prefix(v)  # type: ignore
 
     class Config:
         env_file_encoding = "utf-8"
