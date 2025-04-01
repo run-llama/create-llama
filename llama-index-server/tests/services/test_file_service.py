@@ -53,7 +53,7 @@ class TestFileService:
         assert result.type == "txt"
         assert result.size == 11
         assert result.path == expected_path
-        assert result.url.endswith(expected_path)
+        assert result.url.endswith(expected_path.replace(os.path.sep, "/"))
         assert result.refs is None
 
     @patch("uuid.uuid4")
@@ -157,7 +157,8 @@ class TestFileService:
         )
         mock_file_open.assert_called_once_with(expected_path, "wb")
         assert result.path == expected_path
-        expected_url = os.path.join("/api/files", "test_dir", f"test_{test_uuid}.txt")
+        # URL paths must use forward slashes, even on Windows
+        expected_url = f"/api/files/test_dir/test_{test_uuid}.txt"
         assert result.url == expected_url
 
     def test_save_file_no_extension(self):
