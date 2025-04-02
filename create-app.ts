@@ -110,7 +110,7 @@ export async function createApp({
     console.log();
   }
 
-  if (toolsRequireConfig(tools)) {
+  if (toolsRequireConfig(tools) && template !== "llamaindexserver") {
     const configFile =
       framework === "fastapi" ? "config/tools.yaml" : "config/tools.json";
     console.log(
