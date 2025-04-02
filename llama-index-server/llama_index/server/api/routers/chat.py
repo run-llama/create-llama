@@ -107,7 +107,7 @@ async def _stream_content(
                 async for chunk in event.result:
                     if isinstance(chunk, str):
                         yield chunk
-                    elif hasattr(chunk, "delta"):
+                    elif hasattr(chunk, "delta") and chunk.delta:
                         yield chunk.delta
 
     stream_started = False
