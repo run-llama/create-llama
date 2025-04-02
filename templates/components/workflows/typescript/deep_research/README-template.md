@@ -11,7 +11,7 @@ npm install
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
 Make sure you have the `OPENAI_API_KEY` set.
 
-Second, generate the embeddings of the documents in the `./data` directory:
+Second, generate the embeddings of the example documents in the `./data` directory:
 
 ```
 npm run generate
@@ -27,17 +27,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configure LLM and Embedding Model
 
-You can config LLM model and Embedding model in the [settings file](src\app\settings.ts). By default, `gpt-4o-mini` is used for LLM and `text-embedding-ada-002` is used for Embedding model.
+You can config LLM model and Embedding model in the [settings file](src\app\settings.ts).
 
 ## Use Case
 
-You can start by sending an request on the chat UI to create a report comparing the finances of Apple and Tesla.
-Or you can test the `/api/chat` endpoint with the following curl request:
+We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
 
-```
+You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
+
+```shell
 curl --location 'localhost:3000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
+--data '{ "messages": [{ "role": "user", "content": "Compare the financial performance of Apple and Tesla" }] }'
 ```
 
 ## Learn More
@@ -46,18 +47,6 @@ To learn more about LlamaIndex, take a look at the following resources:
 
 - [LlamaIndex Documentation](https://docs.llamaindex.ai) - learn about LlamaIndex (Python features).
 - [LlamaIndexTS Documentation](https://ts.llamaindex.ai/docs/llamaindex) - learn about LlamaIndex (Typescript features).
-- [Workflows Introduction](https://ts.llamaindex.ai/docs/llamaindex/guide/workflow) - learn about LlamaIndexTS workflows.
+- [Workflows Introduction](https://ts.llamaindex.ai/docs/llamaindex/modules/workflows) - learn about LlamaIndexTS workflows.
 
 You can check out [the LlamaIndexTS GitHub repository](https://github.com/run-llama/LlamaIndexTS) - your feedback and contributions are welcome!
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```

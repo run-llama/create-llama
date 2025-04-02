@@ -68,6 +68,18 @@ const installLlamaIndexServerTemplate = async ({
       rename: () => "data.ts",
     });
   }
+  // Copy README.md
+  await copy("README-template.md", path.join(root), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "workflows",
+      "typescript",
+      useCase,
+    ),
+    rename: assetRelocator,
+  });
 };
 
 const installLegacyTSTemplate = async ({
