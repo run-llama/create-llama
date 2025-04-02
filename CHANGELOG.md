@@ -1,5 +1,16 @@
 # create-llama
 
+## 0.5.0
+
+### Minor Changes
+
+- 54c9e2f: Simplified generated code using LlamaIndexServer
+
+### Patch Changes
+
+- 0e4ecfa: fix: add trycatch for generating error
+- ee69ce7: bump: chat-ui and tailwind v4
+
 ## 0.4.0
 
 ### Minor Changes
