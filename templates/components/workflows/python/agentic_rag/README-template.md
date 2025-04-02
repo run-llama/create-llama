@@ -1,4 +1,4 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) simple RAG project using [Agent Workflows](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/).
+This is a [LlamaIndex](https://www.llamaindex.ai/) simple agentic RAG project using [Agent Workflows](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/).
 
 ## Getting Started
 
@@ -10,7 +10,8 @@ First, setup the environment with poetry:
 poetry install
 ```
 
-Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY`).
+Then check the parameters that have been pre-configured in the `.env` file in this directory.
+Make sure you have set the `OPENAI_API_KEY` for the LLM.
 
 Second, generate the embeddings of the documents in the `./data` directory:
 
@@ -24,21 +25,28 @@ Third, run the development server:
 poetry run dev
 ```
 
-The example provides one streaming API endpoint `/api/chat`.
-You can test the endpoint with the following curl request:
-
-```
-curl --location 'localhost:8000/api/chat' \
---header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "What standards for a letter exist?" }] }'
-```
-
-Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
+Then open [http://localhost:8000](http://localhost:8000) with your browser to start the chat UI.
 
 To start the app optimized for **production**, run:
 
 ```
 poetry run prod
+```
+
+## Configure LLM and Embedding Model
+
+You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](app/settings.py).
+
+## Use Case
+
+We have prepared an [example workflow](./app/workflow.py) for the agentic RAG use case, where you can ask questions about the example documents in the [./data](./data) directory.
+
+You can start by sending an request on the [chat UI](http://localhost:8000) or you can test the `/api/chat` endpoint with the following curl request:
+
+```
+curl --location 'localhost:8000/api/chat' \
+--header 'Content-Type: application/json' \
+--data '{ "messages": [{ "role": "user", "content": "What standards for a letter exist?" }] }'
 ```
 
 ## Learn More

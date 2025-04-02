@@ -1,4 +1,4 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Next.js](https://nextjs.org/) bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama).
+This is a [LlamaIndex](https://www.llamaindex.ai/) project bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama).
 
 ## Getting Started
 
@@ -9,7 +9,7 @@ npm install
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
-Make sure you have the `OPENAI_API_KEY` set.
+Make sure you have set the `OPENAI_API_KEY` for the LLM.
 
 Second, generate the embeddings of the example documents in the `./data` directory:
 
@@ -27,13 +27,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configure LLM and Embedding Model
 
-You can config LLM model and Embedding model in the [settings file](src/app/settings.ts).
+You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
 ## Use Case
 
-You can start by sending an request on the chat UI to asking any questions about the example documents in the [./data](./data) directory.
+We have prepared an [example workflow](./src/app/workflow.ts) for the agentic RAG use case, where you can ask questions about the example documents in the [./data](./data) directory.
 
-Or you can test the `/api/chat` endpoint with the following curl request:
+You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```shell
 curl --location 'localhost:3000/api/chat' \

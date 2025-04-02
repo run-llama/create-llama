@@ -1,4 +1,4 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Next.js](https://nextjs.org/) bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama).
+This is a [LlamaIndex](https://www.llamaindex.ai/) project bootstrapped with [`create-llama`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/create-llama).
 
 ## Getting Started
 
@@ -9,7 +9,7 @@ npm install
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
-Make sure you have the `OPENAI_API_KEY` and `E2B_API_KEY` are set (you can get the e2b api key from [here](https://e2b.dev/docs)).
+Make sure you have set the `OPENAI_API_KEY` for the LLM and the `E2B_API_KEY` for the code interpreter. You can get the E2B API key from [here](https://e2b.dev).
 
 Second, generate the embeddings of the example documents in the `./data` directory:
 
@@ -27,7 +27,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configure LLM and Embedding Model
 
-You can config LLM model and Embedding model in the [settings file](src/app/settings.ts).
+You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
 ## Use Case
 
