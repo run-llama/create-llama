@@ -74,7 +74,7 @@ class LlamaCloudFileService:
                 "custom_metadata": {"file_id": file_id, **(custom_metadata or {})},
             }
         ]
-        files = client.pipelines.add_files_to_pipeline(pipeline_id, request=files)
+        files = client.pipelines.add_files_to_pipeline_api(pipeline_id, request=files)
 
         if not wait_for_processing:
             return file_id

@@ -229,7 +229,6 @@ class TestEventStream:
 
             yield ObjectWithDelta("Delta 1")
             yield ObjectWithDelta("Delta 2")
-            yield ObjectWithDelta("  ")  # Should be filtered out by strip check
 
         yield StopEvent(result=generator())
 

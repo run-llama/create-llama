@@ -36,7 +36,7 @@ requests = "^2.32.3"
 pydantic-settings = "^2.8.1"
 llama-index-core = "0.12.25"
 llama-index-readers-file = "^0.4.6"
-llama-index-indices-managed-llama-cloud = "^0.6.3"
+llama-index-indices-managed-llama-cloud = "0.6.3"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "<=23.9.1,>=23.7.0"}
