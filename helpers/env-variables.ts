@@ -253,12 +253,29 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
+    {
+      name: "EMBEDDING_DIM",
+      description: "Dimension of the embedding model to use.",
+      value: modelConfig.dimensions.toString(),
+    },
+    {
+      name: "CONVERSATION_STARTERS",
+      description: "The questions to help users get started (multi-line).",
+    },
     ...(modelConfig.provider === "openai"
       ? [
           {
             name: "OPENAI_API_KEY",
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
+          },
+          {
+            name: "LLM_TEMPERATURE",
+            description: "Temperature for sampling from the model.",
+          },
+          {
+            name: "LLM_MAX_TOKENS",
+            description: "Maximum number of tokens to generate.",
           },
         ]
       : []),
@@ -411,6 +428,16 @@ const getFrameworkEnvs = (
     });
   }
   return result;
+};
+
+const getEngineEnvs = (): EnvVar[] => {
+  return [
+    {
+      name: "TOP_K",
+      description:
+        "The number of similar embeddings to return when retrieving documents.",
+    },
+  ];
 };
 
 const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
@@ -566,7 +593,7 @@ export const createBackendEnvFile = async (
       : []),
     // Add environment variables of each component
     ...(opts.template !== "llamaindexserver"
-      ? getModelEnvs(opts.modelConfig)
+      ? [...getModelEnvs(opts.modelConfig), ...getEngineEnvs()]
       : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
