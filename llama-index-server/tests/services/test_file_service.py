@@ -3,7 +3,6 @@ import uuid
 from unittest.mock import mock_open, patch
 
 import pytest
-
 from llama_index.server.services.file import FileService, _sanitize_file_name
 
 
@@ -54,7 +53,7 @@ class TestFileService:
         assert result.type == "txt"
         assert result.size == 11
         assert result.path == expected_path
-        assert result.url.endswith(expected_path)
+        assert result.url.endswith(expected_path.replace(os.path.sep, "/"))
         assert result.refs is None
 
     @patch("uuid.uuid4")
@@ -144,7 +143,7 @@ class TestFileService:
         test_uuid = "12345678-1234-5678-1234-567812345678"
         mock_uuid.return_value = uuid.UUID(test_uuid)
         mock_getsize.return_value = 11
-        mock_getenv.return_value = "https://custom-url.com/files"
+        mock_getenv.return_value = "/api/files"
 
         # Execute
         result = FileService.save_file(
@@ -158,9 +157,8 @@ class TestFileService:
         )
         mock_file_open.assert_called_once_with(expected_path, "wb")
         assert result.path == expected_path
-        expected_url = os.path.join(
-            "https://custom-url.com/files", "test_dir", f"test_{test_uuid}.txt"
-        )
+        # URL paths must use forward slashes, even on Windows
+        expected_url = f"/api/files/test_dir/test_{test_uuid}.txt"
         assert result.url == expected_url
 
     def test_save_file_no_extension(self):

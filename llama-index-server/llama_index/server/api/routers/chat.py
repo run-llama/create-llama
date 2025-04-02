@@ -1,8 +1,10 @@
 import asyncio
+import inspect
 import logging
+import os
 from typing import AsyncGenerator, Callable, Union
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.workflow import StopEvent, Workflow
@@ -11,9 +13,11 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.base import EventCallback
+from llama_index.server.api.callbacks.llamacloud import LlamaCloudFileDownload
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
 def chat_router(
@@ -23,13 +27,21 @@ def chat_router(
     router = APIRouter(prefix="/chat")
 
     @router.post("")
-    async def chat(request: ChatRequest) -> StreamingResponse:
+    async def chat(
+        request: ChatRequest,
+        background_tasks: BackgroundTasks,
+    ) -> StreamingResponse:
         try:
             user_message = request.messages[-1].to_llamaindex_message()
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
-            workflow = workflow_factory()
+            # detect if the workflow factory has chat_request as a parameter
+            factory_sig = inspect.signature(workflow_factory)
+            if "chat_request" in factory_sig.parameters:
+                workflow = workflow_factory(chat_request=request)
+            else:
+                workflow = workflow_factory()
             workflow_handler = workflow.run(
                 user_msg=user_message.content,
                 chat_history=chat_history,
@@ -37,6 +49,7 @@ def chat_router(
 
             callbacks: list[EventCallback] = [
                 SourceNodesFromToolCall(),
+                LlamaCloudFileDownload(background_tasks),
             ]
             if request.config and request.config.next_question_suggestions:
                 callbacks.append(SuggestNextQuestions(request))
@@ -51,6 +64,28 @@ def chat_router(
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
+
+    if LlamaCloudFileService.is_configured():
+
+        @router.get("/config/llamacloud")
+        async def chat_llama_cloud_config() -> dict:
+            if not os.getenv("LLAMA_CLOUD_API_KEY"):
+                raise HTTPException(
+                    status_code=500, detail="LlamaCloud API KEY is not configured"
+                )
+            projects = LlamaCloudFileService.get_all_projects_with_pipelines()
+            pipeline = os.getenv("LLAMA_CLOUD_INDEX_NAME")
+            project = os.getenv("LLAMA_CLOUD_PROJECT_NAME")
+            pipeline_config = None
+            if pipeline and project:
+                pipeline_config = {
+                    "pipeline": pipeline,
+                    "project": project,
+                }
+            return {
+                "projects": projects,
+                "pipeline": pipeline_config,
+            }
 
     return router
 

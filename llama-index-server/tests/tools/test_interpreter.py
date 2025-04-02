@@ -1,9 +1,7 @@
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from e2b_code_interpreter.models import Execution, Logs
-
 from llama_index.server.tools.interpreter import E2BCodeInterpreter
 
 
@@ -20,10 +18,9 @@ class TestE2BCodeInterpreter:
     @pytest.fixture()
     def code_interpreter(self, sandbox):  # type: ignore
         """Create E2BCodeInterpreter that uses the mock Sandbox."""
-        with patch.dict(os.environ, {"E2B_API_KEY": "dummy_key"}):
-            interpreter = E2BCodeInterpreter()
-            interpreter.interpreter = sandbox
-            return interpreter
+        interpreter = E2BCodeInterpreter(api_key="dummy_key")
+        interpreter.interpreter = sandbox
+        return interpreter
 
     def test_interpret_success(self, code_interpreter, sandbox) -> None:  # type: ignore
         """Test successful code execution."""
