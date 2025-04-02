@@ -18,5 +18,5 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
     return AgentWorkflow.from_tools_or_functions(
         tools_or_functions=[query_tool],
         llm=Settings.llm or OpenAI(model="gpt-4o-mini"),
-        system_prompt=os.getenv("SYSTEM_PROMPT", "You are a helpful assistant."),
+        system_prompt="You are a helpful assistant.",
     )

@@ -591,16 +591,26 @@ export const createBackendEnvFile = async (
           },
         ]
       : []),
-    // Add environment variables of each component
-    ...(opts.template !== "llamaindexserver"
-      ? [...getModelEnvs(opts.modelConfig), ...getEngineEnvs()]
-      : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
-    ...getToolEnvs(opts.tools),
-    ...getTemplateEnvs(opts.template),
-    ...getObservabilityEnvs(opts.observability),
-    ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.template),
+    // Add environment variables of each component
+    ...(opts.template === "llamaindexserver"
+      ? [
+          {
+            name: "OPENAI_API_KEY",
+            description: "The OpenAI API key to use.",
+            value: opts.modelConfig.apiKey,
+          },
+        ]
+      : [
+          // don't use this stuff for llama-indexserver
+          ...getModelEnvs(opts.modelConfig),
+          ...getEngineEnvs(),
+          ...getToolEnvs(opts.tools),
+          ...getTemplateEnvs(opts.template),
+          ...getObservabilityEnvs(opts.observability),
+          ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.template),
+        ]),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);
