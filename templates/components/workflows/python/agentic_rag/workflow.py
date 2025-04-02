@@ -1,4 +1,3 @@
-import os
 from typing import Optional
 
 from app.index import get_index
