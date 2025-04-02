@@ -36,7 +36,7 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
     e2b_api_key = os.getenv("E2B_API_KEY")
     if e2b_api_key is None:
         raise ValueError(
-            "E2B_API_KEY is not found. Try run generation script to create the index first."
+            "E2B_API_KEY is required to use the code interpreter tool. Please check README.md to know how to get the key."
         )
     code_interpreter_tool = E2BCodeInterpreter(api_key=e2b_api_key).to_tool()
     document_generator_tool = DocumentGenerator(
@@ -222,7 +222,7 @@ class FinancialReportWorkflow(Workflow):
         return AnalyzeEvent(
             input=ChatMessage(
                 role=MessageRole.ASSISTANT,
-                content="I've finished the research. Please analyze the result.",
+                content="Researcher: I've finished the research. Please analyze the result.",
             ),
         )
 
@@ -265,9 +265,12 @@ class FinancialReportWorkflow(Workflow):
             )
             if not response.has_tool_calls():
                 # If no tool call, fallback analyst message to the workflow
+                msg_content = await response.full_response()
                 analyst_msg = ChatMessage(
                     role=MessageRole.ASSISTANT,
-                    content=await response.full_response(),
+                    content=f"Analyst: "
+                    f"\nHere is the analysis result: {msg_content}"
+                    "\nUse it for other steps or response the content to the user.",
                 )
                 self.memory.put(analyst_msg)
                 return InputEvent(input=self.memory.get())

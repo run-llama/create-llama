@@ -33,8 +33,6 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
 ```
 
-You can start editing the API by modifying `app/api/routers/chat.py` or `app/workflows/financial_report.py`. The API auto-updates as you save the files.
-
 Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
 
 To start the app optimized for **production**, run:
