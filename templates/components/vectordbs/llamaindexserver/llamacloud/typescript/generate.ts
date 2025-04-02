@@ -54,7 +54,7 @@ async function loadAndIndex() {
       type: "OPENAI_EMBEDDING",
       component: {
         api_key: process.env.OPENAI_API_KEY,
-        model_name: "text-embedding-ada-002",
+        model_name: "text-embedding-3-small",
       },
     },
   });

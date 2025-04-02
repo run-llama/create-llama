@@ -6,6 +6,6 @@ export function initSettings() {
     model: "gpt-4o-mini",
   });
   Settings.embedModel = new OpenAIEmbedding({
-    model: "text-embedding-ada-002",
+    model: "text-embedding-3-small",
   });
 }
