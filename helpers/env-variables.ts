@@ -224,7 +224,7 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
         },
       ];
     default:
-      return framework !== "fastapi"
+      return template !== "llamaindexserver"
         ? [
             {
               name: "STORAGE_CACHE_DIR",
@@ -592,6 +592,7 @@ export const createBackendEnvFile = async (
         ]
       : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
+    ...getToolEnvs(opts.tools),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
     // Add environment variables of each component
     ...(opts.template === "llamaindexserver"
@@ -606,7 +607,6 @@ export const createBackendEnvFile = async (
           // don't use this stuff for llama-indexserver
           ...getModelEnvs(opts.modelConfig),
           ...getEngineEnvs(),
-          ...getToolEnvs(opts.tools),
           ...getTemplateEnvs(opts.template),
           ...getObservabilityEnvs(opts.observability),
           ...getSystemPromptEnv(opts.tools, opts.dataSources, opts.template),
