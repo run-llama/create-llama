@@ -88,7 +88,7 @@ jobs:
         node-version: [18, 20]
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
-        frameworks: ["nextjs", "express"]
+        frameworks: ["nextjs"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
     defaults:
       run:

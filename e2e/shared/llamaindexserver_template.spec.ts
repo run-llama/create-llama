@@ -76,7 +76,7 @@ for (const useCase of templateUseCases) {
           useCase === "financial_report" ||
           useCase === "deep_research" ||
           templateFramework === "express",
-        "Skip chat tests for financial report and form filling.",
+        "Skip chat tests for financial report and deep research.",
       );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);

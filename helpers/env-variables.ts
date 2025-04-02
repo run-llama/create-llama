@@ -549,16 +549,21 @@ export const createBackendEnvFile = async (
     | "port"
     | "tools"
     | "observability"
+    | "useLlamaParse"
   >,
 ) => {
   // Init env values
   const envFileName = ".env";
   const envVars: EnvVar[] = [
-    {
-      name: "LLAMA_CLOUD_API_KEY",
-      description: `The Llama Cloud API key.`,
-      value: opts.llamaCloudKey,
-    },
+    ...(opts.useLlamaParse
+      ? [
+          {
+            name: "LLAMA_CLOUD_API_KEY",
+            description: `The Llama Cloud API key.`,
+            value: opts.llamaCloudKey,
+          },
+        ]
+      : []),
     // Add environment variables of each component
     ...(opts.template !== "llamaindexserver"
       ? getModelEnvs(opts.modelConfig)
