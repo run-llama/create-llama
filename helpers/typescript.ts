@@ -8,42 +8,98 @@ import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
 import { InstallTemplateArgs, ModelProvider, TemplateVectorDB } from "./types";
 
-/**
- * Install a LlamaIndex internal template to a given `root` directory.
- */
-export const installTSTemplate = async ({
-  appName,
+const installLlamaIndexServerTemplate = async ({
   root,
-  packageManager,
-  isOnline,
+  useCase,
+  vectorDb,
+}: Pick<InstallTemplateArgs, "root" | "useCase" | "vectorDb">) => {
+  if (!useCase) {
+    console.log(
+      red(
+        `There is no use case selected. Please pick a use case to use via --use-case flag.`,
+      ),
+    );
+    process.exit(1);
+  }
+
+  if (!vectorDb) {
+    console.log(
+      red(
+        `There is no vector db selected. Please pick a vector db to use via --vector-db flag.`,
+      ),
+    );
+    process.exit(1);
+  }
+
+  await copy("workflow.ts", path.join(root, "src", "app"), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "workflows",
+      "typescript",
+      useCase,
+    ),
+  });
+
+  if (vectorDb === "llamacloud") {
+    await copy("generate.ts", path.join(root, "src"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "typescript",
+      ),
+    });
+
+    await copy("index.ts", path.join(root, "src", "app"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "typescript",
+      ),
+      rename: () => "data.ts",
+    });
+  }
+  // Copy README.md
+  await copy("README-template.md", path.join(root), {
+    parents: true,
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "workflows",
+      "typescript",
+      useCase,
+    ),
+    rename: assetRelocator,
+  });
+};
+
+const installLegacyTSTemplate = async ({
+  root,
   template,
+  backend,
   framework,
   ui,
   vectorDb,
-  postInstallAction,
-  backend,
   observability,
   tools,
   dataSources,
   useLlamaParse,
   useCase,
   modelConfig,
-}: InstallTemplateArgs & { backend: boolean }) => {
-  console.log(bold(`Using ${packageManager}.`));
-
-  /**
-   * Copy the template files to the target directory.
-   */
-  console.log("\nInitializing project with template:", template, "\n");
-  const templatePath = path.join(templatesDir, "types", "streaming", framework);
-  const copySource = ["**"];
-
-  await copy(copySource, root, {
-    parents: true,
-    cwd: templatePath,
-    rename: assetRelocator,
-  });
-
+  relativeEngineDestPath,
+}: InstallTemplateArgs & {
+  backend: boolean;
+  relativeEngineDestPath: string;
+}) => {
   /**
    * If next.js is used, update its configuration if necessary
    */
@@ -98,10 +154,6 @@ export const installTSTemplate = async ({
   }
 
   const compPath = path.join(templatesDir, "components");
-  const relativeEngineDestPath =
-    framework === "nextjs"
-      ? path.join("app", "api", "chat")
-      : path.join("src", "controllers");
   const enginePath = path.join(root, relativeEngineDestPath, "engine");
 
   // copy llamaindex code for TS templates
@@ -236,6 +288,75 @@ export const installTSTemplate = async ({
     await fs.rm(path.join(root, "app", "api"), { recursive: true });
     await fs.rm(path.join(root, "config"), { recursive: true, force: true });
   }
+};
+
+/**
+ * Install a LlamaIndex internal template to a given `root` directory.
+ */
+export const installTSTemplate = async ({
+  appName,
+  root,
+  packageManager,
+  isOnline,
+  template,
+  framework,
+  ui,
+  vectorDb,
+  postInstallAction,
+  backend,
+  observability,
+  tools,
+  dataSources,
+  useLlamaParse,
+  useCase,
+  modelConfig,
+}: InstallTemplateArgs & { backend: boolean }) => {
+  console.log(bold(`Using ${packageManager}.`));
+
+  /**
+   * Copy the template files to the target directory.
+   */
+  console.log("\nInitializing project with template:", template, "\n");
+  const templatePath = path.join(templatesDir, "types", template, framework);
+  const copySource = ["**"];
+
+  await copy(copySource, root, {
+    parents: true,
+    cwd: templatePath,
+    rename: assetRelocator,
+  });
+
+  const relativeEngineDestPath =
+    framework === "nextjs"
+      ? path.join("app", "api", "chat")
+      : path.join("src", "controllers");
+
+  if (template === "llamaindexserver") {
+    await installLlamaIndexServerTemplate({
+      root,
+      useCase,
+      vectorDb,
+    });
+  } else {
+    await installLegacyTSTemplate({
+      appName,
+      root,
+      packageManager,
+      isOnline,
+      template,
+      backend,
+      framework,
+      ui,
+      vectorDb,
+      observability,
+      tools,
+      dataSources,
+      useLlamaParse,
+      useCase,
+      modelConfig,
+      relativeEngineDestPath,
+    });
+  }
 
   const packageJson = await updatePackageJson({
     root,
@@ -248,6 +369,7 @@ export const installTSTemplate = async ({
     vectorDb,
     backend,
     modelConfig,
+    template,
   });
 
   if (
@@ -262,27 +384,27 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "^0.1.52",
+    "@llamaindex/openai": "^0.2.0",
   },
   gemini: {
-    "@llamaindex/google": "^0.0.7",
+    "@llamaindex/google": "^0.2.0",
   },
   ollama: {
-    "@llamaindex/ollama": "^0.0.40",
+    "@llamaindex/ollama": "^0.1.0",
   },
   mistral: {
-    "@llamaindex/mistral": "^0.0.5",
+    "@llamaindex/mistral": "^0.2.0",
   },
   "azure-openai": {
-    "@llamaindex/openai": "^0.1.52",
+    "@llamaindex/openai": "^0.2.0",
   },
   groq: {
-    "@llamaindex/groq": "^0.0.51",
-    "@llamaindex/huggingface": "^0.0.36", // groq uses huggingface as default embedding model
+    "@llamaindex/groq": "^0.0.61",
+    "@llamaindex/huggingface": "^0.1.0", // groq uses huggingface as default embedding model
   },
   anthropic: {
-    "@llamaindex/anthropic": "^0.1.0",
-    "@llamaindex/huggingface": "^0.0.36", // anthropic uses huggingface as default embedding model
+    "@llamaindex/anthropic": "^0.3.0",
+    "@llamaindex/huggingface": "^0.1.0", // anthropic uses huggingface as default embedding model
   },
 };
 
@@ -331,6 +453,7 @@ async function updatePackageJson({
   vectorDb,
   backend,
   modelConfig,
+  template,
 }: Pick<
   InstallTemplateArgs,
   | "root"
@@ -341,6 +464,7 @@ async function updatePackageJson({
   | "observability"
   | "vectorDb"
   | "modelConfig"
+  | "template"
 > & {
   relativeEngineDestPath: string;
   backend: boolean;
@@ -352,7 +476,7 @@ async function updatePackageJson({
   packageJson.name = appName;
   packageJson.version = "0.1.0";
 
-  if (relativeEngineDestPath) {
+  if (relativeEngineDestPath && template !== "llamaindexserver") {
     // TODO: move script to {root}/scripts for all frameworks
     // add generate script if using context engine
     packageJson.scripts = {

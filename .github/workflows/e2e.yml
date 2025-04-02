@@ -67,6 +67,8 @@ jobs:
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
+          PYTHONIOENCODING: utf-8
+          PYTHONLEGACYWINDOWSSTDIO: utf-8
         working-directory: .
 
       - uses: actions/upload-artifact@v4
@@ -86,7 +88,7 @@ jobs:
         node-version: [18, 20]
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
-        frameworks: ["nextjs", "express"]
+        frameworks: ["nextjs"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
     defaults:
       run:

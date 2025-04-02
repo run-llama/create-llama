@@ -90,7 +90,7 @@ export async function createApp({
   // Install backend
   await installTemplate({ ...args, backend: true });
 
-  if (frontend && framework === "fastapi") {
+  if (frontend && framework === "fastapi" && template !== "llamaindexserver") {
     // install frontend
     const frontendRoot = path.join(root, ".frontend");
     await makeDir(frontendRoot);
@@ -110,7 +110,7 @@ export async function createApp({
     console.log();
   }
 
-  if (toolsRequireConfig(tools)) {
+  if (toolsRequireConfig(tools) && template !== "llamaindexserver") {
     const configFile =
       framework === "fastapi" ? "config/tools.yaml" : "config/tools.json";
     console.log(

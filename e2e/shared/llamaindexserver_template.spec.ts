@@ -16,15 +16,17 @@ const templateFramework: TemplateFramework = process.env.FRAMEWORK
 const dataSource: string = "--example-file";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = templateFramework === "fastapi" ? "--frontend" : "";
+const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["financial_report", "blog", "form_filling"];
+const templateUseCases = ["financial_report", "agentic_rag", "deep_research"];
 
 for (const useCase of templateUseCases) {
-  test.describe(`Test multiagent template ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
+  test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
-      process.platform !== "linux" || process.env.DATASOURCE === "--no-files",
-      "The multiagent template currently only works with files. We also only run on Linux to speed up tests.",
+      process.platform !== "linux" ||
+        process.env.DATASOURCE === "--no-files" ||
+        templateFramework === "express",
+      "The llamaindexserver template currently only works with nextjs, fastapi. We also only run on Linux to speed up tests.",
     );
     let port: number;
     let cwd: string;
@@ -38,7 +40,7 @@ for (const useCase of templateUseCases) {
       cwd = await createTestDir();
       const result = await runCreateLlama({
         cwd,
-        templateType: "multiagent",
+        templateType: "llamaindexserver",
         templateFramework,
         dataSource,
         vectorDb,
@@ -72,9 +74,9 @@ for (const useCase of templateUseCases) {
       test.skip(
         templatePostInstallAction !== "runApp" ||
           useCase === "financial_report" ||
-          useCase === "form_filling" ||
+          useCase === "deep_research" ||
           templateFramework === "express",
-        "Skip chat tests for financial report and form filling.",
+        "Skip chat tests for financial report and deep research.",
       );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);
@@ -86,6 +88,12 @@ for (const useCase of templateUseCases) {
       await page.click("form button[type=submit]");
 
       const response = await responsePromise;
+      console.log(`Response status: ${response.status()}`);
+      const responseBody = await response
+        .text()
+        .catch((e) => `Error reading body: ${e}`);
+      console.log(`Response body: ${responseBody}`);
+
       expect(response.ok()).toBeTruthy();
     });
 

@@ -1,0 +1,23 @@
+{
+  "name": "llamaindex-server",
+  "version": "0.1.0",
+  "scripts": {
+    "generate": "tsx src/generate.ts",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@llamaindex/openai": "0.2.0",
+    "@llamaindex/readers": "^2.0.0",
+    "@llamaindex/server": "0.0.6",
+    "@llamaindex/tools": "0.0.4",
+    "dotenv": "^16.4.7",
+    "llamaindex": "0.9.15",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.3",
+    "tsx": "^4.7.2",
+    "typescript": "^5.3.2"
+  }
+}

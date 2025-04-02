@@ -12,6 +12,7 @@ import {
   InstallTemplateArgs,
   ModelConfig,
   TemplateDataSource,
+  TemplateObservability,
   TemplateType,
   TemplateVectorDB,
 } from "./types";
@@ -29,6 +30,7 @@ const getAdditionalDependencies = (
   dataSources?: TemplateDataSource[],
   tools?: Tool[],
   templateType?: TemplateType,
+  observability?: TemplateObservability,
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -103,7 +105,7 @@ const getAdditionalDependencies = (
     case "llamacloud":
       dependencies.push({
         name: "llama-index-indices-managed-llama-cloud",
-        version: "^0.6.3",
+        version: "0.6.3",
       });
       break;
   }
@@ -268,6 +270,21 @@ const getAdditionalDependencies = (
       break;
   }
 
+  if (observability && observability !== "none") {
+    if (observability === "traceloop") {
+      dependencies.push({
+        name: "traceloop-sdk",
+        version: "^0.15.11",
+      });
+    }
+    if (observability === "llamatrace") {
+      dependencies.push({
+        name: "llama-index-callbacks-arize-phoenix",
+        version: "^0.3.0",
+      });
+    }
+  }
+
   return dependencies;
 };
 
@@ -379,47 +396,24 @@ export const installPythonDependencies = (
   }
 };
 
-export const installPythonTemplate = async ({
-  appName,
+const installLegacyPythonTemplate = async ({
   root,
   template,
-  framework,
   vectorDb,
-  postInstallAction,
-  modelConfig,
   dataSources,
   tools,
-  useLlamaParse,
   useCase,
   observability,
 }: Pick<
   InstallTemplateArgs,
-  | "appName"
   | "root"
   | "template"
-  | "framework"
   | "vectorDb"
-  | "postInstallAction"
-  | "modelConfig"
   | "dataSources"
   | "tools"
-  | "useLlamaParse"
   | "useCase"
   | "observability"
 >) => {
-  console.log("\nInitializing Python project with template:", template, "\n");
-  let templatePath;
-  if (template === "reflex") {
-    templatePath = path.join(templatesDir, "types", "reflex");
-  } else {
-    templatePath = path.join(templatesDir, "types", "streaming", framework);
-  }
-  await copy("**", root, {
-    parents: true,
-    cwd: templatePath,
-    rename: assetRelocator,
-  });
-
   const compPath = path.join(templatesDir, "components");
   const enginePath = path.join(root, "app", "engine");
 
@@ -509,34 +503,7 @@ export const installPythonTemplate = async ({
     }
   }
 
-  console.log("Adding additional dependencies");
-
-  const addOnDependencies = getAdditionalDependencies(
-    modelConfig,
-    vectorDb,
-    dataSources,
-    tools,
-    template,
-  );
-
   if (observability && observability !== "none") {
-    if (observability === "traceloop") {
-      addOnDependencies.push({
-        name: "traceloop-sdk",
-        version: "^0.15.11",
-      });
-    }
-
-    if (observability === "llamatrace") {
-      addOnDependencies.push({
-        name: "llama-index-callbacks-arize-phoenix",
-        version: "^0.3.0",
-        constraints: {
-          python: ">=3.11,<3.13",
-        },
-      });
-    }
-
     const templateObservabilityPath = path.join(
       templatesDir,
       "components",
@@ -548,6 +515,127 @@ export const installPythonTemplate = async ({
       cwd: templateObservabilityPath,
     });
   }
+};
+
+const installLlamaIndexServerTemplate = async ({
+  root,
+  useCase,
+  useLlamaParse,
+}: Pick<InstallTemplateArgs, "root" | "useCase" | "useLlamaParse">) => {
+  if (!useCase) {
+    console.log(
+      red(
+        `There is no use case selected. Please pick a use case to use via --use-case flag.`,
+      ),
+    );
+    process.exit(1);
+  }
+
+  await copy("workflow.py", path.join(root, "app"), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+  });
+
+  if (useLlamaParse) {
+    await copy("index.py", path.join(root, "app"), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "python",
+      ),
+    });
+    // TODO: Consider moving generate.py to app folder.
+    await copy("generate.py", path.join(root), {
+      parents: true,
+      cwd: path.join(
+        templatesDir,
+        "components",
+        "vectordbs",
+        "llamaindexserver",
+        "llamacloud",
+        "python",
+      ),
+    });
+  }
+  // Copy README.md
+  await copy("README-template.md", path.join(root), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+    rename: assetRelocator,
+  });
+};
+
+export const installPythonTemplate = async ({
+  appName,
+  root,
+  template,
+  framework,
+  vectorDb,
+  postInstallAction,
+  modelConfig,
+  dataSources,
+  tools,
+  useLlamaParse,
+  useCase,
+  observability,
+}: Pick<
+  InstallTemplateArgs,
+  | "appName"
+  | "root"
+  | "template"
+  | "framework"
+  | "vectorDb"
+  | "postInstallAction"
+  | "modelConfig"
+  | "dataSources"
+  | "tools"
+  | "useLlamaParse"
+  | "useCase"
+  | "observability"
+>) => {
+  console.log("\nInitializing Python project with template:", template, "\n");
+  let templatePath;
+  if (template === "reflex") {
+    templatePath = path.join(templatesDir, "types", "reflex");
+  } else {
+    templatePath = path.join(templatesDir, "types", template, framework);
+  }
+  await copy("**", root, {
+    parents: true,
+    cwd: templatePath,
+    rename: assetRelocator,
+  });
+
+  if (template === "llamaindexserver") {
+    await installLlamaIndexServerTemplate({
+      root,
+      useCase,
+      useLlamaParse,
+    });
+  } else {
+    await installLegacyPythonTemplate({
+      root,
+      template,
+      vectorDb,
+      dataSources,
+      tools,
+      useCase,
+      observability,
+    });
+  }
+
+  console.log("Adding additional dependencies");
+  const addOnDependencies = getAdditionalDependencies(
+    modelConfig,
+    vectorDb,
+    dataSources,
+    tools,
+    template,
+  );
 
   await addDependencies(root, addOnDependencies);
 
