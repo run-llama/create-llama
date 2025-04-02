@@ -28,7 +28,7 @@ import { getIndex } from "./data";
 
 // workflow factory
 export const workflowFactory = async (reqBody: any) => {
-  const index = await getIndex(reqBody);
+  const index = await getIndex(reqBody?.data);
   return new DeepResearchWorkflow(index);
 };
 
