@@ -236,20 +236,13 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
   }
 };
 
-const getModelEnvs = (
-  modelConfig: ModelConfig,
-  template?: TemplateType,
-): EnvVar[] => {
+const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
   return [
-    ...(template !== "llamaindexserver"
-      ? [
-          {
-            name: "MODEL_PROVIDER",
-            description: "The provider for the AI models to use.",
-            value: modelConfig.provider,
-          },
-        ]
-      : []),
+    {
+      name: "MODEL_PROVIDER",
+      description: "The provider for the AI models to use.",
+      value: modelConfig.provider,
+    },
     {
       name: "MODEL",
       description: "The name of LLM model to use.",
@@ -567,7 +560,9 @@ export const createBackendEnvFile = async (
       value: opts.llamaCloudKey,
     },
     // Add environment variables of each component
-    ...getModelEnvs(opts.modelConfig, opts.template),
+    ...(opts.template !== "llamaindexserver"
+      ? getModelEnvs(opts.modelConfig)
+      : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
     ...getToolEnvs(opts.tools),

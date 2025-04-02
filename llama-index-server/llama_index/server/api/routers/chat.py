@@ -4,7 +4,6 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
@@ -65,8 +64,7 @@ async def _stream_content(
         event: Union[AgentStream, StopEvent],
     ) -> AsyncGenerator[str, None]:
         if isinstance(event, AgentStream):
-            if event.delta.strip():  # Only yield non-empty deltas
-                yield event.delta
+            yield event.delta
         elif isinstance(event, StopEvent):
             if isinstance(event.result, str):
                 yield event.result
@@ -74,9 +72,7 @@ async def _stream_content(
                 async for chunk in event.result:
                     if isinstance(chunk, str):
                         yield chunk
-                    elif (
-                        hasattr(chunk, "delta") and chunk.delta.strip()
-                    ):  # Only yield non-empty deltas
+                    elif hasattr(chunk, "delta"):
                         yield chunk.delta
 
     stream_started = False
