@@ -48,7 +48,17 @@ async function* walk(dir: string): AsyncGenerator<string> {
 async function loadAndIndex() {
   const index = await getIndex();
   // ensure the index is available or create a new one
-  await index.ensureIndex({ verbose: true });
+  await index.ensureIndex({
+    verbose: true,
+    embedding: {
+      type: "OPENAI_EMBEDDING",
+      component: {
+        api_key: process.env.OPENAI_API_KEY,
+        model_name: "text-embedding-ada-002",
+      },
+    },
+  });
+
   const projectId = await index.getProjectId();
   const pipelineId = await index.getPipelineId();
 
