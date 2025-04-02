@@ -14,7 +14,7 @@ export async function getIndex(params?: LlamaCloudDataSourceParams) {
   const apiKey = process.env.LLAMA_CLOUD_API_KEY;
   if (!projectName || !pipelineName || !apiKey) {
     throw new Error(
-      "Set project, pipeline, and api key in the params or as environment variables.",
+      "LlamaCloud is not configured. Please set project, pipeline, and api key in the params or as environment variables.",
     );
   }
   const index = new LlamaCloudIndex({

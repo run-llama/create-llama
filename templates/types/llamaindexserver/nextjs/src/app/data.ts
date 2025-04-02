@@ -9,7 +9,6 @@ export async function getIndex(params?: any) {
     persistDir: "storage",
   });
 
-  // TODO: support storageContext.numDocs later
   const numberOfDocs = Object.keys(
     (storageContext.docStore as SimpleDocumentStore).toDict(),
   ).length;

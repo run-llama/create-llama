@@ -44,6 +44,7 @@ const renderEnvVar = (envVars: EnvVar[]): string => {
 const getVectorDBEnvs = (
   vectorDb?: TemplateVectorDB,
   framework?: TemplateFramework,
+  template?: TemplateType,
 ): EnvVar[] => {
   if (!vectorDb || !framework) {
     return [];
@@ -168,7 +169,7 @@ const getVectorDBEnvs = (
           description:
             "The organization ID for the LlamaCloud project (uses default organization if not specified)",
         },
-        ...(framework === "nextjs"
+        ...(framework === "nextjs" && template !== "llamaindexserver"
           ? // activate index selector per default (not needed for non-NextJS backends as it's handled by createFrontendEnvFile)
             [
               {
@@ -252,29 +253,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
-    {
-      name: "EMBEDDING_DIM",
-      description: "Dimension of the embedding model to use.",
-      value: modelConfig.dimensions.toString(),
-    },
-    {
-      name: "CONVERSATION_STARTERS",
-      description: "The questions to help users get started (multi-line).",
-    },
     ...(modelConfig.provider === "openai"
       ? [
           {
             name: "OPENAI_API_KEY",
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
-          },
-          {
-            name: "LLM_TEMPERATURE",
-            description: "Temperature for sampling from the model.",
-          },
-          {
-            name: "LLM_MAX_TOKENS",
-            description: "Maximum number of tokens to generate.",
           },
         ]
       : []),
@@ -419,7 +403,7 @@ const getFrameworkEnvs = (
       ],
     );
   }
-  if (framework === "nextjs") {
+  if (framework === "nextjs" && template !== "llamaindexserver") {
     result.push({
       name: "NEXT_PUBLIC_CHAT_API",
       description:
@@ -427,16 +411,6 @@ const getFrameworkEnvs = (
     });
   }
   return result;
-};
-
-const getEngineEnvs = (): EnvVar[] => {
-  return [
-    {
-      name: "TOP_K",
-      description:
-        "The number of similar embeddings to return when retrieving documents.",
-    },
-  ];
 };
 
 const getToolEnvs = (tools?: Tool[]): EnvVar[] => {
@@ -587,8 +561,7 @@ export const createBackendEnvFile = async (
     },
     // Add environment variables of each component
     ...getModelEnvs(opts.modelConfig),
-    ...getEngineEnvs(),
-    ...getVectorDBEnvs(opts.vectorDb, opts.framework),
+    ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
     ...getToolEnvs(opts.tools),
     ...getTemplateEnvs(opts.template),

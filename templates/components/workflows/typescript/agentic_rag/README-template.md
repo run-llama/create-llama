@@ -27,7 +27,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configure LLM and Embedding Model
 
-You can config LLM model and Embedding model in the [settings file](src\app\settings.ts).
+You can config LLM model and Embedding model in the [settings file](src/app/settings.ts).
 
 ## Use Case
 
