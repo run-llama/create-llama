@@ -149,7 +149,7 @@ def _create_index(
                     "type": "OPENAI_EMBEDDING",
                     "component": {
                         "api_key": os.getenv("OPENAI_API_KEY"),  # editable
-                        "model_name": os.getenv("EMBEDDING_MODEL"),
+                        "model_name": Settings.embed_model.model_name or "text-embedding-3-small",
                     },
                 },
                 "transform_config": {
