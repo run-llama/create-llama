@@ -1,23 +1,45 @@
 import json
 import logging
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers.chat import chat_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
 
 
+class UIConfig(BaseModel):
+    enabled: bool = True
+    app_title: str = "LlamaIndex Server"
+    starter_questions: Optional[list[str]] = None
+    ui_path: str = ".ui"
+
+    def get_config_content(self) -> str:
+        return json.dumps(
+            {
+                "CHAT_API": f"{server_settings.api_url}/chat",
+                "STARTER_QUESTIONS": self.starter_questions or [],
+                "LLAMA_CLOUD_API": (
+                    f"{server_settings.api_url}/chat/config/llamacloud"
+                    if os.getenv("LLAMA_CLOUD_API_KEY")
+                    else None
+                ),
+                "APP_TITLE": self.app_title,
+            },
+            indent=2,
+        )
+
+
 class LlamaIndexServer(FastAPI):
     workflow_factory: Callable[..., Workflow]
-    include_ui: Optional[bool]
-    starter_questions: Optional[list[str]]
     verbose: bool = False
-    ui_path: str = ".ui"
+    ui_config: UIConfig
 
     def __init__(
         self,
@@ -25,8 +47,7 @@ class LlamaIndexServer(FastAPI):
         logger: Optional[logging.Logger] = None,
         use_default_routers: Optional[bool] = True,
         env: Optional[str] = None,
-        include_ui: Optional[bool] = None,
-        starter_questions: Optional[list[str]] = None,
+        ui_config: Optional[Union[UIConfig, dict]] = None,
         server_url: Optional[str] = None,
         api_prefix: Optional[str] = None,
         verbose: bool = False,
@@ -41,8 +62,7 @@ class LlamaIndexServer(FastAPI):
             logger: The logger to use.
             use_default_routers: Whether to use the default routers (chat, mount `data` and `output` directories).
             env: The environment to run the server in.
-            include_ui: Whether to show an chat UI in the root path.
-            starter_questions: A list of starter questions to display in the chat UI.
+            ui_config: The configuration for the chat UI.
             server_url: The URL of the server.
             api_prefix: The prefix for the API endpoints.
             verbose: Whether to show verbose logs.
@@ -52,9 +72,13 @@ class LlamaIndexServer(FastAPI):
         self.workflow_factory = workflow_factory
         self.logger = logger or logging.getLogger("uvicorn")
         self.verbose = verbose
-        self.include_ui = include_ui  # Store the explicitly passed value first
-        self.starter_questions = starter_questions
         self.use_default_routers = use_default_routers or True
+        if ui_config is None:
+            self.ui_config = UIConfig()
+        elif isinstance(ui_config, dict):
+            self.ui_config = UIConfig(**ui_config)
+        else:
+            self.ui_config = ui_config
 
         # Update the settings
         if server_url:
@@ -67,26 +91,13 @@ class LlamaIndexServer(FastAPI):
 
         if str(env).lower() == "dev":
             self.allow_cors("*")
-            if self.include_ui is None:
-                self.include_ui = True
-        if self.include_ui is None:
-            self.include_ui = False
+            if self.ui_config.enabled is None:
+                self.ui_config.enabled = True
+        if self.ui_config.enabled is None:
+            self.ui_config.enabled = False
 
-        if self.include_ui:
+        if self.ui_config.enabled:
             self.mount_ui()
-
-    @property
-    def _ui_config(self) -> dict:
-        config = {
-            "CHAT_API": f"{server_settings.api_url}/chat",
-            "STARTER_QUESTIONS": self.starter_questions,
-        }
-        is_llamacloud_configured = os.getenv("LLAMA_CLOUD_API_KEY") is not None
-        if is_llamacloud_configured:
-            config["LLAMA_CLOUD_API"] = (
-                f"{server_settings.api_url}/chat/config/llamacloud"
-            )
-        return config
 
     # Default routers
     def add_default_routers(self) -> None:
@@ -111,13 +122,15 @@ class LlamaIndexServer(FastAPI):
         Mount the UI.
         """
         # Check if the static folder exists
-        if self.include_ui:
-            if not os.path.exists(self.ui_path):
+        if self.ui_config.enabled:
+            if not os.path.exists(self.ui_config.ui_path):
                 self.logger.warning(
-                    f"UI files not found, downloading UI to {self.ui_path}"
+                    f"UI files not found, downloading UI to {self.ui_config.ui_path}"
                 )
-                download_chat_ui(logger=self.logger, target_path=self.ui_path)
-            self._mount_static_files(directory=self.ui_path, path="/", html=True)
+                download_chat_ui(logger=self.logger, target_path=self.ui_config.ui_path)
+            self._mount_static_files(
+                directory=self.ui_config.ui_path, path="/", html=True
+            )
             self._override_ui_config()
 
     def _override_ui_config(self) -> None:
@@ -125,12 +138,12 @@ class LlamaIndexServer(FastAPI):
         Override the UI config by writing a complete configuration file.
         """
         try:
-            config_path = os.path.join(self.ui_path, "config.js")
+            config_path = os.path.join(self.ui_config.ui_path, "config.js")
             if not os.path.exists(config_path):
                 self.logger.error("Config file not found")
                 return
             config_content = (
-                f"window.LLAMAINDEX = {json.dumps(self._ui_config, indent=2)};"
+                f"window.LLAMAINDEX = {self.ui_config.get_config_content()};"
             )
             with open(config_path, "w") as f:
                 f.write(config_content)
