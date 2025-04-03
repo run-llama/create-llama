@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.1
+
+### Patch Changes
+
+- 08b3e07: Simplify the local index code.
+
 ## 0.5.0
 
 ### Minor Changes
