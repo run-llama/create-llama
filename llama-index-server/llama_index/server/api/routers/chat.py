@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
@@ -99,7 +100,10 @@ async def _stream_content(
         event: Union[AgentStream, StopEvent],
     ) -> AsyncGenerator[str, None]:
         if isinstance(event, AgentStream):
-            yield event.delta
+            # Normally, if the stream is a tool call, the delta is always empty
+            # so it's not a text stream.
+            if len(event.tool_calls) == 0:
+                yield event.delta
         elif isinstance(event, StopEvent):
             if isinstance(event.result, str):
                 yield event.result
