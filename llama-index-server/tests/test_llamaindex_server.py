@@ -97,7 +97,7 @@ async def test_ui_is_downloaded(server: LlamaIndexServer) -> None:
         assert config_json["CHAT_API"] == "/api/chat"
         assert config_json["STARTER_QUESTIONS"] == ["What's the weather like?"]
         assert config_json["LLAMA_CLOUD_API"] is None
-        assert config_json["TITLE"] == "Test UI"
+        assert config_json["APP_TITLE"] == "Test UI"
 
     # Check if the UI is mounted and accessible
     async with AsyncClient(
@@ -187,7 +187,7 @@ async def test_ui_config_from_dict() -> None:
         config_json = json.loads(
             config_content.replace("window.LLAMAINDEX = ", "").rstrip(";")
         )
-        assert config_json["TITLE"] == "Dict Config App"
+        assert config_json["APP_TITLE"] == "Dict Config App"
         assert config_json["STARTER_QUESTIONS"] == ["Dict Q1", "Dict Q2"]
         assert config_json["CHAT_API"] == "/api/chat"
         assert config_json["LLAMA_CLOUD_API"] is None

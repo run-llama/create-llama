@@ -30,7 +30,7 @@ class UIConfig(BaseModel):
                     if os.getenv("LLAMA_CLOUD_API_KEY")
                     else None
                 ),
-                "TITLE": self.app_title,
+                "APP_TITLE": self.app_title,
             },
             indent=2,
         )
