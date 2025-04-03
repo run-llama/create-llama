@@ -1,9 +1,9 @@
 import logging
 import os
 
-from dotenv import load_dotenv
-
+from app.index import STORAGE_DIR
 from app.settings import init_settings
+from dotenv import load_dotenv
 from llama_index.core.indices import (
     VectorStoreIndex,
 )
@@ -18,7 +18,6 @@ def generate_datasource():
     init_settings()
 
     logger.info("Creating new index")
-    storage_dir = os.environ.get("STORAGE_DIR", "storage")
     # load the documents and create the index
     reader = SimpleDirectoryReader(
         os.environ.get("DATA_DIR", "data"),
@@ -30,5 +29,5 @@ def generate_datasource():
         show_progress=True,
     )
     # store it for later
-    index.storage_context.persist(storage_dir)
-    logger.info(f"Finished creating new index. Stored in {storage_dir}")
+    index.storage_context.persist(STORAGE_DIR)
+    logger.info(f"Finished creating new index. Stored in {STORAGE_DIR}")
