@@ -1,3 +1,3 @@
-from .server import LlamaIndexServer
+from .server import LlamaIndexServer, UIConfig
 
-__all__ = ["LlamaIndexServer"]
+__all__ = ["LlamaIndexServer", "UIConfig"]
