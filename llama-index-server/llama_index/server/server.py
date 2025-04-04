@@ -6,30 +6,37 @@ from typing import Any, Callable, Optional, Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers.chat import chat_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
+from pydantic import BaseModel, Field
 
 
 class UIConfig(BaseModel):
-    enabled: bool = True
-    app_title: str = "LlamaIndex Server"
-    starter_questions: Optional[list[str]] = None
-    ui_path: str = ".ui"
+    enabled: bool = Field(default=True, description="Whether to enable the chat UI")
+    app_title: str = Field(
+        default="LlamaIndex Server", description="The title of the chat UI"
+    )
+    starter_questions: Optional[list[str]] = Field(
+        default=None, description="The starter questions for the chat UI"
+    )
+    ui_path: str = Field(
+        default=".ui", description="The path that stores static files for the chat UI"
+    )
+    use_llamacloud: bool = Field(
+        default=True,
+        description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API environment variable)",
+    )
 
     def get_config_content(self) -> str:
         return json.dumps(
             {
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "STARTER_QUESTIONS": self.starter_questions or [],
-                "LLAMA_CLOUD_API": (
-                    f"{server_settings.api_url}/chat/config/llamacloud"
-                    if os.getenv("LLAMA_CLOUD_API_KEY")
-                    else None
-                ),
+                "LLAMA_CLOUD_API": f"{server_settings.api_url}/chat/config/llamacloud"
+                if self.use_llamacloud and os.getenv("LLAMA_CLOUD_API")
+                else None,
                 "APP_TITLE": self.app_title,
             },
             indent=2,

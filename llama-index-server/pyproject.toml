@@ -34,7 +34,7 @@ fastapi = {extras = ["standard"], version = "^0.115.11"}
 cachetools = "^5.5.2"
 requests = "^2.32.3"
 pydantic-settings = "^2.8.1"
-llama-index-core = "0.12.28"
+llama-index-core = "^0.12.28"
 llama-index-readers-file = "^0.4.6"
 llama-index-indices-managed-llama-cloud = "0.6.3"
 
