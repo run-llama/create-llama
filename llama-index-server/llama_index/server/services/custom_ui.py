@@ -26,7 +26,7 @@ class CustomUI:
 
         try:
             for file in os.listdir(self.component_dir):
-                if not file.endswith(".js"):
+                if not file.endswith(".jsx"):
                     continue
 
                 component_name = file.split(".")[0]
