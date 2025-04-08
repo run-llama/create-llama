@@ -6,7 +6,7 @@ from llama_index.server.api.models import ComponentDefinition
 from llama_index.server.services.custom_ui import CustomUI
 
 
-def ui_router(
+def custom_components_router(
     component_dir: str,
     logger: logging.Logger,
 ) -> APIRouter:
