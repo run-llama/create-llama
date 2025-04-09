@@ -5,7 +5,7 @@ from typing import Optional
 
 import requests
 
-CHAT_UI_VERSION = "0.0.6"
+CHAT_UI_VERSION = "0.0.9"
 
 
 def download_chat_ui(
@@ -21,7 +21,7 @@ def download_chat_ui(
 
 def _get_download_link(version: str) -> str:
     """Get the download link for the chat UI from the npm registry."""
-    return "https://pkg.pr.new/run-llama/LlamaIndexTS/@llamaindex/server@1828"
+    return f"https://registry.npmjs.org/@llamaindex/server/-/server-{version}.tgz"
 
 
 def _download_package(url: str) -> Path:
