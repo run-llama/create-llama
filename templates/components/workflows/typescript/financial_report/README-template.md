@@ -9,7 +9,7 @@ npm install
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
-Make sure you have set the `OPENAI_API_KEY` for the LLM.
+Make sure you have set the `OPENAI_API_KEY` for the LLM and the `E2B_API_KEY` for the code interpreter. You can get the E2B API key from [here](https://e2b.dev).
 
 Second, generate the embeddings of the example documents in the `./data` directory:
 
@@ -31,14 +31,14 @@ You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/l
 
 ## Use Case
 
-We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
+We have prepared an [example workflow](./src/app/workflow.ts) for the financial report generation use case, where you can request for the app to generate a financial report using the example documents in the [./data](./data).
 
 You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```shell
 curl --location 'localhost:3000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Compare the financial performance of Apple and Tesla" }] }'
+--data '{ "messages": [{ "role": "user", "content": "Generate a financial report that compares the financial performance of Apple and Tesla" }] }'
 ```
 
 ## Learn More
