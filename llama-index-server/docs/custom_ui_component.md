@@ -1,12 +1,12 @@
 # Custom UI Components
 
-The LlamaIndex server provides support for custom UI components, allowing you to extend and customize the chat interface according to your needs.
+The LlamaIndex server provides support for rendering workflow events using custom UI components, allowing you to extend and customize the chat interface.
 
 ## Overview
 
 Custom UI components are a powerful feature that enables you to:
 
-- Add custom interface elements to the chat UI
+- Add custom interface elements to the chat UI using React JSX or TSX files
 - Extend the default chat interface functionality
 - Create specialized visualizations or interactions
 
@@ -52,7 +52,7 @@ server = LlamaIndexServer(
 2. Add the custom component code to the directory following the naming pattern:
 
    - File Extension: `.jsx` and `.tsx` for React components
-   - File Name: Should match the event type from your workflow (e.g., `deep_research_event.jsx` for handling `deep_research_event` type that you defined in your workflow)
+   - File Name: Should match the event type from your workflow (e.g., `deep_research_event.jsx` for handling `deep_research_event` type that you defined in your workflow). If there are TSX and JSX files with the same name, the TSX file will be used.
    - Component Name: Export a default React component named `Component` that receives props from the event data
 
    Example component structure:
