@@ -17,7 +17,7 @@ class CustomUI:
         List all js files in the component directory and return a list of ComponentDefinition objects.
         Ignores files that fail to load and logs the error.
         """
-        components = []
+        components: List[ComponentDefinition] = []
         if not os.path.exists(self.component_dir):
             self.logger.warning(
                 f"Component directory {self.component_dir} does not exist"
