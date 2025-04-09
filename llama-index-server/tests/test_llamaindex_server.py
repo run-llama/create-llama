@@ -156,8 +156,11 @@ async def test_component_router_addition(server: LlamaIndexServer, tmp_path) -> 
     )
     assert component_route_exists, "Component API route not found in server routes"
 
+
 @pytest.mark.asyncio()
-async def test_ui_config_includes_components_api(server: LlamaIndexServer, tmp_path) -> None:
+async def test_ui_config_includes_components_api(
+    server: LlamaIndexServer, tmp_path
+) -> None:
     """
     Test if the UI config includes components API when component directory is set.
     """
@@ -177,6 +180,7 @@ async def test_ui_config_includes_components_api(server: LlamaIndexServer, tmp_p
     assert ui_config["COMPONENTS_API"].endswith("/components"), (
         "Incorrect components API path"
     )
+
 
 @pytest.mark.asyncio()
 async def test_component_router_requires_component_dir(
