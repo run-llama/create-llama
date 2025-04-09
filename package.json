@@ -27,6 +27,7 @@
     "e2e": "playwright test",
     "e2e:python": "playwright test e2e/shared e2e/python",
     "e2e:typescript": "playwright test e2e/shared e2e/typescript",
+    "e2e:clean": "pnpm --filter @create-llama/e2e-clean clean",
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
