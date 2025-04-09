@@ -531,7 +531,7 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("workflow.py", path.join(root, "app"), {
+  await copy("*", path.join(root, "app"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
   });
@@ -555,7 +555,7 @@ const installLlamaIndexServerTemplate = async ({
       ),
     });
     // TODO: Consider moving generate.py to app folder.
-    await copy("*", path.join(root), {
+    await copy("generate.py", path.join(root), {
       parents: true,
       cwd: path.join(
         templatesDir,
