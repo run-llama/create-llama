@@ -118,6 +118,9 @@ class LlamaIndexServer(FastAPI):
         """
         Add the UI router.
         """
+        if self.component_dir is None:
+            raise ValueError("component_dir must be specified to add components router")
+
         self.include_router(
             custom_components_router(self.component_dir, self.logger),
             prefix=server_settings.api_prefix,

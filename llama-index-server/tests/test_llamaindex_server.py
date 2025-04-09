@@ -178,3 +178,22 @@ async def test_ui_config_includes_components_api(server: LlamaIndexServer) -> No
     assert ui_config["COMPONENTS_API"].endswith("/components"), (
         "Incorrect components API path"
     )
+
+
+@pytest.mark.asyncio()
+async def test_component_router_requires_component_dir(
+    server: LlamaIndexServer,
+) -> None:
+    """
+    Test that adding components router without component_dir raises an error.
+    """
+    server_without_component_dir = LlamaIndexServer(
+        workflow_factory=_agent_workflow,
+        verbose=True,
+        include_ui=True,
+    )
+
+    with pytest.raises(
+        ValueError, match="component_dir must be specified to add components router"
+    ):
+        server_without_component_dir.add_components_router()
