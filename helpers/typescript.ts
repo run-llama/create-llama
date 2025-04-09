@@ -42,6 +42,12 @@ const installLlamaIndexServerTemplate = async ({
     ),
   });
 
+  // copy workflow UI components to output/components folder
+  await copy("*", path.join(root, "output", "components"), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
+  });
+
   if (vectorDb === "llamacloud") {
     await copy("generate.ts", path.join(root, "src"), {
       parents: true,
