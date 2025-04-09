@@ -75,6 +75,7 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `use_default_routers`: Whether to include default routers (chat, static file serving)
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `include_ui`: Whether to include the chat UI
+- `component_dir`: The directory for custom component code. The default is None, which only renders events that the UI supports.
 - `starter_questions`: List of starter questions for the chat UI
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
@@ -100,6 +101,11 @@ When enabled, the server provides a chat interface at the root path (`/`) with:
 - Configurable starter questions
 - Real-time chat interface
 - API endpoint integration
+
+### Custom UI Components
+
+You can add custom UI components for your workflow by providing `component_dir` config and adding custom .jsx files to the directory.
+See [Custom UI Components](docs/custom_ui_component.md) for more details.
 
 ## Development Mode
 
