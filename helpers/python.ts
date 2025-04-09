@@ -537,9 +537,9 @@ const installLlamaIndexServerTemplate = async ({
   });
 
   // Copy custom UI component code
-  await copy(`${useCase}_event.jsx`, path.join(root, "components"), {
+  await copy(`*`, path.join(root, "components"), {
     parents: true,
-    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+    cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
   });
 
   if (useLlamaParse) {
@@ -555,7 +555,7 @@ const installLlamaIndexServerTemplate = async ({
       ),
     });
     // TODO: Consider moving generate.py to app folder.
-    await copy("generate.py", path.join(root), {
+    await copy("*", path.join(root), {
       parents: true,
       cwd: path.join(
         templatesDir,
