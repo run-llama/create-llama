@@ -8,11 +8,11 @@ function Component({ events }) {
     // Get the latest state for retrieve and analyze events
     const retrieveState =
       retrieveEvents.length > 0
-        ? retrieveEvents[ retrieveEvents.length - 1 ].state
+        ? retrieveEvents[retrieveEvents.length - 1].state
         : null;
     const analyzeState =
       analyzeEvents.length > 0
-        ? analyzeEvents[ analyzeEvents.length - 1 ].state
+        ? analyzeEvents[analyzeEvents.length - 1].state
         : null;
 
     // Group answer events by their ID
@@ -20,8 +20,8 @@ function Component({ events }) {
     for (const event of answerEvents) {
       if (!event.id) continue;
 
-      if (!answerGroups[ event.id ]) {
-        answerGroups[ event.id ] = {
+      if (!answerGroups[event.id]) {
+        answerGroups[event.id] = {
           id: event.id,
           question: event.question,
           answer: event.answer,
@@ -30,13 +30,13 @@ function Component({ events }) {
       }
 
       const lastState =
-        answerGroups[ event.id ].states[ answerGroups[ event.id ].states.length - 1 ];
+        answerGroups[event.id].states[answerGroups[event.id].states.length - 1];
       if (lastState !== event.state) {
-        answerGroups[ event.id ].states.push(event.state);
+        answerGroups[event.id].states.push(event.state);
       }
 
       if (event.answer) {
-        answerGroups[ event.id ].answer = event.answer;
+        answerGroups[event.id].answer = event.answer;
       }
     }
 
@@ -181,7 +181,7 @@ function Component({ events }) {
       done: { background: "#D1FAE5", color: "#065F46" },
       pending: { background: "#F3F4F6", color: "#1F2937" },
     };
-    const stateColors = colors[ state ] || colors.pending;
+    const stateColors = colors[state] || colors.pending;
     return {
       ...styles.badge,
       backgroundColor: stateColors.background,
@@ -205,12 +205,12 @@ function Component({ events }) {
   };
 
   // State for toggling question answers
-  const [ expandedQuestions, setExpandedQuestions ] = React.useState({});
+  const [expandedQuestions, setExpandedQuestions] = React.useState({});
 
   const toggleQuestion = (questionId) => {
     setExpandedQuestions((prev) => ({
       ...prev,
-      [ questionId ]: !prev[ questionId ],
+      [questionId]: !prev[questionId],
     }));
   };
 
@@ -332,11 +332,14 @@ function Component({ events }) {
             Research Questions
           </h2>
           {answerGroups.map((group, index) => {
-            const latestState = group.states[ group.states.length - 1 ];
+            const latestState = group.states[group.states.length - 1];
             const questionId = group.id || `question-${index}`;
-            const isExpanded = expandedQuestions[ questionId ];
+            const isExpanded = expandedQuestions[questionId];
 
-            const answerWithoutCitation = group.answer?.replace(/\[citation:[a-f0-9-]+\]/g, "");
+            const answerWithoutCitation = group.answer?.replace(
+              /\[citation:[a-f0-9-]+\]/g,
+              "",
+            );
 
             return (
               <div key={questionId} style={styles.questionItem}>
@@ -380,7 +383,9 @@ function Component({ events }) {
                   }}
                 >
                   {answerWithoutCitation ? (
-                    <div style={styles.answerContent}>{answerWithoutCitation}</div>
+                    <div style={styles.answerContent}>
+                      {answerWithoutCitation}
+                    </div>
                   ) : (
                     <div
                       style={{
