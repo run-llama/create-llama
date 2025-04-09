@@ -134,3 +134,9 @@ class SourceNodes(BaseModel):
         cls, source_nodes: List[NodeWithScore]
     ) -> List["SourceNodes"]:
         return [cls.from_source_node(node) for node in source_nodes]
+
+
+class ComponentDefinition(BaseModel):
+    type: str
+    code: str
+    filename: str
