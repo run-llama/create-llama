@@ -136,17 +136,17 @@ async def test_component_dir_creation(server: LlamaIndexServer) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_component_router_addition(server: LlamaIndexServer) -> None:
+async def test_component_router_addition(server: LlamaIndexServer, tmp_path) -> None:
     """
     Test if the component router is added when component directory is specified.
     """
-    test_component_dir = "./test_components"
+    test_component_dir = tmp_path / "test_components"
 
     # Create server with component directory
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=test_component_dir,
+        component_dir=str(test_component_dir),
         include_ui=True,
     )
 
@@ -156,19 +156,18 @@ async def test_component_router_addition(server: LlamaIndexServer) -> None:
     )
     assert component_route_exists, "Component API route not found in server routes"
 
-
 @pytest.mark.asyncio()
-async def test_ui_config_includes_components_api(server: LlamaIndexServer) -> None:
+async def test_ui_config_includes_components_api(server: LlamaIndexServer, tmp_path) -> None:
     """
     Test if the UI config includes components API when component directory is set.
     """
-    test_component_dir = "./test_components"
+    test_component_dir = tmp_path / "test_components"
 
     # Create server with component directory
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=test_component_dir,
+        component_dir=str(test_component_dir),
         include_ui=True,
     )
 
@@ -178,7 +177,6 @@ async def test_ui_config_includes_components_api(server: LlamaIndexServer) -> No
     assert ui_config["COMPONENTS_API"].endswith("/components"), (
         "Incorrect components API path"
     )
-
 
 @pytest.mark.asyncio()
 async def test_component_router_requires_component_dir(
