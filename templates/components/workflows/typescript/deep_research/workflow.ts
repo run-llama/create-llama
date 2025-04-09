@@ -1,8 +1,4 @@
-import {
-  DeepResearchEvent,
-  toSourceEvent,
-  toStreamGenerator,
-} from "@llamaindex/server";
+import { toSourceEvent, toStreamGenerator } from "@llamaindex/server";
 import {
   AgentInputData,
   AgentWorkflowContext,
@@ -122,6 +118,19 @@ class PlanResearchEvent extends WorkflowEvent<{}> {}
 class ResearchEvent extends WorkflowEvent<ResearchQuestion[]> {}
 class ReportEvent extends WorkflowEvent<{}> {}
 class StopEvent extends StopEventBase<AsyncGenerator<ChatResponseChunk>> {}
+
+type DeepResearchEventData = {
+  event: "retrieve" | "analyze" | "answer";
+  state: "pending" | "inprogress" | "done" | "error";
+  id?: string;
+  question?: string;
+  answer?: string;
+};
+
+class DeepResearchEvent extends WorkflowEvent<{
+  type: "deep_research_event";
+  data: DeepResearchEventData;
+}> {}
 
 // workflow definition
 class DeepResearchWorkflow extends Workflow<
