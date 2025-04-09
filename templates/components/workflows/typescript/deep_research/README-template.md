@@ -29,7 +29,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
-
 ## Custom UI Components
 
 The LlamaIndex server provides support for custom UI components, allowing you add UI components for specific events in your workflow. This is particularly useful for displaying information or visualizations related to the events that occur during the execution of your workflow.
