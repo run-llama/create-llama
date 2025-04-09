@@ -114,23 +114,23 @@ async def test_component_dir_creation(server: LlamaIndexServer) -> None:
     import shutil
 
     test_component_dir = "./test_components"
-    
+
     # Clean up any existing directory
     if os.path.exists(test_component_dir):
         shutil.rmtree(test_component_dir)
-    
+
     # Create server with component directory
     _ = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
         component_dir=test_component_dir,
-        include_ui=True
+        include_ui=True,
     )
-    
+
     # Verify directory was created
     assert os.path.exists(test_component_dir), "Component directory was not created"
     assert os.path.isdir(test_component_dir), "Component path is not a directory"
-    
+
     # Clean up after test
     shutil.rmtree(test_component_dir)
 
@@ -141,15 +141,15 @@ async def test_component_router_addition(server: LlamaIndexServer) -> None:
     Test if the component router is added when component directory is specified.
     """
     test_component_dir = "./test_components"
-    
+
     # Create server with component directory
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
         component_dir=test_component_dir,
-        include_ui=True
+        include_ui=True,
     )
-    
+
     # Verify component route exists
     component_route_exists = any(
         route.path == "/api/components" for route in component_server.routes
@@ -163,16 +163,18 @@ async def test_ui_config_includes_components_api(server: LlamaIndexServer) -> No
     Test if the UI config includes components API when component directory is set.
     """
     test_component_dir = "./test_components"
-    
+
     # Create server with component directory
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
         component_dir=test_component_dir,
-        include_ui=True
+        include_ui=True,
     )
-    
+
     # Check if components API is in UI config
     ui_config = component_server._ui_config
     assert "COMPONENTS_API" in ui_config, "Components API not found in UI config"
-    assert ui_config["COMPONENTS_API"].endswith("/components"), "Incorrect components API path"
+    assert ui_config["COMPONENTS_API"].endswith("/components"), (
+        "Incorrect components API path"
+    )

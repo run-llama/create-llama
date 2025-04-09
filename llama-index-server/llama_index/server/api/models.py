@@ -139,3 +139,4 @@ class SourceNodes(BaseModel):
 class ComponentDefinition(BaseModel):
     type: str
     code: str
+    filename: str

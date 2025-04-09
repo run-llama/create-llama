@@ -23,10 +23,9 @@ class CustomUI:
                 f"Component directory {self.component_dir} does not exist"
             )
             return components
-
         try:
             for file in os.listdir(self.component_dir):
-                if not file.endswith(".jsx"):
+                if not file.endswith((".jsx", ".tsx")):
                     continue
 
                 component_name = file.split(".")[0]
@@ -39,6 +38,7 @@ class CustomUI:
                             ComponentDefinition(
                                 type=component_name,
                                 code=code,
+                                filename=file,
                             )
                         )
                 except Exception as e:
