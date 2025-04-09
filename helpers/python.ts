@@ -536,6 +536,12 @@ const installLlamaIndexServerTemplate = async ({
     cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
   });
 
+  // Copy custom UI component code
+  await copy(`*`, path.join(root, "components"), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
+  });
+
   if (useLlamaParse) {
     await copy("index.py", path.join(root, "app"), {
       parents: true,

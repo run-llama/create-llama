@@ -8,4 +8,5 @@ initSettings();
 new LlamaIndexServer({
   workflow: workflowFactory,
   appTitle: "LlamaIndex App",
+  componentsDir: "components",
 }).start();

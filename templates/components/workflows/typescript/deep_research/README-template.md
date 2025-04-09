@@ -29,6 +29,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
+## Custom UI Components
+
+For Deep Research, we have a custom component located in `components/deep_research_event.jsx`. This is used to display the results of the deep research workflow in a more user-friendly way
+
 ## Use Case
 
 We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
