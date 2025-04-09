@@ -52,13 +52,12 @@ function Component({ events }) {
   // Styles
   const styles = {
     container: {
-      fontFamily: "Arial, sans-serif",
       maxWidth: "900px",
       margin: "0 auto",
       padding: "20px",
       backgroundColor: "#FFFFFF",
       borderRadius: "8px",
-      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
     },
     header: {
       fontSize: "24px",
@@ -103,6 +102,7 @@ function Component({ events }) {
       borderRadius: "9999px",
       fontSize: "12px",
       fontWeight: "bold",
+      flexShrink: 0,
     },
     questionsList: {
       marginTop: "30px",
@@ -132,6 +132,8 @@ function Component({ events }) {
       overflow: "hidden",
       maxHeight: "0",
       transition: "max-height 0.3s ease-out",
+      whiteSpace: "pre-line",
+      fontSize: "13px",
     },
     answerContent: {
       padding: "16px",
@@ -334,6 +336,8 @@ function Component({ events }) {
             const questionId = group.id || `question-${index}`;
             const isExpanded = expandedQuestions[questionId];
 
+            const answerWithoutCitation = group.answer?.replace(/\[citation:[a-f0-9-]+\]/g, "");
+
             return (
               <div key={questionId} style={styles.questionItem}>
                 <div
@@ -345,6 +349,7 @@ function Component({ events }) {
                       display: "flex",
                       alignItems: "flex-start",
                       gap: "12px",
+                      fontSize: "14px",
                     }}
                   >
                     {renderStateIcon(latestState)}
@@ -374,8 +379,8 @@ function Component({ events }) {
                     ...(isExpanded ? styles.answerContainerExpanded : {}),
                   }}
                 >
-                  {group.answer ? (
-                    <div style={styles.answerContent}>{group.answer}</div>
+                  {answerWithoutCitation ? (
+                    <div style={styles.answerContent}>{answerWithoutCitation}</div>
                   ) : (
                     <div
                       style={{
