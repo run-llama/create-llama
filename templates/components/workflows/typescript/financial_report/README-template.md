@@ -9,7 +9,7 @@ npm install
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
-Make sure you have set the `OPENAI_API_KEY` for the LLM and the `E2B_API_KEY` for the code interpreter. You can get the E2B API key from [here](https://e2b.dev).
+Make sure you have set the `OPENAI_API_KEY` for the LLM.
 
 Second, generate the embeddings of the example documents in the `./data` directory:
 
@@ -29,47 +29,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
-## Custom UI Components
-
-The LlamaIndex server provides support for custom UI components, allowing you add UI components for specific events in your workflow. This is particularly useful for displaying information or visualizations related to the events that occur during the execution of your workflow.
-
-To enable custom UI components, you need to initialize the LlamaIndex server with a component directory:
-
-```python
-new LlamaIndexServer({
-  workflow: workflowFactory,
-  appTitle: "LlamaIndex App",
-  componentsDir: "output/components",
-}).start();
-```
-
-Add the custom component code to the directory following the naming pattern:
-
-- File Extension: `.jsx` for React components
-- File Name: Should match the event type from your workflow (e.g., `deep_research_event.jsx` for handling `deep_research_event` type)
-- Component Name: Export a default React component named `Component` that receives props from the event data
-
-Example component structure:
-
-```jsx
-function Component({ events }) {
-    // Your component logic here
-    return (
-        // Your JSX here
-    );
-}
-```
-
 ## Use Case
 
-We have prepared an [example workflow](./src/app/workflow.ts) for the financial report generation use case, where you can request for the app to generate a financial report using the example documents in the [./data](./data).
+We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
 
 You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```shell
 curl --location 'localhost:3000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Generate a financial report that compares the financial performance of Apple and Tesla" }] }'
+--data '{ "messages": [{ "role": "user", "content": "Compare the financial performance of Apple and Tesla" }] }'
 ```
 
 ## Learn More

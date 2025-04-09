@@ -29,37 +29,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
 
-## Custom UI Components
-
-The LlamaIndex server allows you add UI components for specific events in your workflow. This is particularly useful for displaying information or visualizations related to the events that occur during the execution of your workflow.
-
-To enable custom UI components, you need to initialize the LlamaIndex server with a component directory:
-
-```python
-new LlamaIndexServer({
-  workflow: workflowFactory,
-  appTitle: "LlamaIndex App",
-  componentsDir: "output/components",
-}).start();
-```
-
-Add the custom component code to the directory following the naming pattern:
-
-- File Extension: `.jsx` for React components
-- File Name: Should match the event type from your workflow (e.g., `deep_research_event.jsx` for handling `deep_research_event` type)
-- Component Name: Export a default React component named `Component` that receives props from the event data
-
-Example component structure:
-
-```jsx
-function Component({ events }) {
-    // Your component logic here
-    return (
-        // Your JSX here
-    );
-}
-```
-
 ## Use Case
 
 We have prepared an [example workflow](./src/app/workflow.ts) for the agentic RAG use case, where you can ask questions about the example documents in the [./data](./data) directory.
