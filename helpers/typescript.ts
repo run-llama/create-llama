@@ -43,7 +43,7 @@ const installLlamaIndexServerTemplate = async ({
   });
 
   // copy workflow UI components to output/components folder
-  await copy("*", path.join(root, "output", "components"), {
+  await copy("*", path.join(root, "components"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
   });
