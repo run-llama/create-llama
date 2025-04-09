@@ -18,7 +18,7 @@ class LlamaIndexServer(FastAPI):
     starter_questions: Optional[list[str]]
     verbose: bool = False
     ui_path: str = ".ui"
-    component_dir: str = "components"
+    component_dir: Optional[str] = None
 
     def __init__(
         self,
@@ -44,7 +44,7 @@ class LlamaIndexServer(FastAPI):
             use_default_routers: Whether to use the default routers (chat, mount `data` and `output` directories).
             env: The environment to run the server in.
             include_ui: Whether to show an chat UI in the root path.
-            component_dir: The directory to custom component code. Default is `components` if not specified and FE is enabled.
+            component_dir: The directory to custom UI components code.
             starter_questions: A list of starter questions to display in the chat UI.
             server_url: The URL of the server.
             api_prefix: The prefix for the API endpoints.
@@ -92,6 +92,8 @@ class LlamaIndexServer(FastAPI):
             config["LLAMA_CLOUD_API"] = (
                 f"{server_settings.api_url}/chat/config/llamacloud"
             )
+        if self.component_dir:
+            config["COMPONENTS_API"] = f"{server_settings.api_url}/components"
         return config
 
     # Default routers
@@ -126,7 +128,10 @@ class LlamaIndexServer(FastAPI):
         Mount the UI.
         """
         if self.include_ui:
-            self.add_components_router()
+            if self.component_dir:
+                if not os.path.exists(self.component_dir):
+                    os.makedirs(self.component_dir)
+                self.add_components_router()
             # Check if the static folder exists
             if not os.path.exists(self.ui_path):
                 self.logger.warning(
