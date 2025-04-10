@@ -38,7 +38,7 @@ class UIConfig(BaseModel):
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "STARTER_QUESTIONS": self.starter_questions or [],
                 "LLAMA_CLOUD_API": f"{server_settings.api_url}/chat/config/llamacloud"
-                if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API")
+                if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API_KEY")
                 else None,
                 "APP_TITLE": self.app_title,
                 "COMPONENTS_API": f"{server_settings.api_url}/components"
@@ -153,7 +153,7 @@ class LlamaIndexServer(FastAPI):
             if self.ui_config.component_dir:
                 if not os.path.exists(self.ui_config.component_dir):
                     os.makedirs(self.ui_config.component_dir)
-                    self.add_components_router()
+                self.add_components_router()
             # UI static files
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)
