@@ -21,12 +21,12 @@ class UIConfig(BaseModel):
     starter_questions: Optional[list[str]] = Field(
         default=None, description="The starter questions for the chat UI"
     )
-    ui_path: str = Field(
-        default=".ui", description="The path that stores static files for the chat UI"
-    )
     llamacloud_index_selector: bool = Field(
         default=False,
         description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API environment variable)",
+    )
+    ui_path: str = Field(
+        default=".ui", description="The path that stores static files for the chat UI"
     )
     component_dir: Optional[str] = Field(
         default=None, description="The directory to custom UI components code"
@@ -41,6 +41,9 @@ class UIConfig(BaseModel):
                 if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API")
                 else None,
                 "APP_TITLE": self.app_title,
+                "COMPONENTS_API": f"{server_settings.api_url}/components"
+                if self.component_dir
+                else None,
             },
             indent=2,
         )
@@ -107,9 +110,6 @@ class LlamaIndexServer(FastAPI):
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False
 
-        if self.include_ui is None:
-            self.include_ui = False
-
         if self.ui_config.enabled:
             self.mount_ui()
 
@@ -149,15 +149,14 @@ class LlamaIndexServer(FastAPI):
         """
         # Check if the static folder exists
         if self.ui_config.enabled:
+            # Component dir
+            if self.ui_config.component_dir:
+                if not os.path.exists(self.ui_config.component_dir):
+                    os.makedirs(self.ui_config.component_dir)
+                    self.add_components_router()
+            # UI static files
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)
-            if self.include_ui:
-                if self.component_dir:
-                    if not os.path.exists(self.component_dir):
-                        os.makedirs(self.component_dir)
-                    self.add_components_router()
-            # Check if the static folder exists
-            if not os.path.exists(self.ui_path):
                 self.logger.warning(
                     f"UI files not found, downloading UI to {self.ui_config.ui_path}"
                 )

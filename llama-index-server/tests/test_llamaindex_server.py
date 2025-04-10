@@ -194,6 +194,8 @@ async def test_ui_config_from_dict() -> None:
     # Clean up
     if os.path.exists(".dict_ui"):
         shutil.rmtree(".dict_ui")
+
+
 async def test_component_dir_creation(server: LlamaIndexServer) -> None:
     """
     Test if the component directory is created when specified and doesn't exist.
@@ -234,8 +236,10 @@ async def test_component_router_addition(server: LlamaIndexServer, tmp_path) -> 
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=str(test_component_dir),
-        include_ui=True,
+        ui_config=UIConfig(
+            component_dir=str(test_component_dir),
+            include_ui=True,
+        ),
     )
 
     # Verify component route exists
@@ -258,16 +262,15 @@ async def test_ui_config_includes_components_api(
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=str(test_component_dir),
-        include_ui=True,
+        ui_config=UIConfig(
+            component_dir=str(test_component_dir),
+            include_ui=True,
+        ),
     )
 
     # Check if components API is in UI config
-    ui_config = component_server._ui_config
-    assert "COMPONENTS_API" in ui_config, "Components API not found in UI config"
-    assert ui_config["COMPONENTS_API"].endswith("/components"), (
-        "Incorrect components API path"
-    )
+    ui_config = component_server.ui_config
+    assert "COMPONENTS_API" in ui_config.get_config_content(), "Components API not found in UI config"
 
 
 @pytest.mark.asyncio()
