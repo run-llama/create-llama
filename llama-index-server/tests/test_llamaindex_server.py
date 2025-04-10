@@ -270,7 +270,9 @@ async def test_ui_config_includes_components_api(
 
     # Check if components API is in UI config
     ui_config = component_server.ui_config
-    assert "COMPONENTS_API" in ui_config.get_config_content(), "Components API not found in UI config"
+    assert "COMPONENTS_API" in ui_config.get_config_content(), (
+        "Components API not found in UI config"
+    )
 
 
 @pytest.mark.asyncio()
