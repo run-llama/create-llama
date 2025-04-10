@@ -81,8 +81,8 @@ The LlamaIndexServer accepts the following configuration parameters:
   - `app_title`: The title of the chat application (default: "LlamaIndex Server")
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
-  - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False)
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
+  - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
