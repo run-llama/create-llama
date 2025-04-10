@@ -44,7 +44,9 @@ class MyCustomEvent(BaseModel):
 ```python
 server = LlamaIndexServer(
     workflow_factory=your_workflow,
-    component_dir="path/to/components",
+    ui_config={
+        "component_dir": "path/to/components",
+    },
     include_ui=True
 )
 ```
