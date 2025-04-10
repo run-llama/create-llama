@@ -17,7 +17,7 @@ python-dotenv = "^1.0.0"
 pydantic = "<2.10"
 aiostream = "^0.5.2"
 llama-index-core = "^0.12.28"
-llama-index-server = "^0.1.8"
+llama-index-server = "^0.1.10"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
