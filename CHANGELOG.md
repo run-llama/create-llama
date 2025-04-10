@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.3
+
+### Patch Changes
+
+- 76ec360: Update templates to use new chat ui config
+
 ## 0.5.2
 
 ### Patch Changes
