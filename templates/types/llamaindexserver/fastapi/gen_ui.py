@@ -15,13 +15,25 @@ from llama_index.core.workflow import (
 from pydantic import BaseModel, Field
 
 
+class RunWorkflowEvent(Event):
+    """
+    Event for running the workflow.
+    """
+
+    workflow_input: str = Field(
+        description="The input for the workflow. Should be a string like a question"
+    )
+    events: List[Any] = Field(
+        description="The events type that are being used to generate the UI components"
+    )
+
+
 class WriteAggregationEvent(Event):
     """
     Event for aggregating events.
     """
 
-    workflow_code: str
-    event: str
+    events: List[Any]
 
 
 class WriteUIComponentEvent(Event):
@@ -29,8 +41,7 @@ class WriteUIComponentEvent(Event):
     Event for writing UI component.
     """
 
-    workflow_code: str
-    event: str
+    events: List[Any]
     aggregation_function: Optional[str]
 
 
@@ -40,7 +51,16 @@ class RefineGeneratedCodeEvent(Event):
     """
 
     generated_code: str
-    event: str
+    aggregation_function_context: Optional[str]
+    events: List[Any]
+
+
+class ExtractEventSchemaEvent(Event):
+    """
+    Extract the event schema from the event.
+    """
+
+    events: List[Any]
 
 
 class AggregatePrediction(BaseModel):
@@ -51,15 +71,6 @@ class AggregatePrediction(BaseModel):
 
     need_aggregation: bool
     aggregation_function: Optional[str]
-
-
-class ExtractEventSchemaEvent(Event):
-    """
-    Extract the event schema from the event.
-    """
-
-    workflow_code: str
-    event: str
 
 
 class EventSchema(BaseModel):
@@ -92,6 +103,10 @@ class GenUIWorkflow(Workflow):
                     // styles for the component
                 }
 
+                // State for the component
+                // e.g: const [state, setState] = React.useState({});
+                // handle the state here
+
                 return (
                     <div style={styles.container}>
                         // UI code here
@@ -102,25 +117,19 @@ class GenUIWorkflow(Workflow):
         ```
     """
 
-    def __init__(
-        self,
-        llm: LLM,
-        verbose: bool = False,
-        **kwargs: Any,
-    ):
+    def __init__(self, llm: LLM, **kwargs: Any):
         super().__init__(**kwargs)
         self.llm = llm
-        self.verbose = verbose
 
     @step
-    async def start(self, ctx: Context, ev: StartEvent) -> ExtractEventSchemaEvent:
-        workflow_file = ev.workflow_file
-        if not workflow_file:
-            raise ValueError("workflow_file is required")
-        event = ev.event
-        if not event:
+    async def start(self, ctx: Context, ev: StartEvent) -> RunWorkflowEvent:
+        workflow_input = ev.workflow_input
+        if not workflow_input:
+            raise ValueError("workflow_input is required")
+        events = ev.events
+        if not events:
             raise ValueError(
-                "event is required, provide either the pydantic model or the event code/schema"
+                "events is required, provide list of events that are emitted from the workflow that you want to generate the UI components for"
             )
         output_file = ev.output_file
         if not output_file:
@@ -128,80 +137,76 @@ class GenUIWorkflow(Workflow):
                 "output_file is required. Provide the path of the file to save the generated UI component"
             )
         await ctx.set("output_file", output_file)
-        # Load workflow code
-        with open(workflow_file, "r") as f:
-            workflow_code = f.read()
-
-        return ExtractEventSchemaEvent(
-            workflow_code=workflow_code,
-            event=event,
+        return RunWorkflowEvent(
+            workflow_input=workflow_input,
+            events=events,
         )
 
     @step
-    async def identify_event(
-        self, ctx: Context, ev: ExtractEventSchemaEvent
+    async def run_workflow(
+        self, ctx: Context, ev: RunWorkflowEvent
     ) -> WriteAggregationEvent:
-        prompt_template = """Given a python code:
-            {workflow_code}
-        
-        What is the schema of the event {event} and can you provide some examples for the event?
         """
-        response = await self.llm.astructured_predict(
-            EventSchema,
-            PromptTemplate(prompt_template),
-            event=ev.event,
-            workflow_code=ev.workflow_code,
+        Run the workflow to get the events.
+        """
+        from app.workflow import create_workflow
+
+        workflow = create_workflow()
+        print(
+            f"Running workflow with input: {ev.workflow_input}\n Waiting for the workflow to finish..."
         )
-        event_context = f"Here is the event schema: {response.schema}\nHere are some examples for the event: {response.example}"
-        if self.verbose:
-            print(event_context)
+        handler = workflow.run(user_msg=ev.workflow_input)
+
+        workflow_events = []
+        async for event in handler.stream_events():
+            workflow_events.append(event)
+        await handler
+        print("Workflow finished")
+        selected_events = []
+        expected_event_names = [
+            event if isinstance(event, str) else event.__name__ for event in ev.events
+        ]
+        for event in workflow_events:
+            if type(event).__name__ in expected_event_names:
+                selected_events.append(event)
+            elif hasattr(event, "data"):
+                if event.data.__class__.__name__ in expected_event_names:
+                    selected_events.append(event.data)
+        if len(selected_events) == 0:
+            raise ValueError(f"No event {ev.events} found in the workflow events")
+        await ctx.set("events", selected_events)
         return WriteAggregationEvent(
-            workflow_code=ev.workflow_code,
-            event=event_context,
+            events=[event.model_dump() for event in selected_events],
         )
 
     @step
     async def generate_event_aggregations(
         self, ctx: Context, ev: WriteAggregationEvent
     ) -> WriteUIComponentEvent:
-        aggregation_context = await ctx.get("aggregation_context", None)
         prompt_template = """
             # Your role
             You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
+            Here are the events that you need to work on: {events}
+
+            # Task
             Your task is to analyze the use case of the workflow and the event schema, then write aggregation functions if needed for UI rendering.
             Take into account that the list of events grows with time. At the beginning, there is only one event in the list, and events are incrementally added. 
             To render the events in a visually pleasing way, try to aggregate them by their attributes and render the aggregates instead of just rendering a list of all events.
             Note: 
-                the events might be grouped by some attributes. e.g: event with same type and same id should be grouped together.
-                By aggregates, we just group/update the event by some attributes, don't need to do any computation.
-
-            # Context:
-            - Here is the workflow code:
-            {workflow_code}
-
-            - Here is the event that you need to focus on: {event}
-            Note: you don't need to destructure it from event.data; just use all the attributes of the event.
-
-            # Requirements:
-            - Analyze the workflow code to understand the use case.
-            - Analyze the event to determine if we need to aggregate it or not. 
-            - If we need to aggregate the event, write the aggregation function without additional dependencies/imports.
+                - Events might be grouped by some attributes. e.g.: events with the same type and same ID should be grouped together.
+                - For aggregation, we just group/update the events by some attributes, no computation is needed.
             """
-        if aggregation_context:
-            prompt_template += f"\n\n# Here is the previous aggregation that might not work: {aggregation_context}"
 
         response = await self.llm.astructured_predict(
             AggregatePrediction,
             PromptTemplate(prompt_template),
-            workflow_code=ev.workflow_code,
-            event=ev.event,
+            events=ev.events,
         )
         if response.need_aggregation:
             await ctx.set("aggregation_context", response.aggregation_function)
 
         return WriteUIComponentEvent(
-            workflow_code=ev.workflow_code,
-            event=ev.event,
+            events=ev.events,
             aggregation_function=response.aggregation_function,
         )
 
@@ -211,62 +216,61 @@ class GenUIWorkflow(Workflow):
     ) -> RefineGeneratedCodeEvent:
         prompt_template = """
             # Your role
-            You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
-            Your task is to analyze the use case of the workflow and the event schema, along with the aggregation function, to write a beautiful UI component for the event.
+            You are a frontend developer who is developing a React component for given events that are emitted from a backend.
 
             # Context:
-            ## Workflow code:
-            {workflow_code}
-
-            ## Your code should follow the following structure:
-            {code_structure}
-
-            ## Events:
-            - Events will be emitted from the backend through the workflow code. The events can be of the same type (updated) or different types.
-              The idea is that we need to aggregate events with the same type or same id to avoid re-rendering them in the UI.
-            - Take into account that the list of events grows with time. At the beginning, there is only one event in the list, and events are incrementally added. 
-              To render the events in a visually pleasing way, try to aggregate them by their attributes and render the aggregates instead of just rendering a list of all events.
-            - Here is the event that you need to focus on: {event}
+            Here are the events that you need to work on: {events}
+            - Events are given as a list which grows with time. At the beginning, there is only one event in the list, and events are incrementally added.      
             {aggregation_function_context}
 
             # Requirements:
-            - Write a beautiful UI component for the event without additional dependencies/imports.
-            - Follow the provided code structure.
-            - Use HTML with Tailwind CSS to generate the UI in a beautiful way. 
-              For example:
-                - Generate code for cards to wrap up the events, don't forget to add styles for border, rounded corners, padding, margin, etc.
-                - Generate code for badges to highlight the state/type, don't forget to add styles for different states
-                - Generate code for dropdowns if the event content might be too long to display in a single line.
-                  you might need to implement the logic to handle the dropdown state so that the user can expand/collapse the content.
-                - Use icons or emojis to visualize the state
+            - Write beautiful UI components for the events without additional dependencies/imports.
+            - The component text/label should be specified for each event type.
+            - If the components are stateful, ensure the state is stored and handled correctly.
+            - Ensure the UI components are well-designed and logical.
 
-            Example styles:
-            const styles = {
-                container: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' },
-                card: { border: '1px solid #ccc', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' },
-                // Badge styles - can extends, change colors, etc.
-                badge: { display: 'inline-block', padding: '4px 8px', fontSize: '12px', fontWeight: '600', borderRadius: '9999px' },
-                dropdown: { marginTop: '8px', cursor: 'pointer', color: '#3B82F6' },
-                dropdownContent: { marginTop: '8px', padding: '8px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#F3F4F6' }
-            };
+            # Instructions:
+            - Based on the provided list of events, determine their types and attributes.
+            - For each type of event, design an aesthetically pleasing UI component. 
+              To make the component visually distinct, you can:
+                + Just use different code for each event type, don't need to reuse the same code for different event types.
+                + Generate different children elements, styles, text label, handler logic,... for each event type.
+            - Use HTML with pure CSS to create an aesthetically pleasing UI. 
+              For example:
+                - Generate code for cards to wrap up the events, with proper styles for borders, rounded corners, padding, margin, etc.
+                - Generate code for badges to highlight the state/type, with distinct styles for different states
+                - Generate code for dropdowns if the event content might be too long to display in a single line.
+                - Use icons or emojis to visualize the state
+            - Consider using a grid layout to create a visually appealing UI.
+
+            # Example styles:
+                const styles = {
+                    container: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' },
+                    // Card styles - children can be placed in different positions, e.g.: top-right, top-left, bottom-right, bottom-left, etc.
+                    card: { border: '1px solid #ccc', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' },
+                    // Badge styles - can be extended, colors can be changed, etc.
+                    badge: { display: 'inline-block', padding: '4px 8px', fontSize: '12px', fontWeight: '600', borderRadius: '9999px' },
+                    dropdown: { marginTop: '8px', cursor: 'pointer', color: '#3B82F6' },
+                    dropdownContent: { marginTop: '8px', padding: '8px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#F3F4F6' }
+                };
             """
 
         aggregation_function_context = (
-            f"\n\n# Here is the aggregation function: {ev.aggregation_function}"
+            f"\nBefore rendering the events, we're using the following aggregation function: {ev.aggregation_function}"
             if ev.aggregation_function
             else ""
         )
 
         prompt = PromptTemplate(prompt_template).format(
-            workflow_code=ev.workflow_code,
-            event=ev.event,
+            events=ev.events,
             aggregation_function_context=aggregation_function_context,
             code_structure=self.code_structure,
         )
         response = await self.llm.acomplete(prompt, formatted=True)
         return RefineGeneratedCodeEvent(
             generated_code=response.text,
-            event=ev.event,
+            events=ev.events,
+            aggregation_function_context=aggregation_function_context,
         )
 
     @step
@@ -276,28 +280,26 @@ class GenUIWorkflow(Workflow):
         prompt_template = """
             # Your role
             You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
-            Your task is to analyze the written code of a UI component and refine it to ensure 
-              + There are no potential bugs
-              + Make the UI more beautiful, eg: add styles for border, rounded corners, padding, margin, etc.
+            Your task is to assemble the pieces of code into a complete code segment that follows the specified code structure.
 
             # Context:
             ## Here is the generated code:
             {generated_code}
 
+            {aggregation_function_context}
+
             ## The generated code should follow the following structure:
             {code_structure}
 
-            ## Events:
-            - Here is the event that you need to focus on: {event}
-
             # Requirements:
-            - Refine the code to ensure there are no potential bugs.
-            - Don't be verbose, only return the code.
+            - Refine the code to ensure there are no potential bugs
+            - Don't be verbose, only return the code
         """
         prompt = PromptTemplate(prompt_template).format(
             generated_code=ev.generated_code,
             code_structure=self.code_structure,
-            event=ev.event,
+            events=ev.events,
+            aggregation_function_context=ev.aggregation_function_context,
         )
 
         response = await self.llm.acomplete(prompt, formatted=True)
@@ -315,8 +317,8 @@ class GenUIWorkflow(Workflow):
 
 
 async def main(
-    workflow_file: str,
-    event: str,
+    workflow_input: str,
+    events: str,
     output_file: str,
 ):
     from llama_index.llms.openai import OpenAI
@@ -324,7 +326,7 @@ async def main(
     llm = OpenAI(model="gpt-4o")
     workflow = GenUIWorkflow(llm=llm, verbose=True, timeout=500.0)
     await workflow.run(
-        workflow_file=workflow_file, event=event, output_file=output_file
+        workflow_input=workflow_input, events=events, output_file=output_file
     )
 
 
@@ -332,15 +334,30 @@ if __name__ == "__main__":
     import asyncio
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workflow_file", type=str, required=True)
-    parser.add_argument("--event", type=str, required=True)
-    parser.add_argument("--output_file", type=str, required=True)
+    parser.add_argument(
+        "--workflow_input",
+        type=str,
+        required=True,
+        help="A input message to run the workflow",
+    )
+    parser.add_argument(
+        "--events",
+        type=str,
+        required=True,
+        help="Comma-separated list of model names of the events",
+    )
+    parser.add_argument(
+        "--output_file", type=str, required=True, help="Path to the output file"
+    )
     args = parser.parse_args()
+
+    # Convert events string to list
+    events = [event.strip() for event in args.events.split(",") if event.strip()]
 
     asyncio.run(
         main(
-            workflow_file=args.workflow_file,
-            event=args.event,
+            workflow_input=args.workflow_input,
+            events=events,
             output_file=args.output_file,
         )
     )
