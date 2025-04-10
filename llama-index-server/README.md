@@ -43,8 +43,10 @@ def create_workflow() -> Workflow:
 app = LlamaIndexServer(
     workflow_factory=create_workflow,  # Supports Workflow or AgentWorkflow
     env="dev",  # Enable development mode
-    include_ui=True,  # Include chat UI
-    starter_questions=["What can you do?", "How do I use this?"],
+    ui_config={ # Configure the chat UI, optional
+        "app_title": "Weather Bot",
+        "starter_questions": ["What is the weather in LA?", "Will it rain in SF?"],
+    },
     verbose=True
 )
 ```
@@ -74,13 +76,16 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `logger`: Optional logger instance (defaults to uvicorn logger)
 - `use_default_routers`: Whether to include default routers (chat, static file serving)
 - `env`: Environment setting ('dev' enables CORS and UI by default)
-- `include_ui`: Whether to include the chat UI
-- `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
-- `starter_questions`: List of starter questions for the chat UI
+- `ui_config`: UI configuration as a dictionary or UIConfig object with options:
+  - `enabled`: Whether to enable the chat UI (default: True)
+  - `app_title`: The title of the chat application (default: "LlamaIndex Server")
+  - `starter_questions`: List of starter questions for the chat UI (default: None)
+  - `ui_path`: Path for downloaded UI static files (default: ".ui")
+  - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
+  - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
-- `ui_path`: Path for downloaded UI static files (default: ".ui")
 
 ## Default Routers and Features
 

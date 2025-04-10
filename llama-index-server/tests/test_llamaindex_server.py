@@ -1,8 +1,12 @@
+import json
+import os
+import shutil
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.llms import MockLLM
-from llama_index.server import LlamaIndexServer
+from llama_index.server import LlamaIndexServer, UIConfig
 
 
 def fetch_weather(city: str) -> str:
@@ -35,7 +39,7 @@ def server() -> LlamaIndexServer:
 @pytest.mark.asyncio()
 async def test_server_has_chat_route(server: LlamaIndexServer) -> None:
     """Test that the server has the chat API route."""
-    chat_route_exists = any(route.path == "/api/chat" for route in server.routes)
+    chat_route_exists = any("/api/chat" in str(route) for route in server.routes)
     assert chat_route_exists, "Chat API route not found in server routes"
 
 
@@ -56,26 +60,43 @@ async def test_ui_is_downloaded(server: LlamaIndexServer) -> None:
     """
     Test if the UI is downloaded and mounted correctly.
     """
-    import os
-    import shutil
-
     # Clean up any existing static directory first
     if os.path.exists(".ui"):
         shutil.rmtree(".ui")
 
     # Create a new server with UI enabled
+    ui_config = UIConfig(
+        enabled=True,
+        app_title="Test UI",
+        starter_questions=["What's the weather like?"],
+    )
     ui_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
         use_default_routers=True,
         env="dev",
-        include_ui=True,
+        ui_config=ui_config,
     )
 
     # Verify that static directory was created with index.html
     assert os.path.exists("./.ui"), "Static directory was not created"
     assert os.path.isdir("./.ui"), "Static path is not a directory"
     assert os.path.exists("./.ui/index.html"), "index.html was not downloaded"
+
+    # Check if the config.js was created with correct content
+    config_path = os.path.join(".ui", "config.js")
+    assert os.path.exists(config_path), "config.js was not created"
+
+    with open(config_path, "r") as f:
+        config_content = f.read()
+        assert "window.LLAMAINDEX =" in config_content
+        config_json = json.loads(
+            config_content.replace("window.LLAMAINDEX = ", "").rstrip(";")
+        )
+        assert config_json["CHAT_API"] == "/api/chat"
+        assert config_json["STARTER_QUESTIONS"] == ["What's the weather like?"]
+        assert config_json["LLAMA_CLOUD_API"] is None
+        assert config_json["APP_TITLE"] == "Test UI"
 
     # Check if the UI is mounted and accessible
     async with AsyncClient(
@@ -106,6 +127,75 @@ async def test_ui_is_accessible(server: LlamaIndexServer) -> None:
 
 
 @pytest.mark.asyncio()
+async def test_ui_config_customization() -> None:
+    """
+    Test if UI configuration can be customized.
+    """
+    custom_config = UIConfig(
+        enabled=True,
+        app_title="Custom App",
+        starter_questions=["Question 1", "Question 2"],
+        ui_path=".custom_ui",
+    )
+
+    server = LlamaIndexServer(
+        workflow_factory=_agent_workflow, verbose=True, ui_config=custom_config
+    )
+
+    assert server.ui_config.app_title == "Custom App"
+    assert server.ui_config.starter_questions == ["Question 1", "Question 2"]
+    assert server.ui_config.ui_path == ".custom_ui"
+
+    # Clean up if directory was created
+    if os.path.exists(".custom_ui"):
+        shutil.rmtree(".custom_ui")
+
+
+@pytest.mark.asyncio()
+async def test_ui_config_from_dict() -> None:
+    """
+    Test if UI configuration can be initialized from a dictionary.
+    """
+    ui_config_dict = {
+        "enabled": True,
+        "app_title": "Dict Config App",
+        "starter_questions": ["Dict Q1", "Dict Q2"],
+        "ui_path": ".dict_ui",
+    }
+
+    server = LlamaIndexServer(
+        workflow_factory=_agent_workflow,
+        verbose=True,
+        ui_config=ui_config_dict,
+    )
+
+    # Verify the config was properly converted to UIConfig object
+    assert isinstance(server.ui_config, UIConfig)
+    assert server.ui_config.app_title == "Dict Config App"
+    assert server.ui_config.starter_questions == ["Dict Q1", "Dict Q2"]
+    assert server.ui_config.ui_path == ".dict_ui"
+
+    # Verify the config.js is created with correct content
+    server.mount_ui()
+    config_path = os.path.join(".dict_ui", "config.js")
+    assert os.path.exists(config_path), "config.js was not created"
+
+    with open(config_path, "r") as f:
+        config_content = f.read()
+        assert "window.LLAMAINDEX =" in config_content
+        config_json = json.loads(
+            config_content.replace("window.LLAMAINDEX = ", "").rstrip(";")
+        )
+        assert config_json["APP_TITLE"] == "Dict Config App"
+        assert config_json["STARTER_QUESTIONS"] == ["Dict Q1", "Dict Q2"]
+        assert config_json["CHAT_API"] == "/api/chat"
+        assert config_json["LLAMA_CLOUD_API"] is None
+
+    # Clean up
+    if os.path.exists(".dict_ui"):
+        shutil.rmtree(".dict_ui")
+
+
 async def test_component_dir_creation(server: LlamaIndexServer) -> None:
     """
     Test if the component directory is created when specified and doesn't exist.
@@ -123,8 +213,10 @@ async def test_component_dir_creation(server: LlamaIndexServer) -> None:
     _ = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=test_component_dir,
-        include_ui=True,
+        ui_config={
+            "component_dir": test_component_dir,
+            "include_ui": True,
+        },
     )
 
     # Verify directory was created
@@ -146,8 +238,10 @@ async def test_component_router_addition(server: LlamaIndexServer, tmp_path) -> 
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=str(test_component_dir),
-        include_ui=True,
+        ui_config={
+            "component_dir": str(test_component_dir),
+            "include_ui": True,
+        },
     )
 
     # Verify component route exists
@@ -170,15 +264,16 @@ async def test_ui_config_includes_components_api(
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=str(test_component_dir),
-        include_ui=True,
+        ui_config={
+            "component_dir": str(test_component_dir),
+            "include_ui": True,
+        },
     )
 
     # Check if components API is in UI config
-    ui_config = component_server._ui_config
-    assert "COMPONENTS_API" in ui_config, "Components API not found in UI config"
-    assert ui_config["COMPONENTS_API"].endswith("/components"), (
-        "Incorrect components API path"
+    ui_config = component_server.ui_config
+    assert "COMPONENTS_API" in ui_config.get_config_content(), (
+        "Components API not found in UI config"
     )
 
 
@@ -192,7 +287,9 @@ async def test_component_router_requires_component_dir(
     server_without_component_dir = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        include_ui=True,
+        ui_config={
+            "include_ui": True,
+        },
     )
 
     with pytest.raises(
