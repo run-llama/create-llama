@@ -23,7 +23,7 @@ class UIConfig(BaseModel):
     )
     llamacloud_index_selector: bool = Field(
         default=False,
-        description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API environment variable)",
+        description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API_KEY environment variable)",
     )
     ui_path: str = Field(
         default=".ui", description="The path that stores static files for the chat UI"
