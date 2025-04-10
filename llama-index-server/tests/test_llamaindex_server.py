@@ -213,8 +213,10 @@ async def test_component_dir_creation(server: LlamaIndexServer) -> None:
     _ = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        component_dir=test_component_dir,
-        include_ui=True,
+        ui_config={
+            "component_dir": test_component_dir,
+            "include_ui": True,
+        },
     )
 
     # Verify directory was created
@@ -236,10 +238,10 @@ async def test_component_router_addition(server: LlamaIndexServer, tmp_path) -> 
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        ui_config=UIConfig(
-            component_dir=str(test_component_dir),
-            include_ui=True,
-        ),
+        ui_config={
+            "component_dir": str(test_component_dir),
+            "include_ui": True,
+        },
     )
 
     # Verify component route exists
@@ -262,10 +264,10 @@ async def test_ui_config_includes_components_api(
     component_server = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        ui_config=UIConfig(
-            component_dir=str(test_component_dir),
-            include_ui=True,
-        ),
+        ui_config={
+            "component_dir": str(test_component_dir),
+            "include_ui": True,
+        },
     )
 
     # Check if components API is in UI config
@@ -285,7 +287,9 @@ async def test_component_router_requires_component_dir(
     server_without_component_dir = LlamaIndexServer(
         workflow_factory=_agent_workflow,
         verbose=True,
-        include_ui=True,
+        ui_config={
+            "include_ui": True,
+        },
     )
 
     with pytest.raises(
