@@ -34,7 +34,7 @@ class CustomUI:
                 file_ext = os.path.splitext(file)[1]
 
                 try:
-                    with open(file_path, "r") as f:
+                    with open(file_path, "r", encoding="utf-8") as f:
                         code = f.read()
                         new_component = ComponentDefinition(
                             type=component_name,
