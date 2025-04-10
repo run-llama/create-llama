@@ -15,6 +15,7 @@ def create_app():
 
     app = LlamaIndexServer(
         workflow_factory=create_workflow,  # A factory function that creates a new workflow for each request
+        component_dir="components",
         env=env,
         logger=logger,
     )

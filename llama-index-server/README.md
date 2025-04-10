@@ -6,7 +6,7 @@ LlamaIndexServer is a FastAPI-based application that allows you to quickly launc
 
 - Serving a workflow as a chatbot
 - Built on FastAPI for high performance and easy API development
-- Optional built-in chat UI
+- Optional built-in chat UI with extendable UI components
 - Prebuilt development code
 
 ## Installation
@@ -81,6 +81,8 @@ The LlamaIndexServer accepts the following configuration parameters:
   - `app_title`: The title of the chat application (default: "LlamaIndex Server")
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
+  - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False)
+  - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
@@ -104,6 +106,11 @@ When enabled, the server provides a chat interface at the root path (`/`) with:
 - Configurable starter questions
 - Real-time chat interface
 - API endpoint integration
+
+### Custom UI Components
+
+You can add custom UI components for your workflow by providing `component_dir` config and adding custom .jsx or .tsx files to the directory.
+See [Custom UI Components](docs/custom_ui_component.md) for more details.
 
 ## Development Mode
 

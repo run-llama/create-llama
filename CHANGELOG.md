@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.2
+
+### Patch Changes
+
+- c9f8f8d: Use custom component for deep research use case
+
 ## 0.5.1
 
 ### Patch Changes

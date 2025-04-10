@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from llama_index.core.workflow import Workflow
-from llama_index.server.api.routers.chat import chat_router
+from llama_index.server.api.routers import chat_router, custom_components_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
 from pydantic import BaseModel, Field
@@ -24,9 +24,12 @@ class UIConfig(BaseModel):
     ui_path: str = Field(
         default=".ui", description="The path that stores static files for the chat UI"
     )
-    use_llamacloud: bool = Field(
-        default=True,
+    llamacloud_index_selector: bool = Field(
+        default=False,
         description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API environment variable)",
+    )
+    component_dir: Optional[str] = Field(
+        default=None, description="The directory to custom UI components code"
     )
 
     def get_config_content(self) -> str:
@@ -35,7 +38,7 @@ class UIConfig(BaseModel):
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "STARTER_QUESTIONS": self.starter_questions or [],
                 "LLAMA_CLOUD_API": f"{server_settings.api_url}/chat/config/llamacloud"
-                if self.use_llamacloud and os.getenv("LLAMA_CLOUD_API")
+                if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API")
                 else None,
                 "APP_TITLE": self.app_title,
             },
@@ -100,8 +103,12 @@ class LlamaIndexServer(FastAPI):
             self.allow_cors("*")
             if self.ui_config.enabled is None:
                 self.ui_config.enabled = True
+
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False
+
+        if self.include_ui is None:
+            self.include_ui = False
 
         if self.ui_config.enabled:
             self.mount_ui()
@@ -124,6 +131,18 @@ class LlamaIndexServer(FastAPI):
             prefix=server_settings.api_prefix,
         )
 
+    def add_components_router(self) -> None:
+        """
+        Add the UI router.
+        """
+        if self.ui_config.component_dir is None:
+            raise ValueError("component_dir must be specified to add components router")
+
+        self.include_router(
+            custom_components_router(self.ui_config.component_dir, self.logger),
+            prefix=server_settings.api_prefix,
+        )
+
     def mount_ui(self) -> None:
         """
         Mount the UI.
@@ -131,6 +150,14 @@ class LlamaIndexServer(FastAPI):
         # Check if the static folder exists
         if self.ui_config.enabled:
             if not os.path.exists(self.ui_config.ui_path):
+                os.makedirs(self.ui_config.ui_path)
+            if self.include_ui:
+                if self.component_dir:
+                    if not os.path.exists(self.component_dir):
+                        os.makedirs(self.component_dir)
+                    self.add_components_router()
+            # Check if the static folder exists
+            if not os.path.exists(self.ui_path):
                 self.logger.warning(
                     f"UI files not found, downloading UI to {self.ui_config.ui_path}"
                 )
