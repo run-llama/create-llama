@@ -24,12 +24,21 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 CACHE_FILE = "gen_ui_cache.json"
 
 
+class PlanningEvent(Event):
+    """
+    Event for planning the UI.
+    """
+
+    events: List[Dict[str, Any]]
+
+
 class WriteAggregationEvent(Event):
     """
     Event for aggregating events.
     """
 
     events: List[Dict[str, Any]]
+    ui_description: Optional[str]
 
 
 class WriteUIComponentEvent(Event):
@@ -39,6 +48,7 @@ class WriteUIComponentEvent(Event):
 
     events: List[Dict[str, Any]]
     aggregation_function: Optional[str]
+    ui_description: str
 
 
 class RefineGeneratedCodeEvent(Event):
@@ -76,29 +86,30 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // The code must have no dependencies/imports
-            function Component({ events }) { // Don't change this function name
-                // logic for the component: aggregation, state,....
+            // Import necessary components. Only shadcn/ui and lucide-react are allowed.
+            // Don't import React here
+            // just use React.useState, React.useEffect, in the code
+            e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+            // export the component
+            export default function Component({ events }) {
+                // logic for aggregating events (if needed)
                 const aggregateEvents = () => {
                     // code for aggregating events here
                 }
 
-                // styles for the component
                 const styles = {
-                    // styles for the component
+                    // don't forget to add some beautiful styles for the shadcn/ui components
+                    // use pure css for the styles (tailwind is not allowed)
                 }
-
-                // State for the component
+            
+                // Use React.useState to handle the state
                 // e.g: const [state, setState] = React.useState({});
-                // handle the state here
 
                 return (
-                    <div style={styles.container}>
-                        // UI code here
-                    </div>
+                    // UI code here
                 )
             }
-            // Don't need to export the component
         ```
     """
 
@@ -133,7 +144,7 @@ class GenUIWorkflow(Workflow):
         self._live.update(Panel("\n".join(status_lines)))
 
     @step
-    async def start(self, ctx: Context, ev: StartEvent) -> WriteAggregationEvent:
+    async def start(self, ctx: Context, ev: StartEvent) -> PlanningEvent:
         events = ev.events
         if not events:
             raise ValueError(
@@ -146,8 +157,52 @@ class GenUIWorkflow(Workflow):
             )
         await ctx.set("output_file", output_file)
         await ctx.set("events", events)
+        self.update_status("Planning the UI")
+        return PlanningEvent(events=events)
+
+    @step
+    async def planning(self, ctx: Context, ev: PlanningEvent) -> WriteAggregationEvent:
+        prompt_template = """
+            # Your role
+            You are a designer who is designing a UI for given events that are emitted from a backend workflow.
+            Here are the events that you need to work on: {events}
+
+            # Task
+            Your task is to analyze the event schema and data and provide a description that how the UI would look like.
+            The UI should be beautiful, no monotonous, and visually pleasing.
+            Focus on the elements and the layout, don't ask too much on the styles (transition, dark mode, responsive, etc...).
+
+            e.g: Assume that the backend produce list of events with animal name, action, and status.
+            ```
+            A card-based layout displaying animal actions:
+            - Each card shows an animal's image at the top
+            - Below the image: animal name as the card title
+            - Action details in the card body with an icon (eating 🍖, sleeping 😴, playing 🎾)
+            - Status badge in the corner showing if action is ongoing/completed
+            - Expandable section for additional details
+            - Soft color scheme based on action type
+            ```
+            Don't be verbose, just return the description for the UI based on the event schema and data.
+        """
+        response = await self.llm.acomplete(
+            PromptTemplate(prompt_template).format(events=ev.events),
+            formatted=True,
+        )
+        await ctx.set("ui_description", response.text)
+        self.update_status("Planning the UI", completed=True)
+        # Update the planning description to the console
+        self.console.print(
+            Panel(
+                response.text,
+                title="UI Description",
+                border_style="cyan",
+            )
+        )
         self.update_status("Generating aggregation function")
-        return WriteAggregationEvent(events=events)
+        return WriteAggregationEvent(
+            events=ev.events,
+            ui_description=response.text,
+        )
 
     @step
     async def generate_event_aggregations(
@@ -158,11 +213,17 @@ class GenUIWorkflow(Workflow):
             You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
             Here are the events that you need to work on: {events}
 
+            Here is the description of the UI: 
+            ```
+                {ui_description}
+            ```
+
             # Task
-            Your task is to analyze the use case of the workflow and the event schema, then write aggregation functions if needed for UI rendering.
+            Based on the description of the UI and the list of events, write the aggregation function that will be used to aggregate the events.
             Take into account that the list of events grows with time. At the beginning, there is only one event in the list, and events are incrementally added. 
             To render the events in a visually pleasing way, try to aggregate them by their attributes and render the aggregates instead of just rendering a list of all events.
             Don't add computation to the aggregation function, just group the events by their attributes.
+            Make sure that the aggregation should reflect the description of the UI and the grouped events are not duplicated, make it as simple as possible to avoid unnecessary issues.
 
             # Answer with the following format:
             ```jsx
@@ -183,6 +244,7 @@ class GenUIWorkflow(Workflow):
         return WriteUIComponentEvent(
             events=ev.events,
             aggregation_function=response.text,
+            ui_description=ev.ui_description,
         )
 
     @step
@@ -191,44 +253,43 @@ class GenUIWorkflow(Workflow):
     ) -> RefineGeneratedCodeEvent:
         prompt_template = """
             # Your role
-            You are a frontend developer who is developing a React component for given events that are emitted from a backend.
+            You are a frontend developer who is developing a React component using shadcn/ui and lucide-react for the UI.
+            You are given a list of events and other context.
+            Your task is to write a beautiful UI for the events that will be included in a chat UI.
 
             # Context:
             Here are the events that you need to work on: {events}
             {aggregation_function_context}
+            Here is the description of the UI:
+            ```
+                {ui_description}
+            ```
 
             # Requirements:
-            - Write beautiful UI components for the events without additional dependencies/imports.
+            - Write beautiful UI components for the events using shadcn/ui and lucide-react.
             - The component text/label should be specified for each event type.
-            - If the components are stateful, ensure the state is stored and handled correctly.
-            - Ensure the UI components are well-designed and logical.
 
             # Instructions:
+            ## Event and schema notice
             - Based on the provided list of events, determine their types and attributes.
             - It's normal that the schema is applied to all events, but the events might completely different which some of schema attributes aren't used.
-            - You should make the component visually distinct for each event type, don't reuse the same code text label, children, styles, handler logic,... for different event types.
-            e.g: A simple cat schema
+            - You should make the component visually distinct for each event type.
+              e.g: A simple cat schema
                 ```{"type": "cat", "action": ["jump", "run", "meow"], "jump": {"height": 10, "distance": 20}, "run": {"distance": 100}}```
-                You should write three distinct components for the jump, run and meow actions. Don't try to render "height" for the "run" and "meow" action.
-        
-            - Use HTML with pure CSS to create an aesthetically pleasing UI. 
-              For example:
-                - Generate code for cards to wrap up the events, with proper styles for borders, rounded corners, padding, margin, etc.
-                - Generate code for badges to highlight the state/type, with distinct styles for different states
-                - Generate code for dropdowns if the event content might be too long to display in a single line.
-                - Use icons or emojis to visualize the state
-            - Consider using a grid layout to create a visually appealing UI.
+                You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
-            # Example styles:
-                const styles = {
-                    container: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' },
-                    // Card styles - children can be placed in different positions, e.g.: top-right, top-left, bottom-right, bottom-left, etc.
-                    card: { border: '1px solid #ccc', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' },
-                    // Badge styles - can be extended, colors can be changed, etc.
-                    badge: { display: 'inline-block', padding: '4px 8px', fontSize: '12px', fontWeight: '600', borderRadius: '9999px' },
-                    dropdown: { marginTop: '8px', cursor: 'pointer', color: '#3B82F6' },
-                    dropdownContent: { marginTop: '8px', padding: '8px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#F3F4F6' }
-                };
+            ## UI notice
+            - Use shadcn/ui and lucide-react for the UI.
+            - IMPORTANT: Customize the styles with pure css (tailwind is not allowed) to make the component more beautiful.
+            - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
+            - For a long content, consider to use markdown along with dropdown to show the full content.
+                e.g:
+                ```jsx
+                import { Markdown } from "@llamaindex/chat-ui/widgets";
+                <Markdown content={content} />
+                ```
+            - Try to make the component placement not monotonous, consider use row/column/flex/grid layout.
+            - IMPORTANT: Don't try import React or cn(), just use React.useState, React.useEffect, ...
             """
 
         aggregation_function_context = (
@@ -272,6 +333,7 @@ class GenUIWorkflow(Workflow):
 
             # Requirements:
             - Refine the code to ensure there are no potential bugs.
+            - Make sure cn() and React is not imported, just use React.useState, React.useEffect, ...
             - Don't be verbose, only return the code, wrap it in ```jsx <code>```
         """
         prompt = PromptTemplate(prompt_template).format(
@@ -456,8 +518,6 @@ async def main(
 ):
     from llama_index.llms.anthropic import Anthropic
 
-    MODEL = "claude-3-7-sonnet-latest"
-
     console = Console()
 
     # Execute workflow and get filtered events with schema
@@ -470,7 +530,7 @@ async def main(
 
     # Generate UI components
     console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
-    llm = Anthropic(model=MODEL, max_tokens=8192)
+    llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=8192)
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
     await workflow.run(events=filtered_events, output_file=output_file)
 
