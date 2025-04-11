@@ -162,24 +162,27 @@ class GenUIWorkflow(Workflow):
             Your task is to analyze the use case of the workflow and the event schema, then write aggregation functions if needed for UI rendering.
             Take into account that the list of events grows with time. At the beginning, there is only one event in the list, and events are incrementally added. 
             To render the events in a visually pleasing way, try to aggregate them by their attributes and render the aggregates instead of just rendering a list of all events.
-            Note: 
-                - Events might be grouped by some attributes. e.g.: events with the same type and same ID should be grouped together.
-                - For aggregation, we just group/update the events by some attributes, no computation is needed.
+            Don't add computation to the aggregation function, just group the events by their attributes.
+
+            # Answer with the following format:
+            ```jsx
+            const aggregateEvents = () => {
+                // code for aggregating events here if needed otherwise let the jsx code block empty
+            }
+            ```
             """
 
-        response = await self.llm.astructured_predict(
-            AggregatePrediction,
-            PromptTemplate(prompt_template),
-            events=ev.events,
+        response = await self.llm.acomplete(
+            PromptTemplate(prompt_template).format(events=ev.events),
+            formatted=True,
         )
-        if response.need_aggregation:
-            await ctx.set("aggregation_context", response.aggregation_function)
+        await ctx.set("aggregation_context", response.text)
 
         self.update_status("Generating aggregation function", completed=True)
         self.update_status("Generating UI components")
         return WriteUIComponentEvent(
             events=ev.events,
-            aggregation_function=response.aggregation_function,
+            aggregation_function=response.text,
         )
 
     @step
@@ -192,7 +195,6 @@ class GenUIWorkflow(Workflow):
 
             # Context:
             Here are the events that you need to work on: {events}
-            - Events are given as a list which grows with time. At the beginning, there is only one event in the list, and events are incrementally added.      
             {aggregation_function_context}
 
             # Requirements:
@@ -203,10 +205,12 @@ class GenUIWorkflow(Workflow):
 
             # Instructions:
             - Based on the provided list of events, determine their types and attributes.
-            - For each type of event, design an aesthetically pleasing UI component. 
-              To make the component visually distinct, you can:
-                + Just use different code for each event type, don't need to reuse the same code for different event types.
-                + Generate different children elements, styles, text label, handler logic,... for each event type.
+            - It's normal that the schema is applied to all events, but the events might completely different which some of schema attributes aren't used.
+            - You should make the component visually distinct for each event type, don't reuse the same code text label, children, styles, handler logic,... for different event types.
+            e.g: A simple cat schema
+                ```{"type": "cat", "action": ["jump", "run", "meow"], "jump": {"height": 10, "distance": 20}, "run": {"distance": 100}}```
+                You should write three distinct components for the jump, run and meow actions. Don't try to render "height" for the "run" and "meow" action.
+        
             - Use HTML with pure CSS to create an aesthetically pleasing UI. 
               For example:
                 - Generate code for cards to wrap up the events, with proper styles for borders, rounded corners, padding, margin, etc.
@@ -267,23 +271,28 @@ class GenUIWorkflow(Workflow):
             {code_structure}
 
             # Requirements:
-            - Refine the code to ensure there are no potential bugs
-            - Don't be verbose, only return the code
+            - Refine the code to ensure there are no potential bugs.
+            - Don't be verbose, only return the code, wrap it in ```jsx <code>```
         """
         prompt = PromptTemplate(prompt_template).format(
             generated_code=ev.generated_code,
             code_structure=self.code_structure,
-            events=ev.events,
             aggregation_function_context=ev.aggregation_function_context,
         )
 
-        response = await self.llm.acomplete(prompt, formatted=True)
+        response = self.llm.complete(prompt, formatted=True)
 
-        # Grep the code inside ```jsx``` wrapper
-        code = re.search(r"```jsx(.*)```", response.text, re.DOTALL).group(1)
+        # Extract code from response, handling case where code block is missing
+        code_match = re.search(r"```jsx(.*)```", response.text, re.DOTALL)
+        if code_match is None:
+            # If no code block found, use full response
+            code = response.text
+        else:
+            code = code_match.group(1).strip()
 
         # Write the generated code to the output file
-        with open(await ctx.get("output_file"), "w") as f:
+        output_file = await ctx.get("output_file")
+        with open(output_file, "w") as f:
             f.write(code)
 
         self.update_status("Refining generated code", completed=True)
@@ -385,8 +394,8 @@ def filter_events(
         # Add schema as an event
         result_events.append(json.loads(events[0].schema_json()))
 
-        # Add 1-2 sample events
-        num_samples = min(2, len(events))
+        # Add some sample for the event
+        num_samples = min(5, len(events))
         samples = random.sample(events, num_samples)
         for sample in samples:
             result_events.append(sample.model_dump())
@@ -445,7 +454,7 @@ async def main(
     output_file: str,
     force_refresh: bool = False,
 ):
-    from llama_index.llms.openai import OpenAI
+    from llama_index.llms.google_genai import GoogleGenAI
 
     console = Console()
 
@@ -459,7 +468,7 @@ async def main(
 
     # Generate UI components
     console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
-    llm = OpenAI(model="gpt-4o")
+    llm = GoogleGenAI(model="gemini-2.5-pro-preview-03-25")
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
     await workflow.run(events=filtered_events, output_file=output_file)
 
