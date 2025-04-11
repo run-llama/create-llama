@@ -125,8 +125,8 @@ class GenUIWorkflow(Workflow):
 
         # Build status display
         status_lines = []
-        for step in self._completed_steps:
-            status_lines.append(f"[green]✓[/green] {step}")
+        for completed_step in self._completed_steps:
+            status_lines.append(f"[green]✓[/green] {completed_step}")
         if self._current_step:
             status_lines.append(f"[yellow]⋯[/yellow] {self._current_step}")
 
@@ -280,7 +280,7 @@ class GenUIWorkflow(Workflow):
             aggregation_function_context=ev.aggregation_function_context,
         )
 
-        response = self.llm.complete(prompt, formatted=True)
+        response = await self.llm.acomplete(prompt, formatted=True)
 
         # Extract code from response, handling case where code block is missing
         code_match = re.search(r"```jsx(.*)```", response.text, re.DOTALL)
@@ -454,7 +454,9 @@ async def main(
     output_file: str,
     force_refresh: bool = False,
 ):
-    from llama_index.llms.google_genai import GoogleGenAI
+    from llama_index.llms.anthropic import Anthropic
+
+    MODEL = "claude-3-7-sonnet-latest"
 
     console = Console()
 
@@ -468,7 +470,7 @@ async def main(
 
     # Generate UI components
     console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
-    llm = GoogleGenAI(model="gemini-2.5-pro-preview-03-25")
+    llm = Anthropic(model=MODEL, max_tokens=8192)
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
     await workflow.run(events=filtered_events, output_file=output_file)
 
@@ -479,6 +481,19 @@ async def main(
             border_style="green",
         )
     )
+
+
+def pre_run_checks():
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        raise ValueError(
+            "Anthropic API key is not set. Please set the ANTHROPIC_API_KEY environment variable."
+        )
+    try:
+        from llama_index.llms.anthropic import Anthropic  # noqa: F401
+    except ImportError:
+        raise ValueError(
+            "Anthropic package is not installed. Please install it with `poetry add llama-index-llms-anthropic` or `pip install llama-index-llms-anthropic`."
+        )
 
 
 if __name__ == "__main__":
@@ -503,6 +518,8 @@ if __name__ == "__main__":
         help="Force fresh workflow execution, ignoring cached results",
     )
     args = parser.parse_args()
+
+    pre_run_checks()
 
     # Convert events string to list
     events = [event.strip() for event in args.events.split(",") if event.strip()]
