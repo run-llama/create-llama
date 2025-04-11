@@ -1,6 +1,9 @@
 import argparse
+import json
+import os
+import random
 import re
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import PromptTemplate
@@ -12,20 +15,13 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-
-class RunWorkflowEvent(Event):
-    """
-    Event for running the workflow.
-    """
-
-    workflow_input: str = Field(
-        description="The input for the workflow. Should be a string like a question"
-    )
-    events: List[Any] = Field(
-        description="The events type that are being used to generate the UI components"
-    )
+CACHE_FILE = "gen_ui_cache.json"
 
 
 class WriteAggregationEvent(Event):
@@ -33,7 +29,7 @@ class WriteAggregationEvent(Event):
     Event for aggregating events.
     """
 
-    events: List[Any]
+    events: List[Dict[str, Any]]
 
 
 class WriteUIComponentEvent(Event):
@@ -41,7 +37,7 @@ class WriteUIComponentEvent(Event):
     Event for writing UI component.
     """
 
-    events: List[Any]
+    events: List[Dict[str, Any]]
     aggregation_function: Optional[str]
 
 
@@ -52,7 +48,7 @@ class RefineGeneratedCodeEvent(Event):
 
     generated_code: str
     aggregation_function_context: Optional[str]
-    events: List[Any]
+    events: List[Dict[str, Any]]
 
 
 class ExtractEventSchemaEvent(Event):
@@ -71,17 +67,6 @@ class AggregatePrediction(BaseModel):
 
     need_aggregation: bool
     aggregation_function: Optional[str]
-
-
-class EventSchema(BaseModel):
-    """
-    Schema for the event.
-    """
-
-    schema: str = Field(description="The json schema inferred from the pydantic model")
-    example: List[Any] = Field(
-        description="Example of the event in a list of json values"
-    )
 
 
 class GenUIWorkflow(Workflow):
@@ -120,16 +105,39 @@ class GenUIWorkflow(Workflow):
     def __init__(self, llm: LLM, **kwargs: Any):
         super().__init__(**kwargs)
         self.llm = llm
+        self.console = Console()
+        self._live: Optional[Live] = None
+        self._completed_steps: List[str] = []
+        self._current_step: Optional[str] = None
+
+    def update_status(self, message: str, completed: bool = False):
+        """Show completed and current steps in a panel."""
+        if completed:
+            if self._current_step:
+                self._completed_steps.append(self._current_step)
+            self._current_step = None
+        else:
+            self._current_step = message
+
+        if self._live is None:
+            self._live = Live("", console=self.console, refresh_per_second=4)
+            self._live.start()
+
+        # Build status display
+        status_lines = []
+        for step in self._completed_steps:
+            status_lines.append(f"[green]✓[/green] {step}")
+        if self._current_step:
+            status_lines.append(f"[yellow]⋯[/yellow] {self._current_step}")
+
+        self._live.update(Panel("\n".join(status_lines)))
 
     @step
-    async def start(self, ctx: Context, ev: StartEvent) -> RunWorkflowEvent:
-        workflow_input = ev.workflow_input
-        if not workflow_input:
-            raise ValueError("workflow_input is required")
+    async def start(self, ctx: Context, ev: StartEvent) -> WriteAggregationEvent:
         events = ev.events
         if not events:
             raise ValueError(
-                "events is required, provide list of events that are emitted from the workflow that you want to generate the UI components for"
+                "events is required, provide list of filtered events to generate UI components for"
             )
         output_file = ev.output_file
         if not output_file:
@@ -137,47 +145,9 @@ class GenUIWorkflow(Workflow):
                 "output_file is required. Provide the path of the file to save the generated UI component"
             )
         await ctx.set("output_file", output_file)
-        return RunWorkflowEvent(
-            workflow_input=workflow_input,
-            events=events,
-        )
-
-    @step
-    async def run_workflow(
-        self, ctx: Context, ev: RunWorkflowEvent
-    ) -> WriteAggregationEvent:
-        """
-        Run the workflow to get the events.
-        """
-        from app.workflow import create_workflow
-
-        workflow = create_workflow()
-        print(
-            f"Running workflow with input: {ev.workflow_input}\n Waiting for the workflow to finish..."
-        )
-        handler = workflow.run(user_msg=ev.workflow_input)
-
-        workflow_events = []
-        async for event in handler.stream_events():
-            workflow_events.append(event)
-        await handler
-        print("Workflow finished")
-        selected_events = []
-        expected_event_names = [
-            event if isinstance(event, str) else event.__name__ for event in ev.events
-        ]
-        for event in workflow_events:
-            if type(event).__name__ in expected_event_names:
-                selected_events.append(event)
-            elif hasattr(event, "data"):
-                if event.data.__class__.__name__ in expected_event_names:
-                    selected_events.append(event.data)
-        if len(selected_events) == 0:
-            raise ValueError(f"No event {ev.events} found in the workflow events")
-        await ctx.set("events", selected_events)
-        return WriteAggregationEvent(
-            events=[event.model_dump() for event in selected_events],
-        )
+        await ctx.set("events", events)
+        self.update_status("Generating aggregation function")
+        return WriteAggregationEvent(events=events)
 
     @step
     async def generate_event_aggregations(
@@ -205,6 +175,8 @@ class GenUIWorkflow(Workflow):
         if response.need_aggregation:
             await ctx.set("aggregation_context", response.aggregation_function)
 
+        self.update_status("Generating aggregation function", completed=True)
+        self.update_status("Generating UI components")
         return WriteUIComponentEvent(
             events=ev.events,
             aggregation_function=response.aggregation_function,
@@ -267,6 +239,9 @@ class GenUIWorkflow(Workflow):
             code_structure=self.code_structure,
         )
         response = await self.llm.acomplete(prompt, formatted=True)
+
+        self.update_status("Generating UI components", completed=True)
+        self.update_status("Refining generated code")
         return RefineGeneratedCodeEvent(
             generated_code=response.text,
             events=ev.events,
@@ -311,22 +286,189 @@ class GenUIWorkflow(Workflow):
         with open(await ctx.get("output_file"), "w") as f:
             f.write(code)
 
+        self.update_status("Refining generated code", completed=True)
+        if self._live is not None:
+            self._live.stop()
+            self._live = None
+
         return StopEvent(
             result=code,
         )
 
 
+def get_cache_key(workflow_input: str, expected_events: List[str]) -> str:
+    """Generate a unique cache key for the workflow input and expected events."""
+    sorted_events = ",".join(sorted(expected_events))
+    return f"{workflow_input}::{sorted_events}"
+
+
+async def execute_workflow(workflow_input: str) -> List[Any]:
+    """
+    Execute the workflow and collect all events.
+    Returns the raw workflow events.
+    """
+    from app.workflow import create_workflow
+
+    console = Console()
+    console.print(
+        Panel(
+            f"[bold cyan]Workflow Input:[/bold cyan] [yellow]{workflow_input}[/yellow]",
+            title="🚀 Starting Workflow",
+            border_style="cyan",
+        )
+    )
+
+    workflow = create_workflow()
+
+    # Show progress while running workflow
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("[cyan]Running workflow...", total=None)
+
+        handler = workflow.run(user_msg=workflow_input)
+        workflow_events = []
+        async for event in handler.stream_events():
+            workflow_events.append(event)
+            progress.update(
+                task, description=f"[cyan]Collected {len(workflow_events)} events..."
+            )
+
+        await handler
+        progress.update(task, description="[green]Workflow completed!")
+
+    return workflow_events
+
+
+def filter_events(
+    workflow_events: List[Any], expected_events: List[str]
+) -> List[Dict[str, Any]]:
+    """
+    Filter and process workflow events based on expected event types.
+    Returns a list containing both event schemas and sample events.
+    """
+    console = Console()
+
+    # Collect events by type
+    events_by_type: Dict[str, List[Any]] = {}
+    for event in workflow_events:
+        if type(event).__name__ in expected_events:
+            event_type = type(event).__name__
+            if event_type not in events_by_type:
+                events_by_type[event_type] = []
+            events_by_type[event_type].append(event)
+        elif hasattr(event, "data"):
+            if event.data.__class__.__name__ in expected_events:
+                event_type = event.data.__class__.__name__
+                if event_type not in events_by_type:
+                    events_by_type[event_type] = []
+                events_by_type[event_type].append(event.data)
+
+    if not events_by_type:
+        console.print(
+            Panel(
+                f"[red]No events of types {expected_events} found in the workflow events[/red]",
+                title="❌ Error",
+                border_style="red",
+            )
+        )
+        raise ValueError(
+            f"No events of types {expected_events} found in the workflow events"
+        )
+
+    result_events = []
+
+    # Add both schema and sample events to the list
+    for event_type, events in events_by_type.items():
+        # Add schema as an event
+        result_events.append(json.loads(events[0].schema_json()))
+
+        # Add 1-2 sample events
+        num_samples = min(2, len(events))
+        samples = random.sample(events, num_samples)
+        for sample in samples:
+            result_events.append(sample.model_dump())
+
+    return result_events
+
+
+async def execute_workflow_and_filter_events(
+    workflow_input: str, expected_events: List[str], force_refresh: bool = False
+) -> List[Dict[str, Any]]:
+    """
+    Execute the workflow and filter events based on expected event types.
+    Returns a list containing both event schemas and sample events.
+
+    Args:
+        workflow_input: The input for the workflow
+        expected_events: List of event types to filter for
+        force_refresh: If True, ignores cached results and forces a new workflow execution
+    """
+    console = Console()
+
+    # Check cache file if not forcing refresh
+    if not force_refresh and os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, "r") as f:
+                cached_events = json.load(f)
+                console.print(
+                    Panel(
+                        "[bold cyan]Using cached results[/bold cyan] for this workflow input. \nTo force a fresh execution, use the [bold yellow]--force-refresh[/bold yellow] flag.",
+                        title="🚀 Cache Hit",
+                        border_style="cyan",
+                    )
+                )
+                return cached_events
+        except json.JSONDecodeError:
+            # If cache file is corrupted, ignore it
+            pass
+
+    # Execute workflow and filter events
+    workflow_events = await execute_workflow(workflow_input)
+    result_events = filter_events(workflow_events, expected_events)
+
+    # Cache the results
+    try:
+        with open(CACHE_FILE, "w") as f:
+            json.dump(result_events, f, indent=2)
+    except Exception as e:
+        console.print(f"[yellow]Warning:[/yellow] Failed to cache results: {e}")
+
+    return result_events
+
+
 async def main(
     workflow_input: str,
-    events: str,
+    events: List[str],
     output_file: str,
+    force_refresh: bool = False,
 ):
     from llama_index.llms.openai import OpenAI
 
+    console = Console()
+
+    # Execute workflow and get filtered events with schema
+    console.rule("[bold blue]Step 1: Execute Workflow[/bold blue]")
+    filtered_events = await execute_workflow_and_filter_events(
+        workflow_input=workflow_input,
+        expected_events=events,
+        force_refresh=force_refresh,
+    )
+
+    # Generate UI components
+    console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
     llm = OpenAI(model="gpt-4o")
-    workflow = GenUIWorkflow(llm=llm, verbose=True, timeout=500.0)
-    await workflow.run(
-        workflow_input=workflow_input, events=events, output_file=output_file
+    workflow = GenUIWorkflow(llm=llm, timeout=500.0)
+    await workflow.run(events=filtered_events, output_file=output_file)
+
+    console.print(
+        Panel(
+            f"[green]UI component has been generated successfully![/green]\nOutput file: [bold cyan]{output_file}[/bold cyan]",
+            title="✨ Complete",
+            border_style="green",
+        )
     )
 
 
@@ -335,10 +477,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--workflow_input",
-        type=str,
-        required=True,
-        help="A input message to run the workflow",
+        "--workflow_input", type=str, required=True, help="The input for the workflow"
     )
     parser.add_argument(
         "--events",
@@ -348,6 +487,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output_file", type=str, required=True, help="Path to the output file"
+    )
+    parser.add_argument(
+        "--force-refresh",
+        action="store_true",
+        help="Force fresh workflow execution, ignoring cached results",
     )
     args = parser.parse_args()
 
@@ -359,5 +503,6 @@ if __name__ == "__main__":
             workflow_input=args.workflow_input,
             events=events,
             output_file=args.output_file,
+            force_refresh=args.force_refresh,
         )
     )
