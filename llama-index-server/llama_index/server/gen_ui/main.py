@@ -81,7 +81,7 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // Note: Only shadcn/ui (@/components/ui/<component_name>) and lucide-react are allowed.
+            // Note: Only shadcn/ui (@/components/ui/<component_name>) and lucide-react and tailwind css are allowed.
             e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
             // export the component
@@ -89,10 +89,6 @@ class GenUIWorkflow(Workflow):
                 // logic for aggregating events (if needed)
                 const aggregateEvents = () => {
                     // code for aggregating events here
-                }
-
-                const styles = {
-                    // use pure css for the styles (tailwind is not supported)
                 }
             
                 // State handling
@@ -271,8 +267,7 @@ class GenUIWorkflow(Workflow):
                 You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
             ## UI notice
-            - Use shadcn/ui and lucide-react for the UI.
-            - IMPORTANT: Customize the styles with pure css (tailwind is not allowed) to make the component more beautiful.
+            - Use shadcn/ui and lucide-react and tailwind CSS (but arbitrary values are not supported) for the UI.
             - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
             - For a long content, consider to use markdown along with dropdown to show the full content.
                 e.g:
@@ -324,7 +319,6 @@ class GenUIWorkflow(Workflow):
 
             # Requirements:
             - Refine the code to ensure there are no potential bugs.
-            - Make sure cn() and React is not imported, just use React.useState, React.useEffect, ...
             - Don't be verbose, only return the code, wrap it in ```jsx <code>```
         """
         prompt = PromptTemplate(prompt_template).format(
