@@ -14,23 +14,22 @@ Custom UI components are a powerful feature that enables you to:
 
 ### Workflow events
 
-To use custom UI components, your workflow must emit an `UIEvent` with data that matches the data model of the custom UI component.
+To display custom UI components, your workflow needs to emit `UIEvent` events with data that conforms to the data model of your custom UI component.
 
 ```python
 from llama_index.server import UIEvent
 from pydantic import BaseModel, Field
 from typing import Literal, Any
 
-# A Pydantic model that defines the data model for the event.
-# If you use generate ui function, you should define the description for the fields to help LLM understand your event.
+# Define a Pydantic model for your event data
 class DeepResearchEventData(BaseModel):
-    id: str = Field(description="The id of the event")
-    type: Enum["retrieval", "analysis"] = Field(description="DeepResearch has two main stages: retrieval and analysis.")
-    status: Enum["pending", "completed", "failed"] = Field(description="The status of the event")
-    content: str = Field(description="The content of the event")
+    id: str = Field(description="The unique identifier for the event")
+    type: Literal["retrieval", "analysis"] = Field(description="DeepResearch has two main stages: retrieval and analysis")
+    status: Literal["pending", "completed", "failed"] = Field(description="The current status of the event")
+    content: str = Field(description="The textual content of the event")
 
 
-# Then in your workflow, you should emit this event when you want to render a custom UI component.
+# In your workflow, emit the data model with UIEvent
 ctx.write_event_to_stream(
     UIEvent(
         type="deep_research_event",
@@ -75,27 +74,28 @@ server = LlamaIndexServer(
    }
    ```
 
-### Generate UI component
+### Generate UI Component
 
-We provide a `generate_ui_component` function to help you leverage LLM to generate the UI component for your workflow events.
+We provide a `generate_ui_component` function that uses LLMs to automatically generate UI components for your workflow events.
 
 ```python
 from llama_index.server.gen_ui.main import generate_ui_component
 
-# Call generate_ui_component with the event class you defined in your workflow.
+# Generate a component using the event class you defined in your workflow
 from your_workflow import DeepResearchEvent
 ui_code = await generate_ui_component(
     event_cls=DeepResearchEvent,
 )
-# Or, you can generate from your workflow file.
+
+# Alternatively, generate from your workflow file
 ui_code = await generate_ui_component(
     workflow_file="your_workflow.py",
 )
 print(ui_code)
 
-# You can save the code to a file and use it in your project.
+# Save the generated code to a file for use in your project
 with open("deep_research_event.jsx", "w") as f:
     f.write(ui_code)
 ```
 
-> Tips: For the best result, you should add the description for the fields in the event data class so that the LLM can get the best understanding of your event data.
+> **Tip:** For optimal results, add descriptive documentation to each field in your event data class. This helps the LLM better understand your data structure and generate more appropriate UI components.
