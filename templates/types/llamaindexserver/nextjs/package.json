@@ -9,10 +9,10 @@
   "dependencies": {
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/readers": "^2.0.0",
-    "@llamaindex/server": "0.0.6",
+    "@llamaindex/server": "0.1.0",
     "@llamaindex/tools": "0.0.4",
     "dotenv": "^16.4.7",
-    "llamaindex": "0.9.15",
+    "llamaindex": "0.9.17",
     "zod": "^3.23.8"
   },
   "devDependencies": {
