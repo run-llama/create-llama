@@ -78,6 +78,8 @@ server = LlamaIndexServer(
 
 We provide a `generate_ui_component` function that uses LLMs to automatically generate UI components for your workflow events.
 
+> **_Note:_** This feature requires the `ANTHROPIC_API_KEY` to be set in your environment.
+
 ```python
 from llama_index.server.gen_ui.main import generate_ui_component
 
