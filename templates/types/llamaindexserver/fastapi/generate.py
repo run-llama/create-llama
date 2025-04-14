@@ -62,4 +62,6 @@ def generate_ui_for_workflow():
         print("Error: Both --input_file and --output_file arguments are required")
         sys.exit(1)
 
-    asyncio.run(generate_ui_for_workflow(input_file, output_file))
+    code = asyncio.run(generate_ui_for_workflow(input_file))
+    with open(output_file, "w") as f:
+        f.write(code)

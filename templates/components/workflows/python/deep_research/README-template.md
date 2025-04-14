@@ -49,6 +49,18 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
 ```
 
+## Customize the UI
+
+To customize the UI, you can start by modifying the [./components/deep_research_event.jsx](./components/deep_research_event.jsx) file.
+
+You can also generate a new UI component for the workflow by running the following command:
+
+```
+poetry run generate:ui --input_file ./app/workflow.py --output_file ./components/deep_research_event.jsx
+```
+
+> **_Note:_** This command requires the `ANTHROPIC_API_KEY` to be set in your environment.
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:

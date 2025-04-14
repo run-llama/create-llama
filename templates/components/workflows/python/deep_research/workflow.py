@@ -147,10 +147,10 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "retrieve",
-                    "state": "inprogress",
-                },
+                data=DeepResearchEventData(
+                    event="retrieve",
+                    state="inprogress",
+                ),
             )
         )
         retriever = self.index.as_retriever(
@@ -161,10 +161,10 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "retrieve",
-                    "state": "done",
-                },
+                data=DeepResearchEventData(
+                    event="retrieve",
+                    state="done",
+                ),
             )
         )
         # Send source nodes to the stream
@@ -187,10 +187,10 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "analyze",
-                    "state": "inprogress",
-                },
+                data=DeepResearchEventData(
+                    event="analyze",
+                    state="inprogress",
+                ),
             )
         )
         total_questions = await ctx.get("total_questions")
@@ -204,10 +204,10 @@ class DeepResearchWorkflow(Workflow):
             ctx.write_event_to_stream(
                 UIEvent(
                     type="deep_research_event",
-                    data={
-                        "event": "analyze",
-                        "state": "done",
-                    },
+                    data=DeepResearchEventData(
+                        event="analyze",
+                        state="done",
+                    ),
                 )
             )
             return StopEvent(
@@ -220,10 +220,10 @@ class DeepResearchWorkflow(Workflow):
                 ctx.write_event_to_stream(
                     UIEvent(
                         type="deep_research_event",
-                        data={
-                            "event": "analyze",
-                            "state": "done",
-                        },
+                        data=DeepResearchEventData(
+                            event="analyze",
+                            state="done",
+                        ),
                     )
                 )
                 return StopEvent(
@@ -255,13 +255,13 @@ class DeepResearchWorkflow(Workflow):
                 ctx.write_event_to_stream(
                     UIEvent(
                         type="deep_research_event",
-                        data={
-                            "event": "answer",
-                            "state": "pending",
-                            "id": question_id,
-                            "question": question,
-                            "answer": None,
-                        },
+                        data=DeepResearchEventData(
+                            event="answer",
+                            state="pending",
+                            id=question_id,
+                            question=question,
+                            answer=None,
+                        ),
                     )
                 )
                 ctx.send_event(
@@ -274,10 +274,10 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "analyze",
-                    "state": "done",
-                },
+                data=DeepResearchEventData(
+                    event="analyze",
+                    state="done",
+                ),
             )
         )
         return None
@@ -290,12 +290,12 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "answer",
-                    "state": "inprogress",
-                    "id": ev.question_id,
-                    "question": ev.question,
-                },
+                data=DeepResearchEventData(
+                    event="answer",
+                    state="inprogress",
+                    id=ev.question_id,
+                    question=ev.question,
+                ),
             )
         )
         try:
@@ -309,13 +309,13 @@ class DeepResearchWorkflow(Workflow):
         ctx.write_event_to_stream(
             UIEvent(
                 type="deep_research_event",
-                data={
-                    "event": "answer",
-                    "state": "done",
-                    "id": ev.question_id,
-                    "question": ev.question,
-                    "answer": answer,
-                },
+                data=DeepResearchEventData(
+                    event="answer",
+                    state="done",
+                    id=ev.question_id,
+                    question=ev.question,
+                    answer=answer,
+                ),
             )
         )
 

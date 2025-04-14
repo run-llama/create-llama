@@ -1,7 +1,7 @@
 import logging
 import os
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
@@ -143,10 +143,10 @@ class ComponentDefinition(BaseModel):
 
 class UIEvent(Event):
     type: str
-    data: Type[BaseModel]
+    data: BaseModel
 
     def to_response(self) -> dict:
         return {
-            "type": "ui",
+            "type": self.type,
             "data": self.data.model_dump(),
         }
