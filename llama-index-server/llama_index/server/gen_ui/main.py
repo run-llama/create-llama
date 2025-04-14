@@ -396,7 +396,9 @@ async def generate_ui_for_workflow(
             )
             return
     elif event_cls is not None:
-        event_schemas = [{"type": event_cls.__name__, "schema": event_cls.model_json_schema()}]
+        event_schemas = [
+            {"type": event_cls.__name__, "schema": event_cls.model_json_schema()}
+        ]
 
     # Generate UI component from event schemas
     console.rule("[bold blue]Generate UI Components[/bold blue]")

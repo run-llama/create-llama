@@ -26,7 +26,7 @@ class EventAnalyzer(ast.NodeVisitor):
             and node.args[0].func.id == "UIEvent"
         ):
             self.found_ui_event = True
-        
+
         self.generic_visit(node)
 
 
@@ -79,8 +79,8 @@ def get_workflow_event_schemas(file_path: str) -> List[Dict[str, Any]]:
         # Look for class names containing "EventData" in the module
         for name, obj in inspect.getmembers(module):
             if (
-                inspect.isclass(obj) 
-                and name.endswith("EventData") 
+                inspect.isclass(obj)
+                and name.endswith("EventData")
                 and hasattr(obj, "model_json_schema")
             ):
                 try:

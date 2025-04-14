@@ -141,6 +141,7 @@ class ComponentDefinition(BaseModel):
     code: str
     filename: str
 
+
 class UIEvent(Event):
     type: str
     data: BaseModel
