@@ -23,7 +23,7 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import ChatRequest, SourceNodesEvent
+from llama_index.server.api.models import ChatRequest, SourceNodesEvent, UIEvent
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -88,11 +88,6 @@ class DeepResearchEventData(BaseModel):
         default=None,
         description="Used by answer event to display the answer of the question",
     )
-
-
-class UIEvent(Event):
-    type: Literal["deep_research_event"]
-    data: DeepResearchEventData
 
 
 class DeepResearchWorkflow(Workflow):
