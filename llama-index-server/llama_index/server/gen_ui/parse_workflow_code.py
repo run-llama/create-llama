@@ -11,7 +11,7 @@ class EventAnalyzer(ast.NodeVisitor):
     Parse the workflow code to find UIEvent instances passed to write_event_to_stream.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.found_ui_event = False
 
     def visit_Call(self, node: ast.Call) -> None:

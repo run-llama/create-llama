@@ -33,7 +33,7 @@ class WriteAggregationEvent(Event):
     """
 
     events: List[Dict[str, Any]]
-    ui_description: Optional[str]
+    ui_description: str
 
 
 class WriteUIComponentEvent(Event):
@@ -109,7 +109,7 @@ class GenUIWorkflow(Workflow):
         self._completed_steps: List[str] = []
         self._current_step: Optional[str] = None
 
-    def update_status(self, message: str, completed: bool = False):
+    def update_status(self, message: str, completed: bool = False) -> None:
         """Show completed and current steps in a panel."""
         if completed:
             if self._current_step:
@@ -341,7 +341,7 @@ class GenUIWorkflow(Workflow):
         )
 
 
-def pre_run_checks():
+def pre_run_checks() -> None:
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise ValueError(
             "Anthropic API key is not set. Please set the ANTHROPIC_API_KEY environment variable."
@@ -394,7 +394,9 @@ async def generate_ui_for_workflow(
                     border_style="red",
                 )
             )
-            return
+            raise RuntimeError(
+                "No events found that are used with write_event_to_stream. Please check the workflow file."
+            )
     elif event_cls is not None:
         event_schemas = [
             {"type": event_cls.__name__, "schema": event_cls.model_json_schema()}
