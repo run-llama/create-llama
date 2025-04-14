@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import PromptTemplate
@@ -12,7 +12,7 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.gen_ui.parse_workflow_code import get_ui_events_and_schemas
+from llama_index.server.gen_ui.parse_workflow_code import get_workflow_event_schemas
 from pydantic import BaseModel
 from rich.console import Console
 from rich.live import Live
@@ -138,12 +138,6 @@ class GenUIWorkflow(Workflow):
             raise ValueError(
                 "events is required, provide list of filtered events to generate UI components for"
             )
-        output_file = ev.output_file
-        if not output_file:
-            raise ValueError(
-                "output_file is required. Provide the path of the file to save the generated UI component"
-            )
-        await ctx.set("output_file", output_file)
         await ctx.set("events", events)
         self.update_status("Planning the UI")
         return PlanningEvent(events=events)
@@ -337,11 +331,6 @@ class GenUIWorkflow(Workflow):
         else:
             code = code_match.group(1).strip()
 
-        # Write the generated code to the output file
-        output_file = await ctx.get("output_file")
-        with open(output_file, "w") as f:
-            f.write(code)
-
         self.update_status("Refining generated code", completed=True)
         if self._live is not None:
             self._live.stop()
@@ -365,42 +354,62 @@ def pre_run_checks():
         )
 
 
-async def generate_ui_for_workflow(input_file: str, output_file: str):
+async def generate_ui_for_workflow(
+    workflow_file: Optional[str] = None,
+    event_cls: Optional[Type[BaseModel]] = None,
+) -> str:
     """
     Generate UI component for events from workflow.
+    Either workflow_file or event_cls must be provided.
 
     Args:
-        input_file: The path to the workflow file to generate UI from. e.g: `app/workflow.py`
-        output_file: The path to the output file. e.g: `components/deep_research_event.jsx`
+        workflow_file: The path to the workflow file to generate UI from. e.g: `app/workflow.py`.
+        event_cls: A Pydantic class to generate UI for. e.g: `DeepResearchEvent`.
+    Returns:
+        The generated UI component code.
     """
+    if workflow_file is None and event_cls is None:
+        raise ValueError(
+            "Either workflow_file or event_cls must be provided. Please provide one of them."
+        )
+    if workflow_file is not None and event_cls is not None:
+        raise ValueError(
+            "Only one of workflow_file or event_cls can be provided. Please provide only one of them."
+        )
+
     from llama_index.llms.anthropic import Anthropic
 
     console = Console()
 
-    # Get event schemas from the input file
-    console.rule("[bold blue]Step 1: Analyzing Events[/bold blue]")
-    event_schemas = get_ui_events_and_schemas(input_file)
-
-    if len(event_schemas) == 0:
-        console.print(
-            Panel(
-                "[red]No events found that are used with write_event_to_stream[/red]",
-                title="❌ Error",
-                border_style="red",
+    # Get event schemas
+    if workflow_file is not None:
+        # Get event schemas from the input file
+        console.rule("[bold blue]Analyzing Events[/bold blue]")
+        event_schemas = get_workflow_event_schemas(workflow_file)
+        if len(event_schemas) == 0:
+            console.print(
+                Panel(
+                    "[red]No events found that are used with write_event_to_stream[/red]",
+                    title="❌ Error",
+                    border_style="red",
+                )
             )
-        )
-        return
+            return
+    elif event_cls is not None:
+        event_schemas = [{"type": event_cls.__name__, "schema": event_cls.model_json_schema()}]
 
-    # Generate UI components
-    console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
+    # Generate UI component from event schemas
+    console.rule("[bold blue]Generate UI Components[/bold blue]")
     llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=4096)
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
-    await workflow.run(events=event_schemas, output_file=output_file)
+    code = await workflow.run(events=event_schemas)
 
     console.print(
         Panel(
-            f"[green]UI component has been generated successfully![/green]\nOutput file: [bold cyan]{output_file}[/bold cyan]",
+            "[green]UI component has been generated successfully![/green]\n",
             title="✨ Complete",
             border_style="green",
         )
     )
+
+    return code
