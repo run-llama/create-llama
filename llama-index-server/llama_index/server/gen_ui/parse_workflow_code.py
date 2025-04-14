@@ -1,13 +1,15 @@
 import ast
 import importlib
 import inspect
+import os
 import sys
-from typing import Any, Dict, Optional, Set, Type
+import typing
+from typing import Any, Dict, List, Optional, Set, Type
 
 
 class EventAnalyzer(ast.NodeVisitor):
     """
-    Parse the workflow code to find all UIEvent used in write_event_to_stream and its schema.
+    Parse the workflow code to find all UIEvent used in write_event_to_stream.
     """
 
     def __init__(self):
@@ -32,89 +34,123 @@ def get_pydantic_schema(
     model_class: Type[Any], visited: Optional[Set[str]] = None
 ) -> Optional[Dict[str, Any]]:
     """
-    Get schema for a Pydantic model's data field if it has both type and data fields.
+    Get schema for a Pydantic model, enhancing with descriptions/titles.
     """
     if visited is None:
         visited = set()
 
-    # Get all class attributes including those from parent classes
-    fields = {}
-    for base in model_class.__mro__:
-        if hasattr(base, "__annotations__"):
-            fields.update(base.__annotations__)
+    if inspect.isclass(model_class) and hasattr(model_class, "model_json_schema"):
+        if model_class.__name__ in visited:
+            return {"type": model_class.__name__, "recursive": True}
+        visited.add(model_class.__name__)
 
-    # Check if the model has both 'type' and 'data' fields
-    if "type" not in fields or "data" not in fields:
-        return None
+        schema = model_class.model_json_schema()
 
-    # Get the data field's type
-    data_type = fields["data"]
+        # Enhance with docstring
+        if hasattr(model_class, "__doc__") and model_class.__doc__:
+            if "description" not in schema or not schema["description"]:
+                schema["description"] = model_class.__doc__.strip()
+        if hasattr(model_class, "__name__"):
+            if "title" not in schema or not schema["title"]:
+                schema["title"] = model_class.__name__
 
-    # If data field is another class type, get its schema
-    if inspect.isclass(data_type) and hasattr(data_type, "model_json_schema"):
-        if data_type.__name__ in visited:
-            return {"type": data_type.__name__, "recursive": True}
-
-        visited.add(data_type.__name__)
-        schema = data_type.model_json_schema()
-
-        # Preserve title and description if available
-        if hasattr(data_type, "__doc__") and data_type.__doc__:
-            schema["description"] = data_type.__doc__.strip()
-
-        # If it's a Pydantic model, get field descriptions from model_fields
-        if hasattr(data_type, "model_fields"):
-            for field_name, field in data_type.model_fields.items():
+        # Enhance with model_fields info (Pydantic v2)
+        if hasattr(model_class, "model_fields"):
+            for field_name, field in model_class.model_fields.items():
                 if field_name in schema.get("properties", {}):
-                    if field.description:
-                        schema["properties"][field_name]["description"] = (
-                            field.description
-                        )
-                    if hasattr(field, "title") and field.title:
-                        schema["properties"][field_name]["title"] = field.title
-
+                    prop = schema["properties"][field_name]
+                    if field.description and (
+                        "description" not in prop or not prop["description"]
+                    ):
+                        prop["description"] = field.description
+                    if (
+                        hasattr(field, "title")
+                        and field.title
+                        and ("title" not in prop or not prop["title"])
+                    ):
+                        prop["title"] = field.title
         return schema
-
     return None
 
 
-def get_ui_events_and_schemas(
-    file_path: str,
-) -> tuple[Set[str], Dict[str, Dict[str, Any]]]:
-    """Find UIEvent and its schema.
-
-    Args:
-        file_path: The path to the workflow file to generate UI from. e.g: `app/workflow.py`
-
-    Returns:
-        A tuple of the UIEvent and its schema.
+def get_ui_events_and_schemas(file_path: str) -> List[Dict[str, Any]]:
+    """Find UIEvent, get the schema of its data field's type via introspection,
+    and return a list of full schemas.
     """
-    # First get the module name from the file path
-    module_name = file_path.replace("/", ".").replace(".py", "")
-    if module_name.startswith("."):
-        module_name = module_name[1:]
+    # Get absolute paths for module importing
+    abs_file_path = os.path.abspath(file_path)
+    project_root = os.path.dirname(os.path.dirname(abs_file_path))
 
-    # Add the current directory to Python path if not already there
-    if "" not in sys.path:
-        sys.path.insert(0, "")
+    # Convert file path to module name
+    rel_path = os.path.relpath(abs_file_path, project_root)
+    module_name = rel_path.replace(os.sep, ".").replace(".py", "")
 
-    # Import the module to get access to the actual classes
-    module = importlib.import_module(module_name)
+    # Temporarily modify sys.path to allow imports
+    original_path = list(sys.path)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
 
-    # Parse the file to find UIEvent usage
-    with open(file_path, "r") as f:
-        tree = ast.parse(f.read())
+    module = None
+    try:
+        module = importlib.import_module(module_name)
+        importlib.reload(module)
+    except ImportError as e:
+        print(f"Error importing module {module_name}: {e}")
+        print(f"Current sys.path: {sys.path}")
+        sys.path = original_path
+        return []
+    finally:
+        if project_root in sys.path and project_root not in original_path:
+            try:
+                sys.path.remove(project_root)
+            except ValueError:
+                pass
+
+    # Use AST only to find UIEvent *usage*
+    try:
+        with open(file_path, "r") as f:
+            tree = ast.parse(f.read())
+    except FileNotFoundError:
+        print(f"Error: File not found {file_path}")
+        return []
+    except SyntaxError as e:
+        print(f"Error parsing {file_path}: {e}")
+        return []
 
     analyzer = EventAnalyzer()
     analyzer.visit(tree)
 
-    # Get schema for UIEvent if found
-    schemas = {}
-    if analyzer.ui_events and hasattr(module, "UIEvent"):
-        ui_event = getattr(module, "UIEvent")
-        if inspect.isclass(ui_event):
-            schema = get_pydantic_schema(ui_event)
-            if schema is not None:
-                schemas["UIEvent"] = schema
+    schema_list = []
 
-    return analyzer.ui_events, schemas
+    # If UIEvent usage was found via AST, use introspection on the loaded module
+    if "UIEvent" in analyzer.ui_events and hasattr(module, "UIEvent"):
+        ui_event_class = getattr(module, "UIEvent")
+        if inspect.isclass(ui_event_class):
+            data_field_type = None
+            try:
+                globalns = getattr(sys.modules[module.__name__], "__dict__", None)
+                type_hints = typing.get_type_hints(ui_event_class, globalns=globalns)
+                if "data" in type_hints:
+                    data_field_type = type_hints["data"]
+            except Exception as e:
+                print(
+                    f"Warning: Could not resolve type hints for {ui_event_class.__name__}: {e}"
+                )
+                if (
+                    hasattr(ui_event_class, "model_fields")
+                    and "data" in ui_event_class.model_fields
+                ):
+                    field_info = ui_event_class.model_fields["data"]
+                    if inspect.isclass(field_info.annotation):
+                        data_field_type = field_info.annotation
+
+            if inspect.isclass(data_field_type):
+                schema = get_pydantic_schema(data_field_type)
+                if schema is not None:
+                    schema_list.append(schema)
+            else:
+                print(
+                    f"Warning: Found UIEvent usage but could not determine class type for 'data' field in {ui_event_class.__name__}"
+                )
+
+    return schema_list

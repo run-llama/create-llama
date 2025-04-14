@@ -1,6 +1,4 @@
-import json
 import os
-import random
 import re
 from typing import Any, Dict, List, Optional
 
@@ -360,58 +358,6 @@ class GenUIWorkflow(Workflow):
         )
 
 
-def filter_events(
-    workflow_events: List[Any], expected_events: List[str]
-) -> List[Dict[str, Any]]:
-    """
-    Filter and process workflow events based on expected event types.
-    Returns a list containing both event schemas and sample events.
-    """
-    console = Console()
-
-    # Collect events by type
-    events_by_type: Dict[str, List[Any]] = {}
-    for event in workflow_events:
-        if type(event).__name__ in expected_events:
-            event_type = type(event).__name__
-            if event_type not in events_by_type:
-                events_by_type[event_type] = []
-            events_by_type[event_type].append(event)
-        elif hasattr(event, "data"):
-            if event.data.__class__.__name__ in expected_events:
-                event_type = event.data.__class__.__name__
-                if event_type not in events_by_type:
-                    events_by_type[event_type] = []
-                events_by_type[event_type].append(event.data)
-
-    if not events_by_type:
-        console.print(
-            Panel(
-                f"[red]No events of types {expected_events} found in the workflow events[/red]",
-                title="❌ Error",
-                border_style="red",
-            )
-        )
-        raise ValueError(
-            f"No events of types {expected_events} found in the workflow events"
-        )
-
-    result_events = []
-
-    # Add both schema and sample events to the list
-    for event_type, events in events_by_type.items():
-        # Add schema as an event
-        result_events.append(json.loads(events[0].schema_json()))
-
-        # Add some sample for the event
-        num_samples = min(5, len(events))
-        samples = random.sample(events, num_samples)
-        for sample in samples:
-            result_events.append(sample.model_dump())
-
-    return result_events
-
-
 def pre_run_checks():
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise ValueError(
@@ -439,16 +385,9 @@ async def generate_ui_for_workflow(input_file: str, output_file: str):
 
     # Get event schemas from the input file
     console.rule("[bold blue]Step 1: Analyzing Events[/bold blue]")
-    events_used, event_schemas = get_ui_events_and_schemas(input_file)
+    event_schemas = get_ui_events_and_schemas(input_file)
 
-    # Filter schemas to only include events used in write_event_to_stream
-    filtered_schemas = [
-        {"event": event, "schema": schema}
-        for event, schema in event_schemas.items()
-        if event in events_used
-    ]
-
-    if not filtered_schemas:
+    if len(event_schemas) == 0:
         console.print(
             Panel(
                 "[red]No events found that are used with write_event_to_stream[/red]",
@@ -462,7 +401,7 @@ async def generate_ui_for_workflow(input_file: str, output_file: str):
     console.rule("[bold blue]Step 2: Generate UI Components[/bold blue]")
     llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=4096)
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
-    await workflow.run(events=filtered_schemas, output_file=output_file)
+    await workflow.run(events=event_schemas, output_file=output_file)
 
     console.print(
         Panel(
