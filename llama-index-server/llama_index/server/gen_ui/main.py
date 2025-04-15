@@ -261,7 +261,7 @@ class GenUIWorkflow(Workflow):
                 You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
             ## UI notice
-            - Use shadcn/ui and lucide-react and tailwind CSS (but arbitrary values are not supported) for the UI.
+            - Use shadcn/ui and lucide-react and tailwind CSS for the UI.
             - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
             - For a long content, consider to use markdown along with dropdown to show the full content.
                 e.g:
@@ -282,6 +282,7 @@ class GenUIWorkflow(Workflow):
             events=ev.events,
             aggregation_function_context=aggregation_function_context,
             code_structure=self.code_structure,
+            ui_description=ev.ui_description,
         )
         response = await self.llm.acomplete(prompt, formatted=True)
 
