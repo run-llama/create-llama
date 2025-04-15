@@ -1,4 +1,4 @@
-function Component({ events }) {
+export default function DeepResearchComponent({ events }) {
   // Aggregate events by type and track their state progression
   const aggregateEvents = () => {
     const retrieveEvents = events.filter((e) => e.event === "retrieve");
