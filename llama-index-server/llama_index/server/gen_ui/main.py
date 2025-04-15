@@ -84,6 +84,7 @@ class GenUIWorkflow(Workflow):
             // shadcn import pattern: import { ComponentName } from "@/components/ui/<component_path>";
             // e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
             //      import { Button } from "@/components/ui/button";
+            //      import cn from "@/lib/utils"; // clsx is not supported
 
             // export the component
             export default function Component({ events }) {
