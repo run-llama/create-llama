@@ -1,4 +1,3 @@
-import os
 import re
 from typing import Any, Dict, List, Optional, Type
 
@@ -81,8 +80,10 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // Note: Only shadcn/ui (@/components/ui/<component_name>) and lucide-react and tailwind css are allowed (but cn() is not supported yet).
-            e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+            // Note: Only shadcn/ui and lucide-react and tailwind css are allowed (but cn() is not supported yet).
+            // shadcn import pattern: import { ComponentName } from "@/components/ui/<component_path>";
+            // e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+            //      import { Button } from "@/components/ui/button";
 
             // export the component
             export default function Component({ events }) {
@@ -315,7 +316,12 @@ class GenUIWorkflow(Workflow):
             {code_structure}
 
             # Requirements:
-            - Refine the code if needed to ensure there are no potential bugs. Be careful on code placement, make sure it doesn't call any undefined code.
+            - Refine the code if needed to ensure there are no potential bugs. 
+            - Be careful on code placement, make sure it doesn't call any undefined code.
+            - Make sure the import statements are correct. 
+              e.g: import { Button, Card, Accordion } from "@/components/ui" is correct because Button, Card are defined in different shadcn/ui components.
+              -> correction: import { Button } from "@/components/ui/button";
+                             import { Card } from "@/components/ui/card";
             - Don't be verbose, only return the code, wrap it in ```jsx <code>```
         """
         prompt = PromptTemplate(prompt_template).format(
@@ -344,22 +350,10 @@ class GenUIWorkflow(Workflow):
         )
 
 
-def pre_run_checks() -> None:
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise ValueError(
-            "Anthropic API key is not set. Please set the ANTHROPIC_API_KEY environment variable."
-        )
-    try:
-        from llama_index.llms.anthropic import Anthropic  # noqa: F401
-    except ImportError:
-        raise ValueError(
-            "Anthropic package is not installed. Please install it with `poetry add llama-index-llms-anthropic` or `pip install llama-index-llms-anthropic`."
-        )
-
-
 async def generate_ui_for_workflow(
     workflow_file: Optional[str] = None,
     event_cls: Optional[Type[BaseModel]] = None,
+    llm: Optional[LLM] = None,
 ) -> str:
     """
     Generate UI component for events from workflow.
@@ -368,6 +362,11 @@ async def generate_ui_for_workflow(
     Args:
         workflow_file: The path to the workflow file to generate UI from. e.g: `app/workflow.py`.
         event_cls: A Pydantic class to generate UI for. e.g: `DeepResearchEvent`.
+        llm: The LLM to use for the generation. Default is Anthropic's Claude 3.7 Sonnet.
+             We recommend using these LLMs:
+                - Anthropic's Claude 3.7 Sonnet
+                - OpenAI's GPT-4.1
+                - Google Gemini 2.5 Pro
     Returns:
         The generated UI component code.
     """
@@ -379,8 +378,10 @@ async def generate_ui_for_workflow(
         raise ValueError(
             "Only one of workflow_file or event_cls can be provided. Please provide only one of them."
         )
+    if llm is None:
+        from llama_index.llms.anthropic import Anthropic
 
-    from llama_index.llms.anthropic import Anthropic
+        llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=8192)
 
     console = Console()
 
@@ -407,7 +408,7 @@ async def generate_ui_for_workflow(
 
     # Generate UI component from event schemas
     console.rule("[bold blue]Generate UI Components[/bold blue]")
-    llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=8192)
+
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
     code = await workflow.run(events=event_schemas)
 
