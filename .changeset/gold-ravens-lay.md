@@ -2,4 +2,4 @@
 "create-llama": patch
 ---
 
-Support UI generation for deep research use case (Python)
+Support code generation of event components using an LLM (Python)
