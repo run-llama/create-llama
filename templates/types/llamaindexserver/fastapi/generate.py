@@ -3,6 +3,7 @@ import os
 import sys
 
 from dotenv import load_dotenv
+from llama_index.llms.openai import OpenAI
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -62,6 +63,7 @@ def generate_ui_for_workflow():
         print("Error: Both --input_file and --output_file arguments are required")
         sys.exit(1)
 
-    code = asyncio.run(generate_ui_for_workflow(input_file))
+    llm = OpenAI(model="gpt-4.1")
+    code = asyncio.run(generate_ui_for_workflow(input_file, llm=llm))
     with open(output_file, "w") as f:
         f.write(code)

@@ -59,8 +59,6 @@ You can also generate a new UI component for the workflow by running the followi
 poetry run generate:ui --input_file ./app/workflow.py --output_file ./components/deep_research_event.jsx
 ```
 
-> **_Note:_** This command requires the `ANTHROPIC_API_KEY` to be set in your environment.
-
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
