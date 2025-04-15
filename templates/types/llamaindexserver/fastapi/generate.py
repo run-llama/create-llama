@@ -47,13 +47,14 @@ def generate_ui_for_workflow():
     # To generate UI components for additional event types,
     # import the corresponding data model (e.g., MyCustomEventData)
     # and run the generate_ui_for_workflow function with the imported model.
-    # You may also want to adjust the output filename for the generated UI component that matches the event type.
+    # Make sure the output filename of the generated UI component matches the event type (here `ui_event`)
     try:
         from app.workflow import UIEventData
     except ImportError:
         raise ImportError("Couldn't generate UI component for the current workflow.")
     from llama_index.server.gen_ui.main import generate_ui_for_workflow
 
+    # works also well with Claude 3.7 Sonnet or Gemini Pro 2.5
     llm = OpenAI(model="gpt-4.1")
     code = asyncio.run(generate_ui_for_workflow(event_cls=UIEventData, llm=llm))
     with open("components/ui_event.jsx", "w") as f:
