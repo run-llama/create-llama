@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.5
+
+### Patch Changes
+
+- ee85320: The default custom deep research component does not work.
+
 ## 0.5.4
 
 ### Patch Changes
