@@ -49,6 +49,16 @@ curl --location 'localhost:8000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
 ```
 
+## Customize the UI
+
+To customize the UI, you can start by modifying the [./components/ui_event.jsx](./components/ui_event.jsx) file.
+
+You can also generate a new code for the workflow using LLM by running the following command:
+
+```
+poetry run generate:ui
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:

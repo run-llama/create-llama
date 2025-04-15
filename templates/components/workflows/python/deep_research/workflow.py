@@ -23,8 +23,7 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import SourceNodesEvent
-from llama_index.server.api.models import ChatRequest
+from llama_index.server.api.models import ChatRequest, SourceNodesEvent, UIEvent
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -66,20 +65,29 @@ class ReportEvent(Event):
 
 
 # Events that are streamed to the frontend and rendered there
-class DeepResearchEventData(BaseModel):
-    event: Literal["retrieve", "analyze", "answer"]
-    state: Literal["pending", "inprogress", "done", "error"]
-    id: Optional[str] = None
-    question: Optional[str] = None
-    answer: Optional[str] = None
+class UIEventData(BaseModel):
+    """
+    Events for DeepResearch workflow which has 3 main stages:
+    - Retrieve: Retrieve information from the knowledge base.
+    - Analyze: Analyze the retrieved information and provide list of questions for answering.
+    - Answer: Answering the provided questions. There are multiple answer events, each with its own id that is used to display the answer for a particular question.
+    """
 
-
-class DataEvent(Event):
-    type: Literal["deep_research_event"]
-    data: DeepResearchEventData
-
-    def to_response(self):
-        return self.model_dump()
+    id: Optional[str] = Field(default=None, description="The id of the event")
+    event: Literal["retrieve", "analyze", "answer"] = Field(
+        default="retrieve", description="The event type"
+    )
+    state: Literal["pending", "inprogress", "done", "error"] = Field(
+        default="pending", description="The state of the event"
+    )
+    question: Optional[str] = Field(
+        default=None,
+        description="Used by answer event to display the question",
+    )
+    answer: Optional[str] = Field(
+        default=None,
+        description="Used by answer event to display the answer of the question",
+    )
 
 
 class DeepResearchWorkflow(Workflow):
@@ -137,12 +145,12 @@ class DeepResearchWorkflow(Workflow):
             ]
         )
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "retrieve",
-                    "state": "inprogress",
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="retrieve",
+                    state="inprogress",
+                ),
             )
         )
         retriever = self.index.as_retriever(
@@ -151,12 +159,12 @@ class DeepResearchWorkflow(Workflow):
         nodes = retriever.retrieve(self.user_request)
         self.context_nodes.extend(nodes)  # type: ignore
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "retrieve",
-                    "state": "done",
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="retrieve",
+                    state="done",
+                ),
             )
         )
         # Send source nodes to the stream
@@ -177,12 +185,12 @@ class DeepResearchWorkflow(Workflow):
         """
         logger.info("Analyzing the retrieved information")
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "analyze",
-                    "state": "inprogress",
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="analyze",
+                    state="inprogress",
+                ),
             )
         )
         total_questions = await ctx.get("total_questions")
@@ -194,12 +202,12 @@ class DeepResearchWorkflow(Workflow):
         )
         if res.decision == "cancel":
             ctx.write_event_to_stream(
-                DataEvent(
-                    type="deep_research_event",
-                    data={
-                        "event": "analyze",
-                        "state": "done",
-                    },
+                UIEvent(
+                    type="ui_event",
+                    data=UIEventData(
+                        event="analyze",
+                        state="done",
+                    ),
                 )
             )
             return StopEvent(
@@ -210,12 +218,12 @@ class DeepResearchWorkflow(Workflow):
             # It's a LLM hallucination.
             if total_questions == 0:
                 ctx.write_event_to_stream(
-                    DataEvent(
-                        type="deep_research_event",
-                        data={
-                            "event": "analyze",
-                            "state": "done",
-                        },
+                    UIEvent(
+                        type="ui_event",
+                        data=UIEventData(
+                            event="analyze",
+                            state="done",
+                        ),
                     )
                 )
                 return StopEvent(
@@ -245,15 +253,15 @@ class DeepResearchWorkflow(Workflow):
             for question in res.research_questions:
                 question_id = str(uuid.uuid4())
                 ctx.write_event_to_stream(
-                    DataEvent(
-                        type="deep_research_event",
-                        data={
-                            "event": "answer",
-                            "state": "pending",
-                            "id": question_id,
-                            "question": question,
-                            "answer": None,
-                        },
+                    UIEvent(
+                        type="ui_event",
+                        data=UIEventData(
+                            event="answer",
+                            state="pending",
+                            id=question_id,
+                            question=question,
+                            answer=None,
+                        ),
                     )
                 )
                 ctx.send_event(
@@ -264,12 +272,12 @@ class DeepResearchWorkflow(Workflow):
                     )
                 )
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "analyze",
-                    "state": "done",
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="analyze",
+                    state="done",
+                ),
             )
         )
         return None
@@ -280,14 +288,14 @@ class DeepResearchWorkflow(Workflow):
         Answer the question
         """
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "answer",
-                    "state": "inprogress",
-                    "id": ev.question_id,
-                    "question": ev.question,
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="answer",
+                    state="inprogress",
+                    id=ev.question_id,
+                    question=ev.question,
+                ),
             )
         )
         try:
@@ -299,15 +307,15 @@ class DeepResearchWorkflow(Workflow):
             logger.error(f"Error answering question {ev.question}: {e}")
             answer = f"Got error when answering the question: {ev.question}"
         ctx.write_event_to_stream(
-            DataEvent(
-                type="deep_research_event",
-                data={
-                    "event": "answer",
-                    "state": "done",
-                    "id": ev.question_id,
-                    "question": ev.question,
-                    "answer": answer,
-                },
+            UIEvent(
+                type="ui_event",
+                data=UIEventData(
+                    event="answer",
+                    state="done",
+                    id=ev.question_id,
+                    question=ev.question,
+                    answer=answer,
+                ),
             )
         )
 

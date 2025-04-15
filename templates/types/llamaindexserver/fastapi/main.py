@@ -9,6 +9,9 @@ from llama_index.server import LlamaIndexServer, UIConfig
 
 logger = logging.getLogger("uvicorn")
 
+# A path to a directory where the customized UI code is stored
+COMPONENT_DIR = "components"
+
 
 def create_app():
     env = os.environ.get("APP_ENV")
@@ -16,7 +19,7 @@ def create_app():
     app = LlamaIndexServer(
         workflow_factory=create_workflow,  # A factory function that creates a new workflow for each request
         ui_config=UIConfig(
-            component_dir="components",
+            component_dir=COMPONENT_DIR,
             app_title="Chat App",
         ),
         env=env,
