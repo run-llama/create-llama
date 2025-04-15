@@ -2,8 +2,12 @@ name: E2E Tests
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "llama-index-server/**"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "llama-index-server/**"
 
 env:
   POETRY_VERSION: "1.6.1"

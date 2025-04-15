@@ -5,7 +5,7 @@ from typing import Optional
 
 import requests
 
-CHAT_UI_VERSION = "0.1.0"
+CHAT_UI_VERSION = "0.1.1"
 
 
 def download_chat_ui(

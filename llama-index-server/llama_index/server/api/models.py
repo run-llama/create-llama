@@ -140,3 +140,14 @@ class ComponentDefinition(BaseModel):
     type: str
     code: str
     filename: str
+
+
+class UIEvent(Event):
+    type: str
+    data: BaseModel
+
+    def to_response(self) -> dict:
+        return {
+            "type": self.type,
+            "data": self.data.model_dump(),
+        }
