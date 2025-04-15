@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.4
+
+### Patch Changes
+
+- 7c3b279: Support code generation of event components using an LLM (Python)
+
 ## 0.5.3
 
 ### Patch Changes
