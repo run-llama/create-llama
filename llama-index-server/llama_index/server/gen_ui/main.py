@@ -81,7 +81,7 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // Note: Only shadcn/ui (@/components/ui/<component_name>) and lucide-react and tailwind css are allowed.
+            // Note: Only shadcn/ui (@/components/ui/<component_name>) and lucide-react and tailwind css are allowed (but cn() is not supported yet).
             e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
             // export the component
@@ -194,8 +194,7 @@ class GenUIWorkflow(Workflow):
             # Your role
             You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
             Here are the events that you need to work on: {events}
-
-            Here is the description of the UI: 
+            Here is the description of the UI:
             ```
                 {ui_description}
             ```
@@ -216,7 +215,10 @@ class GenUIWorkflow(Workflow):
             """
 
         response = await self.llm.acomplete(
-            PromptTemplate(prompt_template).format(events=ev.events),
+            PromptTemplate(prompt_template).format(
+                events=ev.events,
+                ui_description=ev.ui_description,
+            ),
             formatted=True,
         )
         await ctx.set("aggregation_context", response.text)
@@ -261,7 +263,7 @@ class GenUIWorkflow(Workflow):
                 You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
             ## UI notice
-            - Use shadcn/ui and lucide-react and tailwind CSS for the UI.
+            - Use shadcn/ui and lucide-react and tailwind CSS for the UI (cn() is not supported yet).
             - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
             - For a long content, consider to use markdown along with dropdown to show the full content.
                 e.g:
@@ -313,7 +315,7 @@ class GenUIWorkflow(Workflow):
             {code_structure}
 
             # Requirements:
-            - Refine the code to ensure there are no potential bugs.
+            - Refine the code if needed to ensure there are no potential bugs. Be careful on code placement, make sure it doesn't call any undefined code.
             - Don't be verbose, only return the code, wrap it in ```jsx <code>```
         """
         prompt = PromptTemplate(prompt_template).format(
@@ -405,7 +407,7 @@ async def generate_ui_for_workflow(
 
     # Generate UI component from event schemas
     console.rule("[bold blue]Generate UI Components[/bold blue]")
-    llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=4096)
+    llm = Anthropic(model="claude-3-7-sonnet-latest", max_tokens=8192)
     workflow = GenUIWorkflow(llm=llm, timeout=500.0)
     code = await workflow.run(events=event_schemas)
 
