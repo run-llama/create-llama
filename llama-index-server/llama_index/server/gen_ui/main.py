@@ -80,10 +80,11 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // Note: Only shadcn/ui and lucide-react and tailwind css are allowed (but cn() is not supported yet).
+            // Note: Only shadcn/ui and lucide-react and tailwind css are allowed.
             // shadcn import pattern: import { ComponentName } from "@/components/ui/<component_path>";
             // e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
             //      import { Button } from "@/components/ui/button";
+            //      import cn from "@/lib/utils"; // clsx is not supported
 
             // export the component
             export default function Component({ events }) {
@@ -264,7 +265,7 @@ class GenUIWorkflow(Workflow):
                 You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
             ## UI notice
-            - Use shadcn/ui and lucide-react and tailwind CSS for the UI (cn() is not supported yet).
+            - Use shadcn/ui and lucide-react and tailwind CSS for the UI.
             - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
             - For a long content, consider to use markdown along with dropdown to show the full content.
                 e.g:
@@ -350,7 +351,7 @@ class GenUIWorkflow(Workflow):
         )
 
 
-async def generate_ui_for_workflow(
+async def generate_event_component(
     workflow_file: Optional[str] = None,
     event_cls: Optional[Type[BaseModel]] = None,
     llm: Optional[LLM] = None,
@@ -360,7 +361,7 @@ async def generate_ui_for_workflow(
     Either workflow_file or event_cls must be provided.
 
     Args:
-        workflow_file: The path to the workflow file to generate UI from. e.g: `app/workflow.py`.
+        workflow_file: The path to the workflow file that contains the event to generate UI for. e.g: `app/workflow.py`.
         event_cls: A Pydantic class to generate UI for. e.g: `DeepResearchEvent`.
         llm: The LLM to use for the generation. Default is Anthropic's Claude 3.7 Sonnet.
              We recommend using these LLMs:

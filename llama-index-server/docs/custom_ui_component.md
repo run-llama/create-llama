@@ -76,21 +76,21 @@ server = LlamaIndexServer(
 
 ### Generate UI Component
 
-We provide a `generate_ui_component` function that uses LLMs to automatically generate UI components for your workflow events.
-
-> **_Note:_** This feature requires the `ANTHROPIC_API_KEY` to be set in your environment.
+We provide a `generate_event_component` function that uses LLMs to automatically generate UI components for your workflow events.
 
 ```python
-from llama_index.server.gen_ui.main import generate_ui_component
+from llama_index.server.gen_ui import generate_event_component
+from llama_index.llms.openai import OpenAI
 
 # Generate a component using the event class you defined in your workflow
 from your_workflow import DeepResearchEvent
-ui_code = await generate_ui_component(
+ui_code = await generate_event_component(
     event_cls=DeepResearchEvent,
+    llm=OpenAI(model="gpt-4.1"), # Default LLM is Claude 3.7 Sonnet if not provided
 )
 
 # Alternatively, generate from your workflow file
-ui_code = await generate_ui_component(
+ui_code = await generate_event_component(
     workflow_file="your_workflow.py",
 )
 print(ui_code)
@@ -100,4 +100,4 @@ with open("deep_research_event.jsx", "w") as f:
     f.write(ui_code)
 ```
 
-> **Tip:** For optimal results, add descriptive documentation to each field in your event data class. This helps the LLM better understand your data structure and generate more appropriate UI components.
+> **Tip:** For optimal results, add descriptive documentation to each field in your event data class. This helps the LLM better understand your data structure and generate more appropriate UI components. We also recommend using GPT 4.1, Claude 3.7 Sonnet and Gemini 2.5 Pro for better results.
