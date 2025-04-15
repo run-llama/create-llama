@@ -51,12 +51,12 @@ curl --location 'localhost:8000/api/chat' \
 
 ## Customize the UI
 
-To customize the UI, you can start by modifying the [./components/deep_research_event.jsx](./components/deep_research_event.jsx) file.
+To customize the UI, you can start by modifying the [./components/ui_event.jsx](./components/ui_event.jsx) file.
 
-You can also generate a new UI component for the workflow by running the following command:
+You can also generate a new code for the workflow using LLM by running the following command:
 
 ```
-poetry run generate:ui --input_file ./app/workflow.py --output_file ./components/deep_research_event.jsx
+poetry run generate:ui
 ```
 
 ## Learn More

@@ -65,12 +65,12 @@ class ReportEvent(Event):
 
 
 # Events that are streamed to the frontend and rendered there
-class DeepResearchEventData(BaseModel):
+class UIEventData(BaseModel):
     """
     Events for DeepResearch workflow which has 3 main stages:
     - Retrieve: Retrieve information from the knowledge base.
     - Analyze: Analyze the retrieved information and provide list of questions for answering.
-    - Answer: Answering the provided questions. Each event has its own id with two sub-events: inprogress and done with the answer.
+    - Answer: Answering the provided questions. There are multiple answer events, each with its own id that is used to display the answer for a particular question.
     """
 
     id: Optional[str] = Field(default=None, description="The id of the event")
@@ -146,8 +146,8 @@ class DeepResearchWorkflow(Workflow):
         )
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="retrieve",
                     state="inprogress",
                 ),
@@ -160,8 +160,8 @@ class DeepResearchWorkflow(Workflow):
         self.context_nodes.extend(nodes)  # type: ignore
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="retrieve",
                     state="done",
                 ),
@@ -186,8 +186,8 @@ class DeepResearchWorkflow(Workflow):
         logger.info("Analyzing the retrieved information")
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="analyze",
                     state="inprogress",
                 ),
@@ -203,8 +203,8 @@ class DeepResearchWorkflow(Workflow):
         if res.decision == "cancel":
             ctx.write_event_to_stream(
                 UIEvent(
-                    type="deep_research_event",
-                    data=DeepResearchEventData(
+                    type="ui_event",
+                    data=UIEventData(
                         event="analyze",
                         state="done",
                     ),
@@ -219,8 +219,8 @@ class DeepResearchWorkflow(Workflow):
             if total_questions == 0:
                 ctx.write_event_to_stream(
                     UIEvent(
-                        type="deep_research_event",
-                        data=DeepResearchEventData(
+                        type="ui_event",
+                        data=UIEventData(
                             event="analyze",
                             state="done",
                         ),
@@ -254,8 +254,8 @@ class DeepResearchWorkflow(Workflow):
                 question_id = str(uuid.uuid4())
                 ctx.write_event_to_stream(
                     UIEvent(
-                        type="deep_research_event",
-                        data=DeepResearchEventData(
+                        type="ui_event",
+                        data=UIEventData(
                             event="answer",
                             state="pending",
                             id=question_id,
@@ -273,8 +273,8 @@ class DeepResearchWorkflow(Workflow):
                 )
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="analyze",
                     state="done",
                 ),
@@ -289,8 +289,8 @@ class DeepResearchWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="answer",
                     state="inprogress",
                     id=ev.question_id,
@@ -308,8 +308,8 @@ class DeepResearchWorkflow(Workflow):
             answer = f"Got error when answering the question: {ev.question}"
         ctx.write_event_to_stream(
             UIEvent(
-                type="deep_research_event",
-                data=DeepResearchEventData(
+                type="ui_event",
+                data=UIEventData(
                     event="answer",
                     state="done",
                     id=ev.question_id,

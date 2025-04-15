@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 
 from dotenv import load_dotenv
 from llama_index.llms.openai import OpenAI
@@ -41,29 +40,21 @@ def generate_index():
 
 def generate_ui_for_workflow():
     """
-    Generate UI component for events from workflow.
-    Takes --input_file and --output_file as command line arguments.
+    Generate UI for UIEventData event in app/workflow.py
     """
     import asyncio
 
+    # To generate UI components for additional event types,
+    # import the corresponding data model (e.g., MyCustomEventData)
+    # and run the generate_ui_for_workflow function with the imported model.
+    # You may also want to adjust the output filename for the generated UI component that matches the event type.
+    try:
+        from app.workflow import UIEventData
+    except ImportError:
+        raise ImportError("Couldn't generate UI component for the current workflow.")
     from llama_index.server.gen_ui.main import generate_ui_for_workflow
 
-    # Parse command line arguments
-    args = sys.argv[1:]
-    input_file = None
-    output_file = None
-
-    for i in range(0, len(args), 2):
-        if args[i] == "--input_file":
-            input_file = args[i + 1]
-        elif args[i] == "--output_file":
-            output_file = args[i + 1]
-
-    if not input_file or not output_file:
-        print("Error: Both --input_file and --output_file arguments are required")
-        sys.exit(1)
-
     llm = OpenAI(model="gpt-4.1")
-    code = asyncio.run(generate_ui_for_workflow(input_file, llm=llm))
-    with open(output_file, "w") as f:
+    code = asyncio.run(generate_ui_for_workflow(event_cls=UIEventData, llm=llm))
+    with open("components/ui_event.jsx", "w") as f:
         f.write(code)

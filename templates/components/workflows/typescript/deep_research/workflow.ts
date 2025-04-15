@@ -128,7 +128,7 @@ type DeepResearchEventData = {
 };
 
 class DeepResearchEvent extends WorkflowEvent<{
-  type: "deep_research_event";
+  type: "ui_event";
   data: DeepResearchEventData;
 }> {}
 
@@ -201,7 +201,7 @@ class DeepResearchWorkflow extends Workflow<
 
     ctx.sendEvent(
       new DeepResearchEvent({
-        type: "deep_research_event",
+        type: "ui_event",
         data: { event: "retrieve", state: "inprogress" },
       }),
     );
@@ -212,7 +212,7 @@ class DeepResearchWorkflow extends Workflow<
 
     ctx.sendEvent(
       new DeepResearchEvent({
-        type: "deep_research_event",
+        type: "ui_event",
         data: { event: "retrieve", state: "done" },
       }),
     );
@@ -228,7 +228,7 @@ class DeepResearchWorkflow extends Workflow<
   ): Promise<ResearchEvent | ReportEvent | StopEvent> => {
     ctx.sendEvent(
       new DeepResearchEvent({
-        type: "deep_research_event",
+        type: "ui_event",
         data: { event: "analyze", state: "inprogress" },
       }),
     );
@@ -240,7 +240,7 @@ class DeepResearchWorkflow extends Workflow<
     if (decision === "cancel") {
       ctx.sendEvent(
         new DeepResearchEvent({
-          type: "deep_research_event",
+          type: "ui_event",
           data: { event: "analyze", state: "done" },
         }),
       );
@@ -263,7 +263,7 @@ class DeepResearchWorkflow extends Workflow<
       researchQuestions.forEach(({ questionId: id, question }) => {
         ctx.sendEvent(
           new DeepResearchEvent({
-            type: "deep_research_event",
+            type: "ui_event",
             data: { event: "answer", state: "pending", id, question },
           }),
         );
@@ -280,7 +280,7 @@ class DeepResearchWorkflow extends Workflow<
 
     ctx.sendEvent(
       new DeepResearchEvent({
-        type: "deep_research_event",
+        type: "ui_event",
         data: { event: "analyze", state: "done" },
       }),
     );
@@ -299,7 +299,7 @@ class DeepResearchWorkflow extends Workflow<
       researchQuestions.map(async ({ questionId: id, question }) => {
         ctx.sendEvent(
           new DeepResearchEvent({
-            type: "deep_research_event",
+            type: "ui_event",
             data: { event: "answer", state: "inprogress", id, question },
           }),
         );
@@ -308,7 +308,7 @@ class DeepResearchWorkflow extends Workflow<
 
         ctx.sendEvent(
           new DeepResearchEvent({
-            type: "deep_research_event",
+            type: "ui_event",
             data: { event: "answer", state: "done", id, question, answer },
           }),
         );
