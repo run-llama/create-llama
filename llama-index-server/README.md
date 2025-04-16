@@ -110,7 +110,7 @@ When enabled, the server provides a chat interface at the root path (`/`) with:
 ### Custom UI Components
 
 You can add custom UI components for your workflow by providing `component_dir` config and adding custom .jsx or .tsx files to the directory.
-See [Custom UI Components](docs/custom_ui_component.md) for more details.
+See [Custom UI Components](https://github.com/run-llama/create-llama/blob/main/llama-index-server/docs/custom_ui_component.md) for more details.
 
 ## Development Mode
 

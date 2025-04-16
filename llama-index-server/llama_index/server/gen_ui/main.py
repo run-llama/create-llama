@@ -1,6 +1,11 @@
 import re
 from typing import Any, Dict, List, Optional, Type
 
+from pydantic import BaseModel
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.workflow import (
@@ -12,10 +17,6 @@ from llama_index.core.workflow import (
     step,
 )
 from llama_index.server.gen_ui.parse_workflow_code import get_workflow_event_schemas
-from pydantic import BaseModel
-from rich.console import Console
-from rich.live import Live
-from rich.panel import Panel
 
 
 class PlanningEvent(Event):
@@ -80,11 +81,7 @@ class GenUIWorkflow(Workflow):
 
     code_structure: str = """
         ```jsx
-            // Note: Only shadcn/ui and lucide-react and tailwind css are allowed.
-            // shadcn import pattern: import { ComponentName } from "@/components/ui/<component_path>";
-            // e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-            //      import { Button } from "@/components/ui/button";
-            //      import cn from "@/lib/utils"; // clsx is not supported
+            // Note: Only React, shadcn/ui, lucide-react, LlamaIndex's markdown-ui and tailwind css (cn) are allowed.
 
             // export the component
             export default function Component({ events }) {
@@ -101,6 +98,21 @@ class GenUIWorkflow(Workflow):
                 )
             }
         ```
+    """
+
+    supported_deps = """
+        - React: import { useState } from "react";
+        - shadcn/ui: import { ComponentName } from "@/components/ui/<component_path>";
+            Supported shadcn components:  
+                accordion, alert, alert-dialog, aspect-ratio, avatar, badge, 
+                breadcrumb, button, calendar, card, carousel, chart, checkbox, collapsible, command, 
+                context-menu, dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label, 
+                menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, 
+                scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table, 
+                tabs, textarea, toggle, toggle-group, tooltip  
+        - lucide-react: import { IconName } from "lucide-react";
+        - tailwind css: import { cn } from "@/lib/utils"; // Note: clsx is not supported
+        - LlamaIndex's markdown-ui: import { Markdown } from "@llamaindex/chat-ui/widgets";
     """
 
     def __init__(self, llm: LLM, **kwargs: Any):
@@ -239,7 +251,7 @@ class GenUIWorkflow(Workflow):
     ) -> RefineGeneratedCodeEvent:
         prompt_template = """
             # Your role
-            You are a frontend developer who is developing a React component using shadcn/ui (@/components/ui/<component_name>) and lucide-react for the UI.
+            You are a frontend developer who is developing a React component using shadcn/ui, lucide-react, LlamaIndex's chat-ui, and tailwind css (cn) for the UI.
             You are given a list of events and other context.
             Your task is to write a beautiful UI for the events that will be included in a chat UI.
 
@@ -251,8 +263,11 @@ class GenUIWorkflow(Workflow):
                 {ui_description}
             ```
 
+            # Supported dependencies:
+            {supported_deps}
+
             # Requirements:
-            - Write beautiful UI components for the events using shadcn/ui and lucide-react.
+            - Write beautiful UI components for the events using the supported dependencies
             - The component text/label should be specified for each event type.
 
             # Instructions:
@@ -265,7 +280,7 @@ class GenUIWorkflow(Workflow):
                 You should display the jump, run and meow actions in different ways. don't try to render "height" for the "run" and "meow" action.
 
             ## UI notice
-            - Use shadcn/ui and lucide-react and tailwind CSS for the UI.
+            - Use the supported dependencies for the UI.
             - Be careful on state handling, make sure the update should be updated in the state and there is no duplicate state.
             - For a long content, consider to use markdown along with dropdown to show the full content.
                 e.g:
@@ -287,6 +302,7 @@ class GenUIWorkflow(Workflow):
             aggregation_function_context=aggregation_function_context,
             code_structure=self.code_structure,
             ui_description=ev.ui_description,
+            supported_deps=self.supported_deps,
         )
         response = await self.llm.acomplete(prompt, formatted=True)
 
@@ -317,6 +333,7 @@ class GenUIWorkflow(Workflow):
             {code_structure}
 
             # Requirements:
+            - Only use supported dependencies: {supported_deps}
             - Refine the code if needed to ensure there are no potential bugs. 
             - Be careful on code placement, make sure it doesn't call any undefined code.
             - Make sure the import statements are correct. 
@@ -329,6 +346,7 @@ class GenUIWorkflow(Workflow):
             generated_code=ev.generated_code,
             code_structure=self.code_structure,
             aggregation_function_context=ev.aggregation_function_context,
+            supported_deps=self.supported_deps,
         )
 
         response = await self.llm.acomplete(prompt, formatted=True)
