@@ -2,6 +2,7 @@ import "dotenv/config";
 import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
 import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
 import { initSettings } from "./app/settings";
+import fs from "fs";
 
 async function generateDatasource() {
   console.log(`Generating storage context...`);
@@ -19,7 +20,30 @@ async function generateDatasource() {
   console.log("Storage context successfully generated.");
 }
 
+async function generateUi() {
+  // Dynamically import UI-related modules
+  const { generateEventComponent } = await import("./gen-ui");
+  const { UIEventSchema } = await import("./app/workflow");
+
+  const generatedCode = await generateEventComponent(UIEventSchema);
+  // Write the generated code to components/ui_event.ts
+  fs.writeFileSync("components/ui_event.jsx", generatedCode);
+}
+
 (async () => {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
   initSettings();
-  await generateDatasource();
+
+  if (command === "datasource") {
+    await generateDatasource();
+  } else if (command === "ui") {
+    await generateUi();
+  } else {
+    console.error(
+      'Invalid command. Please use "datasource" or "ui". Running "datasource" by default.',
+    );
+    await generateDatasource(); // Default behavior or could throw an error
+  }
 })();
