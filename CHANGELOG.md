@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.6
+
+### Patch Changes
+
+- d363ced: Bump llamaindex server packages
+
 ## 0.5.5
 
 ### Patch Changes
