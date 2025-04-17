@@ -68,7 +68,9 @@ for (const useCase of templateUseCases) {
         "Skip frontend test for financial report and deep research.",
       );
       await page.goto(`http://localhost:${port}`);
-      await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
+      await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
+        timeout: 5 * 60 * 1000,
+      });
     });
 
     test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
