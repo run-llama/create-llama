@@ -4,6 +4,16 @@ import { until } from "@llama-flow/core/stream/until";
 import { collect } from "@llama-flow/core/stream/consumer";
 import { LLM } from "llamaindex";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { parse } from "@babel/parser";
+import traverse from "@babel/traverse";
+import type { NodePath } from "@babel/traverse";
+import type {
+  ImportDeclaration,
+  ExportDefaultDeclaration,
+  ImportSpecifier,
+  ImportDefaultSpecifier,
+  ImportNamespaceSpecifier,
+} from "@babel/types";
 
 const planUiEvent = workflowEvent<{
   eventSchema: object;
@@ -28,13 +38,22 @@ const refineGeneratedCodeEvent = workflowEvent<{
 
 export const stopEvent = workflowEvent<string | null>();
 
-const CODE_STRUCTURE = `
-// Note: Only shadcn/ui and lucide-react and tailwind css are allowed.
-// shadcn import pattern: import { ComponentName } from "@/components/ui/<component_path>";
-// e.g: import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-// import { Button } from "@/components/ui/button";
-// import cn from "@/lib/utils"; // clsx is not supported
+const SUPPORTED_DEPS = `
+        - React: import { useState } from "react";
+        - shadcn/ui: import { ComponentName } from "@/components/ui/<component_path>";
+            Supported shadcn components:
+                accordion, alert, alert-dialog, aspect-ratio, avatar, badge,
+                breadcrumb, button, calendar, card, carousel, chart, checkbox, collapsible, command,
+                context-menu, dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label,
+                menubar, navigation-menu, pagination, popover, progress, radio-group, resizable,
+                scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table,
+                tabs, textarea, toggle, toggle-group, tooltip
+        - lucide-react: import { IconName } from "lucide-react";
+        - tailwind css: import { cn } from "@/lib/utils"; // Note: clsx is not supported
+        - LlamaIndex's markdown-ui: import { Markdown } from "@llamaindex/chat-ui/widgets";
+`;
 
+const CODE_STRUCTURE = `
 // export the component
 // The component accepts an 'events' array prop. Each item in the array conforms to the schema provided during generation.
 export default function Component({ events }) {
@@ -63,20 +82,142 @@ export default function Component({ events }) {
   );
 }
 `;
-const SUPPORTED_DEPS = `
-        - React: import { useState } from "react";
-        - shadcn/ui: import { ComponentName } from "@/components/ui/<component_path>";
-            Supported shadcn components:  
-                accordion, alert, alert-dialog, aspect-ratio, avatar, badge, 
-                breadcrumb, button, calendar, card, carousel, chart, checkbox, collapsible, command, 
-                context-menu, dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label, 
-                menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, 
-                scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table, 
-                tabs, textarea, toggle, toggle-group, tooltip  
-        - lucide-react: import { IconName } from "lucide-react";
-        - tailwind css: import { cn } from "@/lib/utils"; // Note: clsx is not supported
-        - LlamaIndex's markdown-ui: import { Markdown } from "@llamaindex/chat-ui/widgets";
-`;
+
+// SOURCE_MAP defines allowed import sources
+// TODO: Reuse from server
+const SOURCE_MAP: Record<string, boolean> = {
+  react: true,
+  "@/components/ui/accordion": true,
+  "@/components/ui/alert": true,
+  "@/components/ui/alert-dialog": true,
+  "@/components/ui/aspect-ratio": true,
+  "@/components/ui/avatar": true,
+  "@/components/ui/badge": true,
+  "@/components/ui/breadcrumb": true,
+  "@/components/ui/button": true,
+  "@/components/ui/calendar": true,
+  "@/components/ui/card": true,
+  "@/components/ui/carousel": true,
+  "@/components/ui/chart": true,
+  "@/components/ui/checkbox": true,
+  "@/components/ui/collapsible": true,
+  "@/components/ui/command": true,
+  "@/components/ui/context-menu": true,
+  "@/components/ui/dialog": true,
+  "@/components/ui/drawer": true,
+  "@/components/ui/dropdown-menu": true,
+  "@/components/ui/form": true,
+  "@/components/ui/hover-card": true,
+  "@/components/ui/input": true,
+  "@/components/ui/input-otp": true,
+  "@/components/ui/label": true,
+  "@/components/ui/menubar": true,
+  "@/components/ui/navigation-menu": true,
+  "@/components/ui/pagination": true,
+  "@/components/ui/popover": true,
+  "@/components/ui/progress": true,
+  "@/components/ui/radio-group": true,
+  "@/components/ui/resizable": true,
+  "@/components/ui/scroll-area": true,
+  "@/components/ui/select": true,
+  "@/components/ui/separator": true,
+  "@/components/ui/sheet": true,
+  "@/components/ui/sidebar": true,
+  "@/components/ui/skeleton": true,
+  "@/components/ui/slider": true,
+  "@/components/ui/sonner": true,
+  "@/components/ui/switch": true,
+  "@/components/ui/table": true,
+  "@/components/ui/tabs": true,
+  "@/components/ui/textarea": true,
+  "@/components/ui/toggle": true,
+  "@/components/ui/toggle-group": true,
+  "@/components/ui/tooltip": true,
+  "@/lib/utils": true,
+  "lucide-react": true,
+  "@llamaindex/chat-ui/widgets": true,
+};
+
+// TODO: Reuse from server
+export function validateComponentCode(code: string): {
+  isValid: boolean;
+  error?: string;
+  componentName?: string;
+} {
+  try {
+    const imports: Array<{ name: string; source: string }> = [];
+    let componentName: string | null = null;
+
+    // Parse the code into an AST
+    const ast = parse(code, {
+      sourceType: "module",
+      plugins: ["jsx", "typescript"],
+    });
+
+    // Traverse the AST to find import declarations
+    traverse(ast, {
+      // Find import declarations
+      ImportDeclaration(path: NodePath<ImportDeclaration>) {
+        path.node.specifiers.forEach(
+          (
+            specifier:
+              | ImportSpecifier
+              | ImportDefaultSpecifier
+              | ImportNamespaceSpecifier,
+          ) => {
+            if (
+              specifier.type === "ImportSpecifier" ||
+              specifier.type === "ImportDefaultSpecifier"
+            ) {
+              imports.push({
+                name: specifier.local.name, // e.g., "Button"
+                source: path.node.source.value, // e.g., "@/components/ui/button"
+              });
+            }
+          },
+        );
+      },
+      // Find export default declaration
+      ExportDefaultDeclaration(path: NodePath<ExportDefaultDeclaration>) {
+        const declaration = path.node.declaration;
+        if (declaration.type === "FunctionDeclaration" && declaration.id) {
+          componentName = declaration.id.name; // e.g., "EventTimeline"
+        } else if (
+          declaration.type === "Identifier" &&
+          path.scope.hasBinding(declaration.name)
+        ) {
+          componentName = declaration.name; // e.g., named function assigned to export
+        }
+      },
+    });
+
+    // Validate imports
+    for (const { name, source } of imports) {
+      if (!(source in SOURCE_MAP)) {
+        console.error(`Invalid import: ${name} from ${source}`);
+        return {
+          isValid: false,
+          error: `Failed to import ${name} from ${source}. Reason: Module not found. 
+          \nHere is the list of supported imports: ${SUPPORTED_DEPS}`,
+        };
+      }
+    }
+
+    // Validate component export
+    if (!componentName) {
+      console.warn("Could not identify component name in the generated code.");
+    }
+
+    return { isValid: true, componentName: componentName || undefined };
+  } catch (error) {
+    console.error("Error during code validation:", error);
+    return {
+      isValid: false,
+      error:
+        error instanceof Error ? error.message : "Unknown validation error",
+    };
+  }
+}
 
 /**
  * Creates the UI generation workflow with the provided LLM instance.
@@ -266,8 +407,28 @@ Here is the description of the UI:
     [refineGeneratedCodeEvent],
     async ({ data: writeData }) => {
       const context = getContext();
+      const MAX_VALIDATION_ATTEMPTS = 3;
 
-      const refiningPrompt = `
+      let currentCode = writeData.uiCode;
+      let attemptCount = 0;
+      let validationError = null;
+
+      while (attemptCount < MAX_VALIDATION_ATTEMPTS) {
+        attemptCount++;
+        if (attemptCount > 1) {
+          console.log(
+            `Refinement attempt ${attemptCount}/${MAX_VALIDATION_ATTEMPTS}`,
+          );
+        }
+
+        try {
+          // Build refinement prompt - include error info for subsequent attempts
+          const errorSection =
+            attemptCount > 1 && validationError
+              ? `\n# Error to fix:\n${validationError}\n\n# Additional requirements:\n1. Only import from supported modules\n2. Ensure the component has an export default statement\n3. Component must accept an 'events' array prop`
+              : "";
+
+          const refiningPrompt = `
 # Your role
 You are a senior frontend developer reviewing React code written by a junior developer.
 
@@ -276,40 +437,66 @@ You are a senior frontend developer reviewing React code written by a junior dev
 - Required Code Structure (Component accepts an \`events\` array prop):
 ${CODE_STRUCTURE}
 - Aggregation Context (if any): ${writeData.aggregationFunction || "None"}
-- Generated Code (may need fixes):
-${writeData.uiCode}
+- ${attemptCount > 1 ? "Previous" : "Generated"} Code:
+${currentCode}${errorSection}
 
 # Task:
-Review and refine the provided "Generated Code". Ensure it strictly follows the "Required Code Structure" (including accepting the \`events\` array prop), implements any described aggregation logic correctly, imports are correct (individual shadcn/ui imports), and there are no obvious bugs or undefined variables.
+Review and refine the provided code. Ensure it strictly follows the "Required Code Structure" (including accepting the \`events\` array prop), implements any described aggregation logic correctly, imports are correct (individual shadcn/ui imports), and there are no obvious bugs or undefined variables.
 
 # Output Format:
 Return ONLY the final, refined code, enclosed in a single JSX code block (\`\`\`jsx ... \`\`\`). Do not add any explanations before or after the code block.
 `;
 
-      try {
-        const response = await llm.complete({
-          prompt: refiningPrompt,
-          stream: false,
-        });
+          const response = await llm.complete({
+            prompt: refiningPrompt,
+            stream: false,
+          });
 
-        let finalCode = response.text.trim();
+          let refinedCode = response.text.trim();
 
-        // Extract code from markdown block if present (using [^] instead of . with s flag)
-        const codeMatch = finalCode.match(/\`\`\`jsx\n?([^]*?)\n?\`\`\`/);
-        if (codeMatch && codeMatch[1]) {
-          finalCode = codeMatch[1].trim();
-        } else {
-          // Fallback if no block found - attempt cleanup
-          finalCode = finalCode.replace(/^\`\`\`jsx|\`\`\`$/g, "").trim();
-          console.warn(
-            "Could not find standard JSX code block in refinement response, using raw content.",
+          // Extract code from markdown block if present
+          const codeMatch = refinedCode.match(/\`\`\`jsx\n?([^]*?)\n?\`\`\`/);
+          if (codeMatch && codeMatch[1]) {
+            currentCode = codeMatch[1].trim();
+          } else {
+            // Fallback if no block found - attempt cleanup
+            currentCode = refinedCode.replace(/^\`\`\`jsx|\`\`\`$/g, "").trim();
+            console.warn(
+              "Could not find standard JSX code block in refinement response, using raw content.",
+            );
+          }
+
+          // Validate the refined code
+          const validation = validateComponentCode(currentCode);
+
+          if (validation.isValid) {
+            console.log(`Code validated successfully`);
+            context.sendEvent(stopEvent.with(currentCode));
+            return;
+          } else {
+            validationError = validation.error;
+            console.warn(
+              `Validation failed (attempt ${attemptCount}/${MAX_VALIDATION_ATTEMPTS}): ${validation.error}`,
+            );
+
+            // If this was the last attempt, give up
+            if (attemptCount >= MAX_VALIDATION_ATTEMPTS) {
+              console.error(
+                `Failed to generate valid code after ${MAX_VALIDATION_ATTEMPTS} attempts`,
+              );
+              context.sendEvent(stopEvent.with(null));
+              return;
+            }
+            // Otherwise continue to the next iteration of the loop
+          }
+        } catch (error) {
+          console.error(
+            `Error during refinement attempt ${attemptCount}:`,
+            error,
           );
+          context.sendEvent(stopEvent.with(null));
+          return;
         }
-
-        console.log("Refined Code:", finalCode);
-        context.sendEvent(stopEvent.with(finalCode));
-      } catch (error) {
-        console.error("Error during code refining:", error);
       }
     },
   );
