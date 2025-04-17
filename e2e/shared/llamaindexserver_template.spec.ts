@@ -60,11 +60,10 @@ for (const useCase of templateUseCases) {
     });
 
     test("Frontend should have a title", async ({ page }) => {
+      test.setTimeout(20 * 60 * 1000);
       test.skip(
         templatePostInstallAction !== "runApp" ||
-          templateFramework === "express" ||
-          // nextjs deep research use case requires more time to compile frontend and custom components that can cause timeout for testing
-          (templateFramework === "nextjs" && useCase === "deep_research"),
+          templateFramework === "express",
       );
       await page.goto(`http://localhost:${port}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
