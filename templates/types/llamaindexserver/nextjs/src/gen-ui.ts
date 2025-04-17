@@ -1,35 +1,32 @@
 import { createWorkflow, workflowEvent, getContext } from "@llama-flow/core";
 import { z } from "zod";
-import { promiseHandler } from "@llama-flow/core/interrupter/promise";
-import { OpenAI } from "llamaindex";
+import { until } from "@llama-flow/core/stream/until";
+import { collect } from "@llama-flow/core/stream/consumer";
+import { LLM } from "llamaindex";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-// Set OPENAI_API_KEY in environment variables to use this workflow.
-const llm = new OpenAI({ model: "gpt-4.1" });
-
-// --- Workflow Events ---
-const PlanUIEvent = workflowEvent<{
+const planUiEvent = workflowEvent<{
   eventSchema: object;
 }>();
 
-const WriteAggregationEvent = workflowEvent<{
+const writeAggregationEvent = workflowEvent<{
   eventSchema: object;
   uiDescription: string;
 }>();
 
-const WriteUIComponentEvent = workflowEvent<{
+const writeUiComponentEvent = workflowEvent<{
   eventSchema: object;
   uiDescription: string;
   aggregationFunction: string | undefined;
 }>();
 
-const RefineGeneratedCodeEvent = workflowEvent<{
+const refineGeneratedCodeEvent = workflowEvent<{
   uiCode: string;
   aggregationFunction: string;
   uiDescription: string;
 }>();
 
-export const stopGenUiEvent = workflowEvent<string>();
+export const stopEvent = workflowEvent<string | null>();
 
 const CODE_STRUCTURE = `
 // Note: Only shadcn/ui and lucide-react and tailwind css are allowed.
@@ -81,14 +78,19 @@ const SUPPORTED_DEPS = `
         - LlamaIndex's markdown-ui: import { Markdown } from "@llamaindex/chat-ui/widgets";
 `;
 
-// --- UI Generation Workflow ---
-export const genUiWorkflow = createWorkflow();
+/**
+ * Creates the UI generation workflow with the provided LLM instance.
+ *
+ * @param llm - The LLM instance to use for the workflow.
+ * @returns The configured workflow instance.
+ */
+export function createGenUiWorkflow(llm: LLM) {
+  const genUiWorkflow = createWorkflow();
 
-genUiWorkflow.handle([PlanUIEvent], async ({ data: eventSchema }) => {
-  console.log("Step 1: Planning UI for schema...");
-  const context = getContext();
+  genUiWorkflow.handle([planUiEvent], async ({ data: { eventSchema } }) => {
+    const context = getContext();
 
-  const planningPrompt = `
+    const planningPrompt = `
 # Your role
 You are an AI assistant helping to plan a React UI component. This component will display *one or more events* in a chat application, all conforming to a single JSON schema.
 
@@ -116,34 +118,34 @@ e.g: Assume that the backend produce list of events with animal name, action, an
 Don't be verbose, just return the description for the UI based on the event schema and data.
 `;
 
-  try {
-    const response = await llm.complete({
-      prompt: planningPrompt,
-      stream: false,
-    });
+    try {
+      const response = await llm.complete({
+        prompt: planningPrompt,
+        stream: false,
+      });
 
-    const responseText = response.text.trim();
+      const responseText = response.text.trim();
+      console.log("UI Description:", responseText);
 
-    context.sendEvent(
-      WriteAggregationEvent.with({
-        eventSchema: eventSchema,
-        uiDescription: responseText,
-      }),
-    );
-  } catch (error) {
-    console.error("Error during UI planning:", error);
-    context.sendEvent(stopGenUiEvent.with("// Error during planning"));
-  }
-});
+      context.sendEvent(
+        writeAggregationEvent.with({
+          eventSchema,
+          uiDescription: responseText,
+        }),
+      );
+    } catch (error) {
+      console.error("Error during UI planning:", error);
+      context.sendEvent(stopEvent.with(null));
+    }
+  });
 
-genUiWorkflow.handle([WriteAggregationEvent], async ({ data: planData }) => {
-  console.log("Step 2: Writing aggregation function...");
-  const context = getContext();
+  genUiWorkflow.handle([writeAggregationEvent], async ({ data: planData }) => {
+    const context = getContext();
 
-  const schemaContext = JSON.stringify(planData.eventSchema, null, 2);
-  const uiDescriptionContext = planData.uiDescription;
+    const schemaContext = JSON.stringify(planData.eventSchema, null, 2);
+    const uiDescriptionContext = planData.uiDescription;
 
-  const writingPrompt = `
+    const writingPrompt = `
 # Your role
 You are a frontend developer who is developing a React component for given events that are emitted from a backend workflow.
 Here are the events that you need to work on: ${schemaContext}
@@ -164,43 +166,39 @@ const aggregateEvents = () => {
 \`\`\`
 `;
 
-  try {
-    const response = await llm.complete({
-      prompt: writingPrompt,
-      stream: false,
-    });
+    try {
+      const response = await llm.complete({
+        prompt: writingPrompt,
+        stream: false,
+      });
 
-    const generatedCode = response.text.trim();
-    console.log("Generated aggregation function:", generatedCode);
-    context.sendEvent(
-      WriteUIComponentEvent.with({
-        eventSchema: planData.eventSchema,
-        uiDescription: planData.uiDescription,
-        aggregationFunction: generatedCode,
-      }),
-    );
-  } catch (error) {
-    console.error("Error during aggregation function writing:", error);
-    context.sendEvent(
-      stopGenUiEvent.with("// Error during aggregation function writing"),
-    );
-  }
-});
+      const generatedCode = response.text.trim();
+      context.sendEvent(
+        writeUiComponentEvent.with({
+          eventSchema: planData.eventSchema,
+          uiDescription: planData.uiDescription,
+          aggregationFunction: generatedCode,
+        }),
+      );
+    } catch (error) {
+      console.error("Error during aggregation function writing:", error);
+      context.sendEvent(stopEvent.with(null));
+    }
+  });
 
-genUiWorkflow.handle([WriteUIComponentEvent], async ({ data: planData }) => {
-  console.log("Step 3: Writing UI component code...");
-  const context = getContext();
+  genUiWorkflow.handle([writeUiComponentEvent], async ({ data: planData }) => {
+    const context = getContext();
 
-  const aggregationFunctionContext = planData.aggregationFunction
-    ? `
+    const aggregationFunctionContext = planData.aggregationFunction
+      ? `
 # Here is the aggregation function that aggregates the events:
 ${planData.aggregationFunction}`
-    : "";
+      : "";
 
-  const schemaContext = JSON.stringify(planData.eventSchema, null, 2);
-  const uiDescriptionContext = planData.uiDescription;
+    const schemaContext = JSON.stringify(planData.eventSchema, null, 2);
+    const uiDescriptionContext = planData.uiDescription;
 
-  const writingPrompt = `
+    const writingPrompt = `
 # Your role
 You are a frontend developer who is developing a React component using shadcn/ui, lucide-react, LlamaIndex's chat-ui, and tailwind css (cn) for the UI.
 You are given a list of events and other context.
@@ -243,35 +241,33 @@ Here is the description of the UI:
 - Try to make the component placement not monotonous, consider use row/column/flex/grid layout.
 `;
 
-  try {
-    const response = await llm.complete({
-      prompt: writingPrompt,
-      stream: false,
-    });
+    try {
+      const response = await llm.complete({
+        prompt: writingPrompt,
+        stream: false,
+      });
 
-    const generatedCode = response.text.trim();
-    console.log("Generated Code:\n", generatedCode);
+      const generatedCode = response.text.trim();
 
-    context.sendEvent(
-      RefineGeneratedCodeEvent.with({
-        uiCode: generatedCode,
-        aggregationFunction: planData.aggregationFunction || "",
-        uiDescription: planData.uiDescription,
-      }),
-    );
-  } catch (error) {
-    console.error("Error during UI component writing:", error);
-    context.sendEvent(stopGenUiEvent.with("// Error during code generation"));
-  }
-});
+      context.sendEvent(
+        refineGeneratedCodeEvent.with({
+          uiCode: generatedCode,
+          aggregationFunction: planData.aggregationFunction || "",
+          uiDescription: planData.uiDescription,
+        }),
+      );
+    } catch (error) {
+      console.error("Error during UI component writing:", error);
+      context.sendEvent(stopEvent.with(null));
+    }
+  });
 
-genUiWorkflow.handle(
-  [RefineGeneratedCodeEvent],
-  async ({ data: writeData }) => {
-    console.log("Step 4: Refining generated code...");
-    const context = getContext();
+  genUiWorkflow.handle(
+    [refineGeneratedCodeEvent],
+    async ({ data: writeData }) => {
+      const context = getContext();
 
-    const refiningPrompt = `
+      const refiningPrompt = `
 # Your role
 You are a senior frontend developer reviewing React code written by a junior developer.
 
@@ -290,70 +286,69 @@ Review and refine the provided "Generated Code". Ensure it strictly follows the 
 Return ONLY the final, refined code, enclosed in a single JSX code block (\`\`\`jsx ... \`\`\`). Do not add any explanations before or after the code block.
 `;
 
-    try {
-      const response = await llm.complete({
-        prompt: refiningPrompt,
-        stream: false,
-      });
+      try {
+        const response = await llm.complete({
+          prompt: refiningPrompt,
+          stream: false,
+        });
 
-      let finalCode = response.text.trim();
+        let finalCode = response.text.trim();
 
-      // Extract code from markdown block if present (using [^] instead of . with s flag)
-      const codeMatch = finalCode.match(/\`\`\`jsx\n?([^]*?)\n?\`\`\`/);
-      if (codeMatch && codeMatch[1]) {
-        finalCode = codeMatch[1].trim();
-      } else {
-        // Fallback if no block found - attempt cleanup
-        finalCode = finalCode.replace(/^\`\`\`jsx|\`\`\`$/g, "").trim();
-        console.warn(
-          "Could not find standard JSX code block in refinement response, using raw content.",
-        );
+        // Extract code from markdown block if present (using [^] instead of . with s flag)
+        const codeMatch = finalCode.match(/\`\`\`jsx\n?([^]*?)\n?\`\`\`/);
+        if (codeMatch && codeMatch[1]) {
+          finalCode = codeMatch[1].trim();
+        } else {
+          // Fallback if no block found - attempt cleanup
+          finalCode = finalCode.replace(/^\`\`\`jsx|\`\`\`$/g, "").trim();
+          console.warn(
+            "Could not find standard JSX code block in refinement response, using raw content.",
+          );
+        }
+
+        console.log("Refined Code:", finalCode);
+        context.sendEvent(stopEvent.with(finalCode));
+      } catch (error) {
+        console.error("Error during code refining:", error);
       }
+    },
+  );
 
-      console.log("Refined Code:", finalCode);
-      context.sendEvent(stopGenUiEvent.with(finalCode));
-    } catch (error) {
-      console.error("Error during code refining:", error);
-    }
-  },
-);
+  return genUiWorkflow;
+}
 
 /**
  * Generates a React UI component for displaying events of a given type.
  * The generated component will expect an 'events' array prop.
  *
  * @param eventType - A Zod schema representing the event type.
- * @param llmInstance - Optional OpenAI instance.
+ * @param llm - The LLM instance to use for the workflow.
  * @returns The generated React component code as a string.
  */
 export async function generateEventComponent(
   eventType: z.ZodTypeAny,
-  llmInstance: OpenAI = llm,
+  llm: LLM,
 ): Promise<string> {
-  if (llmInstance !== llm) {
-    console.warn(
-      "Using provided LLM instance for initial call, but handlers use the globally defined llm.",
-    );
-  }
-
   // Convert Zod schema to JSON schema including descriptions
   const eventSchemaObject = zodToJsonSchema(eventType, { target: "openApi3" });
-
-  const eventName = eventType.description || "UnknownEvent";
-  console.log(
-    `Starting UI generation workflow for event type: ${eventName}...`,
-  );
-  console.log("Schema:", JSON.stringify(eventSchemaObject, null, 2));
+  console.log(`Starting UI generation...`);
 
   try {
-    // Execute the workflow using promiseHandler with the generated schema object
-    const finalResult = await promiseHandler(
-      genUiWorkflow,
-      PlanUIEvent.with({ eventSchema: eventSchemaObject }), // Pass the generated schema object wrapped correctly
-      stopGenUiEvent,
-    );
+    // Create the workflow with the provided LLM instance
+    const genUiWorkflow = createGenUiWorkflow(llm);
+
+    // Create workflow context and trigger the first event
+    const { stream, sendEvent } = genUiWorkflow.createContext();
+    sendEvent(planUiEvent.with({ eventSchema: eventSchemaObject }));
+
+    // Collect all events until the stop event and get the last one
+    const allEvents = await collect(until(stream, stopEvent));
+    const lastEvent = allEvents[allEvents.length - 1];
+    if (lastEvent.data === null) {
+      throw new Error("Workflow failed.");
+    }
     console.log("Workflow finished successfully.");
-    return finalResult.data;
+    return lastEvent.data;
   } catch (error) {
     console.error("Workflow execution failed:", error);
     throw new Error(`UI generation workflow failed: ${error}`);

@@ -1,8 +1,14 @@
 import "dotenv/config";
 import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
-import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
+import {
+  OpenAI,
+  storageContextFromDefaults,
+  VectorStoreIndex,
+} from "llamaindex";
 import { initSettings } from "./app/settings";
 import fs from "fs";
+import { generateEventComponent } from "./gen-ui";
+import { UIEventSchema } from "./app/workflow";
 
 async function generateDatasource() {
   console.log(`Generating storage context...`);
@@ -21,11 +27,9 @@ async function generateDatasource() {
 }
 
 async function generateUi() {
-  // Dynamically import UI-related modules
-  const { generateEventComponent } = await import("./gen-ui");
-  const { UIEventSchema } = await import("./app/workflow");
+  const llm = new OpenAI({ model: "gpt-4.1" });
 
-  const generatedCode = await generateEventComponent(UIEventSchema);
+  const generatedCode = await generateEventComponent(UIEventSchema, llm);
   // Write the generated code to components/ui_event.ts
   fs.writeFileSync("components/ui_event.jsx", generatedCode);
 }
