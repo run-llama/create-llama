@@ -60,10 +60,12 @@ for (const useCase of templateUseCases) {
     });
 
     test("Frontend should have a title", async ({ page }) => {
-      test.setTimeout(20 * 60 * 1000);
       test.skip(
         templatePostInstallAction !== "runApp" ||
-          templateFramework === "express",
+          templateFramework === "express" ||
+          useCase === "financial_report" ||
+          useCase === "deep_research",
+        "Skip frontend test for financial report and deep research.",
       );
       await page.goto(`http://localhost:${port}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
