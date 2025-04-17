@@ -7,7 +7,7 @@ import {
 } from "llamaindex";
 import { initSettings } from "./app/settings";
 import fs from "fs";
-import { generateEventComponent } from "./gen-ui";
+import { generateEventComponent } from "@llamaindex/server";
 import { UIEventSchema } from "./app/workflow";
 
 async function generateDatasource() {
@@ -27,8 +27,10 @@ async function generateDatasource() {
 }
 
 async function generateUi() {
+  // Also works well with Claude 3.5 Sonnet and Google Gemini 2.5 Pro
   const llm = new OpenAI({ model: "gpt-4.1" });
 
+  // You can also generate for other workflow events
   const generatedCode = await generateEventComponent(UIEventSchema, llm);
   // Write the generated code to components/ui_event.ts
   fs.writeFileSync("components/ui_event.jsx", generatedCode);
