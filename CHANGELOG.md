@@ -1,5 +1,17 @@
 # create-llama
 
+## 0.5.7
+
+### Patch Changes
+
+- 5988657: chore: bump llmaindex
+
+## 0.5.6
+
+### Patch Changes
+
+- d363ced: Bump llamaindex server packages
+
 ## 0.5.5
 
 ### Patch Changes
