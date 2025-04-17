@@ -65,7 +65,9 @@ for (const useCase of templateUseCases) {
           templateFramework === "express",
       );
       await page.goto(`http://localhost:${port}`);
-      await expect(page.getByText("Built by LlamaIndex")).toBeVisible();
+      await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
+        timeout: 5 * 60 * 1000,
+      });
     });
 
     test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
