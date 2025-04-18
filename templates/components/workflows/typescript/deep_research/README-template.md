@@ -33,6 +33,14 @@ You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/l
 
 For Deep Research, we have a custom component located in `components/deep_research_event.jsx`. This is used to display the results of the deep research workflow in a more user-friendly way
 
+### Generate a new UI Component from workflow event
+
+You can regenerate a new UI component from the workflow event schema by running the following command:
+
+```
+npm run generate:ui
+```
+
 ## Use Case
 
 We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
