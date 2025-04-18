@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.5.9
+
+### Patch Changes
+
+- 4bc53ac: Bump new chat ui and update deep research component
+- 4bc53ac: Support generate UI for deep research use case (Typescript)
+
 ## 0.5.8
 
 ### Patch Changes
