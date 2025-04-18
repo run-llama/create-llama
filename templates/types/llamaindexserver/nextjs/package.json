@@ -15,15 +15,10 @@
     "@llamaindex/tools": "0.0.4",
     "dotenv": "^16.4.7",
     "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.24.5",
-    "llamaindex": "0.10.1"
+    "llamaindex": "0.10.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
-    "@babel/parser": "^7.27.0",
-    "@babel/traverse": "^7.27.0",
-    "@babel/types": "^7.27.0",
-    "@types/babel__traverse": "^7.20.7",
     "tsx": "^4.7.2",
     "typescript": "^5.3.2"
   }
