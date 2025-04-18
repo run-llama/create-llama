@@ -2,18 +2,20 @@
   "name": "llamaindex-server",
   "version": "0.1.0",
   "scripts": {
-    "generate": "tsx src/generate.ts",
+    "generate": "tsx src/generate.ts datasource",
+    "generate:datasource": "tsx src/generate.ts datasource",
+    "generate:ui": "tsx src/generate.ts ui",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts"
   },
   "dependencies": {
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/readers": "^2.0.0",
-    "@llamaindex/server": "0.1.4",
+    "@llamaindex/server": "0.1.5",
     "@llamaindex/tools": "0.0.4",
     "dotenv": "^16.4.7",
-    "llamaindex": "0.10.1",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "llamaindex": "0.10.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",

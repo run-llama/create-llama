@@ -1,408 +1,375 @@
-export default function DeepResearchComponent({ events }) {
-  // Aggregate events by type and track their state progression
-  const aggregateEvents = () => {
-    const retrieveEvents = events.filter((e) => e.event === "retrieve");
-    const analyzeEvents = events.filter((e) => e.event === "analyze");
-    const answerEvents = events.filter((e) => e.event === "answer");
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { Markdown } from "@llamaindex/chat-ui/widgets";
+import {
+  AlertCircle,
+  Brain,
+  CheckCircle,
+  Clock,
+  Database,
+  Loader2,
+  MessageSquare,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
-    // Get the latest state for retrieve and analyze events
-    const retrieveState =
-      retrieveEvents.length > 0
-        ? retrieveEvents[retrieveEvents.length - 1].state
-        : null;
-    const analyzeState =
-      analyzeEvents.length > 0
-        ? analyzeEvents[analyzeEvents.length - 1].state
-        : null;
+export default function Component({ events }) {
+  const aggregateEvents = (events) => {
+    if (!events || events.length === 0)
+      return { retrieve: null, analyze: null, answers: [] };
 
-    // Group answer events by their ID
-    const answerGroups = {};
-    for (const event of answerEvents) {
-      if (!event.id) continue;
-
-      if (!answerGroups[event.id]) {
-        answerGroups[event.id] = {
-          id: event.id,
-          question: event.question,
-          answer: event.answer,
-          states: [],
-        };
-      }
-
-      const lastState =
-        answerGroups[event.id].states[answerGroups[event.id].states.length - 1];
-      if (lastState !== event.state) {
-        answerGroups[event.id].states.push(event.state);
-      }
-
-      if (event.answer) {
-        answerGroups[event.id].answer = event.answer;
-      }
-    }
-
-    return {
-      retrieveState,
-      analyzeState,
-      answerGroups: Object.values(answerGroups),
+    // Initialize the result structure
+    const result = {
+      retrieve: null,
+      analyze: null,
+      answers: [],
     };
+
+    // Process each event
+    events.forEach((event) => {
+      const { event: eventType, state, id, question, answer } = event;
+
+      if (eventType === "retrieve") {
+        // Update retrieve status
+        result.retrieve = { state };
+      } else if (eventType === "analyze") {
+        // Update analyze status
+        result.analyze = { state };
+      } else if (eventType === "answer" && id) {
+        // Find existing answer with the same id or create a new one
+        const existingAnswerIndex = result.answers.findIndex(
+          (a) => a.id === id,
+        );
+
+        if (existingAnswerIndex >= 0) {
+          // Update existing answer
+          result.answers[existingAnswerIndex] = {
+            ...result.answers[existingAnswerIndex],
+            state,
+            question: question || result.answers[existingAnswerIndex].question,
+            answer: answer || result.answers[existingAnswerIndex].answer,
+          };
+        } else {
+          // Add new answer
+          result.answers.push({
+            id,
+            state,
+            question,
+            answer,
+          });
+        }
+      }
+    });
+
+    return result;
   };
 
-  const { retrieveState, analyzeState, answerGroups } = aggregateEvents();
+  const [aggregatedEvents, setAggregatedEvents] = useState({
+    retrieve: null,
+    analyze: null,
+    answers: [],
+  });
 
-  // Styles
-  const styles = {
-    container: {
-      maxWidth: "900px",
-      margin: "0 auto",
-      padding: "20px",
-      backgroundColor: "#FFFFFF",
-      borderRadius: "8px",
-      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-    },
-    header: {
-      fontSize: "24px",
-      fontWeight: "bold",
-      textAlign: "center",
-      marginBottom: "20px",
-      color: "#333",
-    },
-    cardsContainer: {
-      display: "flex",
-      gap: "16px",
-      marginBottom: "30px",
-      flexWrap: "wrap",
-    },
-    card: {
-      flex: "1",
-      minWidth: "250px",
-      backgroundColor: "#FFFFFF",
-      borderRadius: "8px",
-      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-      padding: "16px",
-      border: "1px solid #E5E7EB",
-      transition: "all 0.3s ease",
-    },
-    cardHeader: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: "12px",
-    },
-    cardTitle: {
-      fontSize: "18px",
-      fontWeight: "bold",
-      marginLeft: "8px",
-    },
-    cardContent: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    badge: {
-      padding: "4px 8px",
-      borderRadius: "9999px",
-      fontSize: "12px",
-      fontWeight: "bold",
-      flexShrink: 0,
-    },
-    questionsList: {
-      marginTop: "30px",
-    },
-    questionItem: {
-      backgroundColor: "#F9FAFB",
-      border: "1px solid #E5E7EB",
-      borderRadius: "8px",
-      marginBottom: "12px",
-      overflow: "hidden",
-    },
-    questionHeader: {
-      padding: "12px 16px",
-      cursor: "pointer",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      userSelect: "none",
-    },
-    questionTitle: {
-      fontWeight: "medium",
-      marginLeft: "12px",
-    },
-    answerContainer: {
-      padding: "0",
-      backgroundColor: "#F3F4F6",
-      overflow: "hidden",
-      maxHeight: "0",
-      transition: "max-height 0.3s ease-out",
-      whiteSpace: "pre-line",
-      fontSize: "13px",
-    },
-    answerContent: {
-      padding: "16px",
-    },
-    answerContainerExpanded: {
-      maxHeight: "1000px", // Adjust based on content
-    },
-    arrow: {
-      marginLeft: "8px",
-      transition: "transform 0.3s ease",
-      display: "inline-block",
-    },
-    loadingContainer: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: "24px",
-      color: "#6B7280",
-    },
-    stateIconContainer: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-  };
+  useEffect(() => {
+    setAggregatedEvents(aggregateEvents(events));
+  }, [events]);
 
-  // Helper function to get color for a state
-  const getStateColor = (state) => {
+  const { retrieve, analyze, answers } = aggregatedEvents;
+
+  // Helper function to get status icon
+  const getStatusIcon = (state) => {
     switch (state) {
-      case "inprogress":
-        return "#FCD34D";
-      case "done":
-        return "#34D399";
       case "pending":
-        return "#9CA3AF";
+        return <Clock className="h-4 w-4 text-gray-400" />;
+      case "inprogress":
+        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+      case "done":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "error":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
-        return "#D1D5DB";
+        return null;
     }
   };
 
-  // Helper function to get badge styles based on state
-  const getBadgeStyles = (state) => {
-    const colors = {
-      inprogress: { background: "#FEF3C7", color: "#92400E" },
-      done: { background: "#D1FAE5", color: "#065F46" },
-      pending: { background: "#F3F4F6", color: "#1F2937" },
-    };
-    const stateColors = colors[state] || colors.pending;
-    return {
-      ...styles.badge,
-      backgroundColor: stateColors.background,
-      color: stateColors.color,
-    };
-  };
-
-  // Helper function to render state icon
-  const renderStateIcon = (state) => {
-    const color = getStateColor(state);
-    if (state === "inprogress") {
-      return (
-        <div style={{ color, animation: "spin 1s linear infinite" }}>⟳</div>
-      );
-    } else if (state === "done") {
-      return <div style={{ color }}>✓</div>;
-    } else if (state === "pending") {
-      return <div style={{ color }}>⏱</div>;
+  // Helper function to get status text
+  const getStatusText = (state) => {
+    switch (state) {
+      case "pending":
+        return "Pending";
+      case "inprogress":
+        return "In Progress";
+      case "done":
+        return "Complete";
+      case "error":
+        return "Error";
+      default:
+        return "";
     }
-    return <div style={{ color }}>?</div>;
   };
 
-  // State for toggling question answers
-  const [expandedQuestions, setExpandedQuestions] = React.useState({});
-
-  const toggleQuestion = (questionId) => {
-    setExpandedQuestions((prev) => ({
-      ...prev,
-      [questionId]: !prev[questionId],
-    }));
+  // Helper function to get status color class
+  const getStatusColorClass = (state) => {
+    switch (state) {
+      case "pending":
+        return "bg-gray-200";
+      case "inprogress":
+        return "bg-blue-500";
+      case "done":
+        return "bg-green-500";
+      case "error":
+        return "bg-red-500";
+      default:
+        return "bg-gray-200";
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.header}>Research Progress</h1>
-
-      {/* Status Cards */}
-      <div style={styles.cardsContainer}>
-        {/* Retrieve Card */}
-        <div
-          style={{
-            ...styles.card,
-            borderColor:
-              retrieveState === "done"
-                ? "#A7F3D0"
-                : retrieveState === "inprogress"
-                  ? "#FDE68A"
-                  : "#E5E7EB",
-          }}
-        >
-          <div style={styles.cardHeader}>
-            <span style={{ color: "#8B5CF6" }}>🔍</span>
-            <div style={styles.cardTitle}>Data Retrieval</div>
-          </div>
-          <div style={styles.cardContent}>
-            <span style={{ fontSize: "14px", color: "#6B7280" }}>Status:</span>
-            <div style={styles.stateIconContainer}>
-              {retrieveState && (
-                <span style={getBadgeStyles(retrieveState)}>
-                  {retrieveState === "inprogress"
-                    ? "In Progress"
-                    : retrieveState === "done"
-                      ? "Completed"
-                      : "Pending"}
-                </span>
-              )}
-              {renderStateIcon(retrieveState)}
-            </div>
-          </div>
-        </div>
-
-        {/* Analyze Card */}
-        <div
-          style={{
-            ...styles.card,
-            borderColor:
-              analyzeState === "done"
-                ? "#A7F3D0"
-                : analyzeState === "inprogress"
-                  ? "#FDE68A"
-                  : "#E5E7EB",
-          }}
-        >
-          <div style={styles.cardHeader}>
-            <span style={{ color: "#06B6D4" }}>📊</span>
-            <div style={styles.cardTitle}>Data Analysis</div>
-          </div>
-          <div style={styles.cardContent}>
-            <span style={{ fontSize: "14px", color: "#6B7280" }}>Status:</span>
-            <div style={styles.stateIconContainer}>
-              {analyzeState && (
-                <span style={getBadgeStyles(analyzeState)}>
-                  {analyzeState === "inprogress"
-                    ? "In Progress"
-                    : analyzeState === "done"
-                      ? "Completed"
-                      : "Pending"}
-                </span>
-              )}
-              {renderStateIcon(analyzeState)}
-            </div>
-          </div>
-        </div>
-
-        {/* Questions Card */}
-        <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <span style={{ color: "#10B981" }}>💬</span>
-            <div style={styles.cardTitle}>Questions</div>
-          </div>
-          <div style={styles.cardContent}>
-            <span style={{ fontSize: "14px", color: "#6B7280" }}>Status:</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span
-                style={{
-                  ...styles.badge,
-                  backgroundColor: "#F3F4F6",
-                  color: "#1F2937",
-                }}
-              >
-                {answerGroups.length} Questions
-              </span>
-              <span
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#059669",
-                }}
-              >
-                {answerGroups.filter((g) => g.states.includes("done")).length}{" "}
-                Answered
-              </span>
-            </div>
-          </div>
+    <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">DeepResearch Workflow</h1>
+        <div className="flex items-center space-x-2">
+          <Badge
+            variant={retrieve?.state === "done" ? "default" : "outline"}
+            className={cn(
+              "transition-all",
+              retrieve?.state === "done" ? "bg-green-500" : "",
+            )}
+          >
+            Retrieve
+          </Badge>
+          <Separator className="h-4 w-px bg-gray-300" orientation="vertical" />
+          <Badge
+            variant={analyze?.state === "done" ? "default" : "outline"}
+            className={cn(
+              "transition-all",
+              analyze?.state === "done" ? "bg-green-500" : "",
+            )}
+          >
+            Analyze
+          </Badge>
+          <Separator className="h-4 w-px bg-gray-300" orientation="vertical" />
+          <Badge
+            variant={
+              answers.length > 0 && answers.every((a) => a.state === "done")
+                ? "default"
+                : "outline"
+            }
+            className={cn(
+              "transition-all",
+              answers.length > 0 && answers.every((a) => a.state === "done")
+                ? "bg-green-500"
+                : "",
+            )}
+          >
+            Answer
+          </Badge>
         </div>
       </div>
 
-      {/* Questions List */}
-      {answerGroups.length > 0 && (
-        <div style={styles.questionsList}>
-          <h2
-            style={{
-              fontSize: "20px",
-              fontWeight: "600",
-              marginBottom: "16px",
-            }}
-          >
-            Research Questions
-          </h2>
-          {answerGroups.map((group, index) => {
-            const latestState = group.states[group.states.length - 1];
-            const questionId = group.id || `question-${index}`;
-            const isExpanded = expandedQuestions[questionId];
+      {/* Retrieve Panel */}
+      <Card
+        className={cn(
+          "border-2 transition-all duration-300",
+          retrieve?.state === "inprogress"
+            ? "border-blue-500 shadow-blue-100 shadow-lg"
+            : retrieve?.state === "done"
+              ? "border-green-500"
+              : retrieve?.state === "error"
+                ? "border-red-500"
+                : "border-gray-200",
+        )}
+      >
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Database className="h-5 w-5 text-gray-700" />
+              <CardTitle>Retrieve Information</CardTitle>
+            </div>
+            <Badge
+              variant="outline"
+              className={cn(
+                "flex items-center space-x-1",
+                retrieve?.state === "inprogress"
+                  ? "text-blue-500"
+                  : retrieve?.state === "done"
+                    ? "text-green-500"
+                    : retrieve?.state === "error"
+                      ? "text-red-500"
+                      : "text-gray-500",
+              )}
+            >
+              {getStatusIcon(retrieve?.state)}
+              <span>{getStatusText(retrieve?.state)}</span>
+            </Badge>
+          </div>
+          <CardDescription>
+            Retrieving relevant information from the knowledge base
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
-            const answerWithoutCitation = group.answer?.replace(
-              /\[citation:[a-f0-9-]+\]/g,
-              "",
-            );
-
-            return (
-              <div key={questionId} style={styles.questionItem}>
-                <div
-                  style={styles.questionHeader}
-                  onClick={() => toggleQuestion(questionId)}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "12px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    {renderStateIcon(latestState)}
-                    <span style={styles.questionTitle}>{group.question}</span>
-                    <span
-                      style={{
-                        ...styles.arrow,
-                        transform: isExpanded
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                      }}
-                    >
-                      ▼
-                    </span>
-                  </div>
-                  <span style={getBadgeStyles(latestState)}>
-                    {latestState === "inprogress"
-                      ? "In Progress"
-                      : latestState === "done"
-                        ? "Answered"
-                        : "Pending"}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    ...styles.answerContainer,
-                    ...(isExpanded ? styles.answerContainerExpanded : {}),
-                  }}
-                >
-                  {answerWithoutCitation ? (
-                    <div style={styles.answerContent}>
-                      {answerWithoutCitation}
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        ...styles.loadingContainer,
-                        ...styles.answerContent,
-                      }}
-                    >
-                      <span style={{ marginLeft: "8px" }}>
-                        Generating answer...
-                      </span>
-                    </div>
-                  )}
-                </div>
+      {/* Analyze Panel */}
+      {retrieve?.state === "done" && (
+        <Card
+          className={cn(
+            "border-2 transition-all duration-300",
+            analyze?.state === "inprogress"
+              ? "border-blue-500 shadow-blue-100 shadow-lg"
+              : analyze?.state === "done"
+                ? "border-green-500"
+                : analyze?.state === "error"
+                  ? "border-red-500"
+                  : "border-gray-200",
+          )}
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Brain className="h-5 w-5 text-gray-700" />
+                <CardTitle>Analyze Information</CardTitle>
               </div>
-            );
-          })}
-        </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "flex items-center space-x-1",
+                  analyze?.state === "inprogress"
+                    ? "text-blue-500"
+                    : analyze?.state === "done"
+                      ? "text-green-500"
+                      : analyze?.state === "error"
+                        ? "text-red-500"
+                        : "text-gray-500",
+                )}
+              >
+                {getStatusIcon(analyze?.state)}
+                <span>{getStatusText(analyze?.state)}</span>
+              </Badge>
+            </div>
+            <CardDescription>
+              Analyzing retrieved information and generating questions
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Answer Panel */}
+      {analyze?.state === "done" && answers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5 text-gray-700" />
+              <CardTitle>Answers</CardTitle>
+            </div>
+            <CardDescription>
+              Detailed answers to the generated questions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="multiple" className="w-full">
+              {answers.map((answer, index) => (
+                <AccordionItem
+                  key={answer.id}
+                  value={answer.id}
+                  className={cn(
+                    "mb-4 border rounded-lg overflow-hidden",
+                    answer.state === "inprogress"
+                      ? "border-blue-500 shadow-blue-100 shadow-sm"
+                      : answer.state === "done"
+                        ? "border-green-100"
+                        : answer.state === "error"
+                          ? "border-red-100"
+                          : "border-gray-200",
+                  )}
+                >
+                  <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+                    <div className="flex items-center space-x-3 text-left">
+                      <Badge className="shrink-0 bg-gray-700 text-white">
+                        Q{index + 1}
+                      </Badge>
+                      <div className="flex-1">
+                        <p className="font-medium">{answer.question}</p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "ml-auto flex items-center space-x-1 shrink-0",
+                          answer.state === "inprogress"
+                            ? "text-blue-500"
+                            : answer.state === "done"
+                              ? "text-green-500"
+                              : answer.state === "error"
+                                ? "text-red-500"
+                                : "text-gray-500",
+                        )}
+                      >
+                        {getStatusIcon(answer.state)}
+                        <span>{getStatusText(answer.state)}</span>
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 pt-1">
+                    <div
+                      className={cn(
+                        "p-3 rounded-md",
+                        answer.state === "done"
+                          ? "bg-green-50"
+                          : answer.state === "inprogress"
+                            ? "bg-blue-50"
+                            : "bg-gray-50",
+                      )}
+                    >
+                      {answer.answer ? (
+                        <Markdown content={answer.answer} />
+                      ) : (
+                        <div className="flex items-center justify-center p-4 text-gray-500">
+                          {answer.state === "inprogress" ? (
+                            <div className="flex items-center space-x-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Generating answer...</span>
+                            </div>
+                          ) : (
+                            <span>Waiting for answer</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <div className="text-sm text-gray-500">
+              {answers.filter((a) => a.state === "done").length} of{" "}
+              {answers.length} questions answered
+            </div>
+            <Progress
+              value={
+                (answers.filter((a) => a.state === "done").length /
+                  answers.length) *
+                100
+              }
+              className="h-2 w-1/3 bg-gray-200"
+            />
+          </CardFooter>
+        </Card>
       )}
     </div>
   );
