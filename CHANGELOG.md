@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.8
+
+### Patch Changes
+
+- 765181a: chore: test typescript e2e with node 20 and 22
+
 ## 0.5.7
 
 ### Patch Changes
