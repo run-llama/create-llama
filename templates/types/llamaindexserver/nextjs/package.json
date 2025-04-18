@@ -9,10 +9,9 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@llama-flow/core": "^0.3.4",
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/readers": "^2.0.0",
-    "@llamaindex/server": "0.1.4",
+    "@llamaindex/server": "0.1.5",
     "@llamaindex/tools": "0.0.4",
     "dotenv": "^16.4.7",
     "zod": "^3.23.8",
