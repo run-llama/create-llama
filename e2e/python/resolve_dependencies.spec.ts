@@ -216,7 +216,7 @@ async function createAndCheckLlamaProject({
   console.log("Running uv sync...");
   try {
     const { stdout: syncStdout, stderr: syncStderr } = await execAsync(
-      "uv sync",
+      "uv sync --all-extras",
       { cwd: projectPath, env: commandEnv },
     );
     console.log("uv sync stdout:", syncStdout);
