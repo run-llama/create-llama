@@ -34,14 +34,14 @@ export function runReflexApp(appPath: string, port: number) {
     "--frontend-port",
     port.toString(),
   ];
-  return createProcess("poetry", commandArgs, {
+  return createProcess("uv", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
   });
 }
 
 export function runFastAPIApp(appPath: string, port: number) {
-  return createProcess("poetry", ["run", "dev"], {
+  return createProcess("uv", ["run", "dev"], {
     stdio: "inherit",
     cwd: appPath,
     env: { ...process.env, APP_PORT: `${port}` },
