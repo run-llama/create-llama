@@ -65,7 +65,7 @@ def build():
 
         rich.print(
             "\n[bold]Built frontend successfully![/bold]"
-            "\n[bold]Run: 'poetry run prod' to start the app[/bold]"
+            "\n[bold]Run: 'uv run prod' to start the app[/bold]"
             "\n[bold]Don't forget to update the .env file![/bold]"
         )
     except CalledProcessError as e:
@@ -205,9 +205,9 @@ async def _run_backend(
             f"Port {APP_PORT} is not available! Please change the port in .env file or kill the process running on this port."
         )
     rich.print(f"\n[bold]Starting app on port {APP_PORT}...[/bold]")
-    poetry_executable = _get_poetry_executable()
+    uv_executable = _get_uv_executable()
     process = await asyncio.create_subprocess_exec(
-        poetry_executable,
+        uv_executable,
         "run",
         "python",
         "main.py",
@@ -265,21 +265,21 @@ def _get_node_package_manager() -> NodePackageManager:
     )
 
 
-def _get_poetry_executable() -> str:
+def _get_uv_executable() -> str:
     """
-    Check for available Poetry executables and return the preferred one.
-    Returns 'poetry' if installed, falls back to 'poetry.cmd'.
+    Check for available UV executables and return the preferred one.
+    Returns 'uv' if installed, falls back to 'uv.cmd'.
     Raises SystemError if neither is installed.
 
     Returns:
-        str: The full path to the available Poetry executable
+        str: The full path to the available UV executable
     """
-    poetry_cmds = ["poetry", "poetry.cmd"]
-    for cmd in poetry_cmds:
+    uv_cmds = ["uv", "uv.cmd"]
+    for cmd in uv_cmds:
         cmd_path = which(cmd)
         if cmd_path is not None:
             return cmd_path
-    raise SystemError("Poetry is not installed. Please install Poetry first.")
+    raise SystemError("uv is not installed. Please install uv first.")
 
 
 def _is_port_available(port: int) -> bool:
