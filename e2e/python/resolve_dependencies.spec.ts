@@ -195,32 +195,47 @@ async function createAndCheckLlamaProject({
   const pyprojectPath = path.join(projectPath, "pyproject.toml");
   expect(fs.existsSync(pyprojectPath)).toBeTruthy();
 
-  const env = {
+  // Modify environment for the command
+  const commandEnv = {
     ...process.env,
-    POETRY_VIRTUALENVS_IN_PROJECT: "true",
   };
 
-  // Run poetry install
+  console.log("Running uv venv...");
   try {
-    const { stdout: installStdout, stderr: installStderr } = await execAsync(
-      "poetry install",
-      { cwd: projectPath, env },
+    const { stdout: venvStdout, stderr: venvStderr } = await execAsync(
+      "uv venv",
+      { cwd: projectPath, env: commandEnv },
     );
-    console.log("poetry install stdout:", installStdout);
-    console.error("poetry install stderr:", installStderr);
+    console.log("uv venv stdout:", venvStdout);
+    console.error("uv venv stderr:", venvStderr);
   } catch (error) {
-    console.error("Error running poetry install:", error);
-    throw error;
+    console.error("Error running uv venv:", error);
+    throw error; // Re-throw error to fail the test
   }
 
-  // Run poetry run mypy
+  console.log("Running uv sync...");
+  try {
+    const { stdout: syncStdout, stderr: syncStderr } = await execAsync(
+      "uv sync",
+      { cwd: projectPath, env: commandEnv },
+    );
+    console.log("uv sync stdout:", syncStdout);
+    console.error("uv sync stderr:", syncStderr);
+  } catch (error) {
+    console.error("Error running uv sync:", error);
+    throw error; // Re-throw error to fail the test
+  }
+
+  console.log("Running uv run mypy ....");
   try {
     const { stdout: mypyStdout, stderr: mypyStderr } = await execAsync(
-      "poetry run mypy .",
-      { cwd: projectPath, env },
+      "uv run mypy .",
+      { cwd: projectPath, env: commandEnv },
     );
-    console.log("poetry run mypy stdout:", mypyStdout);
-    console.error("poetry run mypy stderr:", mypyStderr);
+    console.log("uv run mypy stdout:", mypyStdout);
+    console.error("uv run mypy stderr:", mypyStderr);
+    // Assuming mypy success means no output or specific success message
+    // Adjust checks based on actual expected mypy output
   } catch (error) {
     console.error("Error running mypy:", error);
     throw error;
