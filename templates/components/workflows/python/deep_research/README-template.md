@@ -2,12 +2,12 @@ This is a [LlamaIndex](https://www.llamaindex.ai/) multi-agents project using [W
 
 ## Getting Started
 
-First, setup the environment with poetry:
+First, setup the environment with uv:
 
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```shell
-poetry install
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
@@ -16,13 +16,13 @@ Make sure you have set the `OPENAI_API_KEY` for the LLM.
 Second, generate the embeddings of the documents in the `./data` directory:
 
 ```shell
-poetry run generate
+uv run generate
 ```
 
 Third, run the development server:
 
 ```shell
-poetry run dev
+uv run dev
 ```
 
 Then open [http://localhost:8000](http://localhost:8000) with your browser to start the chat UI.
@@ -30,7 +30,7 @@ Then open [http://localhost:8000](http://localhost:8000) with your browser to st
 To start the app optimized for **production**, run:
 
 ```
-poetry run prod
+uv run prod
 ```
 
 ## Configure LLM and Embedding Model
@@ -56,7 +56,7 @@ To customize the UI, you can start by modifying the [./components/ui_event.jsx](
 You can also generate a new code for the workflow using LLM by running the following command:
 
 ```
-poetry run generate:ui
+uv run generate:ui
 ```
 
 ## Learn More

@@ -3,10 +3,10 @@ import path from "path";
 import { cyan, red } from "picocolors";
 import { parse, stringify } from "smol-toml";
 import terminalLink from "terminal-link";
+import { isUvAvailable, tryUvSync } from "./uv";
 
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
-import { isPoetryAvailable, tryPoetryInstall } from "./poetry";
 import { Tool } from "./tools";
 import {
   InstallTemplateArgs,
@@ -24,6 +24,53 @@ interface Dependency {
   constraints?: Record<string, string>;
 }
 
+// Helper function to format a dependency object into a PEP 508 string
+// PEP 508: https://peps.python.org/pep-0508/
+const formatDependency = (dep: Dependency): string => {
+  let depString = dep.name;
+  if (dep.extras && dep.extras.length > 0) {
+    depString += `[${dep.extras.join(",")}]`;
+  }
+  if (dep.version) {
+    // Convert Poetry/NPM-style ranges to PEP 440 compatible ones if possible
+    // This is a simplification; a robust converter might be needed for complex cases
+    let versionSpecifier = dep.version;
+    if (versionSpecifier.startsWith("^")) {
+      // Convert ^1.2.3 to >=1.2.3,<2.0.0
+      const baseVersion = versionSpecifier.substring(1);
+      const parts = baseVersion.split(".");
+      if (parts.length >= 1) {
+        const major = parseInt(parts[0], 10);
+        if (!isNaN(major)) {
+          versionSpecifier = `>=${baseVersion},<${major + 1}.0.0`;
+        }
+      }
+    } else if (versionSpecifier.startsWith("~")) {
+      // Convert ~1.2.3 to >=1.2.3,<1.3.0
+      const baseVersion = versionSpecifier.substring(1);
+      const parts = baseVersion.split(".");
+      if (parts.length >= 2) {
+        const major = parts[0];
+        const minor = parseInt(parts[1], 10);
+        if (!isNaN(minor)) {
+          versionSpecifier = `>=${baseVersion},<${major}.${minor + 1}.0`;
+        }
+      } else if (parts.length === 1) {
+        // Handle ~1 as >=1,<2
+        const major = parseInt(parts[0], 10);
+        if (!isNaN(major)) {
+          versionSpecifier = `>=${baseVersion},<${major + 1}.0`;
+        }
+      }
+    }
+    // Ensure basic >=, <=, ==, <, > are kept
+    depString += versionSpecifier;
+  }
+  // Note: dep.constraints (like python version) are not directly part of the PEP 508 string
+  // They belong in requires-python or environment markers, handled separately.
+  return depString;
+};
+
 const getAdditionalDependencies = (
   modelConfig: ModelConfig,
   vectorDb?: TemplateVectorDB,
@@ -39,21 +86,21 @@ const getAdditionalDependencies = (
     case "mongo": {
       dependencies.push({
         name: "llama-index-vector-stores-mongodb",
-        version: "^0.6.0",
+        version: ">=0.3.2,<0.4.0",
       });
       break;
     }
     case "pg": {
       dependencies.push({
         name: "llama-index-vector-stores-postgres",
-        version: "^0.3.2",
+        version: ">=0.3.2,<0.4.0",
       });
       break;
     }
     case "pinecone": {
       dependencies.push({
         name: "llama-index-vector-stores-pinecone",
-        version: "^0.4.1",
+        version: ">=0.4.1,<0.5.0",
         constraints: {
           python: ">=3.11,<3.13",
         },
@@ -63,25 +110,25 @@ const getAdditionalDependencies = (
     case "milvus": {
       dependencies.push({
         name: "llama-index-vector-stores-milvus",
-        version: "^0.3.0",
+        version: ">=0.3.0,<0.4.0",
       });
       dependencies.push({
         name: "pymilvus",
-        version: "2.4.4",
+        version: ">=2.4.4,<3.0.0",
       });
       break;
     }
     case "astra": {
       dependencies.push({
         name: "llama-index-vector-stores-astra-db",
-        version: "^0.4.0",
+        version: ">=0.4.0,<0.5.0",
       });
       break;
     }
     case "qdrant": {
       dependencies.push({
         name: "llama-index-vector-stores-qdrant",
-        version: "^0.4.0",
+        version: ">=0.4.0,<0.5.0",
         constraints: {
           python: ">=3.11,<3.13",
         },
@@ -91,21 +138,21 @@ const getAdditionalDependencies = (
     case "chroma": {
       dependencies.push({
         name: "llama-index-vector-stores-chroma",
-        version: "^0.4.0",
+        version: ">=0.4.0,<0.5.0",
       });
       break;
     }
     case "weaviate": {
       dependencies.push({
         name: "llama-index-vector-stores-weaviate",
-        version: "^1.2.3",
+        version: ">=1.2.3,<2.0.0",
       });
       break;
     }
     case "llamacloud":
       dependencies.push({
         name: "llama-index-indices-managed-llama-cloud",
-        version: "0.6.3",
+        version: ">=0.6.3,<0.7.0",
       });
       break;
   }
@@ -118,28 +165,28 @@ const getAdditionalDependencies = (
         case "file":
           dependencies.push({
             name: "docx2txt",
-            version: "^0.8",
+            version: ">=0.8,<0.9",
           });
           break;
         case "web":
           dependencies.push({
             name: "llama-index-readers-web",
-            version: "^0.3.0",
+            version: ">=0.3.0,<0.4.0",
           });
           break;
         case "db":
           dependencies.push({
             name: "llama-index-readers-database",
-            version: "^0.3.0",
+            version: ">=0.3.0,<0.4.0",
           });
           dependencies.push({
             name: "pymysql",
-            version: "^1.1.0",
+            version: ">=1.1.0,<2.0.0",
             extras: ["rsa"],
           });
           dependencies.push({
             name: "psycopg2-binary",
-            version: "^2.9.9",
+            version: ">=2.9.9,<3.0.0",
           });
           break;
       }
@@ -169,15 +216,15 @@ const getAdditionalDependencies = (
       if (templateType !== "multiagent") {
         dependencies.push({
           name: "llama-index-llms-openai",
-          version: "^0.3.2",
+          version: ">=0.3.2,<0.4.0",
         });
         dependencies.push({
           name: "llama-index-embeddings-openai",
-          version: "^0.3.1",
+          version: ">=0.3.1,<0.4.0",
         });
         dependencies.push({
           name: "llama-index-agent-openai",
-          version: "^0.4.0",
+          version: ">=0.4.0,<0.5.0",
         });
       }
       break;
@@ -194,7 +241,7 @@ const getAdditionalDependencies = (
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.2.0",
+        version: ">=0.2.0,<0.3.0",
       });
       break;
     case "anthropic":
@@ -210,7 +257,7 @@ const getAdditionalDependencies = (
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: "^0.2.0",
+        version: ">=0.2.0,<0.3.0",
       });
       break;
     case "gemini":
@@ -220,7 +267,7 @@ const getAdditionalDependencies = (
       });
       dependencies.push({
         name: "llama-index-embeddings-gemini",
-        version: "^0.2.0",
+        version: ">=0.2.0,<0.3.0",
       });
       break;
     case "mistral":
@@ -246,15 +293,15 @@ const getAdditionalDependencies = (
     case "huggingface":
       dependencies.push({
         name: "llama-index-llms-huggingface",
-        version: "^0.3.5",
+        version: ">=0.3.5,<0.4.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-huggingface",
-        version: "^0.3.1",
+        version: ">=0.3.1,<0.4.0",
       });
       dependencies.push({
         name: "optimum",
-        version: "^1.23.3",
+        version: ">=1.23.3,<2.0.0",
         extras: ["onnxruntime"],
       });
       break;
@@ -274,54 +321,18 @@ const getAdditionalDependencies = (
     if (observability === "traceloop") {
       dependencies.push({
         name: "traceloop-sdk",
-        version: "^0.15.11",
+        version: ">=0.15.11,<0.16.0",
       });
     }
     if (observability === "llamatrace") {
       dependencies.push({
         name: "llama-index-callbacks-arize-phoenix",
-        version: "^0.3.0",
+        version: ">=0.3.0,<0.4.0",
       });
     }
   }
 
   return dependencies;
-};
-
-const mergePoetryDependencies = (
-  dependencies: Dependency[],
-  existingDependencies: Record<string, Omit<Dependency, "name"> | string>,
-) => {
-  for (const dependency of dependencies) {
-    let value = existingDependencies[dependency.name] ?? {};
-
-    // default string value is equal to attribute "version"
-    if (typeof value === "string") {
-      value = { version: value };
-    }
-
-    value.version = dependency.version ?? value.version;
-    value.extras = dependency.extras ?? value.extras;
-
-    // Merge constraints if they exist
-    if (dependency.constraints) {
-      value = { ...value, ...dependency.constraints };
-    }
-
-    if (value.version === undefined) {
-      throw new Error(
-        `Dependency "${dependency.name}" is missing attribute "version"!`,
-      );
-    }
-
-    // Serialize as object if there are any additional properties
-    if (Object.keys(value).length > 1) {
-      existingDependencies[dependency.name] = value;
-    } else {
-      // Otherwise, serialize just the version string
-      existingDependencies[dependency.name] = value.version;
-    }
-  }
 };
 
 const copyRouterCode = async (root: string, tools: Tool[]) => {
@@ -346,19 +357,102 @@ export const addDependencies = async (
     // Parse toml file
     const file = path.join(projectDir, FILENAME);
     const fileContent = await fs.readFile(file, "utf8");
-    const fileParsed = parse(fileContent);
+    let fileParsed: any;
+    try {
+      fileParsed = parse(fileContent);
+    } catch (parseError) {
+      console.error(`Error parsing ${FILENAME}:`, parseError);
+      throw new Error(
+        `Failed to parse ${FILENAME}. Please ensure it's valid TOML.`,
+      );
+    }
 
-    // Modify toml dependencies
-    const tool = fileParsed.tool as any;
-    const existingDependencies = tool.poetry.dependencies;
-    mergePoetryDependencies(dependencies, existingDependencies);
+    // Ensure [project] and [project.dependencies] exist
+    if (!fileParsed.project) {
+      fileParsed.project = {};
+    }
+    if (
+      !fileParsed.project.dependencies ||
+      !Array.isArray(fileParsed.project.dependencies)
+    ) {
+      // If dependencies exist but aren't an array, log a warning or error.
+      // For now, we'll overwrite it, assuming the intent is to use the standard array format.
+      console.warn(
+        `[project.dependencies] in ${FILENAME} is not an array. It will be overwritten.`,
+      );
+      fileParsed.project.dependencies = [];
+    }
+
+    const existingDependencies: string[] = fileParsed.project.dependencies;
+    const addedDeps: string[] = [];
+    const updatedDeps: string[] = [];
+
+    // Add or update dependencies
+    for (const newDep of dependencies) {
+      const depString = formatDependency(newDep);
+      const depNameMatch = depString.match(/^([a-zA-Z0-9._-]+)/); // Extract base package name
+      if (!depNameMatch) {
+        console.warn(
+          `Could not parse package name from dependency: ${depString}`,
+        );
+        continue;
+      }
+      const newDepName = depNameMatch[1].toLowerCase();
+
+      let found = false;
+      for (let i = 0; i < existingDependencies.length; i++) {
+        const existingDepNameMatch =
+          existingDependencies[i].match(/^([a-zA-Z0-9._-]+)/);
+        if (
+          existingDepNameMatch &&
+          existingDepNameMatch[1].toLowerCase() === newDepName
+        ) {
+          // Found existing dependency, update it
+          if (existingDependencies[i] !== depString) {
+            updatedDeps.push(`${existingDependencies[i]} -> ${depString}`);
+            existingDependencies[i] = depString;
+          }
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        // Add new dependency
+        existingDependencies.push(depString);
+        addedDeps.push(depString);
+      }
+      // Handle python version constraints separately (if any)
+      if (newDep.constraints?.python) {
+        if (
+          !fileParsed.project["requires-python"] ||
+          fileParsed.project["requires-python"] !== newDep.constraints.python
+        ) {
+          // This simple overwrite might not be ideal; merging constraints is complex.
+          // For now, let's just set it if the new dependency has one.
+          console.log(
+            `Setting requires-python = "${newDep.constraints.python}" from dependency ${newDep.name}`,
+          );
+          fileParsed.project["requires-python"] = newDep.constraints.python;
+        }
+      }
+    }
 
     // Write toml file
     const newFileContent = stringify(fileParsed);
     await fs.writeFile(file, newFileContent);
 
-    const dependenciesString = dependencies.map((d) => d.name).join(", ");
-    console.log(`\nAdded ${dependenciesString} to ${cyan(FILENAME)}\n`);
+    if (addedDeps.length > 0) {
+      console.log(`\nAdded dependencies to ${cyan(FILENAME)}:`);
+      addedDeps.forEach((dep) => console.log(`  ${dep}`));
+    }
+    if (updatedDeps.length > 0) {
+      console.log(`\nUpdated dependencies in ${cyan(FILENAME)}:`);
+      updatedDeps.forEach((dep) => console.log(`  ${dep}`));
+    }
+    if (addedDeps.length > 0 || updatedDeps.length > 0) {
+      console.log(""); // Newline for spacing
+    }
   } catch (error) {
     console.log(
       `Error while updating dependencies for Poetry project file ${FILENAME}\n`,
@@ -367,18 +461,16 @@ export const addDependencies = async (
   }
 };
 
-export const installPythonDependencies = (
-  { noRoot }: { noRoot: boolean } = { noRoot: false },
-) => {
-  if (isPoetryAvailable()) {
+export const installPythonDependencies = () => {
+  if (isUvAvailable()) {
     console.log(
-      `Installing python dependencies using poetry. This may take a while...`,
+      `Installing Python dependencies using uv. This may take a while...`,
     );
-    const installSuccessful = tryPoetryInstall(noRoot);
+    const installSuccessful = tryUvSync();
     if (!installSuccessful) {
       console.error(
         red(
-          "Installing dependencies using poetry failed. Please check error log above and try running create-llama again.",
+          "Installing dependencies using uv failed. Please check the error log above and ensure uv is installed correctly.",
         ),
       );
       process.exit(1);
@@ -386,10 +478,10 @@ export const installPythonDependencies = (
   } else {
     console.error(
       red(
-        `Poetry is not available in the current environment. Please check ${terminalLink(
-          "Poetry Installation",
-          `https://python-poetry.org/docs/#installation`,
-        )} to install poetry first, then run create-llama again.`,
+        `uv is not available in the current environment. Please check ${terminalLink(
+          "uv Installation",
+          `https://github.com/astral-sh/uv#installation`,
+        )} to install uv first, then run create-llama again.`,
       ),
     );
     process.exit(1);

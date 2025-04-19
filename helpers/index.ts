@@ -9,7 +9,6 @@ import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
 import { installLlamapackProject } from "./llama-pack";
 import { makeDir } from "./make-dir";
-import { isHavingPoetryLockFile, tryPoetryRun } from "./poetry";
 import { installPythonTemplate } from "./python";
 import { downloadAndExtractRepo } from "./repo";
 import { ConfigFileType, writeToolsConfig } from "./tools";
@@ -22,6 +21,7 @@ import {
   TemplateVectorDB,
 } from "./types";
 import { installTSTemplate } from "./typescript";
+import { isHavingUvLockFile, tryUvRun } from "./uv";
 
 const checkForGenerateScript = (
   modelConfig: ModelConfig,
@@ -64,7 +64,7 @@ async function generateContextData(
   if (packageManager) {
     const runGenerate = `${cyan(
       framework === "fastapi"
-        ? "poetry run generate"
+        ? "uv run generate"
         : `${packageManager} run generate`,
     )}`;
 
@@ -78,15 +78,21 @@ async function generateContextData(
     if (!missingSettings.length) {
       // If all the required environment variables are set, run the generate script
       if (framework === "fastapi") {
-        if (isHavingPoetryLockFile()) {
+        if (isHavingUvLockFile()) {
           console.log(`Running ${runGenerate} to generate the context data.`);
-          const result = tryPoetryRun("poetry run generate");
+          const result = tryUvRun("generate");
           if (!result) {
             console.log(`Failed to run ${runGenerate}.`);
             process.exit(1);
           }
           console.log(`Generated context data`);
           return;
+        } else {
+          console.log(
+            picocolors.yellow(
+              `\nWarning: uv.lock not found. Dependency installation might be incomplete. Skipping context generation.\nIf dependencies were installed, try running '${runGenerate}' manually.\n`,
+            ),
+          );
         }
       } else {
         console.log(`Running ${runGenerate} to generate the context data.`);
@@ -103,7 +109,7 @@ async function generateContextData(
 const downloadFile = async (url: string, destPath: string) => {
   const response = await fetch(url);
   const fileBuffer = await response.arrayBuffer();
-  await fsExtra.writeFile(destPath, Buffer.from(fileBuffer));
+  await fsExtra.writeFile(destPath, new Uint8Array(fileBuffer));
 };
 
 const prepareContextData = async (

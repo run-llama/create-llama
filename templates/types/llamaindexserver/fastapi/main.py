@@ -1,6 +1,5 @@
 import logging
 import os
-import subprocess
 
 from app.settings import init_settings
 from app.workflow import create_workflow
@@ -33,14 +32,3 @@ def create_app():
 load_dotenv()
 init_settings()
 app = create_app()
-
-
-def run(env: str):
-    os.environ["APP_ENV"] = env
-    app_host = os.getenv("APP_HOST", "0.0.0.0")
-    app_port = os.getenv("APP_PORT", "8000")
-
-    if env == "dev":
-        subprocess.run(["fastapi", "dev", "--host", app_host, "--port", app_port])
-    else:
-        subprocess.run(["fastapi", "run", "--host", app_host, "--port", app_port])
