@@ -2,8 +2,28 @@
 name = "app"
 version = "0.1.0"
 description = ""
-authors = ["Marcus Schiesser <mail@marcusschiesser.de>"]
+authors = [
+  { name = "Marcus Schiesser", email = "mail@marcusschiesser.de" }
+]
 readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "llama-index>=0.12.1",
+    "fastapi>=0.109.1",
+    "uvicorn>=0.23.2",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.10",
+    "aiostream>=0.5.2",
+    "cachetools>=5.3.3",
+    "rich>=13.9.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+]
 
 [tool.poetry.scripts]
 generate = "app.engine.generate:generate_datasource"
@@ -11,23 +31,9 @@ dev = "run:dev" # Starts the app in dev mode
 prod = "run:prod" # Starts the app in prod mode
 build = "run:build" # Builds the frontend assets and copies them to the static directory
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.14"
-fastapi = "^0.109.1"
-uvicorn = { extras = ["standard"], version = "^0.23.2" }
-python-dotenv = "^1.0.0"
-pydantic = "<2.10"
-aiostream = "^0.5.2"
-cachetools = "^5.3.3"
-llama-index = "^0.12.1"
-rich = "^13.9.4"
-
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.8.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = [ "hatchling>=1.24" ]
+build-backend = "hatchling.build"
 
 [tool.mypy]
 python_version = "3.11"
