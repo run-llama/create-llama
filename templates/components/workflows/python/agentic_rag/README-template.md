@@ -22,7 +22,7 @@ uv run generate
 Third, run the development server:
 
 ```shell
-uv run dev
+uv run fastapi dev
 ```
 
 Then open [http://localhost:8000](http://localhost:8000) with your browser to start the chat UI.
@@ -30,7 +30,7 @@ Then open [http://localhost:8000](http://localhost:8000) with your browser to st
 To start the app optimized for **production**, run:
 
 ```
-uv run prod
+uv run fastapi run
 ```
 
 ## Configure LLM and Embedding Model

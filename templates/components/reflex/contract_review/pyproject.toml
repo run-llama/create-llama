@@ -1,44 +1,33 @@
-[tool]
-[tool.poetry]
+[project]
 name = "app"
 version = "0.1.0"
 description = ""
-authors = [ "Marcus Schiesser <mail@marcusschiesser.de>" ]
+authors = [ { name = "Marcus Schiesser", email = "mail@marcusschiesser.de" } ]
 readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "fastapi>=0.109.1",
+    "python-dotenv>=1.0.0",
+    "pydantic<2.10",
+    "llama-index>=0.12.1",
+    "cachetools>=5.3.3",
+    "reflex>=0.6.2.post1",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 generate = "app.engine.generate:generate_datasource"
 
-[tool.poetry.dependencies]
-python = "^3.11,<4.0"
-fastapi = "^0.109.1"
-python-dotenv = "^1.0.0"
-pydantic = "<2.10"
-llama-index = "^0.12.1"
-cachetools = "^5.3.3"
-reflex = "^0.6.2.post1"
-
-[tool.poetry.dependencies.uvicorn]
-extras = [ "standard" ]
-version = "^0.23.2"
-
-[tool.poetry.dependencies.docx2txt]
-version = "^0.8"
-
-[tool.poetry.dependencies.llama-index-llms-openai]
-version = "^0.3.2"
-
-[tool.poetry.dependencies.llama-index-embeddings-openai]
-version = "^0.3.1"
-
-[tool.poetry.dependencies.llama-index-agent-openai]
-version = "^0.4.0"
-
-
-[tool.poetry.group.dev.dependencies]
-pytest-asyncio = "^0.25.0"
-pytest = "^8.3.4"
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+    "docx2txt>=0.8",
+    "llama-index-llms-openai>=0.3.2",
+    "llama-index-embeddings-openai>=0.3.1",
+    "llama-index-agent-openai>=0.4.0",
+]
 
 [build-system]
-requires = [ "poetry-core" ]
-build-backend = "poetry.core.masonry.api"
+requires = [ "hatchling>=1.24" ]
+build-backend = "hatchling.build"

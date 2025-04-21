@@ -26,8 +26,6 @@ dev = [
 generate = "generate:generate_index"
 generate_index = "generate:generate_index"
 generate_ui = "generate:generate_ui_for_workflow"
-dev = "run:run_dev"
-prod = "run:run_prod"
 
 
 [tool.mypy]

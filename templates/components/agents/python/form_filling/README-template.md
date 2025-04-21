@@ -7,7 +7,7 @@ First, setup the environment with poetry:
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```shell
-poetry install
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory.
@@ -16,7 +16,7 @@ Make sure you have the `OPENAI_API_KEY` set.
 Second, run the development server:
 
 ```shell
-poetry run dev
+uv run dev
 ```
 
 ## Use Case: Filling Financial CSV Template

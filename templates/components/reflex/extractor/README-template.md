@@ -7,7 +7,7 @@ First, setup the environment with poetry:
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```shell
-poetry install
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
@@ -15,13 +15,13 @@ Then check the parameters that have been pre-configured in the `.env` file in th
 Second, generate the embeddings of the example document in the `./data` directory:
 
 ```shell
-poetry run generate
+uv run generate
 ```
 
 Third, start app with `reflex` command:
 
 ```shell
-poetry run reflex run
+uv run reflex run
 ```
 
 To deploy the application, refer to the Reflex deployment guide: https://reflex.dev/docs/hosting/deploy-quick-start/

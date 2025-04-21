@@ -41,10 +41,10 @@ export function runReflexApp(appPath: string, port: number) {
 }
 
 export function runFastAPIApp(appPath: string, port: number) {
-  return createProcess("uv", ["run", "dev"], {
+  return createProcess("uv", ["run", "fastapi", "dev", "--port", `${port}`], {
     stdio: "inherit",
     cwd: appPath,
-    env: { ...process.env, APP_PORT: `${port}` },
+    env: { ...process.env },
   });
 }
 

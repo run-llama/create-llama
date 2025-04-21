@@ -1,23 +1,30 @@
-[tool.poetry]
+[project]
 name = "app"
 version = "0.1.0"
 description = ""
-authors = ["Marcus Schiesser <mail@marcusschiesser.de>"]
+authors = [ { name = "Marcus Schiesser", email = "mail@marcusschiesser.de" } ]
 readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "fastapi>=0.109.1",
+    "uvicorn>=0.23.2",
+    "python-dotenv>=1.0.0",
+    "pydantic<2.10",
+    "llama-index>=0.12.1",
+    "cachetools>=5.3.3",
+    "reflex>=0.6.2.post1",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 generate = "app.engine.generate:generate_datasource"
 
-[tool.poetry.dependencies]
-python = "^3.11,<4.0"
-fastapi = "^0.109.1"
-uvicorn = { extras = ["standard"], version = "^0.23.2" }
-python-dotenv = "^1.0.0"
-pydantic = "<2.10"
-llama-index = "^0.12.1"
-cachetools = "^5.3.3"
-reflex = "^0.6.2.post1"
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = [ "hatchling>=1.24" ]
+build-backend = "hatchling.build"

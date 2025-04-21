@@ -7,20 +7,20 @@ First, setup the environment with poetry:
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```shell
-poetry install
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
 Second, generate the embeddings of the documents in the `./data` directory:
 
 ```shell
-poetry run generate
+uv run generate
 ```
 
 Third, run the development server:
 
 ```shell
-poetry run dev
+uv run dev
 ```
 
 ## Use Case: Deep Research over own documents

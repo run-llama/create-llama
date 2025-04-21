@@ -7,8 +7,7 @@ First, setup the environment with poetry:
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```
-poetry install
-poetry shell
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider).
@@ -18,13 +17,13 @@ If you are using any tools or data sources, you can update their config files in
 Second, generate the embeddings of the documents in the `./data` directory:
 
 ```
-poetry run generate
+uv run generate
 ```
 
 Third, run the app:
 
 ```
-poetry run dev
+uv run dev
 ```
 
 Open [http://localhost:8000](http://localhost:8000) with your browser to start the app.
@@ -55,7 +54,7 @@ You can start editing the API endpoints by modifying `app/api/routers/chat.py`. 
 To start the app optimized for **production**, run:
 
 ```
-poetry run prod
+uv run prod
 ```
 
 ## Deployments
