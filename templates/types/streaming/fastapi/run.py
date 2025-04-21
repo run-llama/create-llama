@@ -214,7 +214,7 @@ async def _run_backend(
         env=envs,
     )
     # Wait for port is started
-    timeout = 30
+    timeout = 60
     for _ in range(timeout):
         await asyncio.sleep(1)
         if process.returncode is not None:

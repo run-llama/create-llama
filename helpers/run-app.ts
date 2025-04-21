@@ -40,11 +40,21 @@ export function runReflexApp(appPath: string, port: number) {
   });
 }
 
-export function runFastAPIApp(appPath: string, port: number) {
-  return createProcess("uv", ["run", "fastapi", "dev", "--port", `${port}`], {
+export function runFastAPIApp(
+  appPath: string,
+  port: number,
+  template: TemplateType,
+) {
+  let commandArgs: string[];
+  if (template === "streaming") {
+    commandArgs = ["run", "dev"];
+  } else {
+    commandArgs = ["run", "fastapi", "dev", "--port", `${port}`];
+  }
+  return createProcess("uv", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
-    env: { ...process.env },
+    env: { ...process.env, APP_PORT: `${port}` },
   });
 }
 
@@ -73,7 +83,7 @@ export async function runApp(
         : framework === "fastapi"
           ? runFastAPIApp
           : runTSApp;
-    await appRunner(appPath, port || defaultPort);
+    await appRunner(appPath, port || defaultPort, template);
   } catch (error) {
     console.error("Failed to run app:", error);
     throw error;

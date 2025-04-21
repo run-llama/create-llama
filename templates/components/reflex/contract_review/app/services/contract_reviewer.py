@@ -5,6 +5,19 @@ from enum import Enum
 from pathlib import Path
 from typing import List
 
+from app.config import (
+    COMPLIANCE_REPORT_SYSTEM_PROMPT,
+    COMPLIANCE_REPORT_USER_PROMPT,
+    CONTRACT_EXTRACT_PROMPT,
+    CONTRACT_MATCH_PROMPT,
+)
+from app.engine.index import get_index
+from app.models import (
+    ClauseComplianceCheck,
+    ComplianceReport,
+    ContractClause,
+    ContractExtraction,
+)
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import ChatPromptTemplate
@@ -19,20 +32,6 @@ from llama_index.core.workflow import (
     step,
 )
 
-from app.config import (
-    COMPLIANCE_REPORT_SYSTEM_PROMPT,
-    COMPLIANCE_REPORT_USER_PROMPT,
-    CONTRACT_EXTRACT_PROMPT,
-    CONTRACT_MATCH_PROMPT,
-)
-from app.engine.index import get_index
-from app.models import (
-    ClauseComplianceCheck,
-    ComplianceReport,
-    ContractClause,
-    ContractExtraction,
-)
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +39,7 @@ def get_workflow():
     index = get_index()
     if index is None:
         raise RuntimeError(
-            "Index not found! Please run `poetry run generate` to populate an index first."
+            "Index not found! Please run `uv run generate` to populate an index first."
         )
     return ContractReviewWorkflow(
         guideline_retriever=index.as_retriever(),

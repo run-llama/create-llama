@@ -55,7 +55,7 @@ Then re-start your app. Remember you'll need to re-run `generate` if you add new
 If you're using the Python backend, you can trigger indexing of your data by calling:
 
 ```bash
-poetry run generate
+uv run generate
 ```
 
 ## Customizing the AI models

@@ -40,7 +40,7 @@ To get started:
 2. Review Process:
    - The system will automatically analyze your document against compliance guidelines
    - By default, it uses [GDPR](./data/gdpr.pdf) as the compliance benchmark
-   - Custom guidelines can be used by adding your policy documents to the `./data` directory and running `poetry run generate` to update the embeddings
+   - Custom guidelines can be used by adding your policy documents to the `./data` directory and running `uv run generate` to update the embeddings
 
 The interface will display the analysis results for the compliance of the contract document.
 

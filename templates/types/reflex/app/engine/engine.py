@@ -14,7 +14,7 @@ def get_query_engine(output_cls):
         raise HTTPException(
             status_code=500,
             detail=str(
-                "StorageContext is empty - call 'poetry run generate' to generate the storage first"
+                "StorageContext is empty - call 'uv run generate' to generate the storage first"
             ),
         )
 

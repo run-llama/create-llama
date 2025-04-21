@@ -27,7 +27,7 @@ fly apps open
 If you're having documents in the `./data` folder, run the following command to generate vector embeddings of the documents:
 
 ```
-fly console --machine <machine_id> --command "poetry run generate"
+fly console --machine <machine_id> --command "uv run generate"
 ```
 
 Where `machine_id` is the ID of the machine where the app is running. You can show the running machines with the `fly machines` command.
@@ -67,7 +67,7 @@ docker run \
   -v $(pwd)/data:/app/data \ # Use your local folder to read the data
   -v $(pwd)/storage:/app/storage \ # Use your file system to store the vector database
   <your_image_name> \
-  poetry run generate
+  uv run generate
 ```
 
 The app will then be able to answer questions about the documents in the `./data` folder.
