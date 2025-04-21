@@ -205,11 +205,11 @@ const getAdditionalDependencies = (
     case "ollama":
       dependencies.push({
         name: "llama-index-llms-ollama",
-        version: "0.3.0",
+        version: ">=0.5.0,<0.6.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-ollama",
-        version: "0.3.0",
+        version: ">=0.6.0,<0.7.0",
       });
       break;
     case "openai":
@@ -233,15 +233,15 @@ const getAdditionalDependencies = (
       // Fixed the python version less than 3.13
       dependencies.push({
         name: "python",
-        version: "^3.11,<3.13",
+        version: ">=3.11,<3.13",
       });
       dependencies.push({
         name: "llama-index-llms-groq",
-        version: "0.2.0",
+        version: ">=0.3.0,<0.4.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: ">=0.2.0,<0.3.0",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
     case "anthropic":
@@ -253,51 +253,51 @@ const getAdditionalDependencies = (
       });
       dependencies.push({
         name: "llama-index-llms-anthropic",
-        version: "0.3.0",
+        version: ">=0.6.0,<0.7.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-fastembed",
-        version: ">=0.2.0,<0.3.0",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
     case "gemini":
       dependencies.push({
         name: "llama-index-llms-gemini",
-        version: "0.3.4",
+        version: ">=0.4.0,<0.5.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-gemini",
-        version: ">=0.2.0,<0.3.0",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
     case "mistral":
       dependencies.push({
         name: "llama-index-llms-mistralai",
-        version: "0.2.1",
+        version: ">=0.4.0,<0.5.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-mistralai",
-        version: "0.2.0",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
     case "azure-openai":
       dependencies.push({
         name: "llama-index-llms-azure-openai",
-        version: "0.2.0",
+        version: ">=0.3.0,<0.4.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-azure-openai",
-        version: "0.2.4",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
     case "huggingface":
       dependencies.push({
         name: "llama-index-llms-huggingface",
-        version: ">=0.3.5,<0.4.0",
+        version: ">=0.5.0,<0.6.0",
       });
       dependencies.push({
         name: "llama-index-embeddings-huggingface",
-        version: ">=0.3.1,<0.4.0",
+        version: ">=0.5.0,<0.6.0",
       });
       dependencies.push({
         name: "optimum",
@@ -308,11 +308,11 @@ const getAdditionalDependencies = (
     case "t-systems":
       dependencies.push({
         name: "llama-index-agent-openai",
-        version: "0.3.0",
+        version: ">=0.4.0,<0.5.0",
       });
       dependencies.push({
         name: "llama-index-llms-openai-like",
-        version: "0.2.0",
+        version: ">=0.3.0,<0.4.0",
       });
       break;
   }
