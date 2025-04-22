@@ -56,7 +56,7 @@ To customize the UI, you can start by modifying the [./components/ui_event.jsx](
 You can also generate a new code for the workflow using LLM by running the following command:
 
 ```
-uv run generate:ui
+uv run generate_ui
 ```
 
 ## Learn More
