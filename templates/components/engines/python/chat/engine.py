@@ -30,7 +30,7 @@ def get_chat_engine(params=None, event_handlers=None, **kwargs):
         raise HTTPException(
             status_code=500,
             detail=str(
-                "StorageContext is empty - call 'poetry run generate' to generate the storage first"
+                "StorageContext is empty - call 'uv run generate' to generate the storage first"
             ),
         )
     if top_k != 0 and kwargs.get("similarity_top_k") is None:

@@ -10,7 +10,7 @@ class CrawlUrl(BaseModel):
 
 
 class WebLoaderConfig(BaseModel):
-    driver_arguments: Optional[List[str]] = Field(default_factory=list)
+    driver_arguments: Optional[List[str]] = Field(default=None)
     urls: List[CrawlUrl]
 
 

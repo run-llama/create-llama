@@ -7,7 +7,7 @@ First, setup the environment with poetry:
 > **_Note:_** This step is not needed if you are using the dev-container.
 
 ```shell
-poetry install
+uv sync
 ```
 
 Then check the parameters that have been pre-configured in the `.env` file in this directory. (E.g. you might need to configure an `OPENAI_API_KEY` if you're using OpenAI as model provider and `E2B_API_KEY` for the [E2B's code interpreter tool](https://e2b.dev/docs)).
@@ -15,13 +15,13 @@ Then check the parameters that have been pre-configured in the `.env` file in th
 Second, generate the embeddings of the documents in the `./data` directory:
 
 ```shell
-poetry run generate
+uv run generate
 ```
 
 Third, run the development server:
 
 ```shell
-poetry run dev
+uv run dev
 ```
 
 The example provides one streaming API endpoint `/api/chat`.
@@ -40,7 +40,7 @@ Open [http://localhost:8000](http://localhost:8000) with your browser to start t
 To start the app optimized for **production**, run:
 
 ```
-poetry run prod
+uv run prod
 ```
 
 ## Deployments

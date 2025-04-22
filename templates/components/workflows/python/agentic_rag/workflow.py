@@ -12,7 +12,7 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
     index = get_index(chat_request=chat_request)
     if index is None:
         raise RuntimeError(
-            "Index not found! Please run `poetry run generate` to index the data first."
+            "Index not found! Please run `uv run generate` to index the data first."
         )
     query_tool = get_query_engine_tool(index=index)
     return AgentWorkflow.from_tools_or_functions(

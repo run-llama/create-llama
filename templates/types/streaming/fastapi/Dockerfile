@@ -13,38 +13,31 @@ RUN npm install && npm run build
 # ====================================
 # Backend
 # ====================================
-FROM python:3.11 AS build
+FROM python:3.11 AS release
 
 WORKDIR /app
 
 ENV PYTHONPATH=/app
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
-    cd /usr/local/bin && \
-    ln -s /opt/poetry/bin/poetry && \
-    poetry config virtualenvs.create false
+# Install Astral uv
+# Download the latest installer
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
 
-# Install Chromium for web loader
-# Can disable this if you don't use the web loader to reduce the image size
-RUN apt update && apt install -y chromium chromium-driver
+RUN sh /uv-installer.sh && rm /uv-installer.sh
 
-# Install dependencies
-COPY ./pyproject.toml ./poetry.lock* /app/
-RUN poetry install --no-root --no-cache --only main
+ENV PATH="/root/.local/bin/:$PATH"
 
-# ====================================
-# Release
-# ====================================
-FROM build AS release
 
 COPY --from=frontend /app/frontend/out /app/static
 
 COPY . .
+
+# Install dependencies
+RUN uv sync
 
 # Remove frontend code
 RUN rm -rf .frontend
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "prod"]
+CMD ["uv", "run", "fastapi", "run"]

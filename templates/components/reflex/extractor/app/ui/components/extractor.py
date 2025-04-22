@@ -1,7 +1,8 @@
 import logging
+
 import reflex as rx
-from app.services.model import DEFAULT_MODEL
 from app.services.extractor import ExtractorService, InvalidModelCode
+from app.services.model import DEFAULT_MODEL
 
 logger = logging.getLogger("uvicorn")
 
@@ -13,7 +14,7 @@ class StructuredQuery(rx.State):
     code: str = DEFAULT_MODEL
     error: str = None
 
-    @rx.background
+    @rx.event(background=True)
     async def handle_query(self):
         async with self:
             if not self.query:

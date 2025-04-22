@@ -18,7 +18,7 @@ class MonacoComponent(rx.Component):
     theme: rx.Var[str] = rx.color_mode_cond("light", "vs-dark")  # type: ignore
 
     # The width of the editor.
-    line: rx.Var[int] = rx.Var.create_safe(1, _var_is_string=False)
+    line: rx.Var[int] = rx.Var.create_safe(1)
 
     # The height of the editor.
     width: rx.Var[str]
