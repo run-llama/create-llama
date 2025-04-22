@@ -24,53 +24,6 @@ interface Dependency {
   constraints?: Record<string, string>;
 }
 
-// Helper function to format a dependency object into a PEP 508 string
-// PEP 508: https://peps.python.org/pep-0508/
-const formatDependency = (dep: Dependency): string => {
-  let depString = dep.name;
-  if (dep.extras && dep.extras.length > 0) {
-    depString += `[${dep.extras.join(",")}]`;
-  }
-  if (dep.version) {
-    // Convert Poetry/NPM-style ranges to PEP 440 compatible ones if possible
-    // This is a simplification; a robust converter might be needed for complex cases
-    let versionSpecifier = dep.version;
-    if (versionSpecifier.startsWith("^")) {
-      // Convert ^1.2.3 to >=1.2.3,<2.0.0
-      const baseVersion = versionSpecifier.substring(1);
-      const parts = baseVersion.split(".");
-      if (parts.length >= 1) {
-        const major = parseInt(parts[0], 10);
-        if (!isNaN(major)) {
-          versionSpecifier = `>=${baseVersion},<${major + 1}.0.0`;
-        }
-      }
-    } else if (versionSpecifier.startsWith("~")) {
-      // Convert ~1.2.3 to >=1.2.3,<1.3.0
-      const baseVersion = versionSpecifier.substring(1);
-      const parts = baseVersion.split(".");
-      if (parts.length >= 2) {
-        const major = parts[0];
-        const minor = parseInt(parts[1], 10);
-        if (!isNaN(minor)) {
-          versionSpecifier = `>=${baseVersion},<${major}.${minor + 1}.0`;
-        }
-      } else if (parts.length === 1) {
-        // Handle ~1 as >=1,<2
-        const major = parseInt(parts[0], 10);
-        if (!isNaN(major)) {
-          versionSpecifier = `>=${baseVersion},<${major + 1}.0`;
-        }
-      }
-    }
-    // Ensure basic >=, <=, ==, <, > are kept
-    depString += versionSpecifier;
-  }
-  // Note: dep.constraints (like python version) are not directly part of the PEP 508 string
-  // They belong in requires-python or environment markers, handled separately.
-  return depString;
-};
-
 const getAdditionalDependencies = (
   modelConfig: ModelConfig,
   vectorDb?: TemplateVectorDB,
@@ -377,15 +330,13 @@ export const addDependencies = async (
 
     // Add or update dependencies
     for (const newDep of dependencies) {
-      const depString = formatDependency(newDep);
-      const depNameMatch = depString.match(/^([a-zA-Z0-9._-]+)/); // Extract base package name
-      if (!depNameMatch) {
-        console.warn(
-          `Could not parse package name from dependency: ${depString}`,
-        );
-        continue;
+      let depString = newDep.name;
+      if (newDep.extras && newDep.extras.length > 0) {
+        depString += `[${newDep.extras.join(",")}]`;
       }
-      const newDepName = depNameMatch[1].toLowerCase();
+      if (newDep.version) {
+        depString += newDep.version;
+      }
 
       let found = false;
       for (let i = 0; i < existingDependencies.length; i++) {
@@ -393,7 +344,7 @@ export const addDependencies = async (
           existingDependencies[i].match(/^([a-zA-Z0-9._-]+)/);
         if (
           existingDepNameMatch &&
-          existingDepNameMatch[1].toLowerCase() === newDepName
+          existingDepNameMatch[1].toLowerCase() === depString.toLowerCase()
         ) {
           // Found existing dependency, update it
           if (existingDependencies[i] !== depString) {

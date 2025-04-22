@@ -46,7 +46,7 @@ Open [http://localhost:8000](http://localhost:8000) with your browser to start t
 To start the app optimized for **production**, run:
 
 ```
-poetry run prod
+uv run prod
 ```
 
 ## Deployments
