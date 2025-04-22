@@ -20,6 +20,8 @@ def create_app():
         ),
         logger=logger,
     )
+    # You can also add custom FastAPI routes to app
+    app.add_api_route("/api/health", lambda: {"message": "OK"}, status_code=200)
     return app
 
 
