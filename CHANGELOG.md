@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.10
+
+### Patch Changes
+
+- 0a2e12a: Use uv as the default package manager
+
 ## 0.5.9
 
 ### Patch Changes
