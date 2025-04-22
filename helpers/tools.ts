@@ -41,7 +41,7 @@ export const supportedTools: Tool[] = [
     dependencies: [
       {
         name: "llama-index-tools-google",
-        version: "^0.3.0",
+        version: ">=0.3.0,<0.4.0",
       },
     ],
     supportedFrameworks: ["fastapi"],
@@ -62,7 +62,7 @@ export const supportedTools: Tool[] = [
     dependencies: [
       {
         name: "duckduckgo-search",
-        version: "^6.3.5",
+        version: ">=6.3.5,<7.0.0",
       },
     ],
     supportedFrameworks: ["fastapi"], // TODO: Re-enable this tool once the duck-duck-scrape TypeScript library works again
@@ -82,7 +82,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "llama-index-tools-wikipedia",
-        version: "^0.3.0",
+        version: ">=0.3.0,<0.4.0",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
@@ -102,11 +102,11 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "xhtml2pdf",
-        version: "^0.2.14",
+        version: ">=0.2.14,<0.3.0",
       },
       {
         name: "markdown",
-        version: "^3.7",
+        version: ">=3.7.0,<4.0.0",
       },
     ],
     type: ToolType.LOCAL,
@@ -124,7 +124,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "e2b_code_interpreter",
-        version: "^1.1.1",
+        version: ">=1.1.1,<1.2.0",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
@@ -155,7 +155,7 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "e2b_code_interpreter",
-        version: "^1.1.1",
+        version: ">=1.1.1,<1.2.0",
       },
     ],
     supportedFrameworks: ["fastapi", "express", "nextjs"],
@@ -184,7 +184,7 @@ For better results, you can specify the region parameter to get results from a s
       },
       {
         name: "jsonschema",
-        version: "^4.22.0",
+        version: ">=4.22.0,<5.0.0",
       },
       {
         name: "llama-index-tools-requests",
@@ -247,11 +247,11 @@ For better results, you can specify the region parameter to get results from a s
     dependencies: [
       {
         name: "pandas",
-        version: "^2.2.3",
+        version: ">=2.2.3,<3.0.0",
       },
       {
         name: "tabulate",
-        version: "^0.9.0",
+        version: ">=0.9.0,<1.0.0",
       },
     ],
   },
