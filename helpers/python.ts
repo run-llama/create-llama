@@ -229,12 +229,6 @@ const getAdditionalDependencies = (
       }
       break;
     case "groq":
-      // Fastembed==0.2.0 does not support python3.13 at the moment
-      // Fixed the python version less than 3.13
-      dependencies.push({
-        name: "python",
-        version: ">=3.11,<3.13",
-      });
       dependencies.push({
         name: "llama-index-llms-groq",
         version: ">=0.3.0,<0.4.0",
@@ -245,12 +239,6 @@ const getAdditionalDependencies = (
       });
       break;
     case "anthropic":
-      // Fastembed==0.2.0 does not support python3.13 at the moment
-      // Fixed the python version less than 3.13
-      dependencies.push({
-        name: "python",
-        version: "^3.11,<3.13",
-      });
       dependencies.push({
         name: "llama-index-llms-anthropic",
         version: ">=0.6.0,<0.7.0",
