@@ -1,13 +1,14 @@
 import logging
 import os
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
 from llama_index.server.settings import server_settings
-from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger("uvicorn")
 
@@ -22,6 +23,7 @@ class ChatConfig(BaseModel):
 class ChatAPIMessage(BaseModel):
     role: MessageRole
     content: str
+    annotations: Optional[List[Any]] = None
 
     def to_llamaindex_message(self) -> ChatMessage:
         return ChatMessage(role=self.role, content=self.content)
@@ -150,4 +152,75 @@ class UIEvent(Event):
         return {
             "type": self.type,
             "data": self.data.model_dump(),
+        }
+
+
+class ArtifactType(str, Enum):
+    CODE = "code"
+    DOCUMENT = "document"
+
+
+class CodeArtifactData(BaseModel):
+    file_name: str
+    code: str
+    language: str
+
+
+class DocumentArtifactData(BaseModel):
+    title: str
+    content: str
+    type: Literal["markdown", "html"]
+
+
+class Artifact(BaseModel):
+    created_at: Optional[int] = None
+    type: ArtifactType
+    data: Union[CodeArtifactData, DocumentArtifactData]
+
+    @classmethod
+    def from_message(cls, message: ChatAPIMessage) -> Optional["Artifact"]:
+        if not message.annotations or not isinstance(message.annotations, list):
+            return None
+
+        for annotation_data in message.annotations:
+            if (
+                isinstance(annotation_data, dict)
+                and annotation_data.get("type") == "artifact"
+                and isinstance(annotation_data.get("data"), dict)
+            ):
+                try:
+                    artifact_payload_container = annotation_data["data"]
+
+                    potential_artifact_dict = {
+                        "created_at": artifact_payload_container.get("created_at"),
+                        "type": artifact_payload_container.get("type"),
+                        "data": artifact_payload_container.get("data"),
+                    }
+
+                    potential_artifact_dict = {
+                        k: v
+                        for k, v in potential_artifact_dict.items()
+                        if v is not None
+                    }
+
+                    artifact = cls.model_validate(potential_artifact_dict)
+                    return artifact
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to parse artifact from annotation: {annotation_data}. Error: {e}"
+                    )
+
+        return None
+
+    def to_llm(self) -> str:
+        if self.type == ArtifactType.CODE:
+            return self.data.code  # type: ignore
+        elif self.type == ArtifactType.DOCUMENT:
+            return self.data.content  # type: ignore
+        return ""
+
+    def to_response(self) -> dict:
+        return {
+            "type": "artifact",
+            "data": self.model_dump(),
         }

@@ -10,11 +10,12 @@ from fastapi.responses import StreamingResponse
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
+    ArtifactFromToolCall,
+    EventCallback,
+    LlamaCloudFileDownload,
     SourceNodesFromToolCall,
     SuggestNextQuestions,
 )
-from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.callbacks.llamacloud import LlamaCloudFileDownload
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
@@ -50,6 +51,7 @@ def chat_router(
 
             callbacks: list[EventCallback] = [
                 SourceNodesFromToolCall(),
+                ArtifactFromToolCall(),
                 LlamaCloudFileDownload(background_tasks),
             ]
             if request.config and request.config.next_question_suggestions:
@@ -139,6 +141,6 @@ async def _stream_content(
         logger.warning("Client cancelled the request!")
         await handler.cancel_run()
     except Exception as e:
-        logger.error(f"Error in stream response: {e}")
+        logger.error(f"Error in stream response: {e}", exc_info=True)
         yield VercelStreamResponse.convert_error(str(e))
         await handler.cancel_run()
