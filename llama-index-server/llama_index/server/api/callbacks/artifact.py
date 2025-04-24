@@ -1,5 +1,4 @@
-import time
-from typing import Any
+from typing import Any, Dict, Optional
 
 from llama_index.core.agent.workflow.workflow_events import ToolCallResult
 from llama_index.server.api.callbacks.base import EventCallback
@@ -15,20 +14,23 @@ class ArtifactFromToolCall(EventCallback):
                          default is "artifact"
     """
 
-    def __init__(self, tool_name: str = "artifact_generator"):
-        self.tool_name = tool_name
+    def __init__(self, tool_prefix: str = "artifact_"):
+        self.tool_prefix = tool_prefix
 
-    def transform_tool_call_result(self, event: ToolCallResult) -> Artifact:
-        artifact = event.tool_output.raw_output
-        return Artifact(
-            created_at=int(time.time()),
-            type=artifact.get("type"),
-            data=artifact.get("data"),
-        )
+    def transform_tool_call_result(
+        self, event: ToolCallResult
+    ) -> Optional[Dict[str, Any]]:
+        artifact: Artifact = event.tool_output.raw_output
+        if isinstance(artifact, str):  # Error tool output
+            return None
+        return {
+            "type": "artifact",
+            "data": artifact.model_dump(),
+        }
 
     async def run(self, event: Any) -> Any:
         if isinstance(event, ToolCallResult):
-            if event.tool_name == self.tool_name:
+            if event.tool_name.startswith(self.tool_prefix):
                 return event, self.transform_tool_call_result(event)
         return event
 
