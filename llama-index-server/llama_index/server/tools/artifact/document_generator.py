@@ -55,14 +55,15 @@ class DocumentGenerator:
         self.llm = llm
         self.last_artifact = last_artifact
 
-    def prepare_chat_messages(
-        self, requirement: str, previous_content: Optional[str] = None
-    ) -> List[ChatMessage]:
+    def prepare_chat_messages(self, requirement: str) -> List[ChatMessage]:
         user_messages: List[ChatMessage] = []
         user_messages.append(ChatMessage(role=MessageRole.USER, content=requirement))
-        if previous_content:
+        if self.last_artifact:
             user_messages.append(
-                ChatMessage(role=MessageRole.USER, content=previous_content)
+                ChatMessage(
+                    role=MessageRole.USER,
+                    content=f"Previous content: {self.last_artifact.data.model_dump_json()}",
+                )
             )
         return user_messages
 
@@ -71,7 +72,6 @@ class DocumentGenerator:
         file_name: str,
         document_format: Literal["markdown", "html"],
         requirement: str,
-        previous_content: Optional[str] = None,
     ) -> Artifact:
         """
         Generate document content based on the provided requirement.
@@ -80,12 +80,11 @@ class DocumentGenerator:
             file_name (str): The name of the file to generate.
             document_format (str): The format of the document to generate. (Only "markdown" and "html" are supported now)
             requirement (str): A detailed requirement for the document to be generated/updated.
-            previous_content (Optional[str]): Existing document content to be modified or referenced. Defaults to None.
 
         Returns:
             Artifact: The generated document.
         """
-        user_messages = self.prepare_chat_messages(requirement, previous_content)
+        user_messages = self.prepare_chat_messages(requirement)
 
         messages: List[ChatMessage] = [
             ChatMessage(role=MessageRole.SYSTEM, content=DOCUMENT_GENERATION_PROMPT),

@@ -61,15 +61,15 @@ class CodeGenerator:
         self.last_artifact = last_artifact
 
     def prepare_chat_messages(
-        self, requirement: str, language: str, previous_code: Optional[str] = None
+        self, requirement: str, language: str
     ) -> List[ChatMessage]:
         user_messages: List[ChatMessage] = []
         user_messages.append(ChatMessage(role=MessageRole.USER, content=requirement))
-        if previous_code:
+        if self.last_artifact:
             user_messages.append(
                 ChatMessage(
                     role=MessageRole.USER,
-                    content=f"```{language}\n{previous_code}\n```",
+                    content=f"Previous code: {self.last_artifact.data.model_dump_json()}",
                 )
             )
         else:
@@ -86,7 +86,6 @@ class CodeGenerator:
         file_name: str,
         language: str,
         requirement: str,
-        previous_code: Optional[str] = None,
     ) -> Artifact:
         """
         Generate code based on the provided requirement.
@@ -95,13 +94,12 @@ class CodeGenerator:
             file_name (str): The name of the file to generate.
             language (str): The language of the code to generate (Only "typescript" and "python" is supported now)
             requirement (str): Provide a detailed requirement for the code to be generated/updated.
-            old_content (Optional[str]): Existing code content to be modified or referenced. Defaults to None.
 
         Returns:
             Artifact: A dictionary containing the generated artifact details
                            (type, data).
         """
-        user_messages = self.prepare_chat_messages(requirement, language, previous_code)
+        user_messages = self.prepare_chat_messages(requirement, language)
 
         messages: List[ChatMessage] = [
             ChatMessage(role=MessageRole.SYSTEM, content=CODE_GENERATION_PROMPT),
