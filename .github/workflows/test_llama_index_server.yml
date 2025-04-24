@@ -86,19 +86,10 @@ jobs:
 
       - name: Install build package
         shell: bash
-        run: uv sync --all-extras --dev
-
-      - name: Build package
-        shell: bash
-        run: uv build
-
-      - name: Test installing built package
-        shell: bash
-        run: uv pip install .
+        run: uv sync --all-extras
 
       - name: Test import
         shell: bash
-        working-directory: ${{ vars.RUNNER_TEMP }}
         run: uv run python -c "from llama_index.server import LlamaIndexServer"
 
       - name: Upload artifact
