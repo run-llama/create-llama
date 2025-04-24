@@ -90,7 +90,7 @@ jobs:
 
       - name: Build package
         shell: bash
-        run: uv run python -m build
+        run: uv build
 
       - name: Test installing built package
         shell: bash
