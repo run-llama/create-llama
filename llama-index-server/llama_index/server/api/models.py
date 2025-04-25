@@ -211,16 +211,3 @@ class Artifact(BaseModel):
                     )
 
         return None
-
-    def to_llm(self) -> str:
-        if self.type == ArtifactType.CODE:
-            return self.data.code  # type: ignore
-        elif self.type == ArtifactType.DOCUMENT:
-            return self.data.content  # type: ignore
-        return ""
-
-    def to_response(self) -> dict:
-        return {
-            "type": "artifact",
-            "data": self.model_dump(),
-        }
