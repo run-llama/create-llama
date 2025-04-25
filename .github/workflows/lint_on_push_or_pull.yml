@@ -35,10 +35,10 @@ jobs:
         uses: chartboost/ruff-action@v1
         with:
           args: "format --check"
-          src: "packages/python-server/llama-index-server"
+          src: "python/llama-index-server"
 
       - name: Run Python lint
         uses: chartboost/ruff-action@v1
         with:
           args: "check"
-          src: "packages/python-server/llama-index-server"
+          src: "python/llama-index-server"

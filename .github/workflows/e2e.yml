@@ -3,11 +3,11 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "packages/python-server/llama-index-server/**"
+      - "python/llama-index-server/**"
   pull_request:
     branches: [main]
     paths-ignore:
-      - "packages/python-server/llama-index-server/**"
+      - "python/llama-index-server/**"
 
 jobs:
   e2e-python:
