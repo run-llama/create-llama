@@ -14,8 +14,6 @@ from llama_index.core.agent.workflow.workflow_events import (
 )
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
-    AgentEventFromToolCall,
-    ArtifactFromToolCall,
     EventCallback,
     LlamaCloudFileDownload,
     SourceNodesFromToolCall,
@@ -55,9 +53,7 @@ def chat_router(
             )
 
             callbacks: list[EventCallback] = [
-                AgentEventFromToolCall(),
                 SourceNodesFromToolCall(),
-                ArtifactFromToolCall(),
                 LlamaCloudFileDownload(background_tasks),
             ]
             if request.config and request.config.next_question_suggestions:
