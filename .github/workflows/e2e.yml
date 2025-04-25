@@ -1,13 +1,13 @@
-name: E2E Tests
+name: E2E Tests for create-llama package
 on:
   push:
     branches: [main]
     paths-ignore:
-      - "llama-index-server/**"
+      - "python/llama-index-server/**"
   pull_request:
     branches: [main]
     paths-ignore:
-      - "llama-index-server/**"
+      - "python/llama-index-server/**"
 
 jobs:
   e2e-python:
@@ -51,15 +51,15 @@ jobs:
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Build create-llama
         run: pnpm run build
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Install
         run: pnpm run pack-install
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Run Playwright tests for Python
         run: pnpm run e2e:python
@@ -70,13 +70,13 @@ jobs:
           DATASOURCE: ${{ matrix.datasources }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
-        working-directory: .
+        working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}
-          path: ./playwright-report/
+          path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30
 
@@ -121,15 +121,15 @@ jobs:
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Build create-llama
         run: pnpm run build
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Install
         run: pnpm run pack-install
-        working-directory: .
+        working-directory: packages/create-llama
 
       - name: Run Playwright tests for TypeScript
         run: pnpm run e2e:typescript
@@ -138,12 +138,12 @@ jobs:
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
-        working-directory: .
+        working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}-node${{ matrix.node-version }}
-          path: ./playwright-report/
+          path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30

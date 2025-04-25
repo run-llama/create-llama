@@ -74,7 +74,7 @@ test.describe("Test resolve TS dependencies", () => {
     // Install dependencies using pnpm
     try {
       const { stderr: installStderr } = await execAsync(
-        "pnpm install --prefer-offline",
+        "pnpm install --prefer-offline --ignore-workspace",
         {
           cwd: appDir,
         },
