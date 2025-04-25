@@ -6,6 +6,10 @@ node_modules
 .pnpm-store
 .pnp.js
 
+# testing
+coverage
+.coverage
+
 # next.js
 .next/
 out/
@@ -31,9 +35,27 @@ yarn-error.log*
 dist/
 lib/
 
+# e2e
+.cache
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.tsbuildinfo
+e2e/cache
+
 # intellij
 **/.idea
 
-# vscode
-.vscode
-!.vscode/settings.json
+# Python
+.mypy_cache/
+venv/
+.venv/
+dist/
+.__pycache__
+__pycache__
+.python-version
+.ui
+
+# build artifacts
+create-llama-*.tgz

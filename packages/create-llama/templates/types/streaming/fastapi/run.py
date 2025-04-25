@@ -247,13 +247,13 @@ def _get_node_package_manager() -> NodePackageManager:
         str: The full path to the available package manager executable
     """
     # On Windows, we need to check for .cmd extensions
-    # pnpm_cmds = ["pnpm", "pnpm.cmd"]
+    pnpm_cmds = ["pnpm", "pnpm.cmd"]
     npm_cmds = ["npm", "npm.cmd"]
 
-    # for cmd in pnpm_cmds:
-    #     cmd_path = which(cmd)
-    #     if cmd_path is not None:
-    #         return NodePackageManager(cmd_path)
+    for cmd in pnpm_cmds:
+        cmd_path = which(cmd)
+        if cmd_path is not None:
+            return NodePackageManager(cmd_path)
 
     for cmd in npm_cmds:
         cmd_path = which(cmd)
