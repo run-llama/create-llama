@@ -46,7 +46,7 @@ class SynthesizeAnswerEvent(Event):
     generated_artifact: str
 
 
-class ArtifactUIEvents(BaseModel):
+class UIEventData(BaseModel):
     state: Literal["plan", "generate", "completed"]
     requirement: Optional[str]
 
@@ -71,6 +71,7 @@ class ArtifactWorkflow(Workflow):
         super().__init__(**kwargs)
         self.llm = llm
         self.chat_request = chat_request
+        self.last_artifact = get_last_artifact(chat_request)
 
     @step
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> PlanEvent:
@@ -78,14 +79,12 @@ class ArtifactWorkflow(Workflow):
         if user_msg is None:
             raise ValueError("user_msg is required to run the workflow")
         chat_history = ev.chat_history or []
-        # Get last artifact from chat_request
-        last_artifact = get_last_artifact(self.chat_request)
-        if last_artifact:
+        if self.last_artifact:
             chat_history.append(
                 ChatMessage(
                     role="user",
                     content="Here is the current document artifact: \n"
-                    + last_artifact.model_dump_json(),
+                    + self.last_artifact.model_dump_json(),
                 )
             )
         memory = ChatMemoryBuffer.from_defaults(
@@ -95,7 +94,7 @@ class ArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(last_artifact.data) if last_artifact else None,
+            context=str(self.last_artifact.data) if self.last_artifact else "",
         )
 
     @step
@@ -106,8 +105,8 @@ class ArtifactWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             UIEvent(
-                type="artifact_status",
-                data=ArtifactUIEvents(
+                type="ui_event",
+                data=UIEventData(
                     state="plan",
                     requirement=None,
                 ),
@@ -182,8 +181,8 @@ class ArtifactWorkflow(Workflow):
         )
         ctx.write_event_to_stream(
             UIEvent(
-                type="artifact_status",
-                data=ArtifactUIEvents(
+                type="ui_event",
+                data=UIEventData(
                     state="generate",
                     requirement=requirement.requirement,
                 ),
@@ -202,8 +201,8 @@ class ArtifactWorkflow(Workflow):
         """
         ctx.write_event_to_stream(
             UIEvent(
-                type="artifact_status",
-                data=ArtifactUIEvents(
+                type="ui_event",
+                data=UIEventData(
                     state="generate",
                     requirement=event.requirement.requirement,
                 ),
@@ -243,7 +242,9 @@ class ArtifactWorkflow(Workflow):
          Now, please generate the document for the following requirement:
          {requirement}
          """).format(
-            previous_artifact=get_last_artifact(self.chat_request),
+            previous_artifact=self.last_artifact.model_dump_json()
+            if self.last_artifact
+            else "",
             requirement=event.requirement,
         )
         response = await self.llm.acomplete(
@@ -269,6 +270,7 @@ class ArtifactWorkflow(Workflow):
                 content=f"Generated document: \n{response.text}",
             )
         )
+        # To show the Canvas panel for the artifact
         ctx.write_event_to_stream(
             UIEvent(
                 type="artifact",
@@ -312,8 +314,8 @@ class ArtifactWorkflow(Workflow):
         )
         ctx.write_event_to_stream(
             UIEvent(
-                type="artifact_status",
-                data=ArtifactUIEvents(
+                type="ui_event",
+                data=UIEventData(
                     state="completed",
                     requirement=event.requirement.requirement,
                 ),
