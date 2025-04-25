@@ -22,7 +22,8 @@ jobs:
         working-directory: ./llama-index-server
     if: |
       github.event_name == 'push' && 
-      !startsWith(github.ref, 'refs/heads/release/llama-index-server-v')
+      !startsWith(github.ref, 'refs/heads/release/llama-index-server-v') &&
+      !contains(github.event.head_commit.message, 'Release: llama-index-server v')
 
     steps:
       - name: Checkout Repository
@@ -30,17 +31,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
       - name: Install dependencies
-        run: poetry install
+        shell: bash
+        run: uv sync --all-extras --dev
 
       - name: Setup Git
         run: |
@@ -48,15 +51,17 @@ jobs:
           git config --global user.name "github-actions[bot]"
 
       - name: Bump patch version
+        shell: bash
         run: |
-          poetry version patch
+          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version | awk -F. '{$NF = $NF + 1;}1' OFS=.)
           git add pyproject.toml
-          git commit -m "chore(release): bump version to $(poetry version -s)"
+          git commit -m "chore(release): bump llama-index-server version to $(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)"
 
       - name: Get current version
         id: get_version
+        shell: bash
         run: |
-          version=$(poetry version -s)
+          version=$(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)
           echo "current_version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release PR
@@ -91,31 +96,34 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
       - name: Install dependencies
-        run: poetry install
+        shell: bash
+        run: uv sync --all-extras
 
       - name: Get current version
         id: get_version
+        shell: bash
         run: |
-          version=$(poetry version -s)
+          version=$(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)
           echo "current_version=${version}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and publish to PyPI
-        uses: JRubics/poetry-publish@v2.1
-        with:
-          python_version: "3.11"
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
-          package_directory: "llama-index-server"
-          poetry_install_options: "--without dev"
+      - name: Build package
+        shell: bash
+        run: uv build --no-sources
+
+      - name: Publish to PyPI
+        shell: bash
+        run: uv publish --token ${{ secrets.PYPI_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
