@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: llama-index-server
+        working-directory: python/llama-index-server
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: llama-index-server
+        working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
 
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: llama-index-server
+        working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
@@ -108,4 +108,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-index-server
-          path: llama-index-server/dist/
+          path: python/llama-index-server/dist/

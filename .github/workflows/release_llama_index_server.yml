@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "llama-index-server/**"
+      - "python/llama-index-server/**"
       - ".github/workflows/release_llama_index_server.yml"
   pull_request:
     types:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./llama-index-server
+        working-directory: ./python/llama-index-server
     if: |
       github.event_name == 'push' && 
       !startsWith(github.ref, 'refs/heads/release/llama-index-server-v')
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./llama-index-server
+        working-directory: ./python/llama-index-server
     if: |
       github.event_name == 'pull_request' && 
       github.event.pull_request.merged == true && 
@@ -114,7 +114,7 @@ jobs:
         with:
           python_version: "3.11"
           pypi_token: ${{ secrets.PYPI_TOKEN }}
-          package_directory: "llama-index-server"
+          package_directory: "python/llama-index-server"
           poetry_install_options: "--without dev"
 
       - name: Create GitHub Release

@@ -234,7 +234,7 @@ def _install_frontend_dependencies():
     rich.print(
         f"\n[bold]Installing frontend dependencies using {package_manager.name}. It might take a while...[/bold]"
     )
-    run([package_manager, "install"], cwd=".frontend", check=True)
+    run([package_manager, "install", "--ignore-workspace"], cwd=".frontend", check=True)
 
 
 def _get_node_package_manager() -> NodePackageManager:
