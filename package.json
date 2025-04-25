@@ -1,0 +1,16 @@
+{
+	"name": "create-llama-monorepo",
+	"version": "1.0.0",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"cli:build": "pnpm -r --filter @create-llama/cli build",
+		"cli:test": "pnpm -r --filter @create-llama/cli test",
+		"cli:dev": "pnpm -r --filter @create-llama/cli dev",
+		"server:build": "pnpm -r --filter @create-llama/llama-index-server build",
+		"server:test": "pnpm -r --filter @create-llama/llama-index-server test"
+	},
+	"packageManager": "pnpm@8.15.4"
+}
