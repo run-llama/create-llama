@@ -182,32 +182,14 @@ class Artifact(BaseModel):
         if not message.annotations or not isinstance(message.annotations, list):
             return None
 
-        for annotation_data in message.annotations:
-            if (
-                isinstance(annotation_data, dict)
-                and annotation_data.get("type") == "artifact"
-                and isinstance(annotation_data.get("data"), dict)
-            ):
+        for annotation in message.annotations:
+            if isinstance(annotation, dict) and annotation.get("type") == "artifact":
                 try:
-                    artifact_payload_container = annotation_data["data"]
-
-                    potential_artifact_dict = {
-                        "created_at": artifact_payload_container.get("created_at"),
-                        "type": artifact_payload_container.get("type"),
-                        "data": artifact_payload_container.get("data"),
-                    }
-
-                    potential_artifact_dict = {
-                        k: v
-                        for k, v in potential_artifact_dict.items()
-                        if v is not None
-                    }
-
-                    artifact = cls.model_validate(potential_artifact_dict)
+                    artifact = cls.model_validate(annotation.get("data"))
                     return artifact
                 except Exception as e:
                     logger.warning(
-                        f"Failed to parse artifact from annotation: {annotation_data}. Error: {e}"
+                        f"Failed to parse artifact from annotation: {annotation}. Error: {e}"
                     )
 
         return None

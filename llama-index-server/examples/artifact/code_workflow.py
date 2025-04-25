@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel
 
@@ -27,8 +27,9 @@ from llama_index.server.api.utils import get_last_artifact
 
 
 class Requirement(BaseModel):
-    language: str
-    file_name: str
+    next_step: Literal["answering", "coding"]
+    language: Optional[str] = None
+    file_name: Optional[str] = None
     requirement: str
 
 
@@ -42,13 +43,12 @@ class GenerateArtifactEvent(Event):
 
 
 class SynthesizeAnswerEvent(Event):
-    requirement: Requirement
-    generated_artifact: str
+    pass
 
 
 class UIEventData(BaseModel):
     state: Literal["plan", "generate", "completed"]
-    requirement: Optional[str]
+    requirement: Optional[str] = None
 
 
 class ArtifactWorkflow(Workflow):
@@ -80,13 +80,19 @@ class ArtifactWorkflow(Workflow):
         user_msg = ev.user_msg
         if user_msg is None:
             raise ValueError("user_msg is required to run the workflow")
+        await ctx.set("user_msg", user_msg)
         chat_history = ev.chat_history or []
+        chat_history.append(
+            ChatMessage(
+                role="user",
+                content=user_msg,
+            )
+        )
         if self.last_artifact:
             chat_history.append(
                 ChatMessage(
                     role="user",
-                    content="Here is the current artifact: \n"
-                    + self.last_artifact.model_dump_json(),
+                    content=f"The previous {self.last_artifact.type.value} is: \n{self.last_artifact.model_dump_json()}",
                 )
             )
         memory = ChatMemoryBuffer.from_defaults(
@@ -96,14 +102,18 @@ class ArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(self.last_artifact.data) if self.last_artifact else "",
+            context=str(self.last_artifact.model_dump_json())
+            if self.last_artifact
+            else "",
         )
 
     @step
-    async def planning(self, ctx: Context, event: PlanEvent) -> GenerateArtifactEvent:
+    async def planning(
+        self, ctx: Context, event: PlanEvent
+    ) -> Union[GenerateArtifactEvent, SynthesizeAnswerEvent]:
         """
         Based on the conversation history and the user's request
-        this step will help to provide a good next step for the code/document generation.
+        this step will help to provide a good next step for the code or document generation.
         """
         ctx.write_event_to_stream(
             UIEvent(
@@ -115,50 +125,63 @@ class ArtifactWorkflow(Workflow):
             )
         )
         prompt = PromptTemplate("""
-         You are a product analyst who takes responsibility for analyzing the user request and provide requirements for code/document generation.
-         Follow these instructions:
-         1. Carefully analyze the conversation history and the user's request to see what has been done and what is the next step.
-         2. From the user's request, provide requirements for the next step of the code/document generation.
-         3. Don't be verbose, only return the requirements for the next step of the code/document generation.
-         4. Only the following languages are allowed: "typescript", "python".
-         5. Request should be in the format of:
-            ```json
-            {
-                "language": string,
-                "file_name": string,
-                "requirement": string
-            }
-            ```
+        You are a product analyst responsible for analyzing the user's request and providing the next step for code or document generation.
+        You are helping user with their code artifact. To update the code, you need to plan a coding step.
+    
+        Follow these instructions:
+        1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
+        2. The next step must be one of the following two options:
+           - "coding": To make the changes to the current code.
+           - "answering": If you don't need to update the current code or need clarification from the user.
+        Important: Avoid telling the user to update the code themselves, you are the one who will update the code (by planning a coding step).
+        3. If the next step is "coding", you may specify the language ("typescript" or "python") and file_name if known, otherwise set them to null. 
+        4. The requirement must be provided clearly what is the user request and what need to be done for the next step in details
+           as precise and specific as possible, don't be stingy with in the requirement.
+        5. If the next step is "answering", set language and file_name to null, and the requirement should describe what to answer or explain to the user.
+        6. Be concise; only return the requirements for the next step.
+        7. The requirements must be in the following format:
+           ```json
+           {
+               "next_step": "answering" | "coding",
+               "language": "typescript" | "python" | null,
+               "file_name": string | null,
+               "requirement": string
+           }
+           ```
 
-         ## Example:
-         User request: Create a calculator app.
-         You should return:
-         ```json
-         {
-             "language": "typescript",
-             "file_name": "calculator.tsx",
-             "requirement": "Generate code for a calculator app that: Has a simple UI with a display and button layout. The display will show the current input and the result. The button should have basic operators, number, clear, and equals. The calculation should work correctly."
-         }
-         ```
+        ## Example 1:
+        User request: Create a calculator app.
+        You should return:
+        ```json
+        {
+            "next_step": "coding",
+            "language": "typescript",
+            "file_name": "calculator.tsx",
+            "requirement": "Generate code for a calculator app that has a simple UI with a display and button layout. The display should show the current input and the result. The buttons should include basic operators, numbers, clear, and equals. The calculation should work correctly."
+        }
+        ```
 
-         User request: Add light/dark mode toggle to the calculator app.
-         You should return:
-         ```json
-         {
-             "language": "typescript",
-             "file_name": "calculator.tsx",
-             "requirement": "On top of the existing code, add a light/dark mode toggle at the top right corner of the calculator app. Handle the state of the toggle in the component."
-         }
-         ```
+        ## Example 2:
+        User request: Explain how the game loop works.
+        Context: You have already generated the code for a snake game.
+        You should return:
+        ```json
+        {
+            "next_step": "answering",
+            "language": null,
+            "file_name": null,
+            "requirement": "The user is asking about the game loop. Explain how the game loop works."
+        }
+        ```
 
-         {context}
+        {context}
 
-         Now, i have to planning for the user's request: 
-         {user_msg}
+        Now, plan the user's next step for this request:
+        {user_msg}
         """).format(
             context=""
             if event.context is None
-            else f"## The context are: \n{event.context}\n",
+            else f"## The context is: \n{event.context}\n",
             user_msg=event.user_msg,
         )
         response = await self.llm.acomplete(
@@ -167,20 +190,13 @@ class ArtifactWorkflow(Workflow):
         )
         # parse the response to Requirement
         # 1. use regex to find the json block
-        json_block = re.search(r"```json([\s\S]*)```", response.text)
+        json_block = re.search(
+            r"```(?:json)?\s*([\s\S]*?)\s*```", response.text, re.IGNORECASE
+        )
         if json_block is None:
-            raise ValueError("No json block found in the response")
+            raise ValueError("No JSON block found in the response.")
         # 2. parse the json block to Requirement
         requirement = Requirement.model_validate_json(json_block.group(1).strip())
-
-        # Put the planning result to the memory
-        memory: ChatMemoryBuffer = await ctx.get("memory")
-        memory.put(
-            ChatMessage(
-                role="assistant",
-                content=f"Planning for the code generation: \n{response.text}",
-            )
-        )
         ctx.write_event_to_stream(
             UIEvent(
                 type="ui_event",
@@ -190,9 +206,21 @@ class ArtifactWorkflow(Workflow):
                 ),
             )
         )
-        return GenerateArtifactEvent(
-            requirement=requirement,
+        # Put the planning result to the memory
+        # useful for answering step
+        memory: ChatMemoryBuffer = await ctx.get("memory")
+        memory.put(
+            ChatMessage(
+                role="assistant",
+                content=f"The plan for next step: \n{response.text}",
+            )
         )
+        if requirement.next_step == "coding":
+            return GenerateArtifactEvent(
+                requirement=requirement,
+            )
+        else:
+            return SynthesizeAnswerEvent()
 
     @step
     async def generate_artifact(
@@ -271,11 +299,7 @@ class ArtifactWorkflow(Workflow):
         language_pattern = r"```(\w+)([\s\S]*)```"
         code_match = re.search(language_pattern, response.text)
         if code_match is None:
-            return SynthesizeAnswerEvent(
-                requirement=event.requirement,
-                generated_artifact="There is no code to update. "
-                + response.text.strip(),
-            )
+            return SynthesizeAnswerEvent()
         else:
             code = code_match.group(2).strip()
         # Put the generated code to the memory
@@ -283,7 +307,7 @@ class ArtifactWorkflow(Workflow):
         memory.put(
             ChatMessage(
                 role="assistant",
-                content=f"Generated code: \n{response.text}",
+                content=f"Updated the code: \n{response.text}",
             )
         )
         # To show the Canvas panel for the artifact
@@ -294,17 +318,14 @@ class ArtifactWorkflow(Workflow):
                     type=ArtifactType.CODE,
                     created_at=int(time.time()),
                     data=CodeArtifactData(
-                        language=event.requirement.language,
-                        file_name=event.requirement.file_name,
+                        language=event.requirement.language or "",
+                        file_name=event.requirement.file_name or "",
                         code=code,
                     ),
                 ),
             )
         )
-        return SynthesizeAnswerEvent(
-            requirement=event.requirement,
-            generated_artifact=response.text,
-        )
+        return SynthesizeAnswerEvent()
 
     @step
     async def synthesize_answer(
@@ -319,9 +340,9 @@ class ArtifactWorkflow(Workflow):
             ChatMessage(
                 role="system",
                 content="""
-                Your responsibility is to explain the work to the user.
-                If there is no code to update, explain the reason.
-                If the code is updated, just summarize what changed. Don't need to include the whole code again in the response.
+                You are a helpful assistant who is responsible for explaining the work to the user.
+                Based on the conversation history, provide an answer to the user's question. 
+                The user has access to the code so avoid mentioning the whole code again in your response.
                 """,
             )
         )
@@ -333,7 +354,6 @@ class ArtifactWorkflow(Workflow):
                 type="ui_event",
                 data=UIEventData(
                     state="completed",
-                    requirement=event.requirement.requirement,
                 ),
             )
         )

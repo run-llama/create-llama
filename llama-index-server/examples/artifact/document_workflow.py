@@ -78,7 +78,14 @@ class ArtifactWorkflow(Workflow):
         user_msg = ev.user_msg
         if user_msg is None:
             raise ValueError("user_msg is required to run the workflow")
+        await ctx.set("user_msg", user_msg)
         chat_history = ev.chat_history or []
+        chat_history.append(
+            ChatMessage(
+                role="user",
+                content=user_msg,
+            )
+        )
         if self.last_artifact:
             chat_history.append(
                 ChatMessage(
@@ -94,7 +101,9 @@ class ArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(self.last_artifact.data) if self.last_artifact else "",
+            context=str(self.last_artifact.model_dump_json())
+            if self.last_artifact
+            else "",
         )
 
     @step

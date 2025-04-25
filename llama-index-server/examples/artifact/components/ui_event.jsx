@@ -4,23 +4,21 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@llamaindex/chat-ui/widgets";
-import { Hammer, ListChecks, Loader2 } from "lucide-react";
+import { ListChecks, Loader2, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const STAGE_META = {
   plan: {
     icon: ListChecks,
-    label: "Planning",
-    badgeText: "Step 1/2: Requirements",
+    badgeText: "Step 1/2: Planning",
     gradient: "from-blue-100 via-blue-50 to-white",
     progress: 33,
     iconBg: "bg-blue-100 text-blue-600",
     badge: "bg-blue-100 text-blue-700",
   },
   generate: {
-    icon: Hammer,
-    label: "Generating",
-    badgeText: "Step 2/2: Building",
+    icon: Wand2,
+    badgeText: "Step 2/2: Generating",
     gradient: "from-violet-100 via-violet-50 to-white",
     progress: 66,
     iconBg: "bg-violet-100 text-violet-600",
@@ -72,7 +70,6 @@ function ArtifactWorkflowCard({ event }) {
             <meta.icon className="w-5 h-5" />
           </div>
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span>{meta.label}</span>
             <Badge className={cn("ml-1", meta.badge, "text-xs px-2 py-0.5")}>
               {meta.badgeText}
             </Badge>
@@ -93,7 +90,7 @@ function ArtifactWorkflowCard({ event }) {
               <div className="flex items-center gap-1">
                 <Loader2 className="animate-spin text-violet-400 w-4 h-4" />
                 <span className="text-violet-900 font-medium text-sm">
-                  Generating for the requirement:
+                  Working on the requirement:
                 </span>
               </div>
               <div className="rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 max-h-24 overflow-auto text-xs">
