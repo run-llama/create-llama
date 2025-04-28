@@ -130,4 +130,11 @@ Pro mode is ideal for developers who want fine-grained control over their projec
 - [TS/JS docs](https://ts.llamaindex.ai/)
 - [Python docs](https://docs.llamaindex.ai/en/stable/)
 
+## LlamaIndex Server
+
+We also provide a server implementation for LlamaIndex that you can use to serve your LlamaIndex workflows and agent workflows as an API server. See the following guides for more information:
+
+- [LlamaIndex Server For TypeScript](./packages/server/README.md)
+- [LlamaIndex Server For Python](./python/llama-index-server/README.md)
+
 Inspired by and adapted from [create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)
