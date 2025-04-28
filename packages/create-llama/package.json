@@ -20,8 +20,10 @@
     "dist"
   ],
   "scripts": {
+    "copy": "cp -r ../../README.md ../../LICENSE .",
     "build": "bash ./scripts/build.sh",
     "build:ncc": "pnpm run clean && ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
+    "postbuild": "pnpm run copy",
     "clean": "rimraf --glob ./dist ./templates/**/__pycache__ ./templates/**/node_modules ./templates/**/poetry.lock",
     "dev": "ncc build ./index.ts -w -o dist/",
     "e2e": "playwright test",
