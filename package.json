@@ -26,7 +26,7 @@
 		"dev": "pnpm -r dev",
 		"format": "pnpm -r --filter create-llama format",
 		"format:write": "pnpm -r --filter create-llama format:write",
-		"lint": "pnpm -r --filter create-llama lint"
+		"lint": "pnpm -r lint"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",

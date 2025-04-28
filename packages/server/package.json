@@ -27,6 +27,7 @@
     "directory": "packages/server"
   },
   "scripts": {
+    "lint": "eslint .",
     "clean": "rm -rf ./dist ./server next/.next next/out",
     "prebuild": "pnpm clean",
     "build": "bunchee",
@@ -45,6 +46,8 @@
     "@types/node": "^22.9.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript-eslint": "^8.18.0",
     "bunchee": "6.4.0",
     "llamaindex": "0.10.2",
     "eslint": "^9",
