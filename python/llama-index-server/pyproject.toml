@@ -1,6 +1,6 @@
 [project]
 name = "llama-index-server"
-version = "0.1.14"
+version = "0.1.15"
 description = "llama-index fastapi server"
 readme = "README.md"
 license = "MIT"
