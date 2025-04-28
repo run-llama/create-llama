@@ -2,6 +2,8 @@ import re
 import time
 from typing import Any, Literal, Optional
 
+from pydantic import BaseModel
+
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -22,7 +24,6 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
-from pydantic import BaseModel
 
 
 class DocumentRequirement(BaseModel):
@@ -85,14 +86,6 @@ class ArtifactWorkflow(Workflow):
                 content=user_msg,
             )
         )
-        if self.last_artifact:
-            chat_history.append(
-                ChatMessage(
-                    role="user",
-                    content="Here is the current document artifact: \n"
-                    + self.last_artifact.model_dump_json(),
-                )
-            )
         memory = ChatMemoryBuffer.from_defaults(
             chat_history=chat_history,
             llm=self.llm,
