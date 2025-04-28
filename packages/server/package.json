@@ -27,7 +27,6 @@
     "directory": "packages/server"
   },
   "scripts": {
-    "lint": "eslint .",
     "clean": "rm -rf ./dist ./server next/.next next/out",
     "prebuild": "pnpm clean",
     "build": "bunchee",
@@ -37,6 +36,7 @@
     "build:static": "cd ./next && next build",
     "copy:static": "cp -r ./next/out ./dist/static",
     "dev": "bunchee --watch",
+    "lint": "eslint .",
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write ."
   },
