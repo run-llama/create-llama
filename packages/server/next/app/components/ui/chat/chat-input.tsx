@@ -57,7 +57,7 @@ export default function CustomChatInput() {
             <DocumentInfo
               key={file.id}
               document={{ url: file.url, sources: [] }}
-              className="mb-2 mt-2"
+              className="mt-2 mb-2"
               onRemove={() => removeDoc(file)}
             />
           ))}

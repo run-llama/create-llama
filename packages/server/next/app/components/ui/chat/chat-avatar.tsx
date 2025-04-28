@@ -6,7 +6,7 @@ export function ChatMessageAvatar() {
   return (
     <ChatMessage.Avatar>
       <img
-        className="border-1 rounded-full border-[#e711dd]"
+        className="rounded-full border-1 border-[#e711dd]"
         src="/llama.png"
         alt="Llama Logo"
       />

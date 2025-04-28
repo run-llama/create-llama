@@ -72,7 +72,7 @@ function ChatSectionPanel() {
   }, []);
 
   return (
-    <ResizablePanel defaultSize={40} minSize={30} className="max-w-1/2 mx-auto">
+    <ResizablePanel defaultSize={40} minSize={30} className="mx-auto max-w-1/2">
       <div className="flex h-full min-w-0 flex-1 flex-col gap-4">
         <DynamicEventsErrors
           errors={uniqueErrors}
