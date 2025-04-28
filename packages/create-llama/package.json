@@ -17,10 +17,12 @@
     "create-llama": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE.md"
   ],
   "scripts": {
-    "copy": "cp -r ../../README.md ../../LICENSE .",
+    "copy": "cp -r ../../README.md ../../LICENSE.md .",
     "build": "bash ./scripts/build.sh",
     "build:ncc": "pnpm run clean && ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
     "postbuild": "pnpm run copy",
