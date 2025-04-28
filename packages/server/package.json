@@ -45,6 +45,7 @@
     "@types/node": "^22.9.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "bunchee": "6.4.0",
     "llamaindex": "0.10.2",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
