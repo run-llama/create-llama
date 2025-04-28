@@ -22,10 +22,10 @@
 		"release": "pnpm -r build && changeset publish",
 		"release-snapshot": "pnpm -r build && changeset publish --tag snapshot",
 		"build": "pnpm -r build",
-		"e2e": "pnpm -r --filter create-llama e2e",
+		"e2e": "pnpm -r e2e",
 		"dev": "pnpm -r dev",
-		"format": "pnpm -r --filter create-llama format",
-		"format:write": "pnpm -r --filter create-llama format:write",
+		"format": "pnpm -r format",
+		"format:write": "pnpm -r format:write",
 		"lint": "pnpm -r lint"
 	},
 	"devDependencies": {
