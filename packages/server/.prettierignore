@@ -1,3 +1,7 @@
 lib/
 dist/
-packages/server/server/
+server/
+next/.next/
+next/out/
+node_modules/
+build/
