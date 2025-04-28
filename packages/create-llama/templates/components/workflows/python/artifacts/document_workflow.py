@@ -2,6 +2,8 @@ import re
 import time
 from typing import Any, Literal, Optional
 
+from pydantic import BaseModel
+
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -16,13 +18,13 @@ from llama_index.core.workflow import (
 )
 from llama_index.server.api.models import (
     Artifact,
+    ArtifactEvent,
     ArtifactType,
     ChatRequest,
     DocumentArtifactData,
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
-from pydantic import BaseModel
 
 
 class DocumentRequirement(BaseModel):
@@ -50,7 +52,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str]
 
 
-class DocumentArtifactWorkflow(Workflow):
+class ArtifactWorkflow(Workflow):
     """
     A workflow to help generate or update document artifacts (e.g., Markdown or HTML documents).
     Example use cases: Generate a project guideline, update documentation with user feedback, etc.
@@ -85,14 +87,6 @@ class DocumentArtifactWorkflow(Workflow):
                 content=user_msg,
             )
         )
-        if self.last_artifact:
-            chat_history.append(
-                ChatMessage(
-                    role="user",
-                    content="Here is the current document artifact: \n"
-                    + self.last_artifact.model_dump_json(),
-                )
-            )
         memory = ChatMemoryBuffer.from_defaults(
             chat_history=chat_history,
             llm=self.llm,
@@ -187,6 +181,7 @@ class DocumentArtifactWorkflow(Workflow):
                 content=f"Planning for the document generation: \n{response.text}",
             )
         )
+        await ctx.set("memory", memory)
         ctx.write_event_to_stream(
             UIEvent(
                 type="ui_event",
@@ -280,8 +275,7 @@ class DocumentArtifactWorkflow(Workflow):
         )
         # To show the Canvas panel for the artifact
         ctx.write_event_to_stream(
-            UIEvent(
-                type="artifact",
+            ArtifactEvent(
                 data=Artifact(
                     type=ArtifactType.DOCUMENT,
                     created_at=int(time.time()),

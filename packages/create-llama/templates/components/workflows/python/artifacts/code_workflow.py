@@ -2,6 +2,8 @@ import re
 import time
 from typing import Any, Literal, Optional, Union
 
+from pydantic import BaseModel
+
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -16,13 +18,13 @@ from llama_index.core.workflow import (
 )
 from llama_index.server.api.models import (
     Artifact,
+    ArtifactEvent,
     ArtifactType,
     ChatRequest,
     CodeArtifactData,
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
-from pydantic import BaseModel
 
 
 class Requirement(BaseModel):
@@ -50,7 +52,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str] = None
 
 
-class CodeArtifactWorkflow(Workflow):
+class ArtifactWorkflow(Workflow):
     """
     A simple workflow that help generate/update the chat artifact (code, document)
     e.g: Help create a NextJS app.
@@ -87,13 +89,6 @@ class CodeArtifactWorkflow(Workflow):
                 content=user_msg,
             )
         )
-        if self.last_artifact:
-            chat_history.append(
-                ChatMessage(
-                    role="user",
-                    content=f"The previous {self.last_artifact.type.value} is: \n{self.last_artifact.model_dump_json()}",
-                )
-            )
         memory = ChatMemoryBuffer.from_defaults(
             chat_history=chat_history,
             llm=self.llm,
@@ -214,6 +209,7 @@ class CodeArtifactWorkflow(Workflow):
                 content=f"The plan for next step: \n{response.text}",
             )
         )
+        await ctx.set("memory", memory)
         if requirement.next_step == "coding":
             return GenerateArtifactEvent(
                 requirement=requirement,
@@ -311,8 +307,7 @@ class CodeArtifactWorkflow(Workflow):
         )
         # To show the Canvas panel for the artifact
         ctx.write_event_to_stream(
-            UIEvent(
-                type="artifact",
+            ArtifactEvent(
                 data=Artifact(
                     type=ArtifactType.CODE,
                     created_at=int(time.time()),
