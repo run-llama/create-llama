@@ -18,6 +18,7 @@ from llama_index.core.workflow import (
 )
 from llama_index.server.api.models import (
     Artifact,
+    ArtifactEvent,
     ArtifactType,
     ChatRequest,
     CodeArtifactData,
@@ -306,8 +307,7 @@ class ArtifactWorkflow(Workflow):
         )
         # To show the Canvas panel for the artifact
         ctx.write_event_to_stream(
-            UIEvent(
-                type="artifact",
+            ArtifactEvent(
                 data=Artifact(
                     type=ArtifactType.CODE,
                     created_at=int(time.time()),
