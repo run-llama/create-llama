@@ -1,5 +1,11 @@
 # @llamaindex/server
 
+## 0.1.7
+
+### Patch Changes
+
+- 8fe5fc2: chore: add llamaindex server package
+
 ## 0.1.6
 
 ### Patch Changes
