@@ -1,6 +1,7 @@
 import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import tseslint from "typescript-eslint";
+import globals from "globals";
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -10,6 +11,10 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
   },
   {
@@ -25,6 +30,13 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["**/dist/**", "**/.next/**", "**/node_modules/**", "**/build/**"],
+    ignores: [
+      "**/dist/**",
+      "**/lib/*",
+      "**/.next/**",
+      "**/out/**",
+      "**/node_modules/**",
+      "**/build/**",
+    ],
   },
 );
