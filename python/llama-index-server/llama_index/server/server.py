@@ -5,12 +5,14 @@ from typing import Any, Callable, Optional, Union
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.routing import Mount
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers import chat_router, custom_components_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
-from pydantic import BaseModel, Field
 
 
 class UIConfig(BaseModel):
@@ -162,7 +164,10 @@ class LlamaIndexServer(FastAPI):
                 )
                 download_chat_ui(logger=self.logger, target_path=self.ui_config.ui_path)
             self._mount_static_files(
-                directory=self.ui_config.ui_path, path="/", html=True
+                directory=self.ui_config.ui_path,
+                path="/",
+                html=True,
+                name=self.ui_config.ui_path,
             )
             self._override_ui_config()
 
@@ -204,7 +209,11 @@ class LlamaIndexServer(FastAPI):
         )
 
     def _mount_static_files(
-        self, directory: str, path: str, html: bool = False
+        self,
+        directory: str,
+        path: str,
+        html: bool = False,
+        name: Optional[str] = None,
     ) -> None:
         """
         Mount static files from a directory if it exists.
@@ -214,7 +223,7 @@ class LlamaIndexServer(FastAPI):
             self.mount(
                 path,
                 StaticFiles(directory=directory, check_dir=False, html=html),
-                name=f"{directory}-static",
+                name=name or f"{directory}-static",
             )
 
     def allow_cors(self, origin: str = "*") -> None:
@@ -228,3 +237,19 @@ class LlamaIndexServer(FastAPI):
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
+    def add_api_route(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Add an API route to the server.
+        """
+        # Because static files are mounted at the root path by default,
+        # we need to place them at the end of the routes list.
+        ui_route = None
+        for route in self.routes:
+            if isinstance(route, Mount):
+                if route.name == self.ui_config.ui_path:
+                    ui_route = route
+                    self.routes.remove(route)
+        super().add_api_route(*args, **kwargs)
+        if ui_route:
+            self.mount(ui_route.path, ui_route.app, name=ui_route.name)
