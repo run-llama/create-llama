@@ -62,7 +62,7 @@ export const askSimpleQuestions = async (
 
   let useLlamaCloud = false;
 
-  if (appType !== "extractor" && appType !== "contract_review") {
+  if (appType !== "artifacts") {
     const { language: newLanguage } = await prompts(
       {
         type: "select",

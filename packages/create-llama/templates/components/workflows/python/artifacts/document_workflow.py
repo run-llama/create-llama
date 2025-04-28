@@ -2,8 +2,6 @@ import re
 import time
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel
-
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -25,6 +23,7 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
+from pydantic import BaseModel
 
 
 class DocumentRequirement(BaseModel):
@@ -52,7 +51,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str]
 
 
-class ArtifactWorkflow(Workflow):
+class DocumentArtifactWorkflow(Workflow):
     """
     A workflow to help generate or update document artifacts (e.g., Markdown or HTML documents).
     Example use cases: Generate a project guideline, update documentation with user feedback, etc.

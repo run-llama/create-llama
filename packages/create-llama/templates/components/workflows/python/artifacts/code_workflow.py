@@ -2,8 +2,6 @@ import re
 import time
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel
-
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -25,6 +23,7 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
+from pydantic import BaseModel
 
 
 class Requirement(BaseModel):
@@ -52,7 +51,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str] = None
 
 
-class ArtifactWorkflow(Workflow):
+class CodeArtifactWorkflow(Workflow):
     """
     A simple workflow that help generate/update the chat artifact (code, document)
     e.g: Help create a NextJS app.
