@@ -7,11 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import Mount
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers import chat_router, custom_components_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
-from pydantic import BaseModel, Field
 
 
 class UIConfig(BaseModel):
@@ -250,4 +251,5 @@ class LlamaIndexServer(FastAPI):
                     ui_route = route
                     self.routes.remove(route)
         super().add_api_route(*args, **kwargs)
-        self.mount(ui_route.path, ui_route.app, name=ui_route.name)
+        if ui_route:
+            self.mount(ui_route.path, ui_route.app, name=ui_route.name)
