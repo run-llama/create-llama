@@ -50,7 +50,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str]
 
 
-class ArtifactWorkflow(Workflow):
+class DocumentArtifactWorkflow(Workflow):
     """
     A workflow to help generate or update document artifacts (e.g., Markdown or HTML documents).
     Example use cases: Generate a project guideline, update documentation with user feedback, etc.

@@ -38,6 +38,8 @@ We have prepared two artifact workflows:
 - [Code Workflow](./code_workflow.py): To generate code and display it in the UI like Vercel's v0.
 - [Document Workflow](./document_workflow.py): Generate and update a document like OpenAI's canvas.
 
+Modify the factory method in `workflow.py` to decide which artifact workflow to use. Without any changes the Code Workflow is used.
+
 You can start by sending an request on the [chat UI](http://localhost:8000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```

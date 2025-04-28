@@ -50,7 +50,7 @@ class UIEventData(BaseModel):
     requirement: Optional[str] = None
 
 
-class ArtifactWorkflow(Workflow):
+class CodeArtifactWorkflow(Workflow):
     """
     A simple workflow that help generate/update the chat artifact (code, document)
     e.g: Help create a NextJS app.
