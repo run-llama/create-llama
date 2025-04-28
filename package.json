@@ -21,12 +21,12 @@
 		"new-version": "pnpm -r build && changeset version",
 		"release": "pnpm -r build && changeset publish",
 		"release-snapshot": "pnpm -r build && changeset publish --tag snapshot",
-		"build": "pnpm -r --filter create-llama build",
-		"e2e": "pnpm -r --filter create-llama e2e",
-		"dev": "pnpm -r --filter create-llama dev",
-		"format": "pnpm -r --filter create-llama format",
-		"format:write": "pnpm -r --filter create-llama format:write",
-		"lint": "pnpm -r --filter create-llama lint"
+		"build": "pnpm -r build",
+		"e2e": "pnpm -r e2e",
+		"dev": "pnpm -r dev",
+		"format": "pnpm -r format",
+		"format:write": "pnpm -r format:write",
+		"lint": "pnpm -r lint"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",

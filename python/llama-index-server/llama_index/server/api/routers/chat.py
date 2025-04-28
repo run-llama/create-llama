@@ -7,14 +7,18 @@ from typing import AsyncGenerator, Callable, Union
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
-from llama_index.core.agent.workflow.workflow_events import AgentStream
+from llama_index.core.agent.workflow.workflow_events import (
+    AgentInput,
+    AgentSetup,
+    AgentStream,
+)
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.server.api.callbacks import (
+    EventCallback,
+    LlamaCloudFileDownload,
     SourceNodesFromToolCall,
     SuggestNextQuestions,
 )
-from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.callbacks.llamacloud import LlamaCloudFileDownload
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
@@ -114,15 +118,8 @@ async def _stream_content(
                     elif hasattr(chunk, "delta") and chunk.delta:
                         yield chunk.delta
 
-    stream_started = False
     try:
         async for event in handler.stream_events():
-            if not stream_started:
-                # Start the stream with an empty message
-                stream_started = True
-                yield VercelStreamResponse.convert_text("")
-
-            # Handle different types of events
             if isinstance(event, (AgentStream, StopEvent)):
                 async for chunk in _text_stream(event):
                     handler.accumulate_text(chunk)
@@ -133,12 +130,14 @@ async def _stream_content(
                 event_response = event.to_response()
                 yield VercelStreamResponse.convert_data(event_response)
             else:
-                yield VercelStreamResponse.convert_data(event.model_dump())
+                # Ignore unnecessary agent workflow events
+                if not isinstance(event, (AgentInput, AgentSetup)):
+                    yield VercelStreamResponse.convert_data(event.model_dump())
 
     except asyncio.CancelledError:
         logger.warning("Client cancelled the request!")
         await handler.cancel_run()
     except Exception as e:
-        logger.error(f"Error in stream response: {e}")
+        logger.error(f"Error in stream response: {e}", exc_info=True)
         yield VercelStreamResponse.convert_error(str(e))
         await handler.cancel_run()

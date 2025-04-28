@@ -1,0 +1,7 @@
+lib/
+dist/
+server/
+next/.next/
+next/out/
+node_modules/
+build/

@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.5.11
+
+### Patch Changes
+
+- 3960618: chore: create-llama monorepo
+- 8fe5fc2: chore: add llamaindex server package
+
 ## 0.5.10
 
 ### Patch Changes

@@ -4,10 +4,12 @@ on:
     branches: [main]
     paths-ignore:
       - "python/llama-index-server/**"
+      - ".github/workflows/*llama_index_server.yml"
   pull_request:
     branches: [main]
     paths-ignore:
       - "python/llama-index-server/**"
+      - ".github/workflows/*llama_index_server.yml"
 
 jobs:
   e2e-python:
