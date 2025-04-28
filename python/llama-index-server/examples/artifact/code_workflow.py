@@ -2,8 +2,6 @@ import re
 import time
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel
-
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -24,6 +22,7 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
+from pydantic import BaseModel
 
 
 class Requirement(BaseModel):
@@ -215,6 +214,7 @@ class ArtifactWorkflow(Workflow):
                 content=f"The plan for next step: \n{response.text}",
             )
         )
+        await ctx.set("memory", memory)
         if requirement.next_step == "coding":
             return GenerateArtifactEvent(
                 requirement=requirement,

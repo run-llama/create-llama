@@ -2,8 +2,6 @@ import re
 import time
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel
-
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -24,6 +22,7 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
+from pydantic import BaseModel
 
 
 class DocumentRequirement(BaseModel):
@@ -188,6 +187,7 @@ class ArtifactWorkflow(Workflow):
                 content=f"Planning for the document generation: \n{response.text}",
             )
         )
+        await ctx.set("memory", memory)
         ctx.write_event_to_stream(
             UIEvent(
                 type="ui_event",
