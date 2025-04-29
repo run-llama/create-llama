@@ -23,7 +23,7 @@ from llama_index.server.api.models import (
     UIEvent,
 )
 from llama_index.server.api.utils import get_last_artifact
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Requirement(BaseModel):
@@ -47,8 +47,20 @@ class SynthesizeAnswerEvent(Event):
 
 
 class UIEventData(BaseModel):
-    state: Literal["plan", "generate", "completed"]
-    requirement: Optional[str] = None
+    """
+    Event data for updating workflow status to the UI.
+    """
+
+    state: Literal["plan", "generate", "completed"] = Field(
+        description="The current state of the workflow. "
+        "plan: analyze and create a plan for the next step. "
+        "generate: generate the artifact based on the requirement from the previous step. "
+        "completed: the workflow is completed. "
+    )
+    requirement: Optional[str] = Field(
+        description="The requirement for generating the artifact. ",
+        default=None,
+    )
 
 
 class CodeArtifactWorkflow(Workflow):
