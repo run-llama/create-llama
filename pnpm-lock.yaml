@@ -337,12 +337,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.1.2(@types/react@19.1.2)
-      bunchee:
-        specifier: 6.4.0
-        version: 6.4.0(typescript@5.8.3)
-      globals:
-        specifier: ^15.12.0
-        version: 15.15.0
       llamaindex:
         specifier: 0.10.2
         version: 0.10.2(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.24.3)
