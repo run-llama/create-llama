@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { AstraDBVectorStore } from "@llamaindex/astra";
 import { VectorStoreIndex } from "llamaindex";
 import { checkRequiredEnvVars } from "./shared";

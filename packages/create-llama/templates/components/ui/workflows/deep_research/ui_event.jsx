@@ -97,7 +97,7 @@ export default function Component({ events }) {
       case "pending":
         return <Clock className="h-4 w-4 text-gray-400" />;
       case "inprogress":
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
       case "done":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case "error":
@@ -140,9 +140,9 @@ export default function Component({ events }) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
+    <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">DeepResearch Workflow</h1>
         <div className="flex items-center space-x-2">
           <Badge
@@ -188,7 +188,7 @@ export default function Component({ events }) {
         className={cn(
           "border-2 transition-all duration-300",
           retrieve?.state === "inprogress"
-            ? "border-blue-500 shadow-blue-100 shadow-lg"
+            ? "border-blue-500 shadow-lg shadow-blue-100"
             : retrieve?.state === "done"
               ? "border-green-500"
               : retrieve?.state === "error"
@@ -231,7 +231,7 @@ export default function Component({ events }) {
           className={cn(
             "border-2 transition-all duration-300",
             analyze?.state === "inprogress"
-              ? "border-blue-500 shadow-blue-100 shadow-lg"
+              ? "border-blue-500 shadow-lg shadow-blue-100"
               : analyze?.state === "done"
                 ? "border-green-500"
                 : analyze?.state === "error"
@@ -288,9 +288,9 @@ export default function Component({ events }) {
                   key={answer.id}
                   value={answer.id}
                   className={cn(
-                    "mb-4 border rounded-lg overflow-hidden",
+                    "mb-4 overflow-hidden rounded-lg border",
                     answer.state === "inprogress"
-                      ? "border-blue-500 shadow-blue-100 shadow-sm"
+                      ? "border-blue-500 shadow-sm shadow-blue-100"
                       : answer.state === "done"
                         ? "border-green-100"
                         : answer.state === "error"
@@ -309,7 +309,7 @@ export default function Component({ events }) {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "ml-auto flex items-center space-x-1 shrink-0",
+                          "ml-auto flex shrink-0 items-center space-x-1",
                           answer.state === "inprogress"
                             ? "text-blue-500"
                             : answer.state === "done"
@@ -327,7 +327,7 @@ export default function Component({ events }) {
                   <AccordionContent className="px-4 pb-4 pt-1">
                     <div
                       className={cn(
-                        "p-3 rounded-md",
+                        "rounded-md p-3",
                         answer.state === "done"
                           ? "bg-green-50"
                           : answer.state === "inprogress"

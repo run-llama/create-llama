@@ -181,7 +181,7 @@ const getVectorDBEnvs = (
             ]
           : []),
       ];
-    case "chroma":
+    case "chroma": {
       const envs = [
         {
           name: "CHROMA_COLLECTION",
@@ -206,6 +206,7 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
         });
       }
       return envs;
+    }
     case "weaviate":
       return [
         {

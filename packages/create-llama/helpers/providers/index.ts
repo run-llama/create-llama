@@ -28,7 +28,7 @@ export async function askModelConfig({
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
   let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
   if (askModels) {
-    let choices = [
+    const choices = [
       { title: "OpenAI", value: "openai" },
       { title: "Groq", value: "groq" },
       { title: "Ollama", value: "ollama" },

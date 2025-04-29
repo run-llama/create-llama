@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { async as glob } from "fast-glob";
 import fs from "fs";
 import path from "path";

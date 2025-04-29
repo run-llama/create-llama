@@ -39,7 +39,7 @@ export default function ChatMessages({
 
   return (
     <div
-      className="flex-1 w-full max-w-5xl p-4 bg-white rounded-xl shadow-xl overflow-auto"
+      className="w-full max-w-5xl flex-1 overflow-auto rounded-xl bg-white p-4 shadow-xl"
       ref={scrollableChatContainerRef}
     >
       <div className="flex flex-col gap-5 divide-y">

@@ -18,6 +18,21 @@ export default tseslint.config(
     },
   },
   {
+    files: ["packages/create-llama/**"],
+    rules: {
+      "max-params": ["error", 4],
+      "prefer-const": "error",
+      "no-empty": "off",
+      "no-extra-boolean-cast": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-wrapper-object-types": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
+  },
+  {
+    files: ["packages/server/**"],
     rules: {
       "no-irregular-whitespace": "off",
       "@typescript-eslint/no-unused-vars": "off",
@@ -31,7 +46,9 @@ export default tseslint.config(
   },
   {
     ignores: [
+      "python/**",
       "**/dist/**",
+      "**/e2e/cache/**",
       "**/lib/*",
       "**/.next/**",
       "**/out/**",

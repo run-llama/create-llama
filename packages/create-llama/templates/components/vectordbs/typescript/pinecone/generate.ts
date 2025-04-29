@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { PineconeVectorStore } from "@llamaindex/pinecone";
 import * as dotenv from "dotenv";
 import { VectorStoreIndex, storageContextFromDefaults } from "llamaindex";

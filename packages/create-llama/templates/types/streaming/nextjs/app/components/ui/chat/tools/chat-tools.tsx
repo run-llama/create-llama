@@ -51,18 +51,21 @@ function ChatTools({
   }
 
   switch (toolCall.name) {
-    case "get_weather_information":
+    case "get_weather_information": {
       const weatherData = toolOutput.output as unknown as WeatherData;
       return <WeatherCard data={weatherData} />;
-    case "artifact":
+    }
+    case "artifact": {
       return (
         <Artifact
           artifact={toolOutput.output as CodeArtifact}
           version={artifactVersion}
         />
       );
-    default:
+    }
+    default: {
       return null;
+    }
   }
 }
 

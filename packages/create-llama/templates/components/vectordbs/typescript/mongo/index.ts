@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { MongoDBAtlasVectorSearch } from "@llamaindex/mongodb";
 import { VectorStoreIndex } from "llamaindex";
 import { MongoClient } from "mongodb";

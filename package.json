@@ -1,39 +1,55 @@
 {
-	"name": "create-llama-monorepo",
-	"version": "1.0.0",
-	"private": true,
-	"description": "Monorepo for create-llama",
-	"keywords": [
-		"rag",
-		"llamaindex"
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/run-llama/create-llama"
-	},
-	"license": "MIT",
-	"workspaces": [
-		"packages/*"
-	],
-	"scripts": {
-		"prepare": "husky",
-		"new-snapshot": "pnpm -r build && changeset version --snapshot",
-		"new-version": "pnpm -r build && changeset version",
-		"release": "pnpm -r build && changeset publish",
-		"release-snapshot": "pnpm -r build && changeset publish --tag snapshot",
-		"build": "pnpm -r build",
-		"e2e": "pnpm -r e2e",
-		"dev": "pnpm -r dev",
-		"format": "pnpm -r format",
-		"format:write": "pnpm -r format:write",
-		"lint": "pnpm -r lint"
-	},
-	"devDependencies": {
-		"@changesets/cli": "^2.27.1",
-		"husky": "^9.0.10"
-	},
-	"packageManager": "pnpm@9.0.5",
-	"engines": {
-		"node": ">=16.14.0"
-	}
+  "name": "create-llama-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for create-llama",
+  "keywords": [
+    "rag",
+    "llamaindex"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/run-llama/create-llama"
+  },
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "e2e": "pnpm -r e2e",
+    "lint": "eslint .",
+    "format": "prettier --ignore-unknown --cache --check .",
+    "format:write": "prettier --ignore-unknown --write .",
+    "prepare": "husky",
+    "new-snapshot": "pnpm -r build && changeset version --snapshot",
+    "new-version": "pnpm -r build && changeset version",
+    "release": "pnpm -r build && changeset publish",
+    "release-snapshot": "pnpm -r build && changeset publish --tag snapshot"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "bunchee": "6.4.0",
+    "husky": "^9.0.10",
+    "lint-staged": "^15.2.11",
+    "typescript-eslint": "^8.18.0",
+    "globals": "^15.12.0",
+    "eslint": "9.22.0",
+    "@eslint/js": "^9.25.0",
+    "eslint-config-next": "^15.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "7.37.2",
+    "prettier": "^3.4.2",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "typescript": "^5.7.3",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  },
+  "packageManager": "pnpm@9.0.5",
+  "engines": {
+    "node": ">=16.14.0"
+  }
 }

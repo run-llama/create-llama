@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
 import fs from "fs";
