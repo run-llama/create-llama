@@ -23,20 +23,20 @@ export default function ChatInput(props: ChatInputProps) {
     <>
       <form
         onSubmit={props.handleSubmit}
-        className="flex items-start justify-between w-full max-w-5xl p-4 bg-white rounded-xl shadow-xl gap-4"
+        className="flex w-full max-w-5xl items-start justify-between gap-4 rounded-xl bg-white p-4 shadow-xl"
       >
         <input
           autoFocus
           name="message"
           placeholder="Type a message"
-          className="w-full p-4 rounded-xl shadow-inner flex-1"
+          className="w-full flex-1 rounded-xl p-4 shadow-inner"
           value={props.input}
           onChange={props.handleInputChange}
         />
         <button
           disabled={props.isLoading}
           type="submit"
-          className="p-4 text-white rounded-xl shadow-xl bg-gradient-to-r from-cyan-500 to-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 p-4 text-white shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
         >
           Send message
         </button>

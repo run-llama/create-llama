@@ -47,12 +47,12 @@ function ArtifactWorkflowCard({ event }) {
   if (!meta) return null;
 
   return (
-    <div className="flex justify-center items-center w-full min-h-[180px] py-2">
+    <div className="flex min-h-[180px] w-full items-center justify-center py-2">
       <Card
         className={cn(
-          "w-full shadow-md rounded-xl transition-all duration-500",
+          "w-full rounded-xl shadow-md transition-all duration-500",
           "border-0",
-          fade && "opacity-0 pointer-events-none",
+          fade && "pointer-events-none opacity-0",
           `bg-gradient-to-br ${meta.gradient}`,
         )}
         style={{
@@ -60,17 +60,17 @@ function ArtifactWorkflowCard({ event }) {
             "0 2px 12px 0 rgba(80, 80, 120, 0.08), 0 1px 3px 0 rgba(80, 80, 120, 0.04)",
         }}
       >
-        <CardHeader className="flex flex-row items-center gap-2 pb-1 pt-2 px-3">
+        <CardHeader className="flex flex-row items-center gap-2 px-3 pb-1 pt-2">
           <div
             className={cn(
-              "rounded-full p-1 flex items-center justify-center",
+              "flex items-center justify-center rounded-full p-1",
               meta.iconBg,
             )}
           >
-            <meta.icon className="w-5 h-5" />
+            <meta.icon className="h-5 w-5" />
           </div>
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Badge className={cn("ml-1", meta.badge, "text-xs px-2 py-0.5")}>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <Badge className={cn("ml-1", meta.badge, "px-2 py-0.5 text-xs")}>
               {meta.badgeText}
             </Badge>
           </CardTitle>
@@ -78,26 +78,26 @@ function ArtifactWorkflowCard({ event }) {
         <CardContent className="px-3 py-1">
           {state === "plan" && (
             <div className="flex flex-col items-center gap-2 py-2">
-              <Loader2 className="animate-spin text-blue-400 w-6 h-6 mb-1" />
-              <div className="text-sm text-blue-900 font-medium text-center">
+              <Loader2 className="mb-1 h-6 w-6 animate-spin text-blue-400" />
+              <div className="text-center text-sm font-medium text-blue-900">
                 Analyzing your request...
               </div>
-              <Skeleton className="w-1/2 h-3 rounded-full mt-1" />
+              <Skeleton className="mt-1 h-3 w-1/2 rounded-full" />
             </div>
           )}
           {state === "generate" && (
             <div className="flex flex-col gap-2 py-2">
               <div className="flex items-center gap-1">
-                <Loader2 className="animate-spin text-violet-400 w-4 h-4" />
-                <span className="text-violet-900 font-medium text-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
+                <span className="text-sm font-medium text-violet-900">
                   Working on the requirement:
                 </span>
               </div>
-              <div className="rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 max-h-24 overflow-auto text-xs">
+              <div className="max-h-24 overflow-auto rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-xs">
                 {requirement ? (
                   <Markdown content={requirement} />
                 ) : (
-                  <span className="text-violet-400 italic">
+                  <span className="italic text-violet-400">
                     No requirements available yet.
                   </span>
                 )}
