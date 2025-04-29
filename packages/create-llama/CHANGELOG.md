@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.12
+
+### Patch Changes
+
+- 241d82a: Add artifacts use case (python)
+
 ## 0.5.11
 
 ### Patch Changes
