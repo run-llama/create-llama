@@ -1,3 +1,4 @@
 pnpm format
 pnpm lint
-uvx ruff format --check packages/create-llama/templates python
+uvx ruff check .
+uvx ruff format . --check 
