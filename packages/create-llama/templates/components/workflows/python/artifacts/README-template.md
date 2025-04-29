@@ -35,10 +35,10 @@ You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides
 
 We have prepared two artifact workflows:
 
-- [Code Workflow](./code_workflow.py): To generate code and display it in the UI like Vercel's v0.
-- [Document Workflow](./document_workflow.py): Generate and update a document like OpenAI's canvas.
+- [Code Workflow](app/code_workflow.py): To generate code and display it in the UI like Vercel's v0.
+- [Document Workflow](app/document_workflow.py): Generate and update a document like OpenAI's canvas.
 
-Modify the factory method in `workflow.py` to decide which artifact workflow to use. Without any changes the Code Workflow is used.
+Modify the factory method in [`workflow.py`](app/workflow.py) to decide which artifact workflow to use. Without any changes the Code Workflow is used.
 
 You can start by sending an request on the [chat UI](http://localhost:8000) or you can test the `/api/chat` endpoint with the following curl request:
 
@@ -64,5 +64,6 @@ To learn more about LlamaIndex, take a look at the following resources:
 
 - [LlamaIndex Documentation](https://docs.llamaindex.ai) - learn about LlamaIndex.
 - [Workflows Introduction](https://docs.llamaindex.ai/en/stable/understanding/workflows/) - learn about LlamaIndex workflows.
+- [LlamaIndex Server](https://pypi.org/project/llama-index-server/)
 
 You can check out [the LlamaIndex GitHub repository](https://github.com/run-llama/llama_index) - your feedback and contributions are welcome!
