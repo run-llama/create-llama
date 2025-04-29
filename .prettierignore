@@ -1,0 +1,9 @@
+node_modules/
+pnpm-lock.yaml
+lib/
+dist/
+cache/
+build/
+.next/
+out/
+packages/server/server/

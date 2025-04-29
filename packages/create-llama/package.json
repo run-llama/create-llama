@@ -31,9 +31,6 @@
     "e2e": "playwright test",
     "e2e:python": "playwright test e2e/shared e2e/python",
     "e2e:typescript": "playwright test e2e/shared e2e/typescript",
-    "format": "prettier --ignore-unknown --cache --check .",
-    "format:write": "prettier --ignore-unknown --write .",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern e2e/cache",
     "pack-install": "bash ./scripts/pack.sh"
   },
   "dependencies": {
@@ -66,10 +63,6 @@
     "yaml": "2.4.1"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^8.10.0",
-    "prettier": "^3.2.5",
-    "prettier-plugin-organize-imports": "^3.2.4",
     "@playwright/test": "^1.41.1",
     "@vercel/ncc": "0.38.1",
     "rimraf": "^5.0.5",
@@ -81,3 +74,4 @@
     "node": ">=16.14.0"
   }
 }
+

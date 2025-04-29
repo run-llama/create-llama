@@ -5,7 +5,6 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
   eslintConfigPrettier,
   {
     languageOptions: {
@@ -18,6 +17,17 @@ export default tseslint.config(
     },
   },
   {
+    files: ["packages/create-llama/**"],
+    rules: {
+      "max-params": ["error", 4],
+      "prefer-const": "error",
+    },
+  },
+  {
+    files: ["packages/server/**"],
+    // TODO: currently, we only apply tseslint recommended rules to server packages
+    // we should apply the same rules for create-llama and fix errors in all files when applying create-llama
+    extends: [...tseslint.configs.recommended],
     rules: {
       "no-irregular-whitespace": "off",
       "@typescript-eslint/no-unused-vars": "off",
@@ -31,7 +41,9 @@ export default tseslint.config(
   },
   {
     ignores: [
+      "python/**",
       "**/dist/**",
+      "**/e2e/cache/**",
       "**/lib/*",
       "**/.next/**",
       "**/out/**",

@@ -1,6 +1,0 @@
-apps/docs/i18n
-apps/docs/docs/api
-pnpm-lock.yaml
-lib/
-dist/
-.docusaurus/
