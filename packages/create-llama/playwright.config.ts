@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({

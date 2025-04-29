@@ -31,6 +31,7 @@ const getAdditionalDependencies = (
   tools?: Tool[],
   templateType?: TemplateType,
   observability?: TemplateObservability,
+  // eslint-disable-next-line max-params
 ) => {
   const dependencies: Dependency[] = [];
 

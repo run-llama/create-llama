@@ -96,8 +96,9 @@ export function Artifact({
 
   useEffect(() => {
     // auto trigger code execution
-    !result && fetchArtifactResult();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!result) {
+      fetchArtifactResult();
+    }
   }, []);
 
   if (!artifact || version === undefined) return null;
@@ -284,7 +285,6 @@ function InterpreterOutput({ outputUrls }: { outputUrls: OutputUrl[] }) {
         <li key={url.url}>
           <div className="mt-4">
             {isImageFile(url.filename) ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={url.url} alt={url.filename} className="my-4 w-1/2" />
             ) : (
               <a

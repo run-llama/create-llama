@@ -191,7 +191,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
           case "png":
           case "jpeg":
           case "svg":
-          case "pdf":
+          case "pdf": {
             const { filename } = this.saveToDisk(data, ext);
             output.push({
               type: ext as InterpreterExtraType,
@@ -199,6 +199,7 @@ export class InterpreterTool implements BaseTool<InterpreterParameter> {
               url: this.getFileUrl(filename),
             });
             break;
+          }
           default:
             output.push({
               type: ext as InterpreterExtraType,

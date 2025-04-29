@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import { ChromaVectorStore } from "@llamaindex/chroma";
 import { VectorStoreIndex } from "llamaindex";
 import { checkRequiredEnvVars } from "./shared";

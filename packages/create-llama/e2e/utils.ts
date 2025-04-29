@@ -67,8 +67,8 @@ export async function runCreateLlama({
   ].join("-");
 
   // Handle different data source types
-  let dataSourceArgs = [];
-  if (dataSource.includes("--web-source" || "--db-source")) {
+  const dataSourceArgs = [];
+  if (dataSource.includes("--web-source")) {
     const webSource = dataSource.split(" ")[1];
     dataSourceArgs.push("--web-source", webSource);
   } else if (dataSource.includes("--db-source")) {

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import path from "path";
 import { green, yellow } from "picocolors";
 import { tryGitInit } from "./helpers/git";
