@@ -7,3 +7,9 @@ build/
 .next/
 out/
 packages/server/server/
+
+# Python
+python/
+**/*.mypy_cache/**
+**/*.venv/**
+**/*.ruff_cache/**
