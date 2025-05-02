@@ -1,7 +1,7 @@
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
-import type { ChatMessage } from "llamaindex";
-import type { WorkflowFactory } from "../types";
+import type { MessageType } from "llamaindex";
+import { type WorkflowFactory, type WorkflowInput } from "../types";
 import {
   parseRequestBody,
   pipeStreamToResponse,
@@ -24,16 +24,17 @@ export const handleChat = async (
         error: "Messages cannot be empty and last message must be from user",
       });
     }
+    const workflowInput: WorkflowInput = {
+      userInput: lastMessage.content,
+      chatHistory: messages.map((message) => ({
+        role: message.role as MessageType,
+        content: message.content,
+      })),
+    };
 
     const workflow = await workflowFactory(body);
 
-    const stream = await runWorkflow(workflow, {
-      userInput: lastMessage.content,
-      chatHistory: messages.slice(0, -1).map((message) => ({
-        content: message.content,
-        role: message.role as ChatMessage["role"],
-      })),
-    });
+    const stream = await runWorkflow(workflow, workflowInput);
 
     pipeStreamToResponse(res, stream);
   } catch (error) {

@@ -1,17 +1,22 @@
 import {
-  type AgentInputData,
   type AgentWorkflow,
-  type AgentWorkflowContext,
+  type ChatMessage,
   type Workflow,
+  workflowEvent,
+  WorkflowStream,
 } from "llamaindex";
 import type next from "next";
 
+export type WorkflowInput = {
+  userInput: string;
+  chatHistory: ChatMessage[];
+};
+export const workflowInputEvent = workflowEvent<WorkflowInput>();
+export const workflowOutputEvent = workflowEvent<WorkflowStream>();
 /**
  * ServerWorkflow can be either a custom Workflow or an AgentWorkflow
  */
-export type ServerWorkflow =
-  | Workflow<AgentWorkflowContext, AgentInputData, string>
-  | AgentWorkflow;
+export type ServerWorkflow = Workflow | AgentWorkflow;
 
 /**
  * A factory function that creates a ServerWorkflow instance, possibly asynchronously.
