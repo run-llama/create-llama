@@ -13,7 +13,9 @@ import {
   agentToolCallResultEvent,
   AgentWorkflow,
   LLamaCloudFileService,
+  startAgentEvent,
   stopAgentEvent,
+  type AgentInputData,
 } from "llamaindex";
 import { ReadableStream } from "stream/web";
 import {
@@ -22,30 +24,31 @@ import {
   toSourceEvent,
   type SourceEventNode,
 } from "../events";
-import {
-  workflowInputEvent,
-  type ServerWorkflow,
-  type WorkflowInput,
-} from "../types";
+import { type ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
+import { sendSuggestedQuestionsEvent } from "./suggestion";
 
 export async function runWorkflow(
   workflow: ServerWorkflow,
-  input: WorkflowInput,
+  input: AgentInputData,
 ) {
   const dataStream = new StreamData();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let workflowStream: AsyncIterable<WorkflowEventData<any>> | WorkflowStream;
+  let workflowStream:
+    | AsyncIterable<WorkflowEventData<unknown>>
+    | WorkflowStream;
+  if (!input.userInput) {
+    throw new Error("Missing user input to start the workflow");
+  }
   if (workflow instanceof AgentWorkflow) {
     workflowStream = workflow.runStream(input.userInput, {
-      chatHistory: input.chatHistory,
+      chatHistory: input.chatHistory ?? [],
     });
   } else {
     // TODO: Refactor this using stream API from llamaindex once it's ready
     const { stream, sendEvent } = workflow.createContext();
     sendEvent(
-      workflowInputEvent.with({
+      startAgentEvent.with({
         userInput: input.userInput,
         chatHistory: input.chatHistory,
       }),
@@ -85,6 +88,16 @@ export async function runWorkflow(
 
   return LlamaIndexAdapter.toDataStreamResponse(stream, {
     data: dataStream,
+    callbacks: {
+      onFinal: async (content: string) => {
+        const history = input.chatHistory?.concat({
+          role: "assistant",
+          content,
+        });
+        await sendSuggestedQuestionsEvent(dataStream, history);
+        dataStream.close();
+      },
+    },
   });
 }
 
