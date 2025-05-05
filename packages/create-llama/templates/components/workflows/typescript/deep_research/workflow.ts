@@ -251,7 +251,6 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
       const events = await stream
         .until(() => state.researchResults.length === researchQuestions.length)
         .toArray();
-      state.totalQuestions += events.length;
       return planResearchEvent.with({});
     }
     state.memory.put({
