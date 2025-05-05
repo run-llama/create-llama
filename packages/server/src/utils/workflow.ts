@@ -18,7 +18,7 @@ import {
   stopAgentEvent,
   type AgentInputData,
 } from "llamaindex";
-import { ReadableStream } from "stream/web";
+import { TransformStream } from "stream/web";
 import {
   sourceEvent,
   toAgentRunEvent,
@@ -54,36 +54,9 @@ export async function runWorkflow(
     ]);
   }
 
-  const stream = new ReadableStream<EngineResponse>({
-    async pull(controller) {
-      try {
-        for await (const event of workflowStream) {
-          if (stopAgentEvent.include(event)) {
-            controller.close();
-            return;
-          }
-          if (agentStreamEvent.include(event)) {
-            if (event.data.delta) {
-              controller.enqueue({
-                delta: event.data.delta,
-              } as EngineResponse);
-            }
-          } else {
-            appendEventDataToAnnotations(dataStream, event);
-          }
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occurred";
-        controller.enqueue({ delta: errorMessage } as EngineResponse);
-        dataStream.close();
-      } finally {
-        controller.close();
-      }
-    },
-  });
+  const readable = workflowToEngineResponseStream(workflowStream, dataStream);
 
-  return LlamaIndexAdapter.toDataStreamResponse(stream, {
+  return LlamaIndexAdapter.toDataStreamResponse(readable, {
     data: dataStream,
     callbacks: {
       onFinal: async (content: string) => {
@@ -177,4 +150,50 @@ export async function* toStreamGenerator(
   for await (const chunk of input) {
     yield chunk;
   }
+}
+
+function workflowToEngineResponseStream(
+  workflowStream: AsyncIterable<WorkflowEventData<unknown>>,
+  dataStream: StreamData,
+): ReadableStream<EngineResponse> {
+  const { readable, writable } = new TransformStream<
+    EngineResponse,
+    EngineResponse
+  >();
+  (async () => {
+    const writer = writable.getWriter();
+    let closed = false;
+    try {
+      for await (const event of workflowStream) {
+        if (stopAgentEvent.include(event)) {
+          await writer.close();
+          closed = true;
+          return;
+        }
+        if (agentStreamEvent.include(event)) {
+          if (event.data.delta && !closed) {
+            await writer.write({
+              delta: event.data.delta,
+            } as EngineResponse);
+          }
+        } else {
+          appendEventDataToAnnotations(dataStream, event);
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      if (!closed) {
+        await writer.write({ delta: errorMessage } as EngineResponse);
+        await writer.close();
+        closed = true;
+      }
+      dataStream.close();
+    } finally {
+      if (!closed) {
+        await writer.close();
+      }
+    }
+  })();
+  return readable;
 }
