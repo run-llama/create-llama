@@ -8,15 +8,6 @@ First, install the dependencies:
 npm install
 ```
 
-Then check the parameters that have been pre-configured in the `.env` file in this directory.
-Make sure you have set the `OPENAI_API_KEY` for the LLM.
-
-Second, generate the embeddings of the example documents in the `./data` directory:
-
-```
-npm run generate
-```
-
 Third, run the development server:
 
 ```
@@ -27,15 +18,11 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configure LLM and Embedding Model
 
-You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) and [embedding model](https://ts.llamaindex.ai/docs/llamaindex/modules/embeddings) in the [settings file](src/app/settings.ts).
+You can configure [LLM model](https://ts.llamaindex.ai/docs/llamaindex/modules/llms) in the [settings file](src/app/settings.ts).
 
 ## Custom UI Components
 
-For Deep Research, we have a custom component located in `components/ui_event.jsx`. This is used to display the results of the deep research workflow in a more user-friendly way
-
-### Generate a new UI Component from workflow event
-
-You can regenerate a new UI component from the workflow event schema by running the following command:
+We have a custom component located in `components/ui_event.jsx`. This is used to display the state of artifact workflows in UI. You can regenerate a new UI component from the workflow event schema by running the following command:
 
 ```
 npm run generate:ui
@@ -43,7 +30,12 @@ npm run generate:ui
 
 ## Use Case
 
-We have prepared an [example workflow](./src/app/workflow.ts) for the Deep Research use case, where you can request a detailed answer about the example documents in the [./data](./data) directory.
+We have prepared two artifact workflows:
+
+- [Code Workflow](app/code_workflow.ts): To generate code and display it in the UI like Vercel's v0.
+- [Document Workflow](app/document_workflow.ts): Generate and update a document like OpenAI's canvas.
+
+Modify the factory method in [`workflow.ts`](app/workflow.ts) to decide which artifact workflow to use. Without any changes the Code Workflow is used.
 
 You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
