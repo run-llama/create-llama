@@ -1,4 +1,4 @@
-import { toSourceEvent, workflowInputEvent } from "@llamaindex/server";
+import { toSourceEvent } from "@llamaindex/server";
 import {
   agentStreamEvent,
   ChatMemoryBuffer,
@@ -11,6 +11,7 @@ import {
   NodeWithScore,
   PromptTemplate,
   Settings,
+  startAgentEvent,
   until,
   VectorStoreIndex,
   workflowEvent,
@@ -67,74 +68,6 @@ Now, provide your decision in the required format for this user request:
     "user_request",
   ],
 });
-
-const createResearchPlan = async (
-  memory: ChatMemoryBuffer,
-  contextStr: string,
-  enhancedPrompt: string,
-  userRequest: string,
-) => {
-  const chatHistory = await memory.getMessages();
-
-  const conversationContext = chatHistory
-    .map((message) => `${message.role}: ${message.content}`)
-    .join("\n");
-
-  const prompt = createPlanResearchPrompt.format({
-    context_str: contextStr,
-    conversation_context: conversationContext,
-    enhanced_prompt: enhancedPrompt,
-    user_request: userRequest,
-  });
-
-  const responseFormat = z.object({
-    decision: z.enum(["research", "write", "cancel"]),
-    researchQuestions: z.array(z.string()),
-    cancelReason: z.string().optional(),
-  });
-
-  const result = await Settings.llm.complete({ prompt, responseFormat });
-  const plan = JSON.parse(result.text) as z.infer<typeof responseFormat>;
-
-  return {
-    ...plan,
-    researchQuestions: plan.researchQuestions.map((question) => ({
-      questionId: randomUUID(),
-      question,
-    })),
-  };
-};
-
-const contextStr = (contextNodes: NodeWithScore<Metadata>[]) => {
-  return contextNodes
-    .map((node) => {
-      const nodeId = node.node.id_;
-      const nodeContent = node.node.getContent(MetadataMode.NONE);
-      return `<Citation id='${nodeId}'>\n${nodeContent}</Citation id='${nodeId}'>`;
-    })
-    .join("\n");
-};
-
-const enhancedPrompt = (totalQuestions: number) => {
-  if (totalQuestions === 0) {
-    return "The student has no questions to research. Let start by asking some questions.";
-  }
-
-  if (totalQuestions > MAX_QUESTIONS) {
-    return `The student has researched ${totalQuestions} questions. Should cancel the research if the context is not enough to write a report.`;
-  }
-
-  return "";
-};
-
-const answerQuestion = async (contextStr: string, question: string) => {
-  const prompt = researchPrompt.format({
-    context_str: contextStr,
-    question,
-  });
-  const result = await Settings.llm.complete({ prompt });
-  return result.text;
-};
 
 const researchPrompt = new PromptTemplate({
   template: `
@@ -227,7 +160,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
   });
   const workflow = withState(createWorkflow());
 
-  workflow.handle([workflowInputEvent], async ({ data }) => {
+  workflow.handle([startAgentEvent], async ({ data }) => {
     const { userInput, chatHistory = [] } = data;
     const { sendEvent, state } = getContext();
     if (!userInput) throw new Error("Invalid input");
@@ -410,3 +343,71 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
 
   return workflow;
 }
+
+const createResearchPlan = async (
+  memory: ChatMemoryBuffer,
+  contextStr: string,
+  enhancedPrompt: string,
+  userRequest: string,
+) => {
+  const chatHistory = await memory.getMessages();
+
+  const conversationContext = chatHistory
+    .map((message) => `${message.role}: ${message.content}`)
+    .join("\n");
+
+  const prompt = createPlanResearchPrompt.format({
+    context_str: contextStr,
+    conversation_context: conversationContext,
+    enhanced_prompt: enhancedPrompt,
+    user_request: userRequest,
+  });
+
+  const responseFormat = z.object({
+    decision: z.enum(["research", "write", "cancel"]),
+    researchQuestions: z.array(z.string()),
+    cancelReason: z.string().optional(),
+  });
+
+  const result = await Settings.llm.complete({ prompt, responseFormat });
+  const plan = JSON.parse(result.text) as z.infer<typeof responseFormat>;
+
+  return {
+    ...plan,
+    researchQuestions: plan.researchQuestions.map((question) => ({
+      questionId: randomUUID(),
+      question,
+    })),
+  };
+};
+
+const contextStr = (contextNodes: NodeWithScore<Metadata>[]) => {
+  return contextNodes
+    .map((node) => {
+      const nodeId = node.node.id_;
+      const nodeContent = node.node.getContent(MetadataMode.NONE);
+      return `<Citation id='${nodeId}'>\n${nodeContent}</Citation id='${nodeId}'>`;
+    })
+    .join("\n");
+};
+
+const enhancedPrompt = (totalQuestions: number) => {
+  if (totalQuestions === 0) {
+    return "The student has no questions to research. Let start by asking some questions.";
+  }
+
+  if (totalQuestions > MAX_QUESTIONS) {
+    return `The student has researched ${totalQuestions} questions. Should cancel the research if the context is not enough to write a report.`;
+  }
+
+  return "";
+};
+
+const answerQuestion = async (contextStr: string, question: string) => {
+  const prompt = researchPrompt.format({
+    context_str: contextStr,
+    question,
+  });
+  const result = await Settings.llm.complete({ prompt });
+  return result.text;
+};

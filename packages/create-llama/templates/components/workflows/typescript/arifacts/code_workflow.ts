@@ -1,4 +1,4 @@
-import { extractLastArtifact, workflowInputEvent } from "@llamaindex/server";
+import { extractLastArtifact } from "@llamaindex/server";
 import {
   agentStreamEvent,
   ChatMemoryBuffer,
@@ -7,6 +7,7 @@ import {
   LLM,
   PromptTemplate,
   Settings,
+  startAgentEvent,
   workflowEvent,
 } from "llamaindex";
 
@@ -31,8 +32,6 @@ const generateArtifactEvent = workflowEvent<{
 }>();
 
 const synthesizeAnswerEvent = workflowEvent<object>();
-
-const stopEvent = workflowEvent<string>();
 
 const uiEvent = workflowEvent<{
   type: "ui_event";
@@ -70,10 +69,13 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
   });
   const workflow = withState(createWorkflow());
 
-  workflow.handle([workflowInputEvent], async ({ data: { userInput } }) => {
+  workflow.handle([startAgentEvent], async ({ data: { userInput } }) => {
     // Prepare chat history
     const { state } = getContext();
     // Put user input to the memory
+    if (!userInput) {
+      throw new Error("Missing user input to start the workflow");
+    }
     state.memory.put({
       role: "user",
       content: userInput,
