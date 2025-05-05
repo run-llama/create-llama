@@ -13,6 +13,7 @@ import {
   agentToolCallResultEvent,
   AgentWorkflow,
   LLamaCloudFileService,
+  run,
   startAgentEvent,
   stopAgentEvent,
   type AgentInputData,
@@ -45,15 +46,12 @@ export async function runWorkflow(
       chatHistory: input.chatHistory ?? [],
     });
   } else {
-    // TODO: Refactor this using stream API from llamaindex once it's ready
-    const { stream, sendEvent } = workflow.createContext();
-    sendEvent(
+    workflowStream = run(workflow, [
       startAgentEvent.with({
         userInput: input.userInput,
         chatHistory: input.chatHistory,
       }),
-    );
-    workflowStream = stream;
+    ]);
   }
 
   const stream = new ReadableStream<EngineResponse>({
