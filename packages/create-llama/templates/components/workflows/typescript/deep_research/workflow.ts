@@ -2,7 +2,6 @@ import { toSourceEvent } from "@llamaindex/server";
 import {
   agentStreamEvent,
   ChatMemoryBuffer,
-  collect,
   createStatefulMiddleware,
   createWorkflow,
   LlamaCloudIndex,
@@ -12,7 +11,7 @@ import {
   PromptTemplate,
   Settings,
   startAgentEvent,
-  until,
+  stopAgentEvent,
   VectorStoreIndex,
   workflowEvent,
 } from "llamaindex";
@@ -115,7 +114,6 @@ type ResearchResult = ResearchQuestion & { answer: string };
 const planResearchEvent = workflowEvent<{}>();
 const researchEvent = workflowEvent<ResearchQuestion>();
 const reportEvent = workflowEvent<{}>();
-const stopEvent = workflowEvent<string>();
 
 export const UIEventSchema = z
   .object({
@@ -219,7 +217,6 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         data: { event: "analyze", state: "done" },
       }),
     );
-
     if (decision === "cancel") {
       sendEvent(
         uiEvent.with({
@@ -227,9 +224,12 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
           data: { event: "analyze", state: "done" },
         }),
       );
-      return stopEvent.with(
-        cancelReason ?? "Research cancelled without any reason.",
-      );
+      return agentStreamEvent.with({
+        delta: cancelReason ?? "Research cancelled without any reason.",
+        response: cancelReason ?? "Research cancelled without any reason.",
+        currentAgentName: "",
+        raw: null,
+      });
     }
     if (decision === "research" && researchQuestions.length > 0) {
       state.totalQuestions += researchQuestions.length;
@@ -248,12 +248,10 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         );
         sendEvent(researchEvent.with({ questionId: id, question }));
       });
-      await collect(
-        until(
-          stream,
-          () => state.researchResults.length === researchQuestions.length,
-        ),
-      );
+      const events = await stream
+        .until(() => state.researchResults.length === researchQuestions.length)
+        .toArray();
+      state.totalQuestions += events.length;
       return planResearchEvent.with({});
     }
     state.memory.put({
@@ -338,7 +336,17 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         }),
       );
     }
-    sendEvent(stopEvent.with(response));
+    sendEvent(
+      agentStreamEvent.with({
+        delta: response,
+        response,
+        currentAgentName: "",
+        raw: null,
+      }),
+    );
+    return stopAgentEvent.with({
+      result: response,
+    });
   });
 
   return workflow;
@@ -393,11 +401,11 @@ const contextStr = (contextNodes: NodeWithScore<Metadata>[]) => {
 
 const enhancedPrompt = (totalQuestions: number) => {
   if (totalQuestions === 0) {
-    return "The student has no questions to research. Let start by asking some questions.";
+    return "The student has no questions to research. Let start by providing some questions for the student to research.";
   }
 
-  if (totalQuestions > MAX_QUESTIONS) {
-    return `The student has researched ${totalQuestions} questions. Should cancel the research if the context is not enough to write a report.`;
+  if (totalQuestions >= MAX_QUESTIONS) {
+    return `The student has researched ${totalQuestions} questions. Should proceeding writing report or cancel the research if the answers are not enough to write a report.`;
   }
 
   return "";

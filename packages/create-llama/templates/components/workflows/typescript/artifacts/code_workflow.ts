@@ -8,6 +8,7 @@ import {
   PromptTemplate,
   Settings,
   startAgentEvent,
+  stopAgentEvent,
   workflowEvent,
 } from "llamaindex";
 
@@ -344,7 +345,9 @@ You are a product analyst responsible for analyzing the user's request and provi
       );
     }
 
-    return stopEvent.with(response);
+    return stopAgentEvent.with({
+      result: response,
+    });
   });
 
   return workflow;
