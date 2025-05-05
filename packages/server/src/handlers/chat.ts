@@ -1,7 +1,7 @@
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
-import type { MessageType } from "llamaindex";
-import { type WorkflowFactory, type WorkflowInput } from "../types";
+import type { AgentInputData, MessageType } from "llamaindex";
+import { type WorkflowFactory } from "../types";
 import {
   parseRequestBody,
   pipeStreamToResponse,
@@ -24,7 +24,7 @@ export const handleChat = async (
         error: "Messages cannot be empty and last message must be from user",
       });
     }
-    const workflowInput: WorkflowInput = {
+    const workflowInput: AgentInputData = {
       userInput: lastMessage.content,
       chatHistory: messages.map((message) => ({
         role: message.role as MessageType,

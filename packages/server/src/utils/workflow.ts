@@ -62,7 +62,6 @@ export async function runWorkflow(
         for await (const event of workflowStream) {
           if (stopAgentEvent.include(event)) {
             controller.close();
-            dataStream.close();
             return;
           }
           if (agentStreamEvent.include(event)) {
