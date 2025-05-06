@@ -1,24 +1,16 @@
 import {
-  agentStreamEvent,
   agentToolCallEvent,
   agentToolCallResultEvent,
-  AgentWorkflow,
   run,
   startAgentEvent,
-  stopAgentEvent,
   type AgentInputData,
   type WorkflowEventData,
-  type WorkflowStream,
 } from "@llamaindex/workflow";
-import { LlamaIndexAdapter, StreamData, type JSONValue } from "ai";
 import {
   LLamaCloudFileService,
-  type ChatResponseChunk,
-  type EngineResponse,
   type Metadata,
   type NodeWithScore,
 } from "llamaindex";
-import { TransformStream } from "stream/web";
 import {
   sourceEvent,
   toAgentRunEvent,
@@ -27,62 +19,49 @@ import {
 } from "../events";
 import { type ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
+import { toDataStreamResponse } from "./stream";
 import { sendSuggestedQuestionsEvent } from "./suggestion";
 
 export async function runWorkflow(
   workflow: ServerWorkflow,
   input: AgentInputData,
 ) {
-  const dataStream = new StreamData();
-
-  let workflowStream:
-    | AsyncIterable<WorkflowEventData<unknown>>
-    | WorkflowStream;
   if (!input.userInput) {
     throw new Error("Missing user input to start the workflow");
   }
-  if (workflow instanceof AgentWorkflow) {
-    workflowStream = workflow.runStream(input.userInput, {
-      chatHistory: input.chatHistory ?? [],
-    });
-  } else {
-    workflowStream = run(workflow, [
-      startAgentEvent.with({
-        userInput: input.userInput,
-        chatHistory: input.chatHistory,
-      }),
-    ]);
-  }
+  const workflowStream = run(workflow, [
+    startAgentEvent.with({
+      userInput: input.userInput,
+      chatHistory: input.chatHistory,
+    }),
+  ]);
 
-  const readable = workflowToEngineResponseStream(workflowStream, dataStream);
+  // Transform the stream to handle annotations
+  const transformedStream = processWorkflowStream(workflowStream);
 
-  return LlamaIndexAdapter.toDataStreamResponse(readable, {
-    data: dataStream,
+  return toDataStreamResponse(transformedStream, {
+    // TODO: Fix me
     callbacks: {
-      onFinal: async (content: string) => {
-        const history = input.chatHistory?.concat({
-          role: "assistant",
-          content,
-        });
-        await sendSuggestedQuestionsEvent(dataStream, history);
-        dataStream.close();
+      onFinal: (streamWriter, content) => {
+        sendSuggestedQuestionsEvent(streamWriter, input.chatHistory);
       },
     },
   });
 }
 
-// append data of other events to the data stream as message annotations
-function appendEventDataToAnnotations(
-  dataStream: StreamData,
-  event: WorkflowEventData<unknown>,
-) {
-  const transformedEvent = transformWorkflowEvent(event);
-  // for SourceEvent, we need to trigger download files from LlamaCloud (if having)
-  if (sourceEvent.include(transformedEvent)) {
-    const sourceNodes = transformedEvent.data.data.nodes;
-    downloadLlamaCloudFilesFromNodes(sourceNodes); // download files in background
+// Process the workflow stream to handle non-stream events as annotations
+async function* processWorkflowStream(
+  stream: AsyncIterable<WorkflowEventData<unknown>>,
+): AsyncIterable<WorkflowEventData<unknown>> {
+  for await (const event of stream) {
+    const transformedEvent = transformWorkflowEvent(event);
+
+    if (sourceEvent.include(transformedEvent)) {
+      const sourceNodes = transformedEvent.data.data.nodes;
+      downloadLlamaCloudFilesFromNodes(sourceNodes); // download files in background
+    }
+    yield transformedEvent;
   }
-  dataStream.appendMessageAnnotation(transformedEvent.data as JSONValue);
 }
 
 // transform WorkflowEvent to another WorkflowEvent for annotations display purpose
@@ -100,11 +79,9 @@ function transformWorkflowEvent(
     });
   }
 
-  // modify AgentToolCallResult event
+  // if AgentToolCallResult contains sourceNodes, convert it to SourceEvent
   if (agentToolCallResultEvent.include(event)) {
     const rawOutput = event.data.raw;
-
-    // if AgentToolCallResult contains sourceNodes, convert it to SourceEvent
     if (
       rawOutput &&
       typeof rawOutput === "object" &&
@@ -137,63 +114,4 @@ async function downloadLlamaCloudFilesFromNodes(nodes: SourceEventNode[]) {
 
     downloadedFiles.push(node.filePath);
   }
-}
-
-export async function* toStreamGenerator(
-  input: AsyncIterable<ChatResponseChunk> | string,
-): AsyncGenerator<ChatResponseChunk> {
-  if (typeof input === "string") {
-    yield { delta: input } as ChatResponseChunk;
-    return;
-  }
-
-  for await (const chunk of input) {
-    yield chunk;
-  }
-}
-
-function workflowToEngineResponseStream(
-  workflowStream: AsyncIterable<WorkflowEventData<unknown>>,
-  dataStream: StreamData,
-): ReadableStream<EngineResponse> {
-  const { readable, writable } = new TransformStream<
-    EngineResponse,
-    EngineResponse
-  >();
-  (async () => {
-    const writer = writable.getWriter();
-    let closed = false;
-    try {
-      for await (const event of workflowStream) {
-        if (stopAgentEvent.include(event)) {
-          await writer.close();
-          closed = true;
-          return;
-        }
-        if (agentStreamEvent.include(event)) {
-          if (event.data.delta && !closed) {
-            await writer.write({
-              delta: event.data.delta,
-            } as EngineResponse);
-          }
-        } else {
-          appendEventDataToAnnotations(dataStream, event);
-        }
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      if (!closed) {
-        await writer.write({ delta: errorMessage } as EngineResponse);
-        await writer.close();
-        closed = true;
-      }
-      dataStream.close();
-    } finally {
-      if (!closed) {
-        await writer.close();
-      }
-    }
-  })();
-  return readable;
 }

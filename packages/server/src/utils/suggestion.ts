@@ -1,4 +1,4 @@
-import type { StreamData } from "ai";
+import type { DataStreamWriter } from "ai";
 import { type ChatMessage, Settings } from "llamaindex";
 
 const NEXT_QUESTION_PROMPT = `You're a helpful assistant! Your task is to suggest the next question that user might ask. 
@@ -16,12 +16,12 @@ Your answer should be wrapped in three sticks which follows the following format
 `;
 
 export const sendSuggestedQuestionsEvent = async (
-  dataStream: StreamData,
+  streamWriter: DataStreamWriter,
   chatHistory: ChatMessage[] = [],
 ) => {
   const questions = await generateNextQuestions(chatHistory);
   if (questions.length > 0) {
-    dataStream.appendMessageAnnotation({
+    streamWriter.writeMessageAnnotation({
       type: "suggested_questions",
       data: questions,
     });
