@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from llama_index.core.workflow import Workflow
-from llama_index.server.api.routers import chat_router, custom_components_router
+from llama_index.server.api.routers import chat_router, custom_components_router, dev_router
 from llama_index.server.chat_ui import download_chat_ui
 from llama_index.server.settings import server_settings
 
@@ -100,6 +100,8 @@ class LlamaIndexServer(FastAPI):
             server_settings.set_url(server_url)
         if api_prefix:
             server_settings.set_api_prefix(api_prefix)
+        if workflow_factory:
+            server_settings.set_workflow_factory(workflow_factory.__name__)
 
         if self.use_default_routers:
             self.add_default_routers()
@@ -108,6 +110,7 @@ class LlamaIndexServer(FastAPI):
             self.allow_cors("*")
             if self.ui_config.enabled is None:
                 self.ui_config.enabled = True
+            self.include_router(dev_router(), prefix=server_settings.api_prefix)
 
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False

@@ -11,6 +11,11 @@ class ServerSettings(BaseSettings):
         default="/api",
         description="The prefix for the API endpoints",
     )
+    workflow_factory_signature: str = Field(
+        default="",
+        description="The signature of the workflow factory function",
+        env=None
+    )
 
     @property
     def file_server_url_prefix(self) -> str:
@@ -39,6 +44,9 @@ class ServerSettings(BaseSettings):
     def set_api_prefix(self, v: str) -> None:
         self.api_prefix = v
         self.validate_api_prefix(v)  # type: ignore
+
+    def set_workflow_factory(self, v: str) -> None:
+        self.workflow_factory_signature = v
 
     class Config:
         env_file_encoding = "utf-8"
