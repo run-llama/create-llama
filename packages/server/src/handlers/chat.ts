@@ -1,6 +1,7 @@
+import type { AgentInputData } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
-import type { AgentInputData, MessageType } from "llamaindex";
+import type { MessageType } from "llamaindex";
 import { type WorkflowFactory } from "../types";
 import {
   parseRequestBody,

@@ -1,11 +1,7 @@
 import { randomUUID } from "@llamaindex/env";
+import { workflowEvent } from "@llamaindex/workflow";
 import type { Message } from "ai";
-import {
-  MetadataMode,
-  workflowEvent,
-  type Metadata,
-  type NodeWithScore,
-} from "llamaindex";
+import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
 import { z } from "zod";
 
 // Events that appended to stream as annotations
