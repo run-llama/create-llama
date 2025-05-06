@@ -1,16 +1,14 @@
 import { extractLastArtifact } from "@llamaindex/server";
+import { ChatMemoryBuffer, LLM, PromptTemplate, Settings } from "llamaindex";
+
 import {
   agentStreamEvent,
-  ChatMemoryBuffer,
   createStatefulMiddleware,
   createWorkflow,
-  LLM,
-  PromptTemplate,
-  Settings,
   startAgentEvent,
   stopAgentEvent,
   workflowEvent,
-} from "llamaindex";
+} from "@llamaindex/workflow";
 
 import { z } from "zod";
 

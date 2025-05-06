@@ -7,6 +7,7 @@ import {
   startAgentEvent,
   stopAgentEvent,
   type AgentInputData,
+  type WorkflowEventData,
   type WorkflowStream,
 } from "@llamaindex/workflow";
 import { LlamaIndexAdapter, StreamData, type JSONValue } from "ai";
@@ -22,18 +23,11 @@ import {
   sourceEvent,
   toAgentRunEvent,
   toSourceEvent,
-  type SourceEventData,
   type SourceEventNode,
 } from "../events";
 import { type ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
 import { sendSuggestedQuestionsEvent } from "./suggestion";
-
-// Add this type definition for WorkflowEventData
-export type WorkflowEventData<T = unknown> = {
-  type: string;
-  data: T;
-};
 
 export async function runWorkflow(
   workflow: ServerWorkflow,
@@ -85,8 +79,7 @@ function appendEventDataToAnnotations(
   const transformedEvent = transformWorkflowEvent(event);
   // for SourceEvent, we need to trigger download files from LlamaCloud (if having)
   if (sourceEvent.include(transformedEvent)) {
-    const sourceEvent = transformedEvent as WorkflowEventData<SourceEventData>;
-    const sourceNodes = sourceEvent.data.data.nodes;
+    const sourceNodes = transformedEvent.data.data.nodes;
     downloadLlamaCloudFilesFromNodes(sourceNodes); // download files in background
   }
   dataStream.appendMessageAnnotation(transformedEvent.data as JSONValue);
