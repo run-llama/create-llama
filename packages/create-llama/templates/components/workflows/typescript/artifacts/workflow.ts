@@ -1,4 +1,4 @@
-// import { createCodeArtifactWorkflow } from "./code_workflow";
+// import { createCodeArtifactWorkflow } from "./code-workflow";
 import { createDocumentArtifactWorkflow } from "./doc-workflow";
 
 export const workflowFactory = async (reqBody: any) => {

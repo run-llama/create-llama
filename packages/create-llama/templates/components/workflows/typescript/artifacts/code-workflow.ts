@@ -69,7 +69,6 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
   const workflow = withState(createWorkflow());
 
   workflow.handle([startAgentEvent], async ({ data: { userInput } }) => {
-    console.log("prepare chat history");
     // Prepare chat history
     const { state } = getContext();
     // Put user input to the memory
@@ -80,7 +79,6 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
       role: "user",
       content: userInput,
     });
-    console.log("userInput", userInput);
     return planEvent.with({
       userInput,
     });
