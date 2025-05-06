@@ -180,9 +180,6 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.1(react@19.1.0))
-      '@llama-flow/core':
-        specifier: ^0.3.4
-        version: 0.3.10(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
       '@llamaindex/chat-ui':
         specifier: 0.4.1
         version: 0.4.1(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1018,29 +1015,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
-
-  '@llama-flow/core@0.3.10':
-    resolution: {integrity: sha512-PJyMW5xXf3IHTB6BLfMcwM9hxcN9YsA+Gk5uu+qEc2uQ/jsU8DsM8vd4vubWXauRdWd/weENkJSWrkXj/0mB4A==}
-    peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.7.0
-      hono: ^4.7.4
-      next: ^15.2.2
-      p-retry: ^6.2.1
-      rxjs: ^7.8.2
-      zod: ^3.24.2
-    peerDependenciesMeta:
-      '@modelcontextprotocol/sdk':
-        optional: true
-      hono:
-        optional: true
-      next:
-        optional: true
-      p-retry:
-        optional: true
-      rxjs:
-        optional: true
-      zod:
-        optional: true
 
   '@llamaindex/chat-ui@0.4.1':
     resolution: {integrity: sha512-lRPsnpPe2mBJJVlKEpIKSmr5ofCGVRP7U21CfSCFaFVA/V81BaZZ/gyt2G8+vzXmTWGqRYJGBNHcsGVPx0G7Mw==}
@@ -6350,11 +6324,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
-
-  '@llama-flow/core@0.3.10(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)':
-    optionalDependencies:
-      next: 15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      zod: 3.24.3
 
   '@llamaindex/chat-ui@0.4.1(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
