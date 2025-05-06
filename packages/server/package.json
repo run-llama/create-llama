@@ -56,7 +56,7 @@
     "@babel/types": "^7.27.0",
     "@hookform/resolvers": "^5.0.1",
     "@llama-flow/core": "^0.3.4",
-    "@llamaindex/chat-ui": "0.4.1",
+    "@llamaindex/chat-ui": "0.4.3",
     "@llamaindex/env": "0.1.29",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.7",
