@@ -1,4 +1,8 @@
-import { agentStreamEvent, type WorkflowEventData } from "@llamaindex/workflow";
+import {
+  agentStreamEvent,
+  type WorkflowEventData,
+  type WorkflowStream,
+} from "@llamaindex/workflow";
 // DataStream is deprecated, converting to new API
 import {
   createDataStreamResponse,
@@ -14,7 +18,7 @@ import {
  * @returns A Response object with the streamed data.
  */
 export function toDataStreamResponse(
-  stream: AsyncIterable<WorkflowEventData<unknown>>,
+  stream: WorkflowStream<WorkflowEventData<unknown>>,
   options: {
     init?: ResponseInit;
     callbacks?: {

@@ -3,6 +3,8 @@ import {
   agentToolCallResultEvent,
   run,
   startAgentEvent,
+  stopAgentEvent,
+  WorkflowStream,
   type AgentInputData,
   type WorkflowEventData,
 } from "@llamaindex/workflow";
@@ -49,51 +51,49 @@ export async function runWorkflow(
   });
 }
 
-// Process the workflow stream to handle non-stream events as annotations
-async function* processWorkflowStream(
-  stream: AsyncIterable<WorkflowEventData<unknown>>,
-): AsyncIterable<WorkflowEventData<unknown>> {
-  for await (const event of stream) {
-    const transformedEvent = transformWorkflowEvent(event);
+function processWorkflowStream(
+  stream: WorkflowStream<WorkflowEventData<unknown>>,
+) {
+  return stream.until(stopAgentEvent).pipeThrough(
+    new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
+      {
+        async transform(event, controller) {
+          let transformedEvent = event;
 
-    if (sourceEvent.include(transformedEvent)) {
-      const sourceNodes = transformedEvent.data.data.nodes;
-      downloadLlamaCloudFilesFromNodes(sourceNodes); // download files in background
-    }
-    yield transformedEvent;
-  }
-}
+          // Handle agent events from AgentToolCall
+          if (agentToolCallEvent.include(event)) {
+            const inputString = JSON.stringify(event.data.toolKwargs);
+            transformedEvent = toAgentRunEvent({
+              agent: event.data.agentName,
+              text: `Using tool: '${event.data.toolName}' with inputs: '${inputString}'`,
+              type: "text",
+            });
+          }
+          // Handle source nodes from AgentToolCallResult
+          else if (agentToolCallResultEvent.include(event)) {
+            const rawOutput = event.data.raw;
+            if (
+              rawOutput &&
+              typeof rawOutput === "object" &&
+              "sourceNodes" in rawOutput // TODO: better use Zod to validate and extract sourceNodes from toolCallResult
+            ) {
+              const sourceNodes =
+                rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[];
+              transformedEvent = toSourceEvent(sourceNodes);
+            }
+          }
 
-// transform WorkflowEvent to another WorkflowEvent for annotations display purpose
-// this useful for handling AgentWorkflow events, because we cannot easily append custom events like custom workflows
-function transformWorkflowEvent(
-  event: WorkflowEventData<unknown>,
-): WorkflowEventData<unknown> {
-  // convert AgentToolCall event to AgentRunEvent
-  if (agentToolCallEvent.include(event)) {
-    const inputString = JSON.stringify(event.data.toolKwargs);
-    return toAgentRunEvent({
-      agent: event.data.agentName,
-      text: `Using tool: '${event.data.toolName}' with inputs: '${inputString}'`,
-      type: "text",
-    });
-  }
+          // Post-process for llama-cloud files
+          if (sourceEvent.include(transformedEvent)) {
+            const sourceNodesForDownload = transformedEvent.data.data.nodes; // These are SourceEventNode[]
+            downloadLlamaCloudFilesFromNodes(sourceNodesForDownload); // download files in background
+          }
 
-  // if AgentToolCallResult contains sourceNodes, convert it to SourceEvent
-  if (agentToolCallResultEvent.include(event)) {
-    const rawOutput = event.data.raw;
-    if (
-      rawOutput &&
-      typeof rawOutput === "object" &&
-      "sourceNodes" in rawOutput // TODO: better use Zod to validate and extract sourceNodes from toolCallResult
-    ) {
-      return toSourceEvent(
-        rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[],
-      );
-    }
-  }
-
-  return event;
+          controller.enqueue(transformedEvent);
+        },
+      },
+    ),
+  );
 }
 
 async function downloadLlamaCloudFilesFromNodes(nodes: SourceEventNode[]) {
