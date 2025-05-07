@@ -180,9 +180,6 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.1(react@19.1.0))
-      '@llama-flow/core':
-        specifier: ^0.3.4
-        version: 0.3.10(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
       '@llamaindex/chat-ui':
         specifier: 0.4.3
         version: 0.4.3(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1078,29 +1075,6 @@ packages:
 
   '@lezer/python@1.1.18':
     resolution: {integrity: sha512-31FiUrU7z9+d/ElGQLJFXl+dKOdx0jALlP3KEOsGTex8mvj+SoE1FgItcHWK/axkxCHGUSpqIHt6JAWfWu9Rhg==}
-
-  '@llama-flow/core@0.3.10':
-    resolution: {integrity: sha512-PJyMW5xXf3IHTB6BLfMcwM9hxcN9YsA+Gk5uu+qEc2uQ/jsU8DsM8vd4vubWXauRdWd/weENkJSWrkXj/0mB4A==}
-    peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.7.0
-      hono: ^4.7.4
-      next: ^15.2.2
-      p-retry: ^6.2.1
-      rxjs: ^7.8.2
-      zod: ^3.24.2
-    peerDependenciesMeta:
-      '@modelcontextprotocol/sdk':
-        optional: true
-      hono:
-        optional: true
-      next:
-        optional: true
-      p-retry:
-        optional: true
-      rxjs:
-        optional: true
-      zod:
-        optional: true
 
   '@llama-flow/core@0.4.1':
     resolution: {integrity: sha512-xHhJMRmY16C1pYPWIonmLWPkkjTGuj1iVQCTXOM6sXajQ3r0+mEVERQCjPqf48tvX0K+szbdgxjg6wx+KwVqcg==}
@@ -6673,11 +6647,6 @@ snapshots:
       '@lezer/common': 1.2.3
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
-
-  '@llama-flow/core@0.3.10(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)':
-    optionalDependencies:
-      next: 15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      zod: 3.24.3
 
   '@llama-flow/core@0.4.1(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)':
     optionalDependencies:
