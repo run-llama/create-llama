@@ -67,8 +67,8 @@ export class FormFillingWorkflow extends Workflow<
       timeout: options?.timeout ?? 360,
     });
 
-    this.llm = options.llm ?? (Settings.llm as ToolCallLLM);
-    if (!(this.llm instanceof ToolCallLLM)) {
+    const llm = Settings.llm as ToolCallLLM;
+    if (!llm.supportToolCall) {
       throw new Error("LLM is not a ToolCallLLM");
     }
     this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
