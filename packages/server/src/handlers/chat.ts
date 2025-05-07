@@ -8,6 +8,7 @@ import {
   pipeStreamToResponse,
   sendJSONResponse,
 } from "../utils/request";
+import { toDataStream } from "../utils/stream";
 import { runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
@@ -33,13 +34,20 @@ export const handleChat = async (
       })),
     };
 
+    const abortController = new AbortController();
+    res.on("close", () => abortController.abort("Connection closed"));
+
     const workflow = await workflowFactory(body);
+    const workflowEventStream = await runWorkflow(
+      workflow,
+      workflowInput,
+      abortController.signal,
+    );
 
-    const stream = await runWorkflow(workflow, workflowInput);
-
-    pipeStreamToResponse(res, stream);
+    const dataStream = toDataStream(workflowEventStream);
+    pipeStreamToResponse(res, dataStream);
   } catch (error) {
-    console.error("Chat error:", error);
+    console.error("Chat handler error:", error);
     return sendJSONResponse(res, 500, {
       detail: (error as Error).message || "Internal server error",
     });

@@ -1,4 +1,5 @@
 import { getEnv } from "@llamaindex/env";
+import type { Workflow } from "@llamaindex/workflow";
 import fs from "fs";
 import { createServer } from "http";
 import next from "next";
@@ -9,8 +10,7 @@ import { handleChat } from "./handlers/chat";
 import { getLlamaCloudConfig } from "./handlers/cloud";
 import { getComponents } from "./handlers/components";
 import { handleServeFiles } from "./handlers/files";
-import type { LlamaIndexServerOptions, ServerWorkflow } from "./types";
-
+import type { LlamaIndexServerOptions } from "./types";
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
@@ -18,7 +18,7 @@ const dev = process.env.NODE_ENV !== "production";
 export class LlamaIndexServer {
   port: number;
   app: ReturnType<typeof next>;
-  workflowFactory: () => Promise<ServerWorkflow> | ServerWorkflow;
+  workflowFactory: () => Promise<Workflow> | Workflow;
   componentsDir?: string | undefined;
 
   constructor(options: LlamaIndexServerOptions) {

@@ -6,6 +6,7 @@ import {
   stopAgentEvent,
   WorkflowStream,
   type AgentInputData,
+  type Workflow,
   type WorkflowEventData,
 } from "@llamaindex/workflow";
 import {
@@ -19,15 +20,13 @@ import {
   toSourceEvent,
   type SourceEventNode,
 } from "../events";
-import { type ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
-import { toDataStream } from "./stream";
-import { sendSuggestedQuestionsEvent } from "./suggestion";
 
 export async function runWorkflow(
-  workflow: ServerWorkflow,
+  workflow: Workflow,
   input: AgentInputData,
-) {
+  abortSignal?: AbortSignal,
+): Promise<WorkflowStream<WorkflowEventData<unknown>>> {
   if (!input.userInput) {
     throw new Error("Missing user input to start the workflow");
   }
@@ -39,27 +38,15 @@ export async function runWorkflow(
   ]);
 
   // Transform the stream to handle annotations
-  const transformedStream = processWorkflowStream(workflowStream);
-
-  return toDataStream(transformedStream, {
-    callbacks: {
-      onCompletion: async (streamWriter, content) => {
-        // To suggest next questions
-        const chatHistory = input.chatHistory ?? [];
-        chatHistory.push({
-          role: "assistant",
-          content,
-        });
-        await sendSuggestedQuestionsEvent(streamWriter, chatHistory);
-      },
-    },
-  });
+  return processWorkflowStream(workflowStream).until(
+    (event) => abortSignal?.aborted || stopAgentEvent.include(event),
+  );
 }
 
 function processWorkflowStream(
   stream: WorkflowStream<WorkflowEventData<unknown>>,
 ) {
-  return stream.until(stopAgentEvent).pipeThrough(
+  return stream.pipeThrough(
     new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
       {
         async transform(event, controller) {
@@ -87,6 +74,8 @@ function processWorkflowStream(
               transformedEvent = toSourceEvent(sourceNodes);
             }
           }
+
+          // TODO: Missing next question suggestions
 
           // Post-process for llama-cloud files
           if (sourceEvent.include(transformedEvent)) {
