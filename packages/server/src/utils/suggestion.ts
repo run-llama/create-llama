@@ -28,7 +28,7 @@ export const sendSuggestedQuestionsEvent = async (
   }
 };
 
-async function generateNextQuestions(conversation: ChatMessage[]) {
+export async function generateNextQuestions(conversation: ChatMessage[]) {
   const conversationText = conversation
     .map((message) => `${message.role}: ${message.content}`)
     .join("\n");

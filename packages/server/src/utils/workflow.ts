@@ -50,6 +50,7 @@ function processWorkflowStream(
     new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
       {
         async transform(event, controller) {
+          console.log("event", event.data);
           let transformedEvent = event;
 
           // Handle agent events from AgentToolCall
@@ -74,9 +75,6 @@ function processWorkflowStream(
               transformedEvent = toSourceEvent(sourceNodes);
             }
           }
-
-          // TODO: Missing next question suggestions
-
           // Post-process for llama-cloud files
           if (sourceEvent.include(transformedEvent)) {
             const sourceNodesForDownload = transformedEvent.data.data.nodes; // These are SourceEventNode[]

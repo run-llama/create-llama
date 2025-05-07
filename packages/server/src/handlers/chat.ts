@@ -9,6 +9,7 @@ import {
   sendJSONResponse,
 } from "../utils/request";
 import { toDataStream } from "../utils/stream";
+import { sendSuggestedQuestionsEvent } from "../utils/suggestion";
 import { runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
@@ -19,6 +20,10 @@ export const handleChat = async (
   try {
     const body = await parseRequestBody(req);
     const { messages } = body as { messages: Message[] };
+    const chatHistory = messages.map((message) => ({
+      role: message.role as MessageType,
+      content: message.content,
+    }));
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role !== "user") {
@@ -28,10 +33,7 @@ export const handleChat = async (
     }
     const workflowInput: AgentInputData = {
       userInput: lastMessage.content,
-      chatHistory: messages.map((message) => ({
-        role: message.role as MessageType,
-        content: message.content,
-      })),
+      chatHistory,
     };
 
     const abortController = new AbortController();
@@ -44,7 +46,17 @@ export const handleChat = async (
       abortController.signal,
     );
 
-    const dataStream = toDataStream(workflowEventStream);
+    const dataStream = toDataStream(workflowEventStream, {
+      callbacks: {
+        onFinal: async (completion, dataStreamWriter) => {
+          chatHistory.push({
+            role: "assistant" as MessageType,
+            content: completion,
+          });
+          await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+        },
+      },
+    });
     pipeStreamToResponse(res, dataStream);
   } catch (error) {
     console.error("Chat handler error:", error);
