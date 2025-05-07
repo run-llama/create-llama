@@ -546,7 +546,6 @@ export async function generateEventComponent(
     sendEvent(startEvent.with({ eventSchema }));
 
     // Collect all events until the stop event and get the last one
-    // const allEvents = await collect(until(stream, stopEvent));
     const allEvents = await stream.toArray();
     const result = allEvents[allEvents.length - 1];
     if (result?.data === null) {

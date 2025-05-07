@@ -6,6 +6,14 @@ import {
   interpreter,
 } from "@llamaindex/tools";
 import {
+  agentStreamEvent,
+  createStatefulMiddleware,
+  createWorkflow,
+  startAgentEvent,
+  stopAgentEvent,
+  workflowEvent,
+} from "@llamaindex/workflow";
+import {
   BaseToolWithCall,
   ChatMemoryBuffer,
   ChatMessage,
@@ -14,12 +22,6 @@ import {
   Settings,
   ToolCall,
   ToolCallLLM,
-  agentStreamEvent,
-  createStatefulMiddleware,
-  createWorkflow,
-  startAgentEvent,
-  stopAgentEvent,
-  workflowEvent,
 } from "llamaindex";
 import { getIndex } from "./data";
 
