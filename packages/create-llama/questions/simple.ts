@@ -62,19 +62,21 @@ export const askSimpleQuestions = async (
 
   let useLlamaCloud = false;
 
-  const { language: newLanguage } = await prompts(
-    {
-      type: "select",
-      name: "language",
-      message: "What language do you want to use?",
-      choices: [
-        { title: "Python (FastAPI)", value: "fastapi" },
-        { title: "Typescript (NextJS)", value: "nextjs" },
-      ],
-    },
-    questionHandlers,
-  );
-  language = newLanguage;
+  if (appType !== "artifacts") {
+    const { language: newLanguage } = await prompts(
+      {
+        type: "select",
+        name: "language",
+        message: "What language do you want to use?",
+        choices: [
+          { title: "Python (FastAPI)", value: "fastapi" },
+          { title: "Typescript (NextJS)", value: "nextjs" },
+        ],
+      },
+      questionHandlers,
+    );
+    language = newLanguage;
+  }
 
   const { useLlamaCloud: newUseLlamaCloud } = await prompts(
     {

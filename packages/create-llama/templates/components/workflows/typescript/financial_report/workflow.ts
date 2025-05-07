@@ -6,24 +6,26 @@ import {
   interpreter,
 } from "@llamaindex/tools";
 import {
-  agentStreamEvent,
-  createStatefulMiddleware,
-  createWorkflow,
-  startAgentEvent,
-  stopAgentEvent,
-  workflowEvent,
-} from "@llamaindex/workflow";
-import {
+  AgentInputData,
+  AgentWorkflowContext,
   BaseToolWithCall,
   ChatMemoryBuffer,
   ChatMessage,
+  ChatResponseChunk,
+  HandlerContext,
   Metadata,
   NodeWithScore,
   Settings,
+  StartEvent,
+  StopEvent,
   ToolCall,
   ToolCallLLM,
+  Workflow,
+  WorkflowEvent,
 } from "llamaindex";
 import { getIndex } from "./data";
+
+const TIMEOUT = 360 * 1000;
 
 export async function workflowFactory(reqBody: any) {
   const index = await getIndex(reqBody?.data);
@@ -45,18 +47,28 @@ export async function workflowFactory(reqBody: any) {
   });
   const documentGeneratorTool = documentGenerator();
 
-  return getWorkflow(
+  return new FinancialReportWorkflow({
     queryEngineTool,
     codeInterpreterTool,
     documentGeneratorTool,
-  );
+    timeout: TIMEOUT,
+  });
 }
 
-// workflow events
-const inputEvent = workflowEvent<{ input: ChatMessage[] }>();
-const researchEvent = workflowEvent<{ toolCalls: ToolCall[] }>();
-const analyzeEvent = workflowEvent<{ input: ChatMessage | ToolCall[] }>();
-const reportGenerationEvent = workflowEvent<{ toolCalls: ToolCall[] }>();
+// Create a custom event type
+class InputEvent extends WorkflowEvent<{ input: ChatMessage[] }> {}
+
+class ResearchEvent extends WorkflowEvent<{
+  toolCalls: ToolCall[];
+}> {}
+
+class AnalyzeEvent extends WorkflowEvent<{
+  input: ChatMessage | ToolCall[];
+}> {}
+
+class ReportGenerationEvent extends WorkflowEvent<{
+  toolCalls: ToolCall[];
+}> {}
 
 const DEFAULT_SYSTEM_PROMPT = `
 You are a financial analyst who are given a set of tools to help you.
@@ -64,103 +76,173 @@ It's good to using appropriate tools for the user request and always use the inf
 For the query engine tool, you should break down the user request into a list of queries and call the tool with the queries.
 `;
 
-// workflow definition
-export function getWorkflow(
-  queryEngineTool: BaseToolWithCall,
-  codeInterpreterTool: BaseToolWithCall,
-  documentGeneratorTool: BaseToolWithCall,
-) {
-  const llm = Settings.llm;
-  const { withState, getContext } = createStatefulMiddleware(() => ({
-    memory: new ChatMemoryBuffer({ llm, chatHistory: [] }),
-  }));
-  if (!(llm instanceof ToolCallLLM)) {
-    throw new Error("LLM is not a ToolCallLLM");
+class FinancialReportWorkflow extends Workflow<
+  AgentWorkflowContext,
+  AgentInputData,
+  string
+> {
+  llm: ToolCallLLM;
+  memory: ChatMemoryBuffer;
+  queryEngineTool: BaseToolWithCall;
+  codeInterpreterTool: BaseToolWithCall;
+  documentGeneratorTool: BaseToolWithCall;
+  systemPrompt?: string;
+
+  constructor(options: {
+    queryEngineTool: BaseToolWithCall;
+    codeInterpreterTool: BaseToolWithCall;
+    documentGeneratorTool: BaseToolWithCall;
+    systemPrompt?: string;
+    verbose?: boolean;
+    timeout?: number;
+  }) {
+    super({
+      verbose: options?.verbose ?? false,
+      timeout: options?.timeout ?? 360,
+    });
+
+    this.llm = Settings.llm as ToolCallLLM;
+    if (!this.llm.supportToolCall) {
+      throw new Error("LLM is not a ToolCallLLM");
+    }
+    this.systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
+    this.queryEngineTool = options.queryEngineTool;
+    this.codeInterpreterTool = options.codeInterpreterTool;
+
+    this.documentGeneratorTool = options.documentGeneratorTool;
+    this.memory = new ChatMemoryBuffer({ llm: this.llm, chatHistory: [] });
+
+    // Add steps
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInputData>],
+        outputs: [InputEvent],
+      },
+      this.prepareChatHistory,
+    );
+
+    this.addStep(
+      {
+        inputs: [InputEvent],
+        outputs: [
+          InputEvent,
+          ResearchEvent,
+          AnalyzeEvent,
+          ReportGenerationEvent,
+          StopEvent,
+        ],
+      },
+      this.handleLLMInput,
+    );
+
+    this.addStep(
+      {
+        inputs: [ResearchEvent],
+        outputs: [AnalyzeEvent],
+      },
+      this.handleResearch,
+    );
+
+    this.addStep(
+      {
+        inputs: [AnalyzeEvent],
+        outputs: [InputEvent],
+      },
+      this.handleAnalyze,
+    );
+
+    this.addStep(
+      {
+        inputs: [ReportGenerationEvent],
+        outputs: [InputEvent],
+      },
+      this.handleReportGeneration,
+    );
   }
 
-  const workflow = withState(createWorkflow());
-
-  // Add steps
-  workflow.handle([startAgentEvent], async ({ data }) => {
-    const { state } = getContext();
-    const { userInput, chatHistory = [] } = data;
+  prepareChatHistory = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: StartEvent<AgentInputData>,
+  ): Promise<InputEvent> => {
+    const { userInput, chatHistory = [] } = ev.data;
     if (!userInput) throw new Error("Invalid input");
 
-    state.memory.set(chatHistory);
+    this.memory.set(chatHistory);
 
-    state.memory.put({ role: "system", content: DEFAULT_SYSTEM_PROMPT });
+    if (this.systemPrompt) {
+      this.memory.put({ role: "system", content: this.systemPrompt });
+    }
 
-    state.memory.put({ role: "user", content: userInput });
+    this.memory.put({ role: "user", content: userInput });
 
-    const messages = await state.memory.getMessages();
-    return inputEvent.with({ input: messages });
-  });
+    const messages = await this.memory.getMessages();
+    return new InputEvent({ input: messages });
+  };
 
-  workflow.handle([inputEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    const chatHistory = data.input;
+  handleLLMInput = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: InputEvent,
+  ): Promise<
+    | InputEvent
+    | ResearchEvent
+    | AnalyzeEvent
+    | ReportGenerationEvent
+    | StopEvent<AsyncGenerator<ChatResponseChunk, any, any> | undefined>
+  > => {
+    const chatHistory = ev.data.input;
 
-    const tools = [codeInterpreterTool, documentGeneratorTool, queryEngineTool];
+    const tools = [
+      this.codeInterpreterTool,
+      this.documentGeneratorTool,
+      this.queryEngineTool,
+    ];
 
-    const toolCallResponse = await chatWithTools(llm, tools, chatHistory);
+    const toolCallResponse = await chatWithTools(this.llm, tools, chatHistory);
 
     if (!toolCallResponse.hasToolCall()) {
-      const generator = toolCallResponse.responseGenerator;
-      let response = "";
-      if (generator) {
-        for await (const chunk of generator) {
-          response += chunk.delta;
-          sendEvent(
-            agentStreamEvent.with({
-              delta: chunk.delta,
-              response,
-              currentAgentName: "LLM", // Or derive from context if needed
-              raw: chunk.raw,
-            }),
-          );
-        }
-      }
-      return stopAgentEvent.with({ result: response });
+      return new StopEvent(toolCallResponse.responseGenerator);
     }
 
     if (toolCallResponse.hasMultipleTools()) {
-      state.memory.put({
+      this.memory.put({
         role: "assistant",
         content:
           "Calling different tools is not allowed. Please only use multiple calls of the same tool.",
       });
-      const newChatHistory = await state.memory.getMessages();
-      return inputEvent.with({ input: newChatHistory });
+      const chatHistory = await this.memory.getMessages();
+      return new InputEvent({ input: chatHistory });
     }
 
     // Put the LLM tool call message into the memory
     // And trigger the next step according to the tool call
     if (toolCallResponse.toolCallMessage) {
-      state.memory.put(toolCallResponse.toolCallMessage);
+      this.memory.put(toolCallResponse.toolCallMessage);
     }
     const toolName = toolCallResponse.getToolNames()[0];
     switch (toolName) {
-      case codeInterpreterTool.metadata.name:
-        return analyzeEvent.with({
+      case this.codeInterpreterTool.metadata.name:
+        return new AnalyzeEvent({
           input: toolCallResponse.toolCalls,
         });
-      case documentGeneratorTool.metadata.name:
-        return reportGenerationEvent.with({
+      case this.documentGeneratorTool.metadata.name:
+        return new ReportGenerationEvent({
           toolCalls: toolCallResponse.toolCalls,
         });
       default:
-        if (queryEngineTool.metadata.name === toolName) {
-          return researchEvent.with({
+        if (this.queryEngineTool.metadata.name === toolName) {
+          return new ResearchEvent({
             toolCalls: toolCallResponse.toolCalls,
           });
         }
         throw new Error(`Unknown tool: ${toolName}`);
     }
-  });
+  };
 
-  workflow.handle([researchEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    sendEvent(
+  handleResearch = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: ResearchEvent,
+  ): Promise<AnalyzeEvent> => {
+    ctx.sendEvent(
       toAgentRunEvent({
         agent: "Researcher",
         text: "Researching data",
@@ -168,13 +250,13 @@ export function getWorkflow(
       }),
     );
 
-    const { toolCalls } = data;
+    const { toolCalls } = ev.data;
 
     const toolMsgs = await callTools({
-      tools: [queryEngineTool],
+      tools: [this.queryEngineTool],
       toolCalls,
       writeEvent: (text, step) => {
-        sendEvent(
+        ctx.sendEvent(
           toAgentRunEvent({
             agent: "Researcher",
             text,
@@ -186,7 +268,7 @@ export function getWorkflow(
       },
     });
     for (const toolMsg of toolMsgs) {
-      state.memory.put(toolMsg);
+      this.memory.put(toolMsg);
     }
 
     const sourcesNodes: NodeWithScore<Metadata>[] = toolMsgs
@@ -195,25 +277,26 @@ export function getWorkflow(
       .filter(Boolean);
 
     if (sourcesNodes.length > 0) {
-      sendEvent(toSourceEvent(sourcesNodes));
+      ctx.sendEvent(toSourceEvent(sourcesNodes));
     }
 
-    // Send a message indicating research is done, triggering analysis
-    return analyzeEvent.with({
+    return new AnalyzeEvent({
       input: {
         role: "assistant",
         content:
           "I have finished researching the data, please analyze the data.",
       },
     });
-  });
+  };
 
   /**
    * Analyze a research result or a tool call for code interpreter from the LLM
    */
-  workflow.handle([analyzeEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    sendEvent(
+  handleAnalyze = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: AnalyzeEvent,
+  ): Promise<InputEvent> => {
+    ctx.sendEvent(
       toAgentRunEvent({
         agent: "Analyst",
         text: "Analyzing data",
@@ -222,8 +305,8 @@ export function getWorkflow(
     );
     // Request by workflow LLM, input is a list of tool calls
     let toolCalls: ToolCall[] = [];
-    if (Array.isArray(data.input)) {
-      toolCalls = data.input;
+    if (Array.isArray(ev.data.input)) {
+      toolCalls = ev.data.input;
     } else {
       // Requested by Researcher, input is a ChatMessage
       // We start new LLM chat specifically for analyzing the data
@@ -237,65 +320,63 @@ export function getWorkflow(
 
       // Clone the current chat history
       // Add the analysis system prompt and the message from the researcher
-      const currentChatHistory = await state.memory.getMessages();
+      const chatHistory = await this.memory.getMessages();
       const newChatHistory = [
-        ...currentChatHistory,
+        ...chatHistory,
         { role: "system", content: analysisPrompt },
-        data.input, // This is the ChatMessage from the research step
+        ev.data.input,
       ];
       const toolCallResponse = await chatWithTools(
-        llm,
-        [codeInterpreterTool],
+        this.llm,
+        [this.codeInterpreterTool],
         newChatHistory as ChatMessage[],
       );
 
       if (!toolCallResponse.hasToolCall()) {
-        // If no tool call needed for analysis, put the response directly
-        state.memory.put(await toolCallResponse.asFullResponse());
-        const finalChatHistory = await state.memory.getMessages();
-        return inputEvent.with({ input: finalChatHistory });
+        this.memory.put(await toolCallResponse.asFullResponse());
+        const chatHistory = await this.memory.getMessages();
+        return new InputEvent({ input: chatHistory });
       } else {
-        state.memory.put(toolCallResponse.toolCallMessage!);
+        this.memory.put(toolCallResponse.toolCallMessage!);
         toolCalls = toolCallResponse.toolCalls;
       }
     }
 
-    // Call the code interpreter tools if needed
-    if (toolCalls.length > 0) {
-      const toolMsgs = await callTools({
-        tools: [codeInterpreterTool],
-        toolCalls,
-        writeEvent: (text, step) => {
-          sendEvent(
-            toAgentRunEvent({
-              agent: "Analyst",
-              text,
-              type: toolCalls.length > 1 ? "progress" : "text",
-              current: step,
-              total: toolCalls.length,
-            }),
-          );
-        },
-      });
-      for (const toolMsg of toolMsgs) {
-        state.memory.put(toolMsg);
-      }
-    }
-
-    const finalChatHistory = await state.memory.getMessages();
-    // After analysis (or tool calls for analysis), trigger the next LLM input cycle
-    return inputEvent.with({ input: finalChatHistory });
-  });
-
-  workflow.handle([reportGenerationEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    const { toolCalls } = data;
-
+    // Call the tools
     const toolMsgs = await callTools({
-      tools: [documentGeneratorTool],
+      tools: [this.codeInterpreterTool],
       toolCalls,
       writeEvent: (text, step) => {
-        sendEvent(
+        ctx.sendEvent(
+          toAgentRunEvent({
+            agent: "Analyst",
+            text,
+            type: toolCalls.length > 1 ? "progress" : "text",
+            current: step,
+            total: toolCalls.length,
+          }),
+        );
+      },
+    });
+    for (const toolMsg of toolMsgs) {
+      this.memory.put(toolMsg);
+    }
+
+    const chatHistory = await this.memory.getMessages();
+    return new InputEvent({ input: chatHistory });
+  };
+
+  handleReportGeneration = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: ReportGenerationEvent,
+  ): Promise<InputEvent> => {
+    const { toolCalls } = ev.data;
+
+    const toolMsgs = await callTools({
+      tools: [this.documentGeneratorTool],
+      toolCalls,
+      writeEvent: (text, step) => {
+        ctx.sendEvent(
           toAgentRunEvent({
             agent: "Reporter",
             text,
@@ -307,12 +388,9 @@ export function getWorkflow(
       },
     });
     for (const toolMsg of toolMsgs) {
-      state.memory.put(toolMsg);
+      this.memory.put(toolMsg);
     }
-    const chatHistory = await state.memory.getMessages();
-    // After report generation, trigger the next LLM input cycle
-    return inputEvent.with({ input: chatHistory });
-  });
-
-  return workflow;
+    const chatHistory = await this.memory.getMessages();
+    return new InputEvent({ input: chatHistory });
+  };
 }

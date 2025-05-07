@@ -1,21 +1,22 @@
-import { toSourceEvent } from "@llamaindex/server";
+import { toSourceEvent, toStreamGenerator } from "@llamaindex/server";
 import {
-  agentStreamEvent,
-  createStatefulMiddleware,
-  createWorkflow,
-  startAgentEvent,
-  stopAgentEvent,
-  workflowEvent,
-} from "@llamaindex/workflow";
-import {
+  AgentInputData,
+  AgentWorkflowContext,
   ChatMemoryBuffer,
+  ChatResponseChunk,
+  HandlerContext,
   LlamaCloudIndex,
   Metadata,
   MetadataMode,
   NodeWithScore,
   PromptTemplate,
   Settings,
+  StartEvent,
+  StopEvent as StopEventBase,
+  ToolCallLLM,
   VectorStoreIndex,
+  Workflow,
+  WorkflowEvent,
 } from "llamaindex";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -24,11 +25,12 @@ import { getIndex } from "./data";
 // workflow factory
 export const workflowFactory = async (reqBody: any) => {
   const index = await getIndex(reqBody?.data);
-  return getWorkflow(index);
+  return new DeepResearchWorkflow(index);
 };
 
 // workflow configs
 const MAX_QUESTIONS = 6; // max number of questions to research, research will stop when this number is reached
+const TIMEOUT = 360; // timeout in seconds
 const TOP_K = 10; // number of nodes to retrieve from the vector store
 
 const createPlanResearchPrompt = new PromptTemplate({
@@ -112,10 +114,10 @@ Create a well-structured outline for the research report that covers all the ans
 type ResearchQuestion = { questionId: string; question: string };
 type ResearchResult = ResearchQuestion & { answer: string };
 
-// class PlanResearchEvent extends WorkflowEvent<{}> {}
-const planResearchEvent = workflowEvent<{}>();
-const researchEvent = workflowEvent<ResearchQuestion>();
-const reportEvent = workflowEvent<{}>();
+class PlanResearchEvent extends WorkflowEvent<{}> {}
+class ResearchEvent extends WorkflowEvent<ResearchQuestion[]> {}
+class ReportEvent extends WorkflowEvent<{}> {}
+class StopEvent extends StopEventBase<AsyncGenerator<ChatResponseChunk>> {}
 
 export const UIEventSchema = z
   .object({
@@ -138,180 +140,221 @@ export const UIEventSchema = z
 
 type UIEventData = z.infer<typeof UIEventSchema>;
 
-const uiEvent = workflowEvent<{
+class UIEvent extends WorkflowEvent<{
   type: "ui_event";
   data: UIEventData;
-}>();
+}> {}
 
 // workflow definition
-export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
-  const retriever = index.asRetriever({ similarityTopK: TOP_K });
-  const { withState, getContext } = createStatefulMiddleware(() => {
-    return {
-      memory: new ChatMemoryBuffer({
-        llm: Settings.llm,
-        chatHistory: [],
-      }),
-      contextNodes: [] as NodeWithScore<Metadata>[],
-      userRequest: "",
-      totalQuestions: 0,
-      researchResults: [] as ResearchResult[],
-    };
-  });
-  const workflow = withState(createWorkflow());
+class DeepResearchWorkflow extends Workflow<
+  AgentWorkflowContext,
+  AgentInputData,
+  string
+> {
+  #llm = Settings.llm as ToolCallLLM;
+  #index?: VectorStoreIndex | LlamaCloudIndex;
 
-  workflow.handle([startAgentEvent], async ({ data }) => {
+  userRequest: string = "";
+  totalQuestions: number = 0;
+  contextNodes: NodeWithScore<Metadata>[] = [];
+  memory: ChatMemoryBuffer = new ChatMemoryBuffer({ llm: Settings.llm });
+
+  constructor(index: VectorStoreIndex | LlamaCloudIndex) {
+    super({ timeout: TIMEOUT });
+    this.#index = index;
+    this.addWorkflowSteps();
+  }
+
+  addWorkflowSteps() {
+    this.addStep(
+      {
+        inputs: [StartEvent<AgentInputData>],
+        outputs: [PlanResearchEvent],
+      },
+      this.handleStartWorkflow,
+    );
+    this.addStep(
+      {
+        inputs: [PlanResearchEvent],
+        outputs: [ResearchEvent, ReportEvent, StopEvent],
+      },
+      this.handlePlanResearch,
+    );
+    this.addStep(
+      {
+        inputs: [ResearchEvent],
+        outputs: [PlanResearchEvent],
+      },
+      this.handleResearch,
+    );
+    this.addStep(
+      {
+        inputs: [ReportEvent],
+        outputs: [StopEvent],
+      },
+      this.handleReport,
+    );
+  }
+
+  async initWorkflow(data: AgentInputData) {
     const { userInput, chatHistory = [] } = data;
-    const { sendEvent, state } = getContext();
     if (!userInput) throw new Error("Invalid input");
 
-    state.memory.set(chatHistory);
-    state.memory.put({ role: "user", content: userInput });
-    state.userRequest = userInput;
-    sendEvent(
-      uiEvent.with({
+    this.userRequest = userInput;
+
+    await this.memory.set(chatHistory);
+    await this.memory.put({ role: "user", content: userInput });
+  }
+
+  handleStartWorkflow = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: StartEvent<AgentInputData>,
+  ): Promise<PlanResearchEvent> => {
+    await this.initWorkflow(ev.data);
+
+    ctx.sendEvent(
+      new UIEvent({
         type: "ui_event",
-        data: {
-          event: "retrieve",
-          state: "inprogress",
-        },
+        data: { event: "retrieve", state: "inprogress" },
       }),
     );
 
-    const retrievedNodes = await retriever.retrieve(userInput);
+    const retrievedNodes = await this.retriever.retrieve(this.userRequest);
 
-    sendEvent(toSourceEvent(retrievedNodes));
-    sendEvent(
-      uiEvent.with({
+    ctx.sendEvent(toSourceEvent(retrievedNodes));
+
+    ctx.sendEvent(
+      new UIEvent({
         type: "ui_event",
         data: { event: "retrieve", state: "done" },
       }),
     );
 
-    state.contextNodes.push(...retrievedNodes);
+    this.contextNodes = retrievedNodes;
 
-    return planResearchEvent.with({});
-  });
+    return new PlanResearchEvent({});
+  };
 
-  workflow.handle([planResearchEvent], async ({ data }) => {
-    const { sendEvent, state, stream } = getContext();
-
-    sendEvent(
-      uiEvent.with({
+  handlePlanResearch = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: PlanResearchEvent,
+  ): Promise<ResearchEvent | ReportEvent | StopEvent> => {
+    ctx.sendEvent(
+      new UIEvent({
         type: "ui_event",
         data: { event: "analyze", state: "inprogress" },
       }),
     );
 
     const { decision, researchQuestions, cancelReason } =
-      await createResearchPlan(
-        state.memory,
-        state.contextNodes
-          .map((node) => node.node.getContent(MetadataMode.NONE))
-          .join("\n"),
-        enhancedPrompt(state.totalQuestions),
-        state.userRequest,
-      );
+      await this.createResearchPlan();
 
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: { event: "analyze", state: "done" },
-      }),
-    );
+    // Stop workflow due to decision from LLM
     if (decision === "cancel") {
-      sendEvent(
-        uiEvent.with({
+      ctx.sendEvent(
+        new UIEvent({
           type: "ui_event",
           data: { event: "analyze", state: "done" },
         }),
       );
-      return agentStreamEvent.with({
-        delta: cancelReason ?? "Research cancelled without any reason.",
-        response: cancelReason ?? "Research cancelled without any reason.",
-        currentAgentName: "",
-        raw: null,
-      });
+      return new StopEvent(
+        toStreamGenerator(
+          cancelReason ?? "Research cancelled without any reason.",
+        ),
+      );
     }
-    if (decision === "research" && researchQuestions.length > 0) {
-      state.totalQuestions += researchQuestions.length;
-      state.memory.put({
+
+    // Trigger research from generated questions
+    if (decision === "research") {
+      this.memory.put({
         role: "assistant",
         content:
           "We need to find answers to the following questions:\n" +
           researchQuestions.join("\n"),
       });
+
       researchQuestions.forEach(({ questionId: id, question }) => {
-        sendEvent(
-          uiEvent.with({
+        ctx.sendEvent(
+          new UIEvent({
             type: "ui_event",
             data: { event: "answer", state: "pending", id, question },
           }),
         );
-        sendEvent(researchEvent.with({ questionId: id, question }));
       });
-      const events = await stream
-        .until(() => state.researchResults.length === researchQuestions.length)
-        .toArray();
-      return planResearchEvent.with({});
+
+      return new ResearchEvent(researchQuestions);
     }
-    state.memory.put({
+
+    // Resarch done, start writing report
+    this.memory.put({
       role: "assistant",
       content: "No more idea to analyze. We should report the answers.",
     });
-    sendEvent(
-      uiEvent.with({
+
+    ctx.sendEvent(
+      new UIEvent({
         type: "ui_event",
         data: { event: "analyze", state: "done" },
       }),
     );
-    return reportEvent.with({});
-  });
 
-  workflow.handle([researchEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    const { questionId, question } = data;
+    return new ReportEvent({});
+  };
 
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          event: "answer",
-          state: "inprogress",
-          id: questionId,
-          question,
-        },
+  handleResearch = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: ResearchEvent,
+  ): Promise<PlanResearchEvent> => {
+    const researchQuestions = ev.data;
+
+    // Answer questions in parallel
+    const researchResults: ResearchResult[] = await Promise.all(
+      researchQuestions.map(async ({ questionId: id, question }) => {
+        ctx.sendEvent(
+          new UIEvent({
+            type: "ui_event",
+            data: { event: "answer", state: "inprogress", id, question },
+          }),
+        );
+
+        const answer = await this.answerQuestion(question);
+
+        ctx.sendEvent(
+          new UIEvent({
+            type: "ui_event",
+            data: { event: "answer", state: "done", id, question, answer },
+          }),
+        );
+
+        return { questionId: id, question, answer };
       }),
     );
 
-    const answer = await answerQuestion(
-      contextStr(state.contextNodes),
-      question,
-    );
-    state.researchResults.push({ questionId, question, answer });
-
-    state.memory.put({
-      role: "assistant",
-      content: `<Question>${question}</Question>\n<Answer>${answer}</Answer>`,
+    // Save answers to memory
+    researchResults.forEach(({ question, answer }) => {
+      this.memory.put({
+        role: "assistant",
+        content: `<Question>${question}</Question>\n<Answer>${answer}</Answer>`,
+      });
     });
 
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          event: "answer",
-          state: "done",
-          id: questionId,
-          question,
-          answer,
-        },
-      }),
-    );
-  });
+    this.memory.put({
+      role: "assistant",
+      content:
+        "Researched all the questions. Now, I need to analyze if it's ready to write a report or need to research more.",
+    });
 
-  workflow.handle([reportEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    const chatHistory = await state.memory.getAllMessages();
+    this.totalQuestions += researchResults.length;
+
+    return new PlanResearchEvent({});
+  };
+
+  handleReport = async (
+    ctx: HandlerContext<AgentWorkflowContext>,
+    ev: ReportEvent,
+  ): Promise<StopEvent> => {
+    const chatHistory = await this.memory.getAllMessages();
+
     const messages = chatHistory.concat([
       {
         role: "system",
@@ -324,99 +367,81 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
       },
     ]);
 
-    const stream = await Settings.llm.chat({ messages, stream: true });
-    let response = "";
-    for await (const chunk of stream) {
-      response += chunk.delta;
-      sendEvent(
-        agentStreamEvent.with({
-          delta: chunk.delta,
-          response,
-          currentAgentName: "",
-          raw: stream,
-        }),
-      );
-    }
-    sendEvent(
-      agentStreamEvent.with({
-        delta: response,
-        response,
-        currentAgentName: "",
-        raw: null,
-      }),
-    );
-    return stopAgentEvent.with({
-      result: response,
-    });
-  });
+    const stream = await this.llm.chat({ messages, stream: true });
 
-  return workflow;
-}
-
-const createResearchPlan = async (
-  memory: ChatMemoryBuffer,
-  contextStr: string,
-  enhancedPrompt: string,
-  userRequest: string,
-) => {
-  const chatHistory = await memory.getMessages();
-
-  const conversationContext = chatHistory
-    .map((message) => `${message.role}: ${message.content}`)
-    .join("\n");
-
-  const prompt = createPlanResearchPrompt.format({
-    context_str: contextStr,
-    conversation_context: conversationContext,
-    enhanced_prompt: enhancedPrompt,
-    user_request: userRequest,
-  });
-
-  const responseFormat = z.object({
-    decision: z.enum(["research", "write", "cancel"]),
-    researchQuestions: z.array(z.string()),
-    cancelReason: z.string().optional(),
-  });
-
-  const result = await Settings.llm.complete({ prompt, responseFormat });
-  const plan = JSON.parse(result.text) as z.infer<typeof responseFormat>;
-
-  return {
-    ...plan,
-    researchQuestions: plan.researchQuestions.map((question) => ({
-      questionId: randomUUID(),
-      question,
-    })),
+    return new StopEvent(toStreamGenerator(stream));
   };
-};
 
-const contextStr = (contextNodes: NodeWithScore<Metadata>[]) => {
-  return contextNodes
-    .map((node) => {
-      const nodeId = node.node.id_;
-      const nodeContent = node.node.getContent(MetadataMode.NONE);
-      return `<Citation id='${nodeId}'>\n${nodeContent}</Citation id='${nodeId}'>`;
-    })
-    .join("\n");
-};
-
-const enhancedPrompt = (totalQuestions: number) => {
-  if (totalQuestions === 0) {
-    return "The student has no questions to research. Let start by providing some questions for the student to research.";
+  get llm() {
+    if (!this.#llm.supportToolCall) throw new Error("LLM is not a ToolCallLLM");
+    return this.#llm;
   }
 
-  if (totalQuestions >= MAX_QUESTIONS) {
-    return `The student has researched ${totalQuestions} questions. Should proceeding writing report or cancel the research if the answers are not enough to write a report.`;
+  get retriever() {
+    if (!this.#index) throw new Error("Index is not initialized");
+    return this.#index.asRetriever({ similarityTopK: TOP_K });
   }
 
-  return "";
-};
+  get contextStr() {
+    return this.contextNodes
+      .map((node) => {
+        const nodeId = node.node.id_;
+        const nodeContent = node.node.getContent(MetadataMode.NONE);
+        return `<Citation id='${nodeId}'>\n${nodeContent}</Citation id='${nodeId}'>`;
+      })
+      .join("\n");
+  }
 
-const answerQuestion = async (contextStr: string, question: string) => {
-  const prompt = researchPrompt.format({
-    context_str: contextStr,
-    question,
-  });
-  const result = await Settings.llm.complete({ prompt });
-  return result.text;
-};
+  get enhancedPrompt() {
+    if (this.totalQuestions === 0) {
+      return "The student has no questions to research. Let start by asking some questions.";
+    }
+
+    if (this.totalQuestions > MAX_QUESTIONS) {
+      return `The student has researched ${this.totalQuestions} questions. Should cancel the research if the context is not enough to write a report.`;
+    }
+
+    return "";
+  }
+
+  async createResearchPlan() {
+    const chatHistory = await this.memory.getMessages();
+
+    const conversationContext = chatHistory
+      .map((message) => `${message.role}: ${message.content}`)
+      .join("\n");
+
+    const prompt = createPlanResearchPrompt.format({
+      context_str: this.contextStr,
+      conversation_context: conversationContext,
+      enhanced_prompt: this.enhancedPrompt,
+      user_request: this.userRequest,
+    });
+
+    const responseFormat = z.object({
+      decision: z.enum(["research", "write", "cancel"]),
+      researchQuestions: z.array(z.string()),
+      cancelReason: z.string().optional(),
+    });
+
+    const result = await this.llm.complete({ prompt, responseFormat });
+    const plan = JSON.parse(result.text) as z.infer<typeof responseFormat>;
+
+    return {
+      ...plan,
+      researchQuestions: plan.researchQuestions.map((question) => ({
+        questionId: randomUUID(),
+        question,
+      })),
+    };
+  }
+
+  async answerQuestion(question: string) {
+    const prompt = researchPrompt.format({
+      context_str: this.contextStr,
+      question,
+    });
+    const result = await this.llm.complete({ prompt });
+    return result.text;
+  }
+}

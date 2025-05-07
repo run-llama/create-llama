@@ -31,7 +31,7 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("*.ts", path.join(root, "src", "app"), {
+  await copy("workflow.ts", path.join(root, "src", "app"), {
     parents: true,
     cwd: path.join(
       templatesDir,
