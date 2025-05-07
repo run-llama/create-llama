@@ -1,198 +1,90 @@
-import { LlamaIndexAdapter, StreamData, type JSONValue } from "ai";
-import type {
-  AgentInputData,
-  ChatResponseChunk,
-  EngineResponse,
-  Metadata,
-  NodeWithScore,
-  WorkflowEvent,
-} from "llamaindex";
 import {
-  AgentStream,
-  AgentToolCall,
-  AgentToolCallResult,
-  AgentWorkflow,
+  agentToolCallEvent,
+  agentToolCallResultEvent,
+  run,
+  startAgentEvent,
+  stopAgentEvent,
+  WorkflowStream,
+  type AgentInputData,
+  type Workflow,
+  type WorkflowEventData,
+} from "@llamaindex/workflow";
+import {
   LLamaCloudFileService,
-  StopEvent,
-  Workflow,
-  type AgentWorkflowContext,
+  type Metadata,
+  type NodeWithScore,
 } from "llamaindex";
-import { ReadableStream } from "stream/web";
 import {
-  SourceEvent,
+  sourceEvent,
   toAgentRunEvent,
   toSourceEvent,
   type SourceEventNode,
 } from "../events";
-import type { ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
-import { sendSuggestedQuestionsEvent } from "./suggestion";
 
 export async function runWorkflow(
-  workflow: ServerWorkflow,
-  agentInput: AgentInputData,
-) {
-  if (workflow instanceof AgentWorkflow) {
-    return runAgentWorkflow(workflow, agentInput);
+  workflow: Workflow,
+  input: AgentInputData,
+  abortSignal?: AbortSignal,
+): Promise<WorkflowStream<WorkflowEventData<unknown>>> {
+  if (!input.userInput) {
+    throw new Error("Missing user input to start the workflow");
   }
-  return runCustomWorkflow(workflow, agentInput);
+  const workflowStream = run(workflow, [
+    startAgentEvent.with({
+      userInput: input.userInput,
+      chatHistory: input.chatHistory,
+    }),
+  ]);
+
+  // Transform the stream to handle annotations
+  return processWorkflowStream(workflowStream).until(
+    (event) => abortSignal?.aborted || stopAgentEvent.include(event),
+  );
 }
 
-async function runAgentWorkflow(
-  workflow: AgentWorkflow,
-  agentInput: AgentInputData,
+function processWorkflowStream(
+  stream: WorkflowStream<WorkflowEventData<unknown>>,
 ) {
-  const { userInput = "", chatHistory = [] } = agentInput;
-  const context = workflow.run(userInput, { chatHistory });
+  return stream.pipeThrough(
+    new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
+      {
+        async transform(event, controller) {
+          let transformedEvent = event;
 
-  const dataStream = new StreamData();
-
-  const stream = new ReadableStream<EngineResponse>({
-    async pull(controller) {
-      try {
-        for await (const event of context) {
-          if (event instanceof AgentStream) {
-            // for agent workflow, get the delta from AgentStream event and enqueue it
-            const delta = event.data.delta;
-            if (delta) {
-              controller.enqueue({ delta } as EngineResponse);
-            }
-          } else {
-            appendEventDataToAnnotations(dataStream, event);
+          // Handle agent events from AgentToolCall
+          if (agentToolCallEvent.include(event)) {
+            const inputString = JSON.stringify(event.data.toolKwargs);
+            transformedEvent = toAgentRunEvent({
+              agent: event.data.agentName,
+              text: `Using tool: '${event.data.toolName}' with inputs: '${inputString}'`,
+              type: "text",
+            });
           }
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occurred";
-        controller.enqueue({ delta: errorMessage } as EngineResponse);
-        dataStream.close();
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return LlamaIndexAdapter.toDataStreamResponse(stream, {
-    data: dataStream,
-    callbacks: {
-      onFinal: async (content: string) => {
-        const history = chatHistory.concat({ role: "assistant", content });
-        await sendSuggestedQuestionsEvent(dataStream, history);
-        dataStream.close();
-      },
-    },
-  });
-}
-
-async function runCustomWorkflow(
-  workflow: Workflow<AgentWorkflowContext, AgentInputData, string>,
-  agentInput: AgentInputData,
-) {
-  const context = workflow.run(agentInput);
-  const dataStream = new StreamData();
-
-  const stream = new ReadableStream<EngineResponse>({
-    async pull(controller) {
-      try {
-        for await (const event of context) {
-          if (event instanceof StopEvent) {
-            // for normal workflow, the event data from StopEvent is a generator of ChatResponseChunk
-            // iterate over the generator and enqueue the delta of each chunk
-            const generator = event.data as AsyncGenerator<ChatResponseChunk>;
-            for await (const chunk of generator) {
-              controller.enqueue({ delta: chunk.delta } as EngineResponse);
+          // Handle source nodes from AgentToolCallResult
+          else if (agentToolCallResultEvent.include(event)) {
+            const rawOutput = event.data.raw;
+            if (
+              rawOutput &&
+              typeof rawOutput === "object" &&
+              "sourceNodes" in rawOutput // TODO: better use Zod to validate and extract sourceNodes from toolCallResult
+            ) {
+              const sourceNodes =
+                rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[];
+              transformedEvent = toSourceEvent(sourceNodes);
             }
-          } else {
-            appendEventDataToAnnotations(dataStream, event);
           }
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occurred";
-        controller.enqueue({ delta: errorMessage } as EngineResponse);
-        dataStream.close();
-      } finally {
-        controller.close();
-      }
-    },
-  });
+          // Post-process for llama-cloud files
+          if (sourceEvent.include(transformedEvent)) {
+            const sourceNodesForDownload = transformedEvent.data.data.nodes; // These are SourceEventNode[]
+            downloadLlamaCloudFilesFromNodes(sourceNodesForDownload); // download files in background
+          }
 
-  return LlamaIndexAdapter.toDataStreamResponse(stream, {
-    data: dataStream,
-    callbacks: {
-      onFinal: async (content: string) => {
-        const history = agentInput.chatHistory?.concat({
-          role: "assistant",
-          content,
-        });
-        await sendSuggestedQuestionsEvent(dataStream, history);
-        dataStream.close();
+          controller.enqueue(transformedEvent);
+        },
       },
-    },
-  });
-}
-
-export async function* toStreamGenerator(
-  input: AsyncIterable<ChatResponseChunk> | string,
-): AsyncGenerator<ChatResponseChunk> {
-  if (typeof input === "string") {
-    yield { delta: input } as ChatResponseChunk;
-    return;
-  }
-
-  for await (const chunk of input) {
-    yield chunk;
-  }
-}
-
-// append data of other events to the data stream as message annotations
-function appendEventDataToAnnotations(
-  dataStream: StreamData,
-  event: WorkflowEvent<unknown>,
-) {
-  const transformedEvent = transformWorkflowEvent(event);
-
-  // for SourceEvent, we need to trigger download files from LlamaCloud (if having)
-  if (transformedEvent instanceof SourceEvent) {
-    const sourceNodes = transformedEvent.data.data.nodes;
-    downloadLlamaCloudFilesFromNodes(sourceNodes); // download files in background
-  }
-
-  dataStream.appendMessageAnnotation(transformedEvent.data as JSONValue);
-}
-
-// transform WorkflowEvent to another WorkflowEvent for annotations display purpose
-// this useful for handling AgentWorkflow events, because we cannot easily append custom events like custom workflows
-function transformWorkflowEvent(
-  event: WorkflowEvent<unknown>,
-): WorkflowEvent<unknown> {
-  // convert AgentToolCall event to AgentRunEvent
-  if (event instanceof AgentToolCall) {
-    const inputString = JSON.stringify(event.data.toolKwargs);
-    return toAgentRunEvent({
-      agent: event.data.agentName,
-      text: `Using tool: '${event.data.toolName}' with inputs: '${inputString}'`,
-      type: "text",
-    });
-  }
-
-  // modify AgentToolCallResult event
-  if (event instanceof AgentToolCallResult) {
-    const rawOutput = event.data.raw;
-
-    // if AgentToolCallResult contains sourceNodes, convert it to SourceEvent
-    if (
-      rawOutput &&
-      typeof rawOutput === "object" &&
-      "sourceNodes" in rawOutput // TODO: better use Zod to validate and extract sourceNodes from toolCallResult
-    ) {
-      return toSourceEvent(
-        rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[],
-      );
-    }
-  }
-
-  return event;
+    ),
+  );
 }
 
 async function downloadLlamaCloudFilesFromNodes(nodes: SourceEventNode[]) {

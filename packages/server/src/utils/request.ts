@@ -29,10 +29,10 @@ export function sendJSONResponse(
 
 export async function pipeStreamToResponse(
   response: ServerResponse,
-  stream: Response,
+  stream: ReadableStream,
 ) {
-  if (!stream.body) return;
-  const reader = stream.body.getReader();
+  if (!stream) return;
+  const reader = stream.getReader();
   while (true) {
     const { done, value } = await reader.read();
     if (done) return response.end();

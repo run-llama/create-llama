@@ -1,11 +1,7 @@
 import { randomUUID } from "@llamaindex/env";
+import { workflowEvent } from "@llamaindex/workflow";
 import type { Message } from "ai";
-import {
-  MetadataMode,
-  WorkflowEvent,
-  type Metadata,
-  type NodeWithScore,
-} from "llamaindex";
+import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
 import { z } from "zod";
 
 // Events that appended to stream as annotations
@@ -20,25 +16,23 @@ export type SourceEventNode = {
 };
 
 export type SourceEventData = {
-  nodes: SourceEventNode[];
-};
-
-export class SourceEvent extends WorkflowEvent<{
   type: "sources";
-  data: SourceEventData;
-}> {}
+  data: {
+    nodes: SourceEventNode[];
+  };
+};
+export const sourceEvent = workflowEvent<SourceEventData>();
 
 export type AgentRunEventData = {
-  agent: string;
-  text: string;
-  type: "text" | "progress";
-  data?: { id: string; total: number; current: number } | undefined;
-};
-
-export class AgentRunEvent extends WorkflowEvent<{
   type: "agent";
-  data: AgentRunEventData;
-}> {}
+  data: {
+    agent: string;
+    text: string;
+    type: "text" | "progress";
+    data?: { id: string; total: number; current: number } | undefined;
+  };
+};
+export const agentRunEvent = workflowEvent<AgentRunEventData>();
 
 export function toSourceEventNode(node: NodeWithScore<Metadata>) {
   const { file_name, pipeline_id } = node.node.metadata;
@@ -62,9 +56,9 @@ export function toSourceEvent(sourceNodes: NodeWithScore<Metadata>[] = []) {
   const nodes: SourceEventNode[] = sourceNodes.map((node) =>
     toSourceEventNode(node),
   );
-  return new SourceEvent({
-    type: "sources",
+  return sourceEvent.with({
     data: { nodes },
+    type: "sources",
   });
 }
 
@@ -75,8 +69,7 @@ export function toAgentRunEvent(input: {
   current?: number;
   total?: number;
 }) {
-  return new AgentRunEvent({
-    type: "agent",
+  return agentRunEvent.with({
     data: {
       ...input,
       data:
@@ -88,6 +81,7 @@ export function toAgentRunEvent(input: {
             }
           : undefined,
     },
+    type: "agent",
   });
 }
 
@@ -119,10 +113,10 @@ export type DocumentArtifact = Artifact<DocumentArtifactData> & {
   type: "document";
 };
 
-export class ArtifactEvent extends WorkflowEvent<{
+export const artifactEvent = workflowEvent<{
   type: "artifact";
   data: Artifact;
-}> {}
+}>();
 
 export const codeArtifactSchema = z.object({
   type: z.literal("code"),
