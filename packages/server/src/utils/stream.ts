@@ -5,35 +5,42 @@ import {
 } from "@llamaindex/workflow";
 // DataStream is deprecated, converting to new API
 import {
-  createDataStreamResponse,
+  createDataStream,
   formatDataStreamPart,
   type DataStreamWriter,
   type JSONValue,
 } from "ai";
 
+interface StreamCallbacks {
+  onStart?: (streamWriter: DataStreamWriter) => Promise<void> | void;
+  onCompletion?: (
+    streamWriter: DataStreamWriter,
+    fullContent: string,
+  ) => Promise<void> | void;
+  onError?: (
+    error: Error,
+    streamWriter: DataStreamWriter,
+  ) => Promise<void> | void;
+}
+
 /**
  * Convert a stream of WorkflowEventData to a Response object.
  * @param stream - The input stream of WorkflowEventData.
  * @param options - Optional configuration for the response.
- * @returns A Response object with the streamed data.
+ * @returns A readable stream of data.
  */
-export function toDataStreamResponse(
+export function toDataStream(
   stream: WorkflowStream<WorkflowEventData<unknown>>,
   options: {
     init?: ResponseInit;
-    callbacks?: {
-      onFinal?: (
-        streamWriter: DataStreamWriter,
-        content: string,
-      ) => Promise<void> | void;
-    };
+    callbacks?: StreamCallbacks;
   } = {},
 ) {
-  // TODO: support callbacks (might use pipeDataStreamToResponse)
-  const { init, callbacks } = options;
+  const { init, callbacks: userCallbacks } = options;
 
-  return createDataStreamResponse({
+  return createDataStream({
     execute: async (dataStream) => {
+      await userCallbacks?.onStart?.(dataStream);
       try {
         let fullContent = "";
         for await (const event of stream) {
@@ -47,16 +54,19 @@ export function toDataStreamResponse(
             dataStream.writeMessageAnnotation(event.data as JSONValue);
           }
         }
+        await userCallbacks?.onCompletion?.(dataStream, fullContent);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occurred";
+        const err = error instanceof Error ? error : new Error(String(error));
+        await userCallbacks?.onError?.(err, dataStream);
+        const errorMessage = err.message || "An unknown error occurred";
         dataStream.writeData(errorMessage);
       }
     },
     onError: (error: unknown) => {
       return error instanceof Error
         ? error.message
-        : "An unknown error occurred";
+        : "An unknown error occurred during stream finalization";
     },
+    ...(init && { init }),
   });
 }

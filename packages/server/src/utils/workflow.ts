@@ -21,7 +21,7 @@ import {
 } from "../events";
 import { type ServerWorkflow } from "../types";
 import { downloadFile } from "./file";
-import { toDataStreamResponse } from "./stream";
+import { toDataStream } from "./stream";
 import { sendSuggestedQuestionsEvent } from "./suggestion";
 
 export async function runWorkflow(
@@ -41,11 +41,16 @@ export async function runWorkflow(
   // Transform the stream to handle annotations
   const transformedStream = processWorkflowStream(workflowStream);
 
-  return toDataStreamResponse(transformedStream, {
-    // TODO: Fix me
+  return toDataStream(transformedStream, {
     callbacks: {
-      onFinal: (streamWriter, content) => {
-        sendSuggestedQuestionsEvent(streamWriter, input.chatHistory);
+      onCompletion: async (streamWriter, content) => {
+        // To suggest next questions
+        const chatHistory = input.chatHistory ?? [];
+        chatHistory.push({
+          role: "assistant",
+          content,
+        });
+        await sendSuggestedQuestionsEvent(streamWriter, chatHistory);
       },
     },
   });
