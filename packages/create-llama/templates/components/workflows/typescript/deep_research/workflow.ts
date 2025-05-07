@@ -337,14 +337,6 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         }),
       );
     }
-    sendEvent(
-      agentStreamEvent.with({
-        delta: response,
-        response,
-        currentAgentName: "",
-        raw: null,
-      }),
-    );
     return stopAgentEvent.with({
       result: response,
     });
