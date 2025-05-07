@@ -50,7 +50,6 @@ function processWorkflowStream(
     new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
       {
         async transform(event, controller) {
-          console.log("event", event.data);
           let transformedEvent = event;
 
           // Handle agent events from AgentToolCall
