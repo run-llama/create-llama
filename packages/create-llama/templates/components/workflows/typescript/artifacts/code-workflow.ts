@@ -21,6 +21,24 @@ export const RequirementSchema = z.object({
 
 export type Requirement = z.infer<typeof RequirementSchema>;
 
+export const UIEventSchema = z.object({
+  type: z.literal("ui_event"),
+  data: z.object({
+    state: z
+      .enum(["plan", "generate", "completed"])
+      .describe(
+        "The current state of the workflow: 'plan', 'generate', or 'completed'.",
+      ),
+    requirement: z
+      .string()
+      .optional()
+      .describe(
+        "An optional requirement creating or updating a code, if applicable.",
+      ),
+  }),
+});
+
+export type UIEvent = z.infer<typeof UIEventSchema>;
 const planEvent = workflowEvent<{
   userInput: string;
   context?: string | undefined;
@@ -32,13 +50,7 @@ const generateArtifactEvent = workflowEvent<{
 
 const synthesizeAnswerEvent = workflowEvent<object>();
 
-const uiEvent = workflowEvent<{
-  type: "ui_event";
-  data: {
-    state: "plan" | "generate" | "completed";
-    requirement?: string | undefined;
-  };
-}>();
+const uiEvent = workflowEvent<UIEvent>();
 
 const artifactEvent = workflowEvent<{
   type: "artifact";
