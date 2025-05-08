@@ -1,5 +1,15 @@
 # @llamaindex/server
 
+## 0.2.0
+
+### Minor Changes
+
+- 0384268: Use the new workflow engine and deprecate the old one.
+
+### Patch Changes
+
+- d9f9e3c: chore: bump chat-ui to support code editor & document editor
+
 ## 0.1.7
 
 ### Patch Changes
