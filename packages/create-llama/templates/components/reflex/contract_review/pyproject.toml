@@ -10,6 +10,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic<2.10",
     "llama-index>=0.12.1",
+    "llama-parse>=0.6.21,<0.7.0",
     "cachetools>=5.3.3",
     "reflex>=0.6.2.post1",
 ]
