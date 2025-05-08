@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, PromptTemplate, Settings } from "llamaindex";
+import { ChatMemoryBuffer, LLM, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -107,70 +107,68 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
         },
       }),
     );
-    const prompt = new PromptTemplate({
-      template: `
+    const user_msg = planData.userInput;
+    const context = planData.context
+      ? `## The context is: \n${planData.context}\n`
+      : "";
+    const prompt = `
 You are a product analyst responsible for analyzing the user's request and providing the next step for code or document generation.
-        You are helping user with their code artifact. To update the code, you need to plan a coding step.
-    
-        Follow these instructions:
-        1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
-        2. The next step must be one of the following two options:
-           - "coding": To make the changes to the current code.
-           - "answering": If you don't need to update the current code or need clarification from the user.
-        Important: Avoid telling the user to update the code themselves, you are the one who will update the code (by planning a coding step).
-        3. If the next step is "coding", you may specify the language ("typescript" or "python") and file_name if known, otherwise set them to null. 
-        4. The requirement must be provided clearly what is the user request and what need to be done for the next step in details
-           as precise and specific as possible, don't be stingy with in the requirement.
-        5. If the next step is "answering", set language and file_name to null, and the requirement should describe what to answer or explain to the user.
-        6. Be concise; only return the requirements for the next step.
-        7. The requirements must be in the following format:
-           \`\`\`json
-           {
-               "next_step": "answering" | "coding",
-               "language": "typescript" | "python" | null,
-               "file_name": string | null,
-               "requirement": string
-           }
-           \`\`\`
+You are helping user with their code artifact. To update the code, you need to plan a coding step.
 
-        ## Example 1:
-        User request: Create a calculator app.
-        You should return:
-        \`\`\`json
-        {
-            "next_step": "coding",
-            "language": "typescript",
-            "file_name": "calculator.tsx",
-            "requirement": "Generate code for a calculator app that has a simple UI with a display and button layout. The display should show the current input and the result. The buttons should include basic operators, numbers, clear, and equals. The calculation should work correctly."
-        }
-        \`\`\`
+Follow these instructions:
+1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
+2. The next step must be one of the following two options:
+    - "coding": To make the changes to the current code.
+    - "answering": If you don't need to update the current code or need clarification from the user.
+Important: Avoid telling the user to update the code themselves, you are the one who will update the code (by planning a coding step).
+3. If the next step is "coding", you may specify the language ("typescript" or "python") and file_name if known, otherwise set them to null. 
+4. The requirement must be provided clearly what is the user request and what need to be done for the next step in details
+    as precise and specific as possible, don't be stingy with in the requirement.
+5. If the next step is "answering", set language and file_name to null, and the requirement should describe what to answer or explain to the user.
+6. Be concise; only return the requirements for the next step.
+7. The requirements must be in the following format:
+    \`\`\`json
+    {
+        "next_step": "answering" | "coding",
+        "language": "typescript" | "python" | null,
+        "file_name": string | null,
+        "requirement": string
+    }
+    \`\`\`
 
-        ## Example 2:
-        User request: Explain how the game loop works.
-        Context: You have already generated the code for a snake game.
-        You should return:
-        \`\`\`json
-        {
-            "next_step": "answering",
-            "language": null,
-            "file_name": null,
-            "requirement": "The user is asking about the game loop. Explain how the game loop works."
-        }
-        \`\`\`
+## Example 1:
+User request: Create a calculator app.
+You should return:
+\`\`\`json
+{
+    "next_step": "coding",
+    "language": "typescript",
+    "file_name": "calculator.tsx",
+    "requirement": "Generate code for a calculator app that has a simple UI with a display and button layout. The display should show the current input and the result. The buttons should include basic operators, numbers, clear, and equals. The calculation should work correctly."
+}
+\`\`\`
 
-        {context}
+## Example 2:
+User request: Explain how the game loop works.
+Context: You have already generated the code for a snake game.
+You should return:
+\`\`\`json
+{
+    "next_step": "answering",
+    "language": null,
+    "file_name": null,
+    "requirement": "The user is asking about the game loop. Explain how the game loop works."
+}
+\`\`\`
 
-        Now, plan the user's next step for this request:
-        {user_msg}
-        `,
-      templateVars: ["context", "user_msg"],
-    });
+${context}
+
+Now, plan the user's next step for this request:
+${user_msg}
+`;
 
     const response = await llm.complete({
-      prompt: prompt.format({
-        context: planData.context ?? "",
-        user_msg: planData.userInput,
-      }),
+      prompt,
     });
     // parse the response to Requirement
     // 1. use regex to find the json block
@@ -221,8 +219,6 @@ You are a product analyst responsible for analyzing the user's request and provi
       : "There is no previous artifact";
     const requirementText = planData.requirement.requirement;
 
-    // TODO: Check why PromptTemplate is not working
-    // Error: Replacement index 0 out of range for positional args tuple
     const prompt = `
         You are a skilled developer who can help user with coding.
         You are given a task to generate or update a code for a given requirement.

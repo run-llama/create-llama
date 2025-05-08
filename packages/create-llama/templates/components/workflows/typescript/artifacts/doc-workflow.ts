@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, PromptTemplate, Settings } from "llamaindex";
+import { ChatMemoryBuffer, LLM, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -113,8 +113,11 @@ export function createDocumentArtifactWorkflow(reqBody: any, llm?: LLM) {
         },
       }),
     );
-    const prompt = new PromptTemplate({
-      template: `
+    const user_msg = planData.userInput;
+    const context = planData.context
+      ? `## The context is: \n${planData.context}\n`
+      : "";
+    const prompt = `
          You are a documentation analyst responsible for analyzing the user's request and providing requirements for document generation or update.
          Follow these instructions:
          1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
@@ -151,21 +154,14 @@ export function createDocumentArtifactWorkflow(reqBody: any, llm?: LLM) {
          }
          \`\`\`
 
-         {context}
+         ${context}
 
          Now, please plan for the user's request:
-         {user_msg}
-        `,
-      templateVars: ["context", "user_msg"],
-    });
+         ${user_msg}
+        `;
 
     const response = await llm.complete({
-      prompt: prompt.format({
-        context: planData.context
-          ? `## The context is: \n${planData.context}\n`
-          : "",
-        user_msg: planData.userInput,
-      }),
+      prompt,
     });
     // Parse the response to DocumentRequirement
     const jsonBlock = response.text.match(/```json\s*([\s\S]*?)\s*```/);
