@@ -1,3 +1,4 @@
+import { type Metadata, type NodeWithScore } from "@llamaindex/core/schema";
 import {
   agentToolCallEvent,
   agentToolCallResultEvent,
@@ -9,11 +10,7 @@ import {
   type Workflow,
   type WorkflowEventData,
 } from "@llamaindex/workflow";
-import {
-  LLamaCloudFileService,
-  type Metadata,
-  type NodeWithScore,
-} from "llamaindex";
+import { LLamaCloudFileService } from "llamaindex";
 import {
   sourceEvent,
   toAgentRunEvent,

@@ -1,5 +1,6 @@
+import { Settings } from "@llamaindex/core/global";
+import { type ChatMessage } from "@llamaindex/core/llms";
 import type { DataStreamWriter } from "ai";
-import { type ChatMessage, Settings } from "llamaindex";
 
 const NEXT_QUESTION_PROMPT = `You're a helpful assistant! Your task is to suggest the next question that user might ask. 
 Here is the conversation history

@@ -8,12 +8,12 @@ import type {
   ImportNamespaceSpecifier,
   ImportSpecifier,
 } from "@babel/types";
+import type { LLM } from "@llamaindex/core/llms";
 import {
   createWorkflow,
   getContext,
   workflowEvent,
 } from "@llamaindex/workflow";
-import type { LLM } from "llamaindex";
 import type { ZodType } from "zod";
 
 const writeAggregationEvent = workflowEvent<{
