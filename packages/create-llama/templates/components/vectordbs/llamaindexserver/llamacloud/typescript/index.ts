@@ -1,4 +1,4 @@
-import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
+import { LlamaCloudIndex } from "llamaindex";
 
 type LlamaCloudDataSourceParams = {
   llamaCloudPipeline?: {

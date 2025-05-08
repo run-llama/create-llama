@@ -1,9 +1,9 @@
-// import { createCodeArtifactWorkflow, UIEventSchema } from "./code-workflow";
-import { createDocumentArtifactWorkflow, UIEventSchema } from "./doc-workflow";
+import { createCodeArtifactWorkflow, UIEventSchema } from "./code-workflow";
+// import { createDocumentArtifactWorkflow, UIEventSchema } from "./doc-workflow";
 
 export const workflowFactory = async (reqBody: any) => {
-  // Uncomment the import and change to createCodeArtifactWorkflow to use the code workflow
-  const workflow = createDocumentArtifactWorkflow(reqBody);
+  // Uncomment the import and change to createDocumentArtifactWorkflow to use the document workflow
+  const workflow = createCodeArtifactWorkflow(reqBody);
 
   return workflow;
 };
