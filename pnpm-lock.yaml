@@ -183,12 +183,15 @@ importers:
       '@llamaindex/chat-ui':
         specifier: 0.4.3
         version: 0.4.3(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@llamaindex/core':
+        specifier: 0.6.3
+        version: 0.6.3
       '@llamaindex/env':
         specifier: ^0.1.29
         version: 0.1.29
       '@llamaindex/workflow':
         specifier: ^1.1.0
-        version: 1.1.0(@llamaindex/core@0.6.2)(@llamaindex/env@0.1.29)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
+        version: 1.1.0(@llamaindex/core@0.6.3)(@llamaindex/env@0.1.29)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.3
         version: 1.2.8(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1193,6 +1196,9 @@ packages:
 
   '@llamaindex/core@0.6.2':
     resolution: {integrity: sha512-e0NH7X1C8yq9sCqj1Ys9jL9rITCXBKfZwmKnTHYxpXorPeuNmlFmuoogahJTwLNsILBDTOVAUexO88SqmAFUrA==}
+
+  '@llamaindex/core@0.6.3':
+    resolution: {integrity: sha512-65v8+UdoCQqXo/3a8Icl0Tr0NSBeUUKGRFjJLKQY7kDnjly2rCUaOxmQE4y/JSo30cDFdlG4wuPtaAqqvbjtPg==}
 
   '@llamaindex/env@0.1.29':
     resolution: {integrity: sha512-GoITt+QLDNIhu2i1sGsPH8tHH13Gxp4i4ofMFlefrHagytvF761MG7nvTAQVIqP9kxBYk4dnSQ3lQnVPFAfMZQ==}
@@ -7195,6 +7201,17 @@ snapshots:
       - '@huggingface/transformers'
       - gpt-tokenizer
 
+  '@llamaindex/core@0.6.3':
+    dependencies:
+      '@llamaindex/env': 0.1.29
+      '@types/node': 22.15.2
+      magic-bytes.js: 1.12.1
+      zod: 3.24.3
+      zod-to-json-schema: 3.24.5(zod@3.24.3)
+    transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - gpt-tokenizer
+
   '@llamaindex/env@0.1.29':
     dependencies:
       '@aws-crypto/sha256-js': 5.2.0
@@ -7290,6 +7307,19 @@ snapshots:
     dependencies:
       '@llama-flow/core': 0.4.1(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
       '@llamaindex/core': 0.6.2
+      '@llamaindex/env': 0.1.29
+      zod: 3.24.3
+    transitivePeerDependencies:
+      - '@modelcontextprotocol/sdk'
+      - hono
+      - next
+      - p-retry
+      - rxjs
+
+  '@llamaindex/workflow@1.1.0(@llamaindex/core@0.6.3)(@llamaindex/env@0.1.29)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)':
+    dependencies:
+      '@llama-flow/core': 0.4.1(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(zod@3.24.3)
+      '@llamaindex/core': 0.6.3
       '@llamaindex/env': 0.1.29
       zod: 3.24.3
     transitivePeerDependencies:
