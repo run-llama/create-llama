@@ -70,13 +70,13 @@ export function getWorkflow(
   codeInterpreterTool: BaseToolWithCall,
   documentGeneratorTool: BaseToolWithCall,
 ) {
-  const llm = Settings.llm;
+  const llm = Settings.llm as ToolCallLLM;
+  if (!llm.supportToolCall) {
+    throw new Error("LLM is not a ToolCallLLM");
+  }
   const { withState, getContext } = createStatefulMiddleware(() => ({
     memory: new ChatMemoryBuffer({ llm, chatHistory: [] }),
   }));
-  if (!(llm instanceof ToolCallLLM)) {
-    throw new Error("LLM is not a ToolCallLLM");
-  }
 
   const workflow = withState(createWorkflow());
 
