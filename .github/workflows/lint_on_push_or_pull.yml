@@ -31,6 +31,9 @@ jobs:
       - name: Run Prettier
         run: pnpm run format
 
+      - name: Run build
+        run: pnpm run build
+
       - name: Run Typecheck for examples
         run: pnpm run typecheck
         working-directory: packages/server/examples
