@@ -31,7 +31,7 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("workflow.ts", path.join(root, "src", "app"), {
+  await copy("*.ts", path.join(root, "src", "app"), {
     parents: true,
     cwd: path.join(
       templatesDir,
@@ -516,7 +516,7 @@ async function updatePackageJson({
   if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/readers": "^2.0.0",
+      "@llamaindex/readers": "^3.0.0",
     };
 
     if (vectorDb && vectorDb in vectorDbDependencies) {
