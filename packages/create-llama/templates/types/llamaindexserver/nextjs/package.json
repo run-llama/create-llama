@@ -11,11 +11,11 @@
   "dependencies": {
     "@llamaindex/openai": "0.2.0",
     "@llamaindex/server": "0.2.0",
-    "@llamaindex/workflow": "1.1.0",
+    "@llamaindex/workflow": "1.1.1",
     "@llamaindex/tools": "0.0.4",
     "dotenv": "^16.4.7",
     "zod": "^3.23.8",
-    "llamaindex": "0.10.2"
+    "llamaindex": "0.10.5"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
