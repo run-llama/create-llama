@@ -1,49 +1,54 @@
 "use client";
 
 import { CodeEditor } from "@llamaindex/chat-ui/widgets";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../button";
 
-const code = `
-import { LlamaIndexServer } from "@llamaindex/server";
-import { agent } from "@llamaindex/workflow";
-import { tool } from "llamaindex";
-import { z } from "zod";
-
-const calculatorAgent = agent({
-  tools: [
-    tool({
-      name: "add",
-      description: "Adds two numbers",
-      parameters: z.object({ x: z.number(), y: z.number() }),
-      execute: ({ x, y }) => x + y,
-    }),
-  ],
-});
-
-new LlamaIndexServer({
-  workflow: () => calculatorAgent,
-  uiConfig: {
-    appTitle: "Calculator",
-    starterQuestions: ["1 + 1", "2 + 2"],
-  },
-  port: 4000,
-}).start();
-`;
-
+// TODO: show/hide by DEV_MODE in config.js
 export function DevModePanel() {
   const [devModeOpen, setDevModeOpen] = useState(false);
-  const [updatedCode, setUpdatedCode] = useState(code);
 
-  // TODO: show/hide by DEV_MODE in config.js
+  // TODO: show loading from isFetching
+  const [isFetching, setIsFetching] = useState(false);
+  const [workflowFile, setWorkflowFile] = useState<{
+    last_modified: number;
+    file_name: string;
+    content: string;
+  } | null>(null);
+
+  const [updatedCode, setUpdatedCode] = useState("");
 
   const handleResetCode = () => {
-    setUpdatedCode(code);
+    setUpdatedCode(workflowFile?.content ?? "");
   };
 
-  const handleSaveCode = () => {
-    // trigger API
+  const handleSaveCode = async () => {
+    // TODO: toast promise
+    await fetch("/files/workflow", {
+      method: "PUT",
+      body: JSON.stringify({
+        content: updatedCode,
+      }),
+    });
   };
+
+  useEffect(() => {
+    async function fetchWorkflowCode() {
+      try {
+        setIsFetching(true);
+        const response = await fetch("/files/workflow");
+        const data = await response.json();
+        setWorkflowFile(data);
+      } catch (error) {
+        // TODO: use toast
+        console.error("Error fetching workflow code:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    }
+
+    fetchWorkflowCode();
+  }, []);
 
   return (
     <>
