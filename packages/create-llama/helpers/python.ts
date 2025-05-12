@@ -94,6 +94,10 @@ const getAdditionalDependencies = (
         name: "llama-index-vector-stores-chroma",
         version: ">=0.4.0,<0.5.0",
       });
+      dependencies.push({
+        name: "onnxruntime",
+        version: "<1.22.0",
+      });
       break;
     }
     case "weaviate": {
