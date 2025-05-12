@@ -51,7 +51,7 @@ test.describe("Test resolve TS dependencies", () => {
 
     const result = await runCreateLlama({
       cwd: cwd,
-      templateType: "streaming",
+      templateType: "llamaindexserver",
       templateFramework: templateFramework,
       dataSource: dataSource,
       vectorDb: vectorDb,
