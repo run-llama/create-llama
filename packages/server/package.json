@@ -1,7 +1,7 @@
 {
   "name": "@llamaindex/server",
   "description": "LlamaIndex Server",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -55,9 +55,7 @@
     "@babel/traverse": "^7.27.0",
     "@babel/types": "^7.27.0",
     "@hookform/resolvers": "^5.0.1",
-    "@llama-flow/core": "^0.3.4",
-    "@llamaindex/chat-ui": "0.4.1",
-    "@llamaindex/env": "0.1.29",
+    "@llamaindex/chat-ui": "0.4.3",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.7",
     "@radix-ui/react-aspect-ratio": "^1.1.3",
@@ -105,7 +103,9 @@
     "vaul": "^1.1.2"
   },
   "peerDependencies": {
-    "llamaindex": "0.10.2",
+    "@llamaindex/env": "^0.1.29",
+    "@llamaindex/workflow": "^1.1.0",
+    "llamaindex": "^0.10.2",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.23.3"
   },

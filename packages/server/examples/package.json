@@ -1,0 +1,24 @@
+{
+  "name": "llamaindex-server-examples",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx simple-workflow/calculator.ts"
+  },
+  "dependencies": {
+    "@llamaindex/openai": "^0.2.0",
+    "@llamaindex/readers": "^3.0.0",
+    "@llamaindex/server": "workspace:*",
+    "@llamaindex/tools": "0.0.4",
+    "@llamaindex/workflow": "1.1.0",
+    "dotenv": "^16.4.7",
+    "llamaindex": "0.10.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.3",
+    "tsx": "^4.7.2",
+    "typescript": "^5.3.2"
+  }
+}

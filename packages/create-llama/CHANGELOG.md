@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.5.13
+
+### Patch Changes
+
+- f4ca602: Add artifact use case for Typescript template
+- f4ca602: Update typescript use cases to use the new workflow engine
+
 ## 0.5.12
 
 ### Patch Changes

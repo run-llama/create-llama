@@ -8,9 +8,11 @@ import type {
   ImportNamespaceSpecifier,
   ImportSpecifier,
 } from "@babel/types";
-import { createWorkflow, getContext, workflowEvent } from "@llama-flow/core";
-import { collect } from "@llama-flow/core/stream/consumer";
-import { until } from "@llama-flow/core/stream/until";
+import {
+  createWorkflow,
+  getContext,
+  workflowEvent,
+} from "@llamaindex/workflow";
 import type { LLM } from "llamaindex";
 import type { ZodType } from "zod";
 
@@ -544,7 +546,7 @@ export async function generateEventComponent(
     sendEvent(startEvent.with({ eventSchema }));
 
     // Collect all events until the stop event and get the last one
-    const allEvents = await collect(until(stream, stopEvent));
+    const allEvents = await stream.toArray();
     const result = allEvents[allEvents.length - 1];
     if (result?.data === null) {
       throw new Error("Workflow failed.");

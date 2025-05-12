@@ -47,6 +47,9 @@ export default tseslint.config(
   {
     ignores: [
       "python/**",
+      "**/*.mypy_cache/**",
+      "**/*.venv/**",
+      "**/*.ruff_cache/**",
       "**/dist/**",
       "**/e2e/cache/**",
       "**/lib/*",

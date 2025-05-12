@@ -1,12 +1,15 @@
+import type { AgentInputData } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
-import type { ChatMessage } from "llamaindex";
-import type { WorkflowFactory } from "../types";
+import type { MessageType } from "llamaindex";
+import { type WorkflowFactory } from "../types";
 import {
   parseRequestBody,
   pipeStreamToResponse,
   sendJSONResponse,
 } from "../utils/request";
+import { toDataStream } from "../utils/stream";
+import { sendSuggestedQuestionsEvent } from "../utils/suggestion";
 import { runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
@@ -17,6 +20,10 @@ export const handleChat = async (
   try {
     const body = await parseRequestBody(req);
     const { messages } = body as { messages: Message[] };
+    const chatHistory = messages.map((message) => ({
+      role: message.role as MessageType,
+      content: message.content,
+    }));
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role !== "user") {
@@ -24,20 +31,35 @@ export const handleChat = async (
         error: "Messages cannot be empty and last message must be from user",
       });
     }
+    const workflowInput: AgentInputData = {
+      userInput: lastMessage.content,
+      chatHistory,
+    };
+
+    const abortController = new AbortController();
+    res.on("close", () => abortController.abort("Connection closed"));
 
     const workflow = await workflowFactory(body);
+    const workflowEventStream = await runWorkflow(
+      workflow,
+      workflowInput,
+      abortController.signal,
+    );
 
-    const stream = await runWorkflow(workflow, {
-      userInput: lastMessage.content,
-      chatHistory: messages.slice(0, -1).map((message) => ({
-        content: message.content,
-        role: message.role as ChatMessage["role"],
-      })),
+    const dataStream = toDataStream(workflowEventStream, {
+      callbacks: {
+        onFinal: async (completion, dataStreamWriter) => {
+          chatHistory.push({
+            role: "assistant" as MessageType,
+            content: completion,
+          });
+          await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+        },
+      },
     });
-
-    pipeStreamToResponse(res, stream);
+    pipeStreamToResponse(res, dataStream);
   } catch (error) {
-    console.error("Chat error:", error);
+    console.error("Chat handler error:", error);
     return sendJSONResponse(res, 500, {
       detail: (error as Error).message || "Internal server error",
     });
