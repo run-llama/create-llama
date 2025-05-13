@@ -25,6 +25,9 @@ export function DevModePanel() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollingError, setPollingError] = useState<string | null>(null);
+
   async function fetchWorkflowCode() {
     try {
       setIsFetching(true);
@@ -40,6 +43,50 @@ export function DevModePanel() {
     } finally {
       setIsFetching(false);
     }
+  }
+
+  async function refetchWorkflowCode() {
+    if (!workflowFile) return;
+
+    const initialLastModified = workflowFile.last_modified;
+    setIsPolling(true);
+    setPollingError(null);
+
+    const pollStartTime = Date.now();
+    const POLLING_TIMEOUT = 30_000; // 30 seconds
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // TODO: remove
+
+    const poll = async () => {
+      if (Date.now() - pollStartTime > POLLING_TIMEOUT) {
+        setPollingError("Server not responding after 30 seconds.");
+        return;
+      }
+
+      try {
+        const pollResponse = await fetch(API_PATH);
+        const pollData = (await pollResponse.json()) as WorkflowFile;
+        if (pollData.last_modified !== initialLastModified) {
+          setWorkflowFile(pollData);
+          setUpdatedCode(pollData.content);
+          setIsPolling(false);
+          setPollingError(null);
+        } else {
+          setTimeout(poll, 2000);
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Unknown error during polling";
+        setPollingError(errorMessage);
+        setIsPolling(false);
+        await fetchWorkflowCode();
+        setUpdatedCode(workflowFile?.content ?? null);
+      }
+    };
+
+    setTimeout(poll, 0);
   }
 
   const handleResetCode = () => {
@@ -68,12 +115,7 @@ export function DevModePanel() {
         throw new Error(data?.detail ?? "Unknown error");
       }
       setSaveError(null);
-      setWorkflowFile((prev) => {
-        if (!prev) return null;
-        return { ...prev, content: updatedCode } as WorkflowFile;
-      });
-
-      // TODO: trigger reload page
+      await refetchWorkflowCode();
     } catch (error) {
       console.warn("Error saving workflow code:", error);
       setSaveError(
@@ -100,6 +142,37 @@ export function DevModePanel() {
       >
         Dev Mode
       </Button>
+
+      {isPolling && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+          {!pollingError && (
+            <>
+              <Loader2 className="mb-4 h-16 w-16 animate-spin text-white" />
+              <p className="text-lg font-semibold text-white">
+                Applying changes and restarting server...
+              </p>
+              <p className="mt-2 text-sm text-slate-300">
+                Please wait for a while then you can start chatting with the
+                updated workflow.
+              </p>
+            </>
+          )}
+          {pollingError && (
+            <div className="bg-destructive/20 text-destructive-foreground mt-4 max-w-md rounded-md p-4 text-center">
+              <div className="mb-2 flex items-center justify-center gap-2">
+                <AlertCircle className="shrink-0" size={16} />
+                <h6 className="text-sm font-medium">Server Starting Error</h6>
+              </div>
+              <p className="text-sm">{pollingError}</p>
+
+              <p className="text-sm">
+                Please reload the page and check server logs.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         className={`bg-background border-border fixed right-0 top-0 h-full w-[800px] border-l shadow-xl transition-transform duration-300 ease-in-out ${
           devModeOpen ? "translate-x-0" : "translate-x-full"
