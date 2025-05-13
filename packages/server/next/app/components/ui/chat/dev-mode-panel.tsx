@@ -64,6 +64,8 @@ function DevModePanelComp() {
     setIsPolling(true);
     setPollingError(null);
 
+    await new Promise((resolve) => setTimeout(resolve, 100)); // tsx watch need a delay to detect the changes
+
     const pollStartTime = Date.now();
 
     // interval refetching the updated workflow code
@@ -88,14 +90,8 @@ function DevModePanelComp() {
           setTimeout(poll, 2000);
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Unknown error during polling";
-        setPollingError(errorMessage);
-        setIsPolling(false);
-        await fetchWorkflowCode();
-        setUpdatedCode(workflowFile?.content ?? null);
+        console.info("Polling error", error);
+        setTimeout(poll, 2000);
       }
     };
 
