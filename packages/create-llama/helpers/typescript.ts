@@ -31,23 +31,24 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("*.ts", path.join(root, "src", "app"), {
-    parents: true,
+  await copy("**", path.join(root), {
     cwd: path.join(
       templatesDir,
       "components",
-      "workflows",
+      "use-cases",
       "typescript",
       useCase,
     ),
+    rename: assetRelocator,
   });
 
   // copy workflow UI components to output/components folder
   await copy("*", path.join(root, "components"), {
     parents: true,
-    cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
+    cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
   });
 
+  // Override generate.ts if workflow use case doesn't use custom UI
   if (vectorDb === "llamacloud") {
     await copy("generate.ts", path.join(root, "src"), {
       parents: true,
@@ -74,18 +75,6 @@ const installLlamaIndexServerTemplate = async ({
       rename: () => "data.ts",
     });
   }
-  // Copy README.md
-  await copy("README-template.md", path.join(root), {
-    parents: true,
-    cwd: path.join(
-      templatesDir,
-      "components",
-      "workflows",
-      "typescript",
-      useCase,
-    ),
-    rename: assetRelocator,
-  });
 };
 
 const installLegacyTSTemplate = async ({
