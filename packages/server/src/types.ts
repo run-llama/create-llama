@@ -17,7 +17,6 @@ export type UIConfig = {
   starterQuestions?: string[];
   componentsDir?: string;
   llamaCloudIndexSelector?: boolean;
-  devMode?: boolean;
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {

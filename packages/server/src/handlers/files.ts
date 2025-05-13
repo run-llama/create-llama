@@ -1,8 +1,7 @@
 import fs from "fs";
 import type { IncomingMessage, ServerResponse } from "http";
-import path from "path";
 import { promisify } from "util";
-import { parseRequestBody, sendJSONResponse } from "../utils/request";
+import { sendJSONResponse } from "../utils/request";
 
 export const handleServeFiles = async (
   req: IncomingMessage,
@@ -20,51 +19,5 @@ export const handleServeFiles = async (
     fileStream.pipe(res);
   } else {
     return sendJSONResponse(res, 404, { error: "File not found" });
-  }
-};
-
-const DEFAULT_WORKFLOW_FILE_PATH = "src/app/workflow.ts"; // TODO: we can make it as a parameter in server later
-
-export const getWorkflowFile = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-  filePath: string = DEFAULT_WORKFLOW_FILE_PATH,
-) => {
-  const fileExists = await promisify(fs.exists)(filePath);
-  if (!fileExists) {
-    return sendJSONResponse(res, 404, {
-      detail: `Cannot find workflow file! Path: ${DEFAULT_WORKFLOW_FILE_PATH}`,
-    });
-  }
-
-  const content = await promisify(fs.readFile)(filePath, "utf-8");
-  const file_name = path.basename(filePath);
-  const last_modified = fs.statSync(filePath).mtime.getTime();
-  sendJSONResponse(res, 200, { content, file_name, last_modified });
-};
-
-export const updateWorkflowFile = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-  filePath: string = DEFAULT_WORKFLOW_FILE_PATH,
-) => {
-  const body = await parseRequestBody(req);
-  const { content } = body as { content: string };
-
-  const fileExists = await promisify(fs.exists)(filePath);
-  if (!fileExists) {
-    return sendJSONResponse(res, 404, {
-      detail: `Dev mode is currently in beta. It only supports updating workflow file at ${DEFAULT_WORKFLOW_FILE_PATH}`,
-    });
-  }
-
-  try {
-    // TODO: validate syntax and imports
-
-    await promisify(fs.writeFile)(filePath, content);
-    sendJSONResponse(res, 200, { content });
-  } catch (error) {
-    console.error("Error updating workflow file:", error);
-    sendJSONResponse(res, 500, { error: "Failed to update workflow file" });
   }
 };
