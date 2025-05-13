@@ -1,7 +1,7 @@
 "use client";
 
 import { CodeEditor } from "@llamaindex/chat-ui/widgets";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../button";
 
@@ -158,6 +158,7 @@ export function DevModePanel() {
                 disabled={isSaving || !updatedCode || !workflowFile}
               >
                 Save & Restart Server
+                {isSaving && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
               </Button>
             </div>
           </div>
