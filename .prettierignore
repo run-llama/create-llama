@@ -7,6 +7,8 @@ build/
 .next/
 out/
 packages/server/server/
+**/playwright-report/
+**/test-results/
 
 # Python
 python/

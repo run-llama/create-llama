@@ -3,7 +3,12 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import { TemplateFramework, TemplateVectorDB } from "../../helpers/types";
+import {
+  TemplateFramework,
+  TemplateType,
+  TemplateUseCase,
+  TemplateVectorDB,
+} from "../../helpers/types";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
@@ -11,6 +16,13 @@ const execAsync = util.promisify(exec);
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "nextjs";
+const templateTypes: TemplateType[] = ["streaming", "llamaindexserver"];
+const useCases: TemplateUseCase[] = [
+  "agentic_rag",
+  "deep_research",
+  "financial_report",
+  "artifacts",
+];
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
   : "--example-file";
@@ -29,32 +41,68 @@ const vectorDbs: TemplateVectorDB[] = [
 ];
 
 test.describe("Test resolve TS dependencies", () => {
-  // Test vector DBs without LlamaParse
-  for (const vectorDb of vectorDbs) {
-    const optionDescription = `vectorDb: ${vectorDb}, dataSource: ${dataSource}`;
+  test.describe.configure({ retries: 0 });
 
-    test(`Vector DB test - ${optionDescription}`, async () => {
-      await runTest(vectorDb, false);
-    });
+  for (const templateType of templateTypes) {
+    // Test vector DBs without LlamaParse
+    for (const vectorDb of vectorDbs) {
+      const optionDescription = `templateType: ${templateType}, vectorDb: ${vectorDb}, dataSource: ${dataSource}`;
+
+      test(`Vector DB test - ${optionDescription}`, async () => {
+        // skip vectordb test for llamaindexserver
+        test.skip(
+          templateType === "llamaindexserver",
+          "skipping vectorDB test for llamaindexserver",
+        );
+
+        await runTest({
+          templateType: templateType,
+          useLlamaParse: false, // Disable LlamaParse for vectorDB test
+          vectorDb: vectorDb,
+        });
+      });
+    }
+
+    // No vectorDB, with LlamaParse and useCase
+    for (const useCase of useCases) {
+      const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
+      test.describe(`useCase test - ${optionDescription}`, () => {
+        test.skip(
+          templateType === "streaming",
+          "Skipping use case test for streaming template.",
+        );
+        test(`no llamaParse - ${optionDescription}`, async () => {
+          await runTest({
+            templateType: templateType,
+            useLlamaParse: false,
+            useCase: useCase,
+          });
+        });
+        test(`llamaParse - ${optionDescription}`, async () => {
+          await runTest({
+            templateType: templateType,
+            useLlamaParse: true,
+            useCase: useCase,
+          });
+        });
+      });
+    }
   }
 
-  // Test LlamaParse with vectorDB 'none'
-  test(`LlamaParse test - vectorDb: none, dataSource: ${dataSource}, llamaParse: true`, async () => {
-    await runTest("none", true);
-  });
-
-  async function runTest(
-    vectorDb: TemplateVectorDB | "none",
-    useLlamaParse: boolean,
-  ) {
+  async function runTest(options: {
+    templateType: TemplateType;
+    useLlamaParse: boolean;
+    useCase?: TemplateUseCase;
+    vectorDb?: TemplateVectorDB;
+  }) {
     const cwd = await createTestDir();
 
     const result = await runCreateLlama({
       cwd: cwd,
-      templateType: "llamaindexserver",
+      templateType: options.templateType,
       templateFramework: templateFramework,
       dataSource: dataSource,
-      vectorDb: vectorDb,
+      vectorDb: options.vectorDb ?? "none",
       port: 3000,
       postInstallAction: "none",
       templateUI: undefined,
@@ -62,7 +110,8 @@ test.describe("Test resolve TS dependencies", () => {
       llamaCloudProjectName: undefined,
       llamaCloudIndexName: undefined,
       tools: undefined,
-      useLlamaParse: useLlamaParse,
+      useLlamaParse: options.useLlamaParse,
+      useCase: options.useCase,
     });
     const name = result.projectName;
 
