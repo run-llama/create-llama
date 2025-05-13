@@ -112,7 +112,9 @@ export function DevModePanel() {
               <p className="text-muted-foreground text-sm">
                 {isFetching
                   ? "Loading..."
-                  : `Edit the code of ${workflowFile?.file_name} and save to apply changes to your workflow.`}
+                  : workflowFile
+                    ? `Edit the code of ${workflowFile.file_name} and save to apply changes to your workflow.`
+                    : ""}
               </p>
             </div>
             <Button
