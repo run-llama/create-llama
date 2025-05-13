@@ -2,7 +2,7 @@ import os
 import tempfile
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from llama_index.server.settings import server_settings
 from llama_index.server.utils.workflow_validation import validate_workflow_file
@@ -10,13 +10,19 @@ from llama_index.server.utils.workflow_validation import validate_workflow_file
 
 class WorkflowFile(BaseModel):
     last_modified: int
-    file_name: str
+    file_path: str = Field(
+        default="app/workflow.py",
+        description="Relative path to the workflow file",
+    )
     content: str
 
 
 class WorkflowFileUpdate(BaseModel):
     content: str
-    file_name: str
+    file_path: str = Field(
+        default="app/workflow.py",
+        description="Relative path to the workflow file",
+    )
 
 
 class WorkflowValidationResult(BaseModel):
@@ -30,7 +36,6 @@ def dev_router() -> APIRouter:
     router = APIRouter(prefix="/dev", tags=["dev"])
 
     default_workflow_file_path = "app/workflow.py"
-    default_workflow_file_name = os.path.basename(default_workflow_file_path)
 
     @router.get("/files/workflow")
     async def get_workflow_file() -> WorkflowFile:
@@ -47,7 +52,7 @@ def dev_router() -> APIRouter:
         with open(default_workflow_file_path, "r") as f:
             return WorkflowFile(
                 last_modified=int(stat.st_mtime),
-                file_name=default_workflow_file_name,
+                file_path=default_workflow_file_path,
                 content=f.read(),
             )
 
@@ -57,9 +62,9 @@ def dev_router() -> APIRouter:
         Validate the current workflow code
         """
         try:
-            if file.file_name != default_workflow_file_name:
+            if file.file_path != default_workflow_file_path:
                 raise HTTPException(
-                    status_code=400, detail=f"Updating {file.file_name} is not allowed"
+                    status_code=400, detail=f"Updating {file.file_path} is not allowed"
                 )
             validate_workflow_file(
                 workflow_content=file.content,
@@ -75,9 +80,9 @@ def dev_router() -> APIRouter:
         Update the current workflow code
         """
         # Validations
-        if update.file_name != default_workflow_file_name:
+        if update.file_path != default_workflow_file_path:
             raise HTTPException(
-                status_code=400, detail=f"Updating {update.file_name} is not allowed"
+                status_code=400, detail=f"Updating {update.file_path} is not allowed"
             )
         with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tmp:
             tmp.write(update.content)
