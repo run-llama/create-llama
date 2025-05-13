@@ -36,7 +36,7 @@ export function DevModePanel() {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       setFetchingError(errorMessage);
-      console.error("Error fetching workflow code:", error);
+      console.warn("Error fetching workflow code:", error);
     } finally {
       setIsFetching(false);
     }
@@ -75,7 +75,7 @@ export function DevModePanel() {
 
       // TODO: trigger reload page
     } catch (error) {
-      console.error("Error saving workflow code:", error);
+      console.warn("Error saving workflow code:", error);
       setSaveError(
         error instanceof Error
           ? error.message
@@ -109,9 +109,11 @@ export function DevModePanel() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold">Workflow Editor</h2>
-              {isFetching && (
-                <p className="text-muted-foreground text-sm">Loading...</p>
-              )}
+              <p className="text-muted-foreground text-sm">
+                {isFetching
+                  ? "Loading..."
+                  : `Edit the code of ${workflowFile?.file_name} and save to apply changes to your workflow.`}
+              </p>
             </div>
             <Button
               variant="ghost"
