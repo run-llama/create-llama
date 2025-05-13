@@ -11,7 +11,7 @@ const POLLING_TIMEOUT = 30_000; // 30 seconds
 
 type WorkflowFile = {
   last_modified: number;
-  file_name: string;
+  file_path: string;
   content: string;
 };
 
@@ -120,7 +120,7 @@ function DevModePanelComp() {
         },
         body: JSON.stringify({
           content: updatedCode,
-          file_name: workflowFile.file_name,
+          file_path: workflowFile.file_path,
         }),
       });
       const data = await response.json();
@@ -196,15 +196,20 @@ function DevModePanelComp() {
             <div>
               <h2 className="text-xl font-bold">Workflow Editor</h2>
               <p className="text-muted-foreground text-sm">
-                {isFetching
-                  ? "Loading..."
-                  : workflowFile
-                    ? `Edit the code of ${workflowFile.file_name} and save to apply changes to your workflow.`
-                    : ""}
+                {isFetching ? (
+                  "Loading..."
+                ) : workflowFile ? (
+                  <>
+                    Edit the code of <b>{workflowFile.file_path}</b> and save to
+                    apply changes to your workflow.
+                  </>
+                ) : (
+                  ""
+                )}
               </p>
             </div>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setDevModeOpen(false)}
             >
