@@ -68,6 +68,12 @@ export function DevModePanel() {
         throw new Error(data?.detail ?? "Unknown error");
       }
       setSaveError(null);
+      setWorkflowFile((prev) => {
+        if (!prev) return null;
+        return { ...prev, content: updatedCode } as WorkflowFile;
+      });
+
+      // TODO: trigger reload page
     } catch (error) {
       console.error("Error saving workflow code:", error);
       setSaveError(
