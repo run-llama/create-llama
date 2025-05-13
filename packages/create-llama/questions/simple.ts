@@ -76,19 +76,21 @@ export const askSimpleQuestions = async (
   );
   language = newLanguage;
 
-  const { useLlamaCloud: newUseLlamaCloud } = await prompts(
-    {
-      type: "toggle",
-      name: "useLlamaCloud",
-      message: "Do you want to use LlamaCloud services?",
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-      hint: "see https://www.llamaindex.ai/enterprise for more info",
-    },
-    questionHandlers,
-  );
-  useLlamaCloud = newUseLlamaCloud;
+  if (appType !== "artifacts") {
+    const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+      {
+        type: "toggle",
+        name: "useLlamaCloud",
+        message: "Do you want to use LlamaCloud services?",
+        initial: false,
+        active: "Yes",
+        inactive: "No",
+        hint: "see https://www.llamaindex.ai/enterprise for more info",
+      },
+      questionHandlers,
+    );
+    useLlamaCloud = newUseLlamaCloud;
+  }
 
   if (useLlamaCloud && !llamaCloudKey) {
     // Ask for LlamaCloud API key, if not set
