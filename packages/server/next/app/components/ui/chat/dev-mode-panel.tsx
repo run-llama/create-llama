@@ -4,6 +4,7 @@ import { CodeEditor } from "@llamaindex/chat-ui/widgets";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../button";
+import { getConfig } from "../lib/utils";
 
 const API_PATH = "http://127.0.0.1:8000/api/dev/files/workflow"; // TODO: remove host
 
@@ -13,8 +14,13 @@ type WorkflowFile = {
   content: string;
 };
 
-// TODO: show/hide by DEV_MODE in config.js
 export function DevModePanel() {
+  const devModeEnabled = getConfig("DEV_MODE");
+  if (!devModeEnabled) return null;
+  return <DevModePanelComp />;
+}
+
+function DevModePanelComp() {
   const [devModeOpen, setDevModeOpen] = useState(false);
 
   const [isFetching, setIsFetching] = useState(false);
@@ -57,6 +63,7 @@ export function DevModePanel() {
 
     await new Promise((resolve) => setTimeout(resolve, 1000)); // TODO: remove
 
+    // interval refetching the updated workflow code
     const poll = async () => {
       if (Date.now() - pollStartTime > POLLING_TIMEOUT) {
         setPollingError("Server not responding after 30 seconds.");
