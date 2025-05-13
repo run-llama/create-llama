@@ -1,54 +1,90 @@
 "use client";
 
 import { CodeEditor } from "@llamaindex/chat-ui/widgets";
+import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../button";
+
+const API_PATH = "http://127.0.0.1:8000/api/dev/files/workflow"; // TODO: remove host
+
+type WorkflowFile = {
+  last_modified: number;
+  file_name: string;
+  content: string;
+};
 
 // TODO: show/hide by DEV_MODE in config.js
 export function DevModePanel() {
   const [devModeOpen, setDevModeOpen] = useState(false);
 
-  // TODO: show loading from isFetching
   const [isFetching, setIsFetching] = useState(false);
-  const [workflowFile, setWorkflowFile] = useState<{
-    last_modified: number;
-    file_name: string;
-    content: string;
-  } | null>(null);
+  const [fetchingError, setFetchingError] = useState<string | null>();
+  const [workflowFile, setWorkflowFile] = useState<WorkflowFile | null>(null);
 
-  const [updatedCode, setUpdatedCode] = useState("");
+  const [updatedCode, setUpdatedCode] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function fetchWorkflowCode() {
+    try {
+      setIsFetching(true);
+      const response = await fetch(API_PATH);
+      const data = (await response.json()) as WorkflowFile;
+      setWorkflowFile(data);
+      setFetchingError(null);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      setFetchingError(errorMessage);
+      console.error("Error fetching workflow code:", error);
+    } finally {
+      setIsFetching(false);
+    }
+  }
 
   const handleResetCode = () => {
-    setUpdatedCode(workflowFile?.content ?? "");
+    setUpdatedCode(workflowFile?.content ?? null);
+    setSaveError(null);
   };
 
   const handleSaveCode = async () => {
-    // TODO: toast promise
-    await fetch("/files/workflow", {
-      method: "PUT",
-      body: JSON.stringify({
-        content: updatedCode,
-      }),
-    });
+    if (!workflowFile) return;
+
+    try {
+      setIsSaving(true);
+      const response = await fetch(API_PATH, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: updatedCode,
+          file_name: workflowFile.file_name,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail ?? "Unknown error");
+      }
+      setSaveError(null);
+    } catch (error) {
+      console.error("Error saving workflow code:", error);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Unknown error happened when saving workflow code",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   useEffect(() => {
-    async function fetchWorkflowCode() {
-      try {
-        setIsFetching(true);
-        const response = await fetch("/files/workflow");
-        const data = await response.json();
-        setWorkflowFile(data);
-      } catch (error) {
-        // TODO: use toast
-        console.error("Error fetching workflow code:", error);
-      } finally {
-        setIsFetching(false);
-      }
+    if (devModeOpen) {
+      fetchWorkflowCode();
     }
-
-    fetchWorkflowCode();
-  }, []);
+  }, [devModeOpen]);
 
   return (
     <>
@@ -65,7 +101,12 @@ export function DevModePanel() {
       >
         <div className="flex h-full flex-col p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold">Workflow Editor</h2>
+            <div>
+              <h2 className="text-xl font-bold">Workflow Editor</h2>
+              {isFetching && (
+                <p className="text-muted-foreground text-sm">Loading...</p>
+              )}
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -75,17 +116,44 @@ export function DevModePanel() {
             </Button>
           </div>
           <div className="flex-1 overflow-auto">
-            <CodeEditor code={updatedCode} onChange={setUpdatedCode} />
+            {fetchingError ? (
+              <div className="bg-destructive/10 text-destructive/70 mb-4 flex items-center gap-2 rounded-md p-4">
+                <AlertCircle className="shrink-0" size={16} />
+                <p className="text-sm font-medium">{fetchingError}</p>
+              </div>
+            ) : (
+              <CodeEditor
+                code={updatedCode ?? workflowFile?.content ?? ""}
+                onChange={setUpdatedCode}
+              />
+            )}
           </div>
-          <div className="mt-4 flex justify-end">
-            <Button
-              variant="outline"
-              className="mr-2"
-              onClick={handleResetCode}
-            >
-              Reset Code
-            </Button>
-            <Button onClick={handleSaveCode}>Save & Restart Server</Button>
+          <div className="mt-4 flex flex-col">
+            {saveError && (
+              <div className="bg-destructive/10 text-destructive/70 mb-4 rounded-md p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <AlertCircle className="shrink-0" size={16} />
+                  <h6 className="text-sm font-medium">Error Saving Code</h6>
+                </div>
+                <p className="text-sm">{saveError}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={handleResetCode}
+              >
+                Reset Code
+              </Button>
+              <Button
+                onClick={handleSaveCode}
+                disabled={isSaving || !updatedCode || !workflowFile}
+              >
+                Save & Restart Server
+              </Button>
+            </div>
           </div>
         </div>
       </div>
