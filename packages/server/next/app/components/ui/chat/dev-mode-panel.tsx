@@ -39,7 +39,12 @@ function DevModePanelComp() {
     try {
       setIsFetching(true);
       const response = await fetch(API_PATH);
-      const data = (await response.json()) as WorkflowFile;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.detail ?? "Unknown error");
+      }
+
       setWorkflowFile(data);
       setFetchingError(null);
     } catch (error) {
