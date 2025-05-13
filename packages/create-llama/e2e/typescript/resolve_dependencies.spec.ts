@@ -79,13 +79,16 @@ test.describe("Test resolve TS dependencies", () => {
           useCase: useCase,
         });
       });
-      test(`llamaParse - ${optionDescription}`, async () => {
-        await runTest({
-          templateType: templateType,
-          useLlamaParse: true,
-          useCase: useCase,
+      // Skipping llamacloud for the use case doesn't use index.
+      if (useCase !== "artifacts") {
+        test(`llamaParse - ${optionDescription}`, async () => {
+          await runTest({
+            templateType: templateType,
+            useLlamaParse: true,
+            useCase: useCase,
+          });
         });
-      });
+      }
     });
   }
 });
