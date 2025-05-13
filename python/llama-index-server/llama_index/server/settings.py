@@ -14,7 +14,7 @@ class ServerSettings(BaseSettings):
     workflow_factory_signature: str = Field(
         default="",
         description="The signature of the workflow factory function",
-        env=None
+        env=None,
     )
 
     @property
