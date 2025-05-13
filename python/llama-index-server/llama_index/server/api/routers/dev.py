@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 import os
 import tempfile
-from llama_index.server.utils.workflow_validation import validate_workflow_file
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
 from llama_index.server.settings import server_settings
+from llama_index.server.utils.workflow_validation import validate_workflow_file
 
 
 class WorkflowFile(BaseModel):
@@ -27,7 +29,7 @@ def dev_router() -> APIRouter:
     # but we probably don't need to do this
     router = APIRouter(prefix="/dev", tags=["dev"])
 
-    default_workflow_file_path = "workflow.py"
+    default_workflow_file_path = "app/workflow.py"
     default_workflow_file_name = os.path.basename(default_workflow_file_path)
 
     @router.get("/files/workflow")
@@ -35,6 +37,12 @@ def dev_router() -> APIRouter:
         """
         Fetch the current workflow code
         """
+        # Check if the file exists
+        if not os.path.exists(default_workflow_file_path):
+            raise HTTPException(
+                status_code=400,
+                detail="Dev mode is currently in beta. It only supports updating workflow file at 'app/workflow.py'",
+            )
         stat = os.stat(default_workflow_file_path)
         with open(default_workflow_file_path, "r") as f:
             return WorkflowFile(
