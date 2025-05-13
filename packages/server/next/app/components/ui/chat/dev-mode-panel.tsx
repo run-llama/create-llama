@@ -45,7 +45,7 @@ export function DevModePanel() {
     }
   }
 
-  async function refetchWorkflowCode() {
+  async function restartingWorkflow() {
     if (!workflowFile) return;
 
     const initialLastModified = workflowFile.last_modified;
@@ -71,6 +71,7 @@ export function DevModePanel() {
           setUpdatedCode(pollData.content);
           setIsPolling(false);
           setPollingError(null);
+          setDevModeOpen(false);
         } else {
           setTimeout(poll, 2000);
         }
@@ -115,7 +116,7 @@ export function DevModePanel() {
         throw new Error(data?.detail ?? "Unknown error");
       }
       setSaveError(null);
-      await refetchWorkflowCode();
+      await restartingWorkflow();
     } catch (error) {
       console.warn("Error saving workflow code:", error);
       setSaveError(
