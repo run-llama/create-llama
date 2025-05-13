@@ -11,7 +11,9 @@ const execAsync = util.promisify(exec);
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
-const templateTypes: TemplateType[] = ["streaming", "llamaindexserver"];
+const templateType: TemplateType = process.env.TEMPLATE_TYPE
+  ? (process.env.TEMPLATE_TYPE as TemplateType)
+  : "llamaindexserver";
 const useCases: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
@@ -24,7 +26,6 @@ const dataSource: string = process.env.DATASOURCE
 
 test.describe("Mypy check", () => {
   test.describe.configure({ retries: 0 });
-  for (const templateType of templateTypes) {
 
     // Test for streaming template
     test.describe("StreamingTemplate", () => {
@@ -277,7 +278,6 @@ test.describe("Mypy check", () => {
       // If we reach this point without throwing an error, the test passes
       expect(true).toBeTruthy();
 
-      return { pyprojectPath, projectPath };
-    }
+    return { pyprojectPath, projectPath };
   }
 });

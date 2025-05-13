@@ -16,7 +16,9 @@ const execAsync = util.promisify(exec);
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "nextjs";
-const templateTypes: TemplateType[] = ["streaming", "llamaindexserver"];
+const templateType: TemplateType = process.env.TEMPLATE_TYPE
+  ? (process.env.TEMPLATE_TYPE as TemplateType)
+  : "llamaindexserver";
 const useCases: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
@@ -43,112 +45,110 @@ const vectorDbs: TemplateVectorDB[] = [
 test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
-  for (const templateType of templateTypes) {
-    // Test vector DBs without LlamaParse
-    for (const vectorDb of vectorDbs) {
-      const optionDescription = `templateType: ${templateType}, vectorDb: ${vectorDb}, dataSource: ${dataSource}`;
+  // Test vector DBs without LlamaParse
+  for (const vectorDb of vectorDbs) {
+    const optionDescription = `templateType: ${templateType}, vectorDb: ${vectorDb}, dataSource: ${dataSource}`;
 
-      test(`Vector DB test - ${optionDescription}`, async () => {
-        // skip vectordb test for llamaindexserver
-        test.skip(
-          templateType === "llamaindexserver",
-          "skipping vectorDB test for llamaindexserver",
-        );
+    test(`Vector DB test - ${optionDescription}`, async () => {
+      // skip vectordb test for llamaindexserver
+      test.skip(
+        templateType === "llamaindexserver",
+        "skipping vectorDB test for llamaindexserver",
+      );
 
+      await runTest({
+        templateType: templateType,
+        useLlamaParse: false, // Disable LlamaParse for vectorDB test
+        vectorDb: vectorDb,
+      });
+    });
+  }
+
+  // No vectorDB, with LlamaParse and useCase
+  for (const useCase of useCases) {
+    const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
+    test.describe(`useCase test - ${optionDescription}`, () => {
+      test.skip(
+        templateType === "streaming",
+        "Skipping use case test for streaming template.",
+      );
+      test(`no llamaParse - ${optionDescription}`, async () => {
         await runTest({
           templateType: templateType,
-          useLlamaParse: false, // Disable LlamaParse for vectorDB test
-          vectorDb: vectorDb,
+          useLlamaParse: false,
+          useCase: useCase,
         });
       });
-    }
-
-    // No vectorDB, with LlamaParse and useCase
-    for (const useCase of useCases) {
-      const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
-      test.describe(`useCase test - ${optionDescription}`, () => {
-        test.skip(
-          templateType === "streaming",
-          "Skipping use case test for streaming template.",
-        );
-        test(`no llamaParse - ${optionDescription}`, async () => {
-          await runTest({
-            templateType: templateType,
-            useLlamaParse: false,
-            useCase: useCase,
-          });
-        });
-        test(`llamaParse - ${optionDescription}`, async () => {
-          await runTest({
-            templateType: templateType,
-            useLlamaParse: true,
-            useCase: useCase,
-          });
+      test(`llamaParse - ${optionDescription}`, async () => {
+        await runTest({
+          templateType: templateType,
+          useLlamaParse: true,
+          useCase: useCase,
         });
       });
-    }
-  }
-
-  async function runTest(options: {
-    templateType: TemplateType;
-    useLlamaParse: boolean;
-    useCase?: TemplateUseCase;
-    vectorDb?: TemplateVectorDB;
-  }) {
-    const cwd = await createTestDir();
-
-    const result = await runCreateLlama({
-      cwd: cwd,
-      templateType: options.templateType,
-      templateFramework: templateFramework,
-      dataSource: dataSource,
-      vectorDb: options.vectorDb ?? "none",
-      port: 3000,
-      postInstallAction: "none",
-      templateUI: undefined,
-      appType: templateFramework === "nextjs" ? "" : "--no-frontend",
-      llamaCloudProjectName: undefined,
-      llamaCloudIndexName: undefined,
-      tools: undefined,
-      useLlamaParse: options.useLlamaParse,
-      useCase: options.useCase,
     });
-    const name = result.projectName;
-
-    // Check if the app folder exists
-    const appDir = path.join(cwd, name);
-    const dirExists = fs.existsSync(appDir);
-    expect(dirExists).toBeTruthy();
-
-    // Install dependencies using pnpm
-    try {
-      const { stderr: installStderr } = await execAsync(
-        "pnpm install --prefer-offline --ignore-workspace",
-        {
-          cwd: appDir,
-        },
-      );
-    } catch (error) {
-      console.error("Error installing dependencies:", error);
-      throw error;
-    }
-
-    // Run tsc type check and capture the output
-    try {
-      const { stdout, stderr } = await execAsync(
-        "pnpm exec tsc -b --diagnostics",
-        {
-          cwd: appDir,
-        },
-      );
-      // Check if there's any error output
-      expect(stderr).toBeFalsy();
-
-      // Log the stdout for debugging purposes
-      console.log("TypeScript type-check output:", stdout);
-    } catch (error) {
-      console.error("Error running tsc:", error);
-      throw error;
-    }
   }
 });
+
+async function runTest(options: {
+  templateType: TemplateType;
+  useLlamaParse: boolean;
+  useCase?: TemplateUseCase;
+  vectorDb?: TemplateVectorDB;
+}) {
+  const cwd = await createTestDir();
+
+  const result = await runCreateLlama({
+    cwd: cwd,
+    templateType: options.templateType,
+    templateFramework: templateFramework,
+    dataSource: dataSource,
+    vectorDb: options.vectorDb ?? "none",
+    port: 3000,
+    postInstallAction: "none",
+    templateUI: undefined,
+    appType: templateFramework === "nextjs" ? "" : "--no-frontend",
+    llamaCloudProjectName: undefined,
+    llamaCloudIndexName: undefined,
+    tools: undefined,
+    useLlamaParse: options.useLlamaParse,
+    useCase: options.useCase,
+  });
+  const name = result.projectName;
+
+  // Check if the app folder exists
+  const appDir = path.join(cwd, name);
+  const dirExists = fs.existsSync(appDir);
+  expect(dirExists).toBeTruthy();
+
+  // Install dependencies using pnpm
+  try {
+    const { stderr: installStderr } = await execAsync(
+      "pnpm install --prefer-offline --ignore-workspace",
+      {
+        cwd: appDir,
+      },
+    );
+  } catch (error) {
+    console.error("Error installing dependencies:", error);
+    throw error;
+  }
+
+  // Run tsc type check and capture the output
+  try {
+    const { stdout, stderr } = await execAsync(
+      "pnpm exec tsc -b --diagnostics",
+      {
+        cwd: appDir,
+      },
+    );
+    // Check if there's any error output
+    expect(stderr).toBeFalsy();
+
+    // Log the stdout for debugging purposes
+    console.log("TypeScript type-check output:", stdout);
+  } catch (error) {
+    console.error("Error running tsc:", error);
+    throw error;
+  }
+}
