@@ -190,6 +190,7 @@ test.describe("Mypy check", () => {
 
     test.describe("LlamaIndexServer", async () => {
       test.skip(templateType !== "llamaindexserver", `skipping llamaindexserver test for ${templateType}`);
+      test.skip(dataSource !== "--example-file", `skipping llamaindexserver test for ${dataSource}`);
       for (const useCase of useCases) {
         const cwd = await createTestDir();
         await createAndCheckLlamaProject({

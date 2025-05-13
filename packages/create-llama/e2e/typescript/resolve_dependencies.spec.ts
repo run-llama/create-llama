@@ -65,31 +65,34 @@ test.describe("Test resolve TS dependencies", () => {
   }
 
   // No vectorDB, with LlamaParse and useCase
-  for (const useCase of useCases) {
-    const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
-    test.describe(`useCase test - ${optionDescription}`, () => {
-      test.skip(
-        templateType === "streaming",
-        "Skipping use case test for streaming template.",
-      );
-      test(`no llamaParse - ${optionDescription}`, async () => {
-        await runTest({
-          templateType: templateType,
-          useLlamaParse: false,
-          useCase: useCase,
-        });
-      });
-      // Skipping llamacloud for the use case doesn't use index.
-      if (useCase !== "artifacts") {
-        test(`llamaParse - ${optionDescription}`, async () => {
+  // Only need to test use case with example data source
+  if (dataSource === "--example-file") {
+    for (const useCase of useCases) {
+      const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
+      test.describe(`useCase test - ${optionDescription}`, () => {
+        test.skip(
+          templateType === "streaming",
+          "Skipping use case test for streaming template.",
+        );
+        test(`no llamaParse - ${optionDescription}`, async () => {
           await runTest({
             templateType: templateType,
-            useLlamaParse: true,
+            useLlamaParse: false,
             useCase: useCase,
           });
         });
-      }
-    });
+        // Skipping llamacloud for the use case doesn't use index.
+        if (useCase !== "artifacts") {
+          test(`llamaParse - ${optionDescription}`, async () => {
+            await runTest({
+              templateType: templateType,
+              useLlamaParse: true,
+              useCase: useCase,
+            });
+          });
+        }
+      });
+    }
   }
 });
 
