@@ -75,6 +75,14 @@ const installLlamaIndexServerTemplate = async ({
       rename: () => "data.ts",
     });
   }
+
+  // Simplify use case code
+  if (useCase === "artifacts") {
+    // Artifact use case doesn't use index.
+    // We don't need data.ts, generate.ts
+    await fs.rm(path.join(root, "src", "app", "data.ts"));
+    // TODO: Remove generate index in generate.ts and package.json if possible
+  }
 };
 
 const installLegacyTSTemplate = async ({
