@@ -94,6 +94,10 @@ const getAdditionalDependencies = (
         name: "llama-index-vector-stores-chroma",
         version: ">=0.4.0,<0.5.0",
       });
+      dependencies.push({
+        name: "onnxruntime",
+        version: "<1.22.0",
+      });
       break;
     }
     case "weaviate": {
@@ -565,13 +569,13 @@ const installLlamaIndexServerTemplate = async ({
 
   await copy("*.py", path.join(root, "app"), {
     parents: true,
-    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+    cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
   });
 
   // Copy custom UI component code
   await copy(`*`, path.join(root, "components"), {
     parents: true,
-    cwd: path.join(templatesDir, "components", "ui", "workflows", useCase),
+    cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
   });
 
   if (useLlamaParse) {
@@ -602,7 +606,7 @@ const installLlamaIndexServerTemplate = async ({
   // Copy README.md
   await copy("README-template.md", path.join(root), {
     parents: true,
-    cwd: path.join(templatesDir, "components", "workflows", "python", useCase),
+    cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
     rename: assetRelocator,
   });
 };
