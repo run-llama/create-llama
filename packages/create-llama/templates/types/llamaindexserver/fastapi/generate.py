@@ -51,7 +51,7 @@ def generate_ui_for_workflow():
     # and run the generate_ui_for_workflow function with the imported model.
     # Make sure the output filename of the generated UI component matches the event type (here `ui_event`)
     try:
-        from app.workflow import UIEventData
+        from app.workflow import UIEventData  # type: ignore
     except ImportError:
         raise ImportError("Couldn't generate UI component for the current workflow.")
     from llama_index.server.gen_ui import generate_event_component
