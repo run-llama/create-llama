@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { Button } from "../button";
 import { getConfig } from "../lib/utils";
 
-const API_PATH = "http://127.0.0.1:8000/api/dev/files/workflow"; // TODO: remove host
+const API_PATH = "/api/dev/files/workflow";
+const POLLING_TIMEOUT = 30_000; // 30 seconds
 
 type WorkflowFile = {
   last_modified: number;
@@ -59,14 +60,13 @@ function DevModePanelComp() {
     setPollingError(null);
 
     const pollStartTime = Date.now();
-    const POLLING_TIMEOUT = 30_000; // 30 seconds
-
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // TODO: remove
 
     // interval refetching the updated workflow code
     const poll = async () => {
       if (Date.now() - pollStartTime > POLLING_TIMEOUT) {
-        setPollingError("Server not responding after 30 seconds.");
+        setPollingError(
+          `Server not responding after ${POLLING_TIMEOUT / 1000} seconds.`,
+        );
         return;
       }
 
