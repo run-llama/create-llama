@@ -12,6 +12,12 @@ import {
 
 import { z } from "zod";
 
+export const workflowFactory = async (reqBody: any) => {
+  const workflow = createDocumentArtifactWorkflow(reqBody);
+
+  return workflow;
+};
+
 export const DocumentRequirementSchema = z.object({
   type: z.enum(["markdown", "html"]),
   title: z.string(),

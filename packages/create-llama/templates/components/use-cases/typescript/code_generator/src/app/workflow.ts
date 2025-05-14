@@ -12,6 +12,12 @@ import {
 
 import { z } from "zod";
 
+export const workflowFactory = async (reqBody: any) => {
+  const workflow = createCodeArtifactWorkflow(reqBody);
+
+  return workflow;
+};
+
 export const RequirementSchema = z.object({
   next_step: z.enum(["answering", "coding"]),
   language: z.string().nullable().optional(),

@@ -77,7 +77,7 @@ const installLlamaIndexServerTemplate = async ({
   }
 
   // Simplify use case code
-  if (useCase === "artifacts") {
+  if (useCase === "code_generator" || useCase === "document_generator") {
     // Artifact use case doesn't use index.
     // We don't need data.ts, generate.ts
     await fs.rm(path.join(root, "src", "app", "data.ts"));
