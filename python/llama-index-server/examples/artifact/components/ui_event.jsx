@@ -113,11 +113,6 @@ function ArtifactWorkflowCard({ event }) {
               state === "plan" && "bg-blue-200",
               state === "generate" && "bg-violet-200",
             )}
-            indicatorClassName={cn(
-              "transition-all duration-500",
-              state === "plan" && "bg-blue-500",
-              state === "generate" && "bg-violet-500",
-            )}
           />
         </div>
       </Card>
