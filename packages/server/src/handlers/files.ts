@@ -1,5 +1,6 @@
 import fs from "fs";
 import type { IncomingMessage, ServerResponse } from "http";
+import path from "path";
 import ts from "typescript";
 import { promisify } from "util";
 import { parseRequestBody, sendJSONResponse } from "../utils/request";
@@ -58,7 +59,9 @@ export const updateWorkflowFile = async (
   }
 
   try {
-    const result = validateTypeScriptFile(filePath);
+    const resolvedFilePath = path.resolve(DEFAULT_WORKFLOW_FILE_PATH);
+    const result = validateTypeScriptFile(resolvedFilePath, content);
+
     if (!result.isValid) {
       return sendJSONResponse(res, 400, {
         detail: result.errors.join("\n"),
@@ -74,19 +77,32 @@ export const updateWorkflowFile = async (
 };
 
 // use typescript package to validate the file syntax and imports
-function validateTypeScriptFile(filePath: string) {
-  // Create a TypeScript program
-  const program = ts.createProgram([filePath], {
+function validateTypeScriptFile(filePath: string, content: string) {
+  // Update workflow file directly will cause the server restart immediately.
+  // So we create a temporary file with the same content in the same directory as the workflow file
+  // This file will be used to validate the file syntax and imports. It will be deleted after validation.
+  const tempFilePath = path.join(
+    path.dirname(filePath),
+    `workflow_${Date.now()}.ts`,
+  );
+  fs.writeFileSync(tempFilePath, content);
+
+  // Create a TypeScript program to validate file by filePath
+  const program = ts.createProgram([tempFilePath], {
     noEmit: true,
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ES2022,
     moduleResolution: ts.ModuleResolutionKind.Bundler,
     strict: true,
     allowJs: false,
+    skipLibCheck: true,
   });
 
   // Get diagnostics (errors and warnings)
   const diagnostics = ts.getPreEmitDiagnostics(program);
+
+  // delete the temp file
+  fs.unlinkSync(tempFilePath);
 
   // Format and return errors
   const errors = diagnostics.map((diagnostic) => {
