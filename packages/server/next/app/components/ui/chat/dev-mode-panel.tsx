@@ -190,11 +190,13 @@ function DevModePanelComp() {
       )}
 
       <div
-        className={`bg-background border-border fixed right-0 top-0 h-full w-[800px] border-l shadow-xl transition-transform duration-300 ease-in-out ${
-          devModeOpen ? "translate-x-0" : "translate-x-full"
+        className={`border-border fixed right-0 top-0 h-full w-full border-l shadow-xl transition-all duration-300 ease-in-out ${
+          devModeOpen ? "translate-x-0 bg-black/50" : "translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col p-4">
+        <div
+          className={`bg-background ml-auto flex h-full w-[800px] flex-col p-4`}
+        >
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold">Workflow Editor</h2>
