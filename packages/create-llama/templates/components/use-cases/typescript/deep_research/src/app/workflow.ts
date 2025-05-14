@@ -167,7 +167,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
 
     state.memory.set(chatHistory);
     state.memory.put({ role: "user", content: userInput });
-    state.userRequest = userInput;
+    state.userRequest = userInput.toString();
     sendEvent(
       uiEvent.with({
         type: "ui_event",
@@ -178,7 +178,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
       }),
     );
 
-    const retrievedNodes = await retriever.retrieve(userInput);
+    const retrievedNodes = await retriever.retrieve(userInput.toString());
 
     sendEvent(toSourceEvent(retrievedNodes));
     sendEvent(

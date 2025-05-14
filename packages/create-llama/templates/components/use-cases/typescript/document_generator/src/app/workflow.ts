@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, Settings } from "llamaindex";
+import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -46,7 +46,7 @@ export const UIEventSchema = z.object({
 export type UIEvent = z.infer<typeof UIEventSchema>;
 
 const planEvent = workflowEvent<{
-  userInput: string;
+  userInput: MessageContent;
   context?: string | undefined;
 }>();
 
