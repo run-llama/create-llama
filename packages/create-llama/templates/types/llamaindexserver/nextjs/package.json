@@ -9,13 +9,13 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@llamaindex/openai": "0.2.0",
-    "@llamaindex/server": "0.2.0",
-    "@llamaindex/workflow": "1.1.1",
-    "@llamaindex/tools": "0.0.9",
+    "@llamaindex/openai": "^0.2.0",
+    "@llamaindex/server": "^0.2.0",
+    "@llamaindex/workflow": "^1.1.1",
+    "@llamaindex/tools": "^0.0.9",
+    "llamaindex": "^0.10.5",
     "dotenv": "^16.4.7",
-    "zod": "^3.23.8",
-    "llamaindex": "0.10.5"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
