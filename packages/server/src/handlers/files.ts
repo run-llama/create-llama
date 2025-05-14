@@ -33,7 +33,7 @@ export const getWorkflowFile = async (
   const fileExists = await promisify(fs.exists)(filePath);
   if (!fileExists) {
     return sendJSONResponse(res, 404, {
-      detail: `Cannot find workflow file! Path: ${DEFAULT_WORKFLOW_FILE_PATH}`,
+      detail: `Dev mode is currently in beta. It only supports updating workflow file at ${DEFAULT_WORKFLOW_FILE_PATH}`,
     });
   }
 
