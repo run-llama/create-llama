@@ -121,6 +121,21 @@ In development mode (`env="dev"`), the server:
 - Automatically includes the chat UI
 - Provides more verbose logging
 
+### Workflow Editor (Beta)
+
+In development mode, you can set `dev_mode` to `True` in the UI configuration to enable the workflow editor, which allows you to edit the workflow code directly in the browser.
+
+```python
+app = LlamaIndexServer(
+    workflow_factory=create_workflow,
+    env="dev",
+    ui_config={"dev_mode": True},
+)
+```
+
+**Note**: The workflow editor is currently in beta and only supports updating LlamaIndexServer projects created with [create-llama](https://github.com/run-llama/create-llama/).
+
+
 ## API Endpoints
 
 The server provides the following default endpoints:

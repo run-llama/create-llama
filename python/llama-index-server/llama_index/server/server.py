@@ -114,6 +114,11 @@ class LlamaIndexServer(FastAPI):
             self.allow_cors("*")
             if self.ui_config.enabled is None:
                 self.ui_config.enabled = True
+        else:
+            if self.ui_config.dev_mode:
+                self.logger.warning(
+                    "UI Dev mode is enabled but your environment is not 'dev'"
+                )
 
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False
