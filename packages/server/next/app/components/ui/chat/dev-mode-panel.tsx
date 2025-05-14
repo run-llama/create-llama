@@ -190,12 +190,14 @@ function DevModePanelComp() {
       )}
 
       <div
-        className={`border-border fixed right-0 top-0 h-full w-full border-l shadow-xl transition-all duration-300 ease-in-out ${
+        className={`border-border fixed right-0 top-0 z-10 h-full w-full border-l shadow-xl transition-all duration-300 ease-in-out ${
           devModeOpen ? "translate-x-0 bg-black/50" : "translate-x-full"
         }`}
+        onClick={() => setDevModeOpen(false)}
       >
         <div
           className={`bg-background ml-auto flex h-full w-[800px] flex-col p-4`}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -242,7 +244,7 @@ function DevModePanelComp() {
                   <AlertCircle className="shrink-0" size={16} />
                   <h6 className="text-sm font-medium">Error Saving Code</h6>
                 </div>
-                <p className="text-sm">{saveError}</p>
+                <p className="whitespace-pre-wrap text-sm">{saveError}</p>
               </div>
             )}
 
