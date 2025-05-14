@@ -1,6 +1,6 @@
 import fs from "fs";
 import type { IncomingMessage, ServerResponse } from "http";
-import path from "path";
+import ts from "typescript";
 import { promisify } from "util";
 import { parseRequestBody, sendJSONResponse } from "../utils/request";
 
@@ -38,9 +38,8 @@ export const getWorkflowFile = async (
   }
 
   const content = await promisify(fs.readFile)(filePath, "utf-8");
-  const file_name = path.basename(filePath);
   const last_modified = fs.statSync(filePath).mtime.getTime();
-  sendJSONResponse(res, 200, { content, file_name, last_modified });
+  sendJSONResponse(res, 200, { content, file_path: filePath, last_modified });
 };
 
 export const updateWorkflowFile = async (
@@ -59,7 +58,12 @@ export const updateWorkflowFile = async (
   }
 
   try {
-    // TODO: validate syntax and imports
+    const result = validateTypeScriptFile(filePath);
+    if (!result.isValid) {
+      return sendJSONResponse(res, 400, {
+        detail: result.errors.join("\n"),
+      });
+    }
 
     await promisify(fs.writeFile)(filePath, content);
     sendJSONResponse(res, 200, { content });
@@ -68,3 +72,36 @@ export const updateWorkflowFile = async (
     sendJSONResponse(res, 500, { error: "Failed to update workflow file" });
   }
 };
+
+// use typescript package to validate the file syntax and imports
+function validateTypeScriptFile(filePath: string) {
+  // Create a TypeScript program
+  const program = ts.createProgram([filePath], {
+    noEmit: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ES2022,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    strict: true,
+    allowJs: false,
+  });
+
+  // Get diagnostics (errors and warnings)
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+
+  // Format and return errors
+  const errors = diagnostics.map((diagnostic) => {
+    const message = ts.flattenDiagnosticMessageText(
+      diagnostic.messageText,
+      "\n",
+    );
+    const { line, character } = diagnostic.file
+      ? diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start ?? 0)
+      : { line: 0, character: 0 };
+    return `Error at line ${line + 1}, character ${character + 1}: ${message}`;
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors,
+  };
+}
