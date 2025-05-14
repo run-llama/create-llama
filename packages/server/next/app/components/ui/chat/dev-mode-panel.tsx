@@ -1,6 +1,9 @@
 "use client";
 
-import { CodeEditor } from "@llamaindex/chat-ui/widgets";
+import {
+  CodeEditor,
+  fileExtensionToEditorLang,
+} from "@llamaindex/chat-ui/widgets";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../button";
@@ -143,6 +146,10 @@ function DevModePanelComp() {
     }
   }, [devModeOpen]);
 
+  const codeEditorLanguage = fileExtensionToEditorLang(
+    workflowFile?.file_path.split(".").pop() ?? "",
+  );
+
   return (
     <>
       <Button
@@ -222,6 +229,7 @@ function DevModePanelComp() {
               <CodeEditor
                 code={updatedCode ?? workflowFile?.content ?? ""}
                 onChange={setUpdatedCode}
+                language={codeEditorLanguage}
               />
             )}
           </div>
