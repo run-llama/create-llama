@@ -7,13 +7,7 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import { getLlamaCloudConfig } from "./handlers/cloud";
 import { getComponents } from "./handlers/components";
-import {
-  getWorkflowFile,
-  handleServeFiles,
-  updateWorkflowFile,
-} from "./handlers/files";
 import type { LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
@@ -80,11 +74,8 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
 
       if (pathname === "/api/chat" && req.method === "POST") {
+        // TODO: serialize workflowFactory to req object, then using it in Route Handler
         return handleChat(req, res, this.workflowFactory);
-      }
-
-      if (pathname?.startsWith("/api/files") && req.method === "GET") {
-        return handleServeFiles(req, res, pathname);
       }
 
       if (
@@ -92,23 +83,8 @@ export class LlamaIndexServer {
         pathname === "/api/components" &&
         req.method === "GET"
       ) {
+        // TODO: find the way to pass componentsDir (serialized string) to req object, then using it in Route Handler
         return getComponents(req, res, this.componentsDir);
-      }
-
-      if (
-        getEnv("LLAMA_CLOUD_API_KEY") &&
-        pathname === "/api/chat/config/llamacloud" &&
-        req.method === "GET"
-      ) {
-        return getLlamaCloudConfig(req, res);
-      }
-
-      if (pathname === "/api/dev/files/workflow" && req.method === "GET") {
-        return getWorkflowFile(req, res);
-      }
-
-      if (pathname === "/api/dev/files/workflow" && req.method === "PUT") {
-        return updateWorkflowFile(req, res);
       }
 
       const handle = this.app.getRequestHandler();
