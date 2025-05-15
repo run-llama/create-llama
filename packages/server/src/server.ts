@@ -9,8 +9,13 @@ import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
 import { getLlamaCloudConfig } from "./handlers/cloud";
 import { getComponents } from "./handlers/components";
-import { handleServeFiles } from "./handlers/files";
+import {
+  getWorkflowFile,
+  handleServeFiles,
+  updateWorkflowFile,
+} from "./handlers/files";
 import type { LlamaIndexServerOptions } from "./types";
+
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
@@ -44,6 +49,7 @@ export class LlamaIndexServer {
         ? "/api/chat/config/llamacloud"
         : undefined;
     const componentsApi = this.componentsDir ? "/api/components" : undefined;
+    const devMode = uiConfig?.devMode ?? false;
 
     // content in javascript format
     const content = `
@@ -52,7 +58,8 @@ export class LlamaIndexServer {
         APP_TITLE: ${JSON.stringify(appTitle)},
         LLAMA_CLOUD_API: ${JSON.stringify(llamaCloudApi)},
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
-        COMPONENTS_API: ${JSON.stringify(componentsApi)}
+        COMPONENTS_API: ${JSON.stringify(componentsApi)},
+        DEV_MODE: ${JSON.stringify(devMode)}
       }
     `;
     fs.writeFileSync(configFile, content);
@@ -94,6 +101,14 @@ export class LlamaIndexServer {
         req.method === "GET"
       ) {
         return getLlamaCloudConfig(req, res);
+      }
+
+      if (pathname === "/api/dev/files/workflow" && req.method === "GET") {
+        return getWorkflowFile(req, res);
+      }
+
+      if (pathname === "/api/dev/files/workflow" && req.method === "PUT") {
+        return updateWorkflowFile(req, res);
       }
 
       const handle = this.app.getRequestHandler();

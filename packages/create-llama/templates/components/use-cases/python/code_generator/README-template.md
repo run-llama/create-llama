@@ -32,13 +32,9 @@ uv run fastapi run
 You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](app/settings.py).
 
 ## Use Case
+AI-powered code generator that can help you generate app with a chat interface, code editor and app preview.
 
-We have prepared two artifact workflows:
-
-- [Code Workflow](app/code_workflow.py): To generate code and display it in the UI like Vercel's v0.
-- [Document Workflow](app/document_workflow.py): Generate and update a document like OpenAI's canvas.
-
-Modify the factory method in [`workflow.py`](app/workflow.py) to decide which artifact workflow to use. Without any changes the Code Workflow is used.
+To update the workflow, you can modify the code in [`workflow.py`](app/workflow.py).
 
 You can start by sending an request on the [chat UI](http://localhost:8000) or you can test the `/api/chat` endpoint with the following curl request:
 

@@ -58,7 +58,8 @@ export type TemplateUseCase =
   | "extractor"
   | "contract_review"
   | "agentic_rag"
-  | "artifacts";
+  | "code_generator"
+  | "document_generator";
 // Config for both file and folder
 export type FileSourceConfig =
   | {

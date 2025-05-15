@@ -10,12 +10,14 @@ import {
 import {
   ChatMemoryBuffer,
   LlamaCloudIndex,
+  MessageContent,
   Metadata,
   MetadataMode,
   NodeWithScore,
   PromptTemplate,
   Settings,
   VectorStoreIndex,
+  extractText,
 } from "llamaindex";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -153,7 +155,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         chatHistory: [],
       }),
       contextNodes: [] as NodeWithScore<Metadata>[],
-      userRequest: "",
+      userRequest: "" as MessageContent,
       totalQuestions: 0,
       researchResults: [] as ResearchResult[],
     };
@@ -178,7 +180,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
       }),
     );
 
-    const retrievedNodes = await retriever.retrieve(userInput);
+    const retrievedNodes = await retriever.retrieve({ query: userInput });
 
     sendEvent(toSourceEvent(retrievedNodes));
     sendEvent(
@@ -349,7 +351,7 @@ const createResearchPlan = async (
   memory: ChatMemoryBuffer,
   contextStr: string,
   enhancedPrompt: string,
-  userRequest: string,
+  userRequest: MessageContent,
 ) => {
   const chatHistory = await memory.getMessages();
 
@@ -361,7 +363,7 @@ const createResearchPlan = async (
     context_str: contextStr,
     conversation_context: conversationContext,
     enhanced_prompt: enhancedPrompt,
-    user_request: userRequest,
+    user_request: extractText(userRequest),
   });
 
   const responseFormat = z.object({

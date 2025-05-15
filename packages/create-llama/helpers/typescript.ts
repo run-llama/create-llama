@@ -77,7 +77,7 @@ const installLlamaIndexServerTemplate = async ({
   }
 
   // Simplify use case code
-  if (useCase === "artifacts") {
+  if (useCase === "code_generator" || useCase === "document_generator") {
     // Artifact use case doesn't use index.
     // We don't need data.ts, generate.ts
     await fs.rm(path.join(root, "src", "app", "data.ts"));
@@ -387,7 +387,7 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "^0.2.0",
+    "@llamaindex/openai": "^0.3.7",
   },
   gemini: {
     "@llamaindex/google": "^0.2.0",
@@ -513,7 +513,7 @@ async function updatePackageJson({
   if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/readers": "^3.0.0",
+      "@llamaindex/readers": "^3.1.3",
     };
 
     if (vectorDb && vectorDb in vectorDbDependencies) {
