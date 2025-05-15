@@ -115,10 +115,9 @@ class LlamaIndexServer(FastAPI):
             if self.ui_config.enabled is None:
                 self.ui_config.enabled = True
         else:
-            if self.ui_config.dev_mode:
-                self.logger.warning(
-                    "UI Dev mode is enabled but your environment is not 'dev'"
-                )
+            raise ValueError(
+                "UI dev mode requires the environment variable for LlamaIndexServer to be set to 'dev' and start the FastAPI app in dev mode."
+            )
 
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False

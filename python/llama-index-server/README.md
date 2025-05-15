@@ -83,7 +83,7 @@ The LlamaIndexServer accepts the following configuration parameters:
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
   - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
-  - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/workflow.py`.
+  - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/workflow.py`. You might also need to set `env="dev"` and start the server with the reload feature enabled.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
@@ -133,7 +133,7 @@ app = LlamaIndexServer(
 )
 ```
 
-**Note**: The workflow editor is currently in beta and only supports updating LlamaIndexServer projects created with [create-llama](https://github.com/run-llama/create-llama/).
+**Note**: The workflow editor is currently in beta and only supports updating LlamaIndexServer projects created with [create-llama](https://github.com/run-llama/create-llama/). You also need to start the server via `fastapi dev` so that the server can hot reload the workflow code.
 
 
 ## API Endpoints
