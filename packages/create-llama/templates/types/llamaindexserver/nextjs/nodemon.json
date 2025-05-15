@@ -1,0 +1,5 @@
+{
+  "watch": ["src/**/*.ts"],
+  "exec": "nodemon --exec tsx src/index.ts",
+  "ext": "js ts"
+}
