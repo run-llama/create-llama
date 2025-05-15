@@ -90,8 +90,6 @@ def dev_router() -> APIRouter:
         try:
             # Validate workflow file using the actual callable name from the workflow_factory
             factory_func_name = server_settings.workflow_factory_signature
-            print(f"Validating workflow file: {tmp_path}")
-            print(f"Factory function name: {factory_func_name}")
             validate_workflow_file(
                 workflow_path=tmp_path, factory_signature=factory_func_name
             )
