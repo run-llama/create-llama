@@ -92,13 +92,8 @@ The LlamaIndexServer accepts the following configuration parameters:
 The `workflow_factory` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the [ChatRequest](https://github.com/run-llama/create-llama/blob/afe9e9fc16427d20e1dfb635a45e7ed4b46285cb/python/llama-index-server/llama_index/server/api/models.py#L32) object, which includes the request information that is helpful for initializing the workflow. For example:
 ```python
 def create_workflow(chat_request: ChatRequest) -> Workflow:
-    # Raise an error if the user has reached the maximum number of messages
-    if chat_request and len(chat_request.messages) == 3:
-        raise HTTPException(
-            status_code=402, 
-            detail="You reached the maximum number of messages. Subscribe to unlock the full version."
-        )
-    return MyCustomWorkflow()
+    # using messages from the chat request to initialize the workflow
+    return MyCustomWorkflow(chat_request.messages)
 ```
 
 Your workflow will be executed once for each chat request with the following input parameters are included in workflow's `StartEvent`:
