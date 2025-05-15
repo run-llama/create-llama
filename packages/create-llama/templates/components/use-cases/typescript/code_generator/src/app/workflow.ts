@@ -98,7 +98,7 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
       content: userInput,
     });
     return planEvent.with({
-      userInput: userInput.toString(),
+      userInput: userInput,
     });
   });
 

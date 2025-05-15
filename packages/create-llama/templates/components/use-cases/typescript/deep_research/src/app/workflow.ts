@@ -10,10 +10,12 @@ import {
 import {
   ChatMemoryBuffer,
   LlamaCloudIndex,
+  MessageContent,
   Metadata,
   MetadataMode,
   NodeWithScore,
   PromptTemplate,
+  QueryType,
   Settings,
   VectorStoreIndex,
 } from "llamaindex";
@@ -153,7 +155,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         chatHistory: [],
       }),
       contextNodes: [] as NodeWithScore<Metadata>[],
-      userRequest: "",
+      userRequest: "" as MessageContent,
       totalQuestions: 0,
       researchResults: [] as ResearchResult[],
     };
@@ -167,7 +169,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
 
     state.memory.set(chatHistory);
     state.memory.put({ role: "user", content: userInput });
-    state.userRequest = userInput.toString();
+    state.userRequest = userInput as MessageContent;
     sendEvent(
       uiEvent.with({
         type: "ui_event",
@@ -178,7 +180,7 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
       }),
     );
 
-    const retrievedNodes = await retriever.retrieve(userInput.toString());
+    const retrievedNodes = await retriever.retrieve(userInput as QueryType);
 
     sendEvent(toSourceEvent(retrievedNodes));
     sendEvent(
@@ -349,7 +351,7 @@ const createResearchPlan = async (
   memory: ChatMemoryBuffer,
   contextStr: string,
   enhancedPrompt: string,
-  userRequest: string,
+  userRequest: MessageContent,
 ) => {
   const chatHistory = await memory.getMessages();
 
@@ -361,7 +363,7 @@ const createResearchPlan = async (
     context_str: contextStr,
     conversation_context: conversationContext,
     enhanced_prompt: enhancedPrompt,
-    user_request: userRequest,
+    user_request: userRequest as string,
   });
 
   const responseFormat = z.object({
