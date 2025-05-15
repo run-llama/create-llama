@@ -143,15 +143,17 @@ new LlamaIndexServer({
 The `workflow` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the fully request body object (req.body), which includes the request information that is helpful for initializing the workflow. For example:
 
 ```ts
+import { chatWithTools } from "@llamaindex/tools";
 import {
-  agentStreamEvent,
+  createStatefulMiddleware,
   createWorkflow,
   workflowEvent,
 } from "@llamaindex/workflow";
+import { ChatMemoryBuffer, type ChatMessage, Settings } from "llamaindex";
 
 export const workflowFactory = async (reqBody: any) => {
   // get messages from request body
-  const { messages } = reqBody as { messages: Message[] };
+  const { messages } = reqBody as { messages: ChatMessage[] };
 
   // use request body data to initialize the index
   const index = await getIndex(reqBody?.data);
