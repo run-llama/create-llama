@@ -6,7 +6,7 @@ This directory contains examples of how to use the LlamaIndex Server.
 
 ```bash
 export OPENAI_API_KEY=your_openai_api_key
-npx tsx simple-workflow/calculator.ts
+pnpm run dev
 ```
 
-## Open browser at http://localhost:3000
+## Open browser at http://localhost:4000

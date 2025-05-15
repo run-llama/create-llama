@@ -54,12 +54,13 @@ curl -X POST "http://localhost:3000/api/chat" -H "Content-Type: application/json
 
 The `LlamaIndexServer` accepts the following configuration options:
 
-- `workflow`: A callable function that creates a workflow instance for each request
+- `workflow`: A callable function that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `appTitle`: The title of the application (default: `"LlamaIndex App"`)
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
+  - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/src/workflow.ts`. Please start server in dev mode (`npm run dev`) to use see this reload feature enabled.
 
 LlamaIndexServer accepts all the configuration options from Nextjs Custom Server such as `port`, `hostname`, `dev`, etc.
 See all Nextjs Custom Server options [here](https://nextjs.org/docs/app/building-your-application/configuring/custom-server).
@@ -135,6 +136,34 @@ new LlamaIndexServer({
     componentsDir: "components",
   },
 }).start();
+```
+
+### Workflow factory contract
+
+The `workflow` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the fully request body object (req.body), which includes the request information that is helpful for initializing the workflow. For example:
+
+```ts
+export const workflowFactory = async (reqBody: any) => {
+  // use messages from request body
+  const { messages } = body as { messages: Message[] };
+  if (messages.length === 3) {
+    throw new Error(
+      "You reached the maximum number of messages. Subscribe to unlock the full version.",
+    );
+  }
+
+  // use request body data to initialize the index
+  const index = await getIndex(reqBody?.data);
+  const queryEngineTool = index.queryTool({
+    metadata: {
+      name: "query_document",
+      description: `This tool can r2etrieve information about Apple and Tesla financial data`,
+    },
+    includeSourceNodes: true,
+  });
+
+  return agent({ tools: [queryEngineTool] });
+};
 ```
 
 ## Default Endpoints and Features
