@@ -183,15 +183,6 @@ ${user_msg}
       throw new Error("No JSON block found in the response.");
     }
     const requirement = RequirementSchema.parse(JSON.parse(jsonBlock[1]));
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          state: "generate",
-          requirement: requirement.requirement,
-        },
-      }),
-    );
     state.memory.put({
       role: "assistant",
       content: `The plan for next step: \n${response.text}`,

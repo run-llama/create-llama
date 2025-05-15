@@ -181,15 +181,6 @@ export function createDocumentArtifactWorkflow(reqBody: any, llm?: LLM) {
       role: "assistant",
       content: `Planning for the document generation: \n${response.text}`,
     });
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          state: "generate",
-          requirement: requirement.requirement,
-        },
-      }),
-    );
     return generateArtifactEvent.with({
       requirement,
     });
