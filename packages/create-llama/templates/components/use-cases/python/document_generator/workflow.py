@@ -4,6 +4,7 @@ from typing import Any, Literal, Optional
 
 from llama_index.core.chat_engine.types import ChatMessage
 from llama_index.core.llms import LLM
+from llama_index.llms.openai import OpenAI
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.workflow import (
@@ -24,6 +25,15 @@ from llama_index.server.api.models import (
 )
 from llama_index.server.api.utils import get_last_artifact
 from pydantic import BaseModel, Field
+
+
+def create_workflow(chat_request: ChatRequest) -> Workflow:
+    workflow = DocumentArtifactWorkflow(
+        llm=OpenAI(model="gpt-4.1"),
+        chat_request=chat_request,
+        timeout=120.0,
+    )
+    return workflow
 
 
 class DocumentRequirement(BaseModel):

@@ -30,12 +30,9 @@ npm run generate:ui
 
 ## Use Case
 
-We have prepared two artifact workflows:
+AI-powered code generator that can help you generate app with a chat interface, code editor and app preview.
 
-- [Code Workflow](app/code_workflow.ts): To generate code and display it in the UI like Vercel's v0.
-- [Document Workflow](app/document_workflow.ts): Generate and update a document like OpenAI's canvas.
-
-Modify the factory method in [`workflow.ts`](app/workflow.ts) to decide which artifact workflow to use. Without any changes the Code Workflow is used.
+To update the workflow, you can modify the code in [`workflow.ts`](app/workflow.ts).
 
 You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 

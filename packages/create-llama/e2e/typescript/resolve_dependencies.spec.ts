@@ -23,7 +23,8 @@ const useCases: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
   "financial_report",
-  "artifacts",
+  "code_generator",
+  "document_generator",
 ];
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
@@ -82,7 +83,7 @@ test.describe("Test resolve TS dependencies", () => {
           });
         });
         // Skipping llamacloud for the use case doesn't use index.
-        if (useCase !== "artifacts") {
+        if (useCase !== "code_generator" && useCase !== "document_generator") {
           test(`llamaParse - ${optionDescription}`, async () => {
             await runTest({
               templateType: templateType,

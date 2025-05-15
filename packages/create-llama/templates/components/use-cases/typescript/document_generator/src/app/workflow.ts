@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, Settings } from "llamaindex";
+import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -11,6 +11,12 @@ import {
 } from "@llamaindex/workflow";
 
 import { z } from "zod";
+
+export const workflowFactory = async (reqBody: any) => {
+  const workflow = createDocumentArtifactWorkflow(reqBody);
+
+  return workflow;
+};
 
 export const DocumentRequirementSchema = z.object({
   type: z.enum(["markdown", "html"]),
@@ -40,7 +46,7 @@ export const UIEventSchema = z.object({
 export type UIEvent = z.infer<typeof UIEventSchema>;
 
 const planEvent = workflowEvent<{
-  userInput: string;
+  userInput: MessageContent;
   context?: string | undefined;
 }>();
 
@@ -175,15 +181,6 @@ export function createDocumentArtifactWorkflow(reqBody: any, llm?: LLM) {
       role: "assistant",
       content: `Planning for the document generation: \n${response.text}`,
     });
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          state: "generate",
-          requirement: requirement.requirement,
-        },
-      }),
-    );
     return generateArtifactEvent.with({
       requirement,
     });

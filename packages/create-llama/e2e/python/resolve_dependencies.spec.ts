@@ -18,7 +18,8 @@ const useCases: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
   "financial_report",
-  "artifacts",
+  "code_generator",
+  "document_generator",
 ];
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE

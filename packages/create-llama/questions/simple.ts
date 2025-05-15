@@ -10,7 +10,8 @@ type AppType =
   | "agentic_rag"
   | "financial_report"
   | "deep_research"
-  | "artifacts";
+  | "code_generator"
+  | "document_generator";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -47,10 +48,14 @@ export const askSimpleQuestions = async (
             "Researches and analyzes provided documents from multiple perspectives, generating a comprehensive report with citations to support key findings and insights.",
         },
         {
-          title: "Artifacts",
-          value: "artifacts",
-          description:
-            "Build your own Vercel's v0 or OpenAI's canvas-styled UI.",
+          title: "Code Generator",
+          value: "code_generator",
+          description: "Build a Vercel v0 styled code generator.",
+        },
+        {
+          title: "Document Generator",
+          value: "document_generator",
+          description: "Build a OpenAI canvas-styled document generator.",
         },
       ],
     },
@@ -76,7 +81,7 @@ export const askSimpleQuestions = async (
   );
   language = newLanguage;
 
-  if (appType !== "artifacts") {
+  if (appType !== "code_generator" && appType !== "document_generator") {
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
         type: "toggle",
@@ -153,7 +158,13 @@ const convertAnswers = async (
       tools: [],
       modelConfig: MODEL_GPT41,
     },
-    artifacts: {
+    code_generator: {
+      template: "llamaindexserver",
+      dataSources: [],
+      tools: [],
+      modelConfig: MODEL_GPT41,
+    },
+    document_generator: {
       template: "llamaindexserver",
       dataSources: [],
       tools: [],
