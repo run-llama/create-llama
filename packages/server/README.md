@@ -160,7 +160,7 @@ export const workflowFactory = async (reqBody: any) => {
   const queryEngineTool = index.queryTool({
     metadata: {
       name: "query_document",
-      description: `This tool can r2etrieve information about Apple and Tesla financial data`,
+      description: `This tool can retrieve information about Apple and Tesla financial data`,
     },
     includeSourceNodes: true,
   });
