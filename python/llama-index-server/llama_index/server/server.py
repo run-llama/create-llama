@@ -115,10 +115,10 @@ class LlamaIndexServer(FastAPI):
             if self.ui_config.enabled is None:
                 self.ui_config.enabled = True
         else:
-            raise ValueError(
-                "UI dev mode requires the environment variable for LlamaIndexServer to be set to 'dev' and start the FastAPI app in dev mode."
-            )
-
+            if self.ui_config.enabled and self.ui_config.dev_mode:
+                raise ValueError(
+                    "UI dev mode requires the environment variable for LlamaIndexServer to be set to 'dev' and start the FastAPI app in dev mode."
+                )
         if self.ui_config.enabled is None:
             self.ui_config.enabled = False
 
@@ -133,7 +133,7 @@ class LlamaIndexServer(FastAPI):
     # Default routers
     def add_default_routers(self) -> None:
         self.add_chat_router()
-        if self.ui_config.dev_mode:
+        if self.ui_config.enabled and self.ui_config.dev_mode:
             self.include_router(dev_router(), prefix=server_settings.api_prefix)
         self.mount_data_dir()
         self.mount_output_dir()
