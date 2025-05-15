@@ -106,25 +106,6 @@ Ok to proceed? (y) y
 You can also pass command line arguments to set up a new project
 non-interactively. For a list of the latest options, call `create-llama --help`.
 
-### Running in pro mode
-
-If you prefer more advanced customization options, you can run `create-llama` in pro mode using the `--pro` flag.
-
-In pro mode, instead of selecting a predefined use case, you'll be prompted to select each technical component of your project. This allows for greater flexibility in customizing your project, including:
-
-- **Vector Store**: Choose from a variety of vector stores for keeping your documents, including MongoDB, Pinecone, Weaviate, Qdrant and Chroma.
-- **Tools**: Choose from a variety of agent tools (functions called by the LLM), such as:
-  - Code Interpreter: Executes Python code in a secure Jupyter notebook environment
-  - Artifact Code Generator: Generates code artifacts that can be run in a sandbox
-  - OpenAPI Action: Facilitates requests to a provided OpenAPI schema
-  - Image Generator: Creates images based on text descriptions
-  - Web Search: Performs web searches to retrieve up-to-date information
-- **Data Sources**: Integrate various data sources into your chat application, including local files, websites, or database-retrieved data.
-- **Backend Options**: Besides using Next.js or FastAPI, you can also select to use Express for a more traditional Node.js application.
-- **Observability**: Choose from a variety of LLM observability tools, including LlamaTrace and Traceloop.
-
-Pro mode is ideal for developers who want fine-grained control over their project's configuration and are comfortable with more technical setup options.
-
 ## LlamaIndex Documentation
 
 - [TS/JS docs](https://ts.llamaindex.ai/)

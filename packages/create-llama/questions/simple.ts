@@ -62,35 +62,35 @@ export const askSimpleQuestions = async (
 
   let useLlamaCloud = false;
 
-  if (appType !== "artifacts") {
-    const { language: newLanguage } = await prompts(
-      {
-        type: "select",
-        name: "language",
-        message: "What language do you want to use?",
-        choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
-        ],
-      },
-      questionHandlers,
-    );
-    language = newLanguage;
-  }
-
-  const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+  const { language: newLanguage } = await prompts(
     {
-      type: "toggle",
-      name: "useLlamaCloud",
-      message: "Do you want to use LlamaCloud services?",
-      initial: false,
-      active: "Yes",
-      inactive: "No",
-      hint: "see https://www.llamaindex.ai/enterprise for more info",
+      type: "select",
+      name: "language",
+      message: "What language do you want to use?",
+      choices: [
+        { title: "Python (FastAPI)", value: "fastapi" },
+        { title: "Typescript (NextJS)", value: "nextjs" },
+      ],
     },
     questionHandlers,
   );
-  useLlamaCloud = newUseLlamaCloud;
+  language = newLanguage;
+
+  if (appType !== "artifacts") {
+    const { useLlamaCloud: newUseLlamaCloud } = await prompts(
+      {
+        type: "toggle",
+        name: "useLlamaCloud",
+        message: "Do you want to use LlamaCloud services?",
+        initial: false,
+        active: "Yes",
+        inactive: "No",
+        hint: "see https://www.llamaindex.ai/enterprise for more info",
+      },
+      questionHandlers,
+    );
+    useLlamaCloud = newUseLlamaCloud;
+  }
 
   if (useLlamaCloud && !llamaCloudKey) {
     // Ask for LlamaCloud API key, if not set

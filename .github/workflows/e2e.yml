@@ -23,6 +23,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
+        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -70,6 +71,7 @@ jobs:
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
+          TEMPLATE_TYPE: ${{ matrix.template-types }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
         working-directory: packages/create-llama
@@ -93,6 +95,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
+        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -140,6 +143,7 @@ jobs:
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
+          TEMPLATE_TYPE: ${{ matrix.template-types }}
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4

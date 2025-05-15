@@ -1,5 +1,9 @@
-import { Document, LLamaCloudFileService, VectorStoreIndex } from "llamaindex";
-import { LlamaCloudIndex } from "llamaindex/cloud/LlamaCloudIndex";
+import {
+  Document,
+  LLamaCloudFileService,
+  LlamaCloudIndex,
+  VectorStoreIndex,
+} from "llamaindex";
 import { DocumentFile } from "../streaming/annotations";
 import { parseFile, storeFile } from "./helper";
 import { runPipeline } from "./pipeline";

@@ -196,7 +196,7 @@ const program = new Command(packageJson.name)
     "--pro",
     `
 
-  Allow interactive selection of all features.
+  Deprecated: Allow interactive selection of all features.
 `,
     false,
   )
