@@ -50,12 +50,12 @@ export const askSimpleQuestions = async (
         {
           title: "Code Generator",
           value: "code_generator",
-          description: "Cloned Vercel's v0 code generator.",
+          description: "Build a Vercel v0 styled code generator.",
         },
         {
           title: "Document Generator",
           value: "document_generator",
-          description: "Cloned OpenAI's canvas-styled document generator.",
+          description: "Build a OpenAI canvas-styled document generator.",
         },
       ],
     },
