@@ -72,7 +72,7 @@ app = LlamaIndexServer(
 
 The LlamaIndexServer accepts the following configuration parameters:
 
-- `workflow_factory`: A callable that creates a workflow instance for each request
+- `workflow_factory`: A callable that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `logger`: Optional logger instance (defaults to uvicorn logger)
 - `use_default_routers`: Whether to include default routers (chat, static file serving)
 - `env`: Environment setting ('dev' enables CORS and UI by default)
@@ -87,6 +87,32 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
+
+### Workflow factory contract
+The `workflow_factory` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the [ChatRequest](https://github.com/run-llama/create-llama/blob/afe9e9fc16427d20e1dfb635a45e7ed4b46285cb/python/llama-index-server/llama_index/server/api/models.py#L32) object, which includes the request information that is helpful for initializing the workflow. For example:
+```python
+def create_workflow(chat_request: ChatRequest) -> Workflow:
+    # Raise an error if the user has reached the maximum number of messages
+    if chat_request and len(chat_request.messages) == 3:
+        raise HTTPException(
+            status_code=402, 
+            detail="You reached the maximum number of messages. Subscribe to unlock the full version."
+        )
+    return MyCustomWorkflow()
+```
+
+Your workflow will be executed once for each chat request with the following input parameters are included in workflow's `StartEvent`:
+- `user_msg` [str]: The current user message
+- `chat_history` [list[[ChatMessage](https://docs.llamaindex.ai/en/stable/api_reference/prompts/#llama_index.core.prompts.ChatMessage)]]: All the previous messages of the conversation
+
+Example:
+```python
+@step
+def handle_start_event(ev: StartEvent) -> MyNextEvent:
+    user_msg = ev.user_msg
+    chat_history = ev.chat_history
+    ...
+```
 
 ## Default Routers and Features
 
