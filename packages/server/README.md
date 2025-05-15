@@ -143,14 +143,15 @@ new LlamaIndexServer({
 The `workflow` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the fully request body object (req.body), which includes the request information that is helpful for initializing the workflow. For example:
 
 ```ts
+import {
+  agentStreamEvent,
+  createWorkflow,
+  workflowEvent,
+} from "@llamaindex/workflow";
+
 export const workflowFactory = async (reqBody: any) => {
-  // use messages from request body
-  const { messages } = body as { messages: Message[] };
-  if (messages.length === 3) {
-    throw new Error(
-      "You reached the maximum number of messages. Subscribe to unlock the full version.",
-    );
-  }
+  // get messages from request body
+  const { messages } = reqBody as { messages: Message[] };
 
   // use request body data to initialize the index
   const index = await getIndex(reqBody?.data);
@@ -162,7 +163,29 @@ export const workflowFactory = async (reqBody: any) => {
     includeSourceNodes: true,
   });
 
-  return agent({ tools: [queryEngineTool] });
+  const { withState, getContext } = createStatefulMiddleware(() => ({
+    // use messages from request body to initialize the memory
+    memory: new ChatMemoryBuffer({ llm, chatHistory: messages }),
+  }));
+
+  const workflow = withState(createWorkflow());
+  const inputEvent = workflowEvent<{ input: ChatMessage[] }>();
+
+  workflow.handle([inputEvent], async ({ data }) => {
+    const { sendEvent, state } = getContext();
+    const chatHistory = data.input;
+    const toolCallResponse = await chatWithTools(
+      Settings.llm,
+      [queryEngineTool],
+      chatHistory,
+    );
+
+    // using result from tool call such as emit an UI event...
+  });
+
+  // define more workflow handling logic here...
+
+  return workflow;
 };
 ```
 
