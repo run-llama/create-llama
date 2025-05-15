@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, Settings } from "llamaindex";
+import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -11,6 +11,12 @@ import {
 } from "@llamaindex/workflow";
 
 import { z } from "zod";
+
+export const workflowFactory = async (reqBody: any) => {
+  const workflow = createCodeArtifactWorkflow(reqBody);
+
+  return workflow;
+};
 
 export const RequirementSchema = z.object({
   next_step: z.enum(["answering", "coding"]),
@@ -40,7 +46,7 @@ export const UIEventSchema = z.object({
 
 export type UIEvent = z.infer<typeof UIEventSchema>;
 const planEvent = workflowEvent<{
-  userInput: string;
+  userInput: MessageContent;
   context?: string | undefined;
 }>();
 
@@ -92,7 +98,7 @@ export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
       content: userInput,
     });
     return planEvent.with({
-      userInput,
+      userInput: userInput,
     });
   });
 
@@ -177,15 +183,6 @@ ${user_msg}
       throw new Error("No JSON block found in the response.");
     }
     const requirement = RequirementSchema.parse(JSON.parse(jsonBlock[1]));
-    sendEvent(
-      uiEvent.with({
-        type: "ui_event",
-        data: {
-          state: "generate",
-          requirement: requirement.requirement,
-        },
-      }),
-    );
     state.memory.put({
       role: "assistant",
       content: `The plan for next step: \n${response.text}`,
