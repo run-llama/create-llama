@@ -67,8 +67,6 @@ function DevModePanelComp() {
     setIsPolling(true);
     setPollingError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 100)); // tsx watch need a delay to detect the changes
-
     const pollStartTime = Date.now();
 
     // interval refetching the updated workflow code
@@ -98,7 +96,7 @@ function DevModePanelComp() {
       }
     };
 
-    setTimeout(poll, 0);
+    setTimeout(poll, 2000);
   }
 
   const handleResetCode = () => {
