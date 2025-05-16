@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@llamaindex/openai": "^0.3.7",
-    "@llamaindex/server": "^0.2.0",
+    "@llamaindex/server": "^0.2.1",
     "@llamaindex/workflow": "^1.1.2",
     "@llamaindex/tools": "^0.0.10",
     "llamaindex": "^0.10.6",

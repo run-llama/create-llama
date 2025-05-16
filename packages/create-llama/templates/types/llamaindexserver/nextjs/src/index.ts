@@ -10,5 +10,6 @@ new LlamaIndexServer({
   uiConfig: {
     appTitle: "LlamaIndex App",
     componentsDir: "components",
+    devMode: true,
   },
 }).start();
