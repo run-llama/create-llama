@@ -33,8 +33,9 @@
     "postbuild": "pnpm copy:next-src && pnpm build:static && pnpm copy:static",
     "copy:next-src": "cp -r ./next ./server && pnpm build:css && rm -rf ./server/postcss.config.js",
     "build:css": "postcss server/app/globals.css -o server/app/globals.css",
-    "build:static": "cd ./next && next build",
-    "copy:static": "cp -r ./next/out ./dist/static",
+    "prepare:temp": "rm -rf ./temp && cp -r ./next ./temp && rm -rf ./temp/app/api && mv ./temp/next-build.config.ts ./temp/next.config.ts",
+    "build:static": "pnpm prepare:temp && cd ./temp && next build",
+    "copy:static": "cp -r ./temp/out ./dist/static && rm -rf ./temp",
     "dev": "bunchee --watch"
   },
   "devDependencies": {
