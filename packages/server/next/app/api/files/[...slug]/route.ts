@@ -2,8 +2,6 @@ import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import { promisify } from "util";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
