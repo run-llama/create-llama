@@ -39,5 +39,5 @@ new LlamaIndexServer({
     appTitle: "LlamaIndex App",
     starterQuestions: ["What is the color of the dog?"],
   },
-  port: 4100,
+  port: 3000,
 }).start();
