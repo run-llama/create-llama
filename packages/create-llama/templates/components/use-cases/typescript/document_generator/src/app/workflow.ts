@@ -12,8 +12,8 @@ import {
 
 import { z } from "zod";
 
-export const workflowFactory = async (reqBody: any) => {
-  const workflow = createDocumentArtifactWorkflow(reqBody);
+export const workflowFactory = async () => {
+  const workflow = createDocumentArtifactWorkflow();
 
   return workflow;
 };
@@ -74,32 +74,27 @@ const artifactEvent = workflowEvent<{
   };
 }>();
 
-export function createDocumentArtifactWorkflow(reqBody: any, llm?: LLM) {
-  if (!llm) {
-    llm = Settings.llm;
-  }
+export function createDocumentArtifactWorkflow(llm: LLM = Settings.llm) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
-      memory: new ChatMemoryBuffer({
-        llm,
-        chatHistory: reqBody.chatHistory,
-      }),
-      lastArtifact: extractLastArtifact(reqBody),
+      memory: new ChatMemoryBuffer({ llm }),
+      lastArtifact: undefined,
     };
   });
   const workflow = withState(createWorkflow());
 
-  workflow.handle([startAgentEvent], async ({ data: { userInput } }) => {
+  workflow.handle([startAgentEvent], async ({ data }) => {
+    const { userInput, chatHistory = [] } = data;
     // Prepare chat history
     const { state } = getContext();
     // Put user input to the memory
     if (!userInput) {
       throw new Error("Missing user input to start the workflow");
     }
-    state.memory.put({
-      role: "user",
-      content: userInput,
-    });
+    state.memory.set(chatHistory);
+    state.memory.put({ role: "user", content: userInput });
+    state.lastArtifact = extractLastArtifact(chatHistory);
+
     return planEvent.with({
       userInput,
       context: state.lastArtifact
