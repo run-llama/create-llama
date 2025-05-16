@@ -147,9 +147,10 @@ import { chatWithTools } from "@llamaindex/tools";
 import {
   createStatefulMiddleware,
   createWorkflow,
-  workflowEvent,
+  startAgentEvent,
 } from "@llamaindex/workflow";
 import { ChatMemoryBuffer, type ChatMessage, Settings } from "llamaindex";
+import { getIndex } from "./data";
 
 export const workflowFactory = async (reqBody: any) => {
   // get messages from request body
@@ -167,22 +168,22 @@ export const workflowFactory = async (reqBody: any) => {
 
   const { withState, getContext } = createStatefulMiddleware(() => ({
     // use messages from request body to initialize the memory
-    memory: new ChatMemoryBuffer({ llm, chatHistory: messages }),
+    memory: new ChatMemoryBuffer({ llm: Settings.llm, chatHistory: messages }),
   }));
 
   const workflow = withState(createWorkflow());
-  const inputEvent = workflowEvent<{ input: ChatMessage[] }>();
 
-  workflow.handle([inputEvent], async ({ data }) => {
-    const { sendEvent, state } = getContext();
-    const chatHistory = data.input;
+  workflow.handle([startAgentEvent], async ({ data }) => {
+    const { state, sendEvent } = getContext();
+    const messages = await state.memory.getMessages();
+
     const toolCallResponse = await chatWithTools(
       Settings.llm,
       [queryEngineTool],
-      chatHistory,
+      messages,
     );
 
-    // using result from tool call such as emit an UI event...
+    // using result from tool call and use `sendEvent` to emit an UI event...
   });
 
   // define more workflow handling logic here...
