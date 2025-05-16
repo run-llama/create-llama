@@ -22,6 +22,7 @@ Create an `index.ts` file and add the following code:
 ```ts
 import { LlamaIndexServer } from "@llamaindex/server";
 import { openai } from "@llamaindex/openai";
+import { agent } from "@llamaindex/workflow";
 import { wiki } from "@llamaindex/tools"; // or any other tool
 
 const createWorkflow = () => agent({ tools: [wiki()], llm: openai("gpt-4o") });
