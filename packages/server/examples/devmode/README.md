@@ -9,7 +9,7 @@ new LlamaIndexServer({
     appTitle: "Calculator",
     devMode: true,
   },
-  port: 6000,
+  port: 3000,
 }).start();
 ```
 

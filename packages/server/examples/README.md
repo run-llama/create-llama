@@ -9,4 +9,4 @@ export OPENAI_API_KEY=your_openai_api_key
 pnpm run dev
 ```
 
-## Open browser at http://localhost:4000
+## Open browser at http://localhost:3000
