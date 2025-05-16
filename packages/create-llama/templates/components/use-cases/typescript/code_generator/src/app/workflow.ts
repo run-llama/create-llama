@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
+import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -11,12 +11,6 @@ import {
 } from "@llamaindex/workflow";
 
 import { z } from "zod";
-
-export const workflowFactory = async (reqBody: any) => {
-  const workflow = createCodeArtifactWorkflow(reqBody);
-
-  return workflow;
-};
 
 export const RequirementSchema = z.object({
   next_step: z.enum(["answering", "coding"]),
@@ -71,32 +65,28 @@ const artifactEvent = workflowEvent<{
   };
 }>();
 
-export function createCodeArtifactWorkflow(reqBody: any, llm?: LLM) {
-  if (!llm) {
-    llm = Settings.llm;
-  }
+export function workflowFactory(reqBody: any) {
+  const llm = Settings.llm;
+
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
-      memory: new ChatMemoryBuffer({
-        llm,
-        chatHistory: reqBody.chatHistory,
-      }),
+      memory: new ChatMemoryBuffer({ llm }),
       lastArtifact: extractLastArtifact(reqBody),
     };
   });
   const workflow = withState(createWorkflow());
 
-  workflow.handle([startAgentEvent], async ({ data: { userInput } }) => {
+  workflow.handle([startAgentEvent], async ({ data }) => {
+    const { userInput, chatHistory = [] } = data;
     // Prepare chat history
     const { state } = getContext();
     // Put user input to the memory
     if (!userInput) {
       throw new Error("Missing user input to start the workflow");
     }
-    state.memory.put({
-      role: "user",
-      content: userInput,
-    });
+    state.memory.set(chatHistory);
+    state.memory.put({ role: "user", content: userInput });
+
     return planEvent.with({
       userInput: userInput,
     });

@@ -11,5 +11,5 @@ new LlamaIndexServer({
       "What is the weather in New York?",
     ],
   },
-  port: 6005,
+  port: 3000,
 }).start();
