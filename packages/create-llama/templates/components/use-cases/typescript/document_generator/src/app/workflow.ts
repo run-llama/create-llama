@@ -12,8 +12,9 @@ import {
 
 import { z } from "zod";
 
-export const workflowFactory = async () => {
-  const workflow = createDocumentArtifactWorkflow();
+export const workflowFactory = async (reqBody: any) => {
+  const llm = Settings.llm;
+  const workflow = createDocumentArtifactWorkflow(reqBody, llm);
 
   return workflow;
 };
@@ -74,11 +75,11 @@ const artifactEvent = workflowEvent<{
   };
 }>();
 
-export function createDocumentArtifactWorkflow(llm: LLM = Settings.llm) {
+export function createDocumentArtifactWorkflow(reqBody: any, llm: LLM) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: undefined,
+      lastArtifact: extractLastArtifact(reqBody),
     };
   });
   const workflow = withState(createWorkflow());
