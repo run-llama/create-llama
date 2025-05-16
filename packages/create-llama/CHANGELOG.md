@@ -1,5 +1,16 @@
 # create-llama
 
+## 0.5.14
+
+### Patch Changes
+
+- 1df8cfb: Split artifacts use case to document generator and code generator
+- 1b5a519: chore: improve dev experience with nodemon
+- b3eb0ba: Fix typing check issue
+- 556f33c: fix chromadb dependency issue
+- 2451539: fix: remove dead generated ai code
+- 7a70390: Deprecate pro mode
+
 ## 0.5.13
 
 ### Patch Changes
