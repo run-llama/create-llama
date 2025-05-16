@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
+import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -11,13 +11,6 @@ import {
 } from "@llamaindex/workflow";
 
 import { z } from "zod";
-
-export const workflowFactory = async (reqBody: any) => {
-  const llm = Settings.llm;
-  const workflow = createCodeArtifactWorkflow(reqBody, llm);
-
-  return workflow;
-};
 
 export const RequirementSchema = z.object({
   next_step: z.enum(["answering", "coding"]),
@@ -72,7 +65,9 @@ const artifactEvent = workflowEvent<{
   };
 }>();
 
-export function createCodeArtifactWorkflow(reqBody: any, llm: LLM) {
+export function workflowFactory(reqBody: any) {
+  const llm = Settings.llm;
+
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),

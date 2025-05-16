@@ -1,5 +1,5 @@
 import { extractLastArtifact } from "@llamaindex/server";
-import { ChatMemoryBuffer, LLM, MessageContent, Settings } from "llamaindex";
+import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
   agentStreamEvent,
@@ -11,13 +11,6 @@ import {
 } from "@llamaindex/workflow";
 
 import { z } from "zod";
-
-export const workflowFactory = async (reqBody: any) => {
-  const llm = Settings.llm;
-  const workflow = createDocumentArtifactWorkflow(reqBody, llm);
-
-  return workflow;
-};
 
 export const DocumentRequirementSchema = z.object({
   type: z.enum(["markdown", "html"]),
@@ -75,7 +68,9 @@ const artifactEvent = workflowEvent<{
   };
 }>();
 
-export function createDocumentArtifactWorkflow(reqBody: any, llm: LLM) {
+export function workflowFactory(reqBody: any) {
+  const llm = Settings.llm;
+
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
