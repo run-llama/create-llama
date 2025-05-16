@@ -7,7 +7,6 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import { getComponents } from "./handlers/components";
 import type { LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
@@ -72,9 +71,10 @@ export class LlamaIndexServer {
     const server = createServer((req, res) => {
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
+      const query = parsedUrl.query;
 
       if (pathname === "/api/chat" && req.method === "POST") {
-        // TODO: serialize workflowFactory to req object, then using it in Route Handler
+        // TODO: serialize workflowFactory and append it to req object, then using it in Route Handler
         return handleChat(req, res, this.workflowFactory);
       }
 
@@ -83,12 +83,11 @@ export class LlamaIndexServer {
         pathname === "/api/components" &&
         req.method === "GET"
       ) {
-        // TODO: find the way to pass componentsDir (serialized string) to req object, then using it in Route Handler
-        return getComponents(req, res, this.componentsDir);
+        query.componentsDir = this.componentsDir;
       }
 
       const handle = this.app.getRequestHandler();
-      handle(req, res, parsedUrl);
+      handle(req, res, { ...parsedUrl, query });
     });
 
     server.listen(this.port, () => {
