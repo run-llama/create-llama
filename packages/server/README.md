@@ -4,10 +4,10 @@ LlamaIndexServer is a Next.js-based application that allows you to quickly launc
 
 ## Features
 
-- Serving a workflow as a chatbot
+- Add a sophisticated chatbot UI to your LlamaIndex workflow
+- Edit code and document artifacts in an OpenAI Canvas-style UI
+- Extendable UI components for events and headers
 - Built on Next.js for high performance and easy API development
-- Optional built-in chat UI with extendable UI components
-- Prebuilt development code
 
 ## Installation
 
@@ -21,9 +21,11 @@ Create an `index.ts` file and add the following code:
 
 ```ts
 import { LlamaIndexServer } from "@llamaindex/server";
+import { openai } from "@llamaindex/openai";
+import { agent } from "@llamaindex/workflow";
 import { wiki } from "@llamaindex/tools"; // or any other tool
 
-const createWorkflow = () => agent({ tools: [wiki()] });
+const createWorkflow = () => agent({ tools: [wiki()], llm: openai("gpt-4o") });
 
 new LlamaIndexServer({
   workflow: createWorkflow,
@@ -33,6 +35,8 @@ new LlamaIndexServer({
   },
 }).start();
 ```
+
+The `createWorkflow` function is a factory function that creates an [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow) with a tool that retrieves information from Wikipedia in this case. For more details, read about the [Workflow factory contract](#workflow-factory-contract).
 
 ## Running the Server
 
@@ -54,15 +58,74 @@ curl -X POST "http://localhost:3000/api/chat" -H "Content-Type: application/json
 
 The `LlamaIndexServer` accepts the following configuration options:
 
-- `workflow`: A callable function that creates a workflow instance for each request
+- `workflow`: A callable function that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `appTitle`: The title of the application (default: `"LlamaIndex App"`)
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
+  - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/src/workflow.ts`. Please start server in dev mode (`npm run dev`) to use see this reload feature enabled.
 
 LlamaIndexServer accepts all the configuration options from Nextjs Custom Server such as `port`, `hostname`, `dev`, etc.
 See all Nextjs Custom Server options [here](https://nextjs.org/docs/app/building-your-application/configuring/custom-server).
+
+## Workflow factory contract
+
+The `workflow` provided will be called for each chat request to initialize a new workflow instance. The contract of the generated workflow must be the same as for the [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow).
+
+This means that the workflow must handle a `startAgentEvent` event, which is the entry point of the workflow and contains the following information in it's `data` property:
+
+```typescript
+{
+  userInput: MessageContent;
+  chatHistory?: ChatMessage[] | undefined;
+};
+```
+
+The `userInput` is the latest user message and the `chatHistory` is the list of messages exchanged between the user and the workflow so far.
+
+Furthermore, the workflow must stop with a `stopAgentEvent` event to mark the end of the workflow. In between, the workflow can emit [UI events](##AI-generated-UI-Components) to render custom UI components and [Artifact events](##Sending-Artifacts-to-the-UI) to send structured data like generated documents or code snippets to the UI.
+
+```ts
+import {
+  createStatefulMiddleware,
+  createWorkflow,
+  startAgentEvent,
+} from "@llamaindex/workflow";
+import { ChatMemoryBuffer, type ChatMessage, Settings } from "llamaindex";
+import { openai } from "@llamaindex/openai";
+import { wiki } from "@llamaindex/tools";
+
+Settings.llm = openai("gpt-4o");
+
+export const workflowFactory = async () => {
+  const workflow = createWorkflow();
+
+  workflow.handle([startAgentEvent], async ({ data }) => {
+    const { state, sendEvent } = getContext();
+    const messages = data.chatHistory;
+
+    const toolCallResponse = await chatWithTools(
+      Settings.llm,
+      [wiki()],
+      messages,
+    );
+
+    // using result from tool call and use `sendEvent` to emit the next event...
+  });
+
+  // define more workflow handling logic here...
+
+  // Finally stop with a `stopAgentEvent` event to mark the end of the workflow.
+  // return stopAgentEvent.with({
+  //   result: "This is the end!",
+  // });
+
+  return workflow;
+};
+```
+
+To generate sophisticated examples of workflows, you best use the [create-llama](https://github.com/run-llama/create-llama) project.
 
 ## AI-generated UI Components
 
@@ -136,6 +199,66 @@ new LlamaIndexServer({
   },
 }).start();
 ```
+
+## Sending Artifacts to the UI
+
+In addition to UI events for custom components, LlamaIndex Server supports a special `ArtifactEvent` to send structured data like generated documents or code snippets to the UI. These artifacts are displayed in a dedicated "Canvas" panel in the chat interface.
+
+### Artifact Event Structure
+
+To send an artifact, your workflow needs to emit an event with `type: "artifact"`. The `data` payload of this event should include:
+
+- `type`: A string indicating the type of artifact (e.g., `"document"`, `"code"`).
+- `created_at`: A timestamp (e.g., `Date.now()`) indicating when the artifact was created.
+- `data`: An object containing the specific details of the artifact. The structure of this object depends on the artifact `type`.
+
+### Defining and Sending an ArtifactEvent
+
+First, define your artifact event using `workflowEvent` from `@llamaindex/workflow`:
+
+```typescript
+import { workflowEvent } from "@llamaindex/workflow";
+
+// Example for a document artifact
+const artifactEvent = workflowEvent<{
+  type: "artifact"; // Must be "artifact"
+  data: {
+    type: "document"; // Custom type for your artifact (e.g., "document", "code")
+    created_at: number;
+    data: {
+      // Specific data for the document artifact type
+      title: string;
+      content: string;
+      type: "markdown" | "html"; // document format
+    };
+  };
+}>();
+```
+
+Then, within your workflow logic, use `sendEvent` (obtained from `getContext()`) to emit the event:
+
+```typescript
+// Assuming 'sendEvent' is available in your workflow handler
+// and 'documentDetails' contains the content for the artifact.
+
+sendEvent(
+  artifactEvent.with({
+    type: "artifact", // This top-level type must be "artifact"
+    data: {
+      type: "document", // This is your specific artifact type
+      created_at: Date.now(),
+      data: {
+        title: "My Generated Document",
+        content: "# Hello World
+This is a markdown document.",
+        type: "markdown",
+      },
+    },
+  }),
+);
+```
+
+This will send the artifact to the LlamaIndex Server UI, where it will be rendered in the [ChatCanvasPanel](/packages/server/next/app/components/ui/chat/canvas/panel.tsx) by a renderer depending on the artifact type. For type `document` this is using the [DocumentArtifactViewer](https://github.com/run-llama/chat-ui/blob/bacb75fc6edceacf742fba18632404a2483b5a81/packages/chat-ui/src/chat/canvas/artifacts/document.tsx#L17).
 
 ## Default Endpoints and Features
 

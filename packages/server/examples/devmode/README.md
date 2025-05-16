@@ -9,7 +9,7 @@ new LlamaIndexServer({
     appTitle: "Calculator",
     devMode: true,
   },
-  port: 6000,
+  port: 3000,
 }).start();
 ```
 
@@ -17,5 +17,5 @@ Export OpenAI API key and start the server in dev mode.
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
-npx tsx watch index.ts
+npx nodemon --exec tsx index.ts
 ```
