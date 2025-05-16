@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.15
+
+### Patch Changes
+
+- 527075c: Enable dev mode that allows updating code directly in the UI
+
 ## 0.5.14
 
 ### Patch Changes
