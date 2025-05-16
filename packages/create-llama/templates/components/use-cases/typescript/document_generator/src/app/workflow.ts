@@ -94,7 +94,6 @@ export function createDocumentArtifactWorkflow(reqBody: any, llm: LLM) {
     }
     state.memory.set(chatHistory);
     state.memory.put({ role: "user", content: userInput });
-    state.lastArtifact = extractLastArtifact(chatHistory);
 
     return planEvent.with({
       userInput,
