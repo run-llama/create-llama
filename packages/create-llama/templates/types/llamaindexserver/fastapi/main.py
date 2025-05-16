@@ -17,8 +17,10 @@ def create_app():
         ui_config=UIConfig(
             component_dir=COMPONENT_DIR,
             app_title="Chat App",
+            dev_mode=True,  # Please disable this in production
         ),
         logger=logger,
+        env="dev",
     )
     # You can also add custom FastAPI routes to app
     app.add_api_route("/api/health", lambda: {"message": "OK"}, status_code=200)
