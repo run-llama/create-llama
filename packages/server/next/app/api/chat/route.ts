@@ -9,7 +9,7 @@ import { runWorkflow } from "./utils/workflow";
 export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const serverOptions = (globalThis as any).serverOptions;
-  const workflowFactory = serverOptions.workflowFactory;
+  const workflowFactory = serverOptions.workflow;
 
   if (!workflowFactory) {
     return NextResponse.json(
