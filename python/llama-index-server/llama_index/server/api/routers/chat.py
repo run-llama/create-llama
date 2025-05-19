@@ -33,7 +33,7 @@ from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
 class ResumeRequest(BaseModel):
-    chat_id: str
+    id: str
     response: str
 
 
@@ -90,7 +90,7 @@ def chat_router(
         try:
             # TODO: How can we have the same workflow as the chat API?
             workflow = workflow_factory()
-            previous_ctx = WorkflowService.load_context(request.chat_id, workflow)
+            previous_ctx = WorkflowService.load_context(request.id, workflow)
             # Send human response event to resume the workflow
             previous_ctx.send_event(
                 HumanResponseEvent(
@@ -117,9 +117,6 @@ def chat_router(
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
-        finally:
-            # Could simplify the current implementation by passing whole serialized context to FE
-            WorkflowService.clear_context(request.chat_id)
 
     if LlamaCloudFileService.is_configured():
 
@@ -193,7 +190,7 @@ async def _stream_content(
                 yield VercelStreamResponse.convert_data(
                     {
                         "type": "human",
-                        "chat_id": run_id,  # Use run_id as a unique identifier for the chat
+                        "id": run_id,
                         "data": event.model_dump(),
                     }
                 )

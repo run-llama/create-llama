@@ -1,41 +1,45 @@
-from typing import Optional
+import hashlib
+import subprocess
 
 from fastapi import FastAPI
 
+# Uncomment this to use the custom workflow
+# from custom_workflow import CLIWorkflow
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.workflow import Context, HumanResponseEvent, InputRequiredEvent
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
-from llama_index.server.api.models import ChatRequest
 
 
-async def ask_city(ctx: Context) -> str:
+async def cli_executor(ctx: Context, command: str) -> str:
     """
-    Get the city from the user
+    This tool carefully waits for user confirmation before executing a command.
     """
-    question = "Where is your place now?"
-    event = await ctx.wait_for_event(
+    # hash command into an unique id for the waiter
+    command_id = hashlib.sha256(command.encode("utf-8")).hexdigest()
+    confirmation = await ctx.wait_for_event(
         HumanResponseEvent,
-        waiter_id=question,
+        waiter_id=command_id,
         waiter_event=InputRequiredEvent(  # type: ignore
-            prefix=question,
+            prefix=f"Do you wanna execute command: `{command}`?",
         ),
     )
-    return event.response
+    if confirmation.response.lower().strip() == "yes":
+        return subprocess.check_output(command, shell=True).decode("utf-8")
+    else:
+        return "Command execution cancelled."
 
 
-async def get_weather(city: str) -> str:
-    """
-    Get the weather of the city
-    """
-    return f"The weather of {city} is sunny."
-
-
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
+def create_workflow() -> AgentWorkflow:
+    # Uncomment this to use the custom workflow
+    # return CLIWorkflow()
     return AgentWorkflow.from_tools_or_functions(
-        tools_or_functions=[ask_city, get_weather],
+        tools_or_functions=[cli_executor],
         llm=OpenAI(model="gpt-4.1-mini"),
-        system_prompt="You are a helpful assistant. Use the provided tools to answer the user's question.",
+        system_prompt="""
+        You are a helpful assistant that help the user execute commands.
+        You can execute commands using the cli_executor tool, don't need to ask for confirmation for triggering the tool.
+        """,
     )
 
 
@@ -45,8 +49,8 @@ def create_app() -> FastAPI:
         ui_config=UIConfig(
             app_title="Artifact",
             starter_questions=[
-                "What is the weather now?",
-                "May I play golf today?",
+                "List all files in the current directory",
+                "Fetch changes from the remote repository",
             ],
         ),
     )
