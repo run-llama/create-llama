@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./next/app/api",
+    "outDir": "./dist/api",
+    "emitDeclarationOnly": false
+  },
+  "include": ["./next/app/api"]
+}
