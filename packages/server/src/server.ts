@@ -26,6 +26,9 @@ export class LlamaIndexServer {
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).serverOptions = options;
+
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
     }
@@ -71,23 +74,14 @@ export class LlamaIndexServer {
     const server = createServer((req, res) => {
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
-      const query = parsedUrl.query;
 
       if (pathname === "/api/chat" && req.method === "POST") {
         // TODO: serialize workflowFactory and append it to req object, then using it in Route Handler
         return handleChat(req, res, this.workflowFactory);
       }
 
-      if (
-        this.componentsDir &&
-        pathname === "/api/components" &&
-        req.method === "GET"
-      ) {
-        query.componentsDir = this.componentsDir;
-      }
-
       const handle = this.app.getRequestHandler();
-      handle(req, res, { ...parsedUrl, query });
+      handle(req, res, parsedUrl);
     });
 
     server.listen(this.port, () => {

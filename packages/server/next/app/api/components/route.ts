@@ -4,8 +4,9 @@ import path from "path";
 import { promisify } from "util";
 
 export async function GET(request: NextRequest) {
-  const params = request.nextUrl.searchParams;
-  const componentsDir = params.get("componentsDir") || "components";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serverOptions = (globalThis as any).serverOptions;
+  const componentsDir = serverOptions.uiConfig.componentsDir || "components";
 
   try {
     const exists = await promisify(fs.exists)(componentsDir);
