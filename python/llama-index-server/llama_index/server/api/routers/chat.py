@@ -6,13 +6,19 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
     AgentStream,
 )
-from llama_index.core.workflow import StopEvent, Workflow
+from llama_index.core.workflow import (
+    HumanResponseEvent,
+    InputRequiredEvent,
+    StopEvent,
+    Workflow,
+)
 from llama_index.server.api.callbacks import (
     EventCallback,
     LlamaCloudFileDownload,
@@ -22,7 +28,13 @@ from llama_index.server.api.callbacks import (
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.api.utils.workflow import WorkflowService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
+
+
+class ResumeRequest(BaseModel):
+    chat_id: str
+    response: str
 
 
 def chat_router(
@@ -64,11 +76,50 @@ def chat_router(
             )
 
             return VercelStreamResponse(
-                content_generator=_stream_content(stream_handler, request, logger),
+                content_generator=_stream_content(stream_handler, logger),
             )
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/resume")
+    async def resume(
+        request: ResumeRequest,
+        background_tasks: BackgroundTasks,
+    ) -> StreamingResponse:
+        try:
+            # TODO: How can we have the same workflow as the chat API?
+            workflow = workflow_factory()
+            previous_ctx = WorkflowService.load_context(request.chat_id, workflow)
+            # Send human response event to resume the workflow
+            previous_ctx.send_event(
+                HumanResponseEvent(
+                    response=request.response,
+                )
+            )
+            # Resume the workflow
+            workflow_handler = workflow.run(ctx=previous_ctx)
+            stream_handler = StreamHandler(
+                workflow_handler=workflow_handler,
+                callbacks=[
+                    # Missing callbacks: SuggestNextQuestions
+                    SourceNodesFromToolCall(),
+                    LlamaCloudFileDownload(background_tasks),
+                ],
+            )
+
+            return VercelStreamResponse(
+                content_generator=_stream_content(
+                    stream_handler,
+                    logger,
+                ),
+            )
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            # Could simplify the current implementation by passing whole serialized context to FE
+            WorkflowService.clear_context(request.chat_id)
 
     if LlamaCloudFileService.is_configured():
 
@@ -97,7 +148,6 @@ def chat_router(
 
 async def _stream_content(
     handler: StreamHandler,
-    request: ChatRequest,
     logger: logging.Logger,
 ) -> AsyncGenerator[str, None]:
     async def _text_stream(
@@ -129,6 +179,25 @@ async def _stream_content(
             elif hasattr(event, "to_response"):
                 event_response = event.to_response()
                 yield VercelStreamResponse.convert_data(event_response)
+            elif isinstance(event, InputRequiredEvent):
+                run_id = handler.workflow_handler.run_id
+                if run_id is None:
+                    raise RuntimeError("Run ID is None")
+                ctx = handler.workflow_handler.ctx
+                if ctx is None:
+                    raise RuntimeError("Context is None")
+                run_id = WorkflowService.save_context(
+                    run_id=run_id,
+                    ctx=ctx,
+                )
+                yield VercelStreamResponse.convert_data(
+                    {
+                        "type": "human",
+                        "chat_id": run_id,  # Use run_id as a unique identifier for the chat
+                        "data": event.model_dump(),
+                    }
+                )
+                break
             else:
                 # Ignore unnecessary agent workflow events
                 if not isinstance(event, (AgentInput, AgentSetup)):
