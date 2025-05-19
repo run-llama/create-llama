@@ -9,7 +9,7 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@llamaindex/openai": "0.3.7",
+    "@llamaindex/openai": "^0.3.7",
     "@llamaindex/server": "^0.2.1",
     "@llamaindex/workflow": "^1.1.2",
     "@llamaindex/tools": "^0.0.10",

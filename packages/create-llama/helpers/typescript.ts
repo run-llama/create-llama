@@ -387,7 +387,7 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "0.3.7",
+    "@llamaindex/openai": "^0.3.7",
   },
   gemini: {
     "@llamaindex/google": "^0.2.0",
