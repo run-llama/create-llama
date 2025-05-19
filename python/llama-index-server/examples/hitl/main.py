@@ -15,11 +15,12 @@ async def cli_executor(ctx: Context, command: str) -> str:
     """
     This tool carefully waits for user confirmation before executing a command.
     """
-    # hash command into an unique id for the waiter
-    command_id = hashlib.sha256(command.encode("utf-8")).hexdigest()
+    # a unique id as a flag for the waiter
+    # simply hash this function name and the parameters as a unique id
+    waiter_id = hashlib.sha256(f"cli_executor:{command}".encode("utf-8")).hexdigest()
     confirmation = await ctx.wait_for_event(
         HumanResponseEvent,
-        waiter_id=command_id,
+        waiter_id=waiter_id,
         waiter_event=InputRequiredEvent(  # type: ignore
             prefix=f"Do you wanna execute command: `{command}`?",
         ),
