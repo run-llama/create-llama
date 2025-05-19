@@ -513,7 +513,7 @@ async function updatePackageJson({
   if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/readers": "^3.1.3",
+      "@llamaindex/readers": "3.1.3",
     };
 
     if (vectorDb && vectorDb in vectorDbDependencies) {
