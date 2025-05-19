@@ -2,7 +2,7 @@ import { getEnv } from "@llamaindex/env";
 import { LLamaCloudFileService } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!getEnv("LLAMA_CLOUD_API_KEY")) {
     return NextResponse.json(
       {
