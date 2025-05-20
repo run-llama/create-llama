@@ -87,4 +87,4 @@ class CLIWorkflow(Workflow):
         if command == "":
             raise ValueError("Missing command in CLIExecutionEvent")
         res = subprocess.run(command, shell=True, capture_output=True, text=True)
-        return StopEvent(result=res.stdout)
+        return StopEvent(result=res.stdout or res.stderr)

@@ -6,7 +6,6 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
@@ -32,11 +31,6 @@ from llama_index.server.api.utils.workflow import WorkflowService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
-class ResumeRequest(BaseModel):
-    id: str
-    response: str
-
-
 def chat_router(
     workflow_factory: Callable[..., Workflow],
     logger: logging.Logger,
@@ -49,7 +43,8 @@ def chat_router(
         background_tasks: BackgroundTasks,
     ) -> StreamingResponse:
         try:
-            user_message = request.messages[-1].to_llamaindex_message()
+            last_message = request.messages[-1]
+            user_message = last_message.to_llamaindex_message()
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
@@ -59,10 +54,23 @@ def chat_router(
                 workflow = workflow_factory(chat_request=request)
             else:
                 workflow = workflow_factory()
-            workflow_handler = workflow.run(
-                user_msg=user_message.content,
-                chat_history=chat_history,
-            )
+
+            # Check if we should resume a chat with a human response
+            human_response = last_message.human_response
+            if human_response:
+                previous_ctx = WorkflowService.load_context(request.id, workflow)
+                # send a new human response event then resume the workflow with the previous context
+                previous_ctx.send_event(
+                    HumanResponseEvent(
+                        response=human_response,
+                    )
+                )
+                workflow_handler = workflow.run(ctx=previous_ctx)
+            else:
+                workflow_handler = workflow.run(
+                    user_msg=user_message.content,
+                    chat_history=chat_history,
+                )
 
             callbacks: list[EventCallback] = [
                 SourceNodesFromToolCall(),
@@ -76,42 +84,10 @@ def chat_router(
             )
 
             return VercelStreamResponse(
-                content_generator=_stream_content(stream_handler, logger),
-            )
-        except Exception as e:
-            logger.error(e)
-            raise HTTPException(status_code=500, detail=str(e))
-
-    @router.post("/resume")
-    async def resume(
-        request: ResumeRequest,
-        background_tasks: BackgroundTasks,
-    ) -> StreamingResponse:
-        try:
-            # TODO: How can we have the same workflow as the chat API?
-            workflow = workflow_factory()
-            previous_ctx = WorkflowService.load_context(request.id, workflow)
-            # Send human response event to resume the workflow
-            previous_ctx.send_event(
-                HumanResponseEvent(
-                    response=request.response,
-                )
-            )
-            # Resume the workflow
-            workflow_handler = workflow.run(ctx=previous_ctx)
-            stream_handler = StreamHandler(
-                workflow_handler=workflow_handler,
-                callbacks=[
-                    # Missing callbacks: SuggestNextQuestions
-                    SourceNodesFromToolCall(),
-                    LlamaCloudFileDownload(background_tasks),
-                ],
-            )
-
-            return VercelStreamResponse(
                 content_generator=_stream_content(
                     stream_handler,
                     logger,
+                    request.id,
                 ),
             )
         except Exception as e:
@@ -146,6 +122,7 @@ def chat_router(
 async def _stream_content(
     handler: StreamHandler,
     logger: logging.Logger,
+    chat_id: str,
 ) -> AsyncGenerator[str, None]:
     async def _text_stream(
         event: Union[AgentStream, StopEvent],
@@ -177,20 +154,16 @@ async def _stream_content(
                 event_response = event.to_response()
                 yield VercelStreamResponse.convert_data(event_response)
             elif isinstance(event, InputRequiredEvent):
-                run_id = handler.workflow_handler.run_id
-                if run_id is None:
-                    raise RuntimeError("Run ID is None")
                 ctx = handler.workflow_handler.ctx
                 if ctx is None:
                     raise RuntimeError("Context is None")
-                run_id = WorkflowService.save_context(
-                    run_id=run_id,
+                chat_id = WorkflowService.save_context(
+                    chat_id=chat_id,
                     ctx=ctx,
                 )
                 yield VercelStreamResponse.convert_data(
                     {
                         "type": "human",
-                        "id": run_id,
                         "data": event.model_dump(),
                     }
                 )

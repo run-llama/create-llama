@@ -53,6 +53,7 @@ def create_app() -> FastAPI:
                 "List all files in the current directory",
                 "Fetch changes from the remote repository",
             ],
+            component_dir="components",
         ),
     )
     return app
