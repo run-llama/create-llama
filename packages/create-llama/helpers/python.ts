@@ -267,7 +267,7 @@ const getAdditionalDependencies = (
     if (observability === "traceloop") {
       dependencies.push({
         name: "traceloop-sdk",
-        version: ">=0.15.11,<0.16.0",
+        version: ">=0.15.11",
       });
     }
     if (observability === "llamatrace") {
@@ -677,6 +677,7 @@ export const installPythonTemplate = async ({
     dataSources,
     tools,
     template,
+    observability,
   );
 
   await addDependencies(root, addOnDependencies);
