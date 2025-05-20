@@ -26,9 +26,6 @@ export class LlamaIndexServer {
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).serverOptions = options;
-
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
     }
