@@ -1,6 +1,6 @@
 import { agentStreamEvent, type WorkflowEventData } from "@llamaindex/workflow";
 import {
-  createDataStreamResponse,
+  createDataStream,
   formatDataStreamPart,
   type DataStreamWriter,
   type JSONValue,
@@ -32,7 +32,7 @@ export interface StreamCallbacks {
  * @param options - Optional options for stream lifecycle events.
  * @returns A readable stream of data.
  */
-export function toDataStreamResponse(
+export function toDataStream(
   stream: AsyncIterable<WorkflowEventData<unknown>>,
   options: {
     callbacks?: StreamCallbacks;
@@ -43,7 +43,7 @@ export function toDataStreamResponse(
   let completionText = "";
   let hasStarted = false;
 
-  return createDataStreamResponse({
+  return createDataStream({
     execute: async (dataStreamWriter: DataStreamWriter) => {
       if (!hasStarted && callbacks?.onStart) {
         await callbacks.onStart(dataStreamWriter);

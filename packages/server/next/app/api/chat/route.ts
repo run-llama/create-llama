@@ -1,8 +1,8 @@
-import type { AgentInputData } from "@llamaindex/workflow";
+import { type AgentInputData } from "@llamaindex/workflow";
 import { type Message } from "ai";
-import type { MessageType } from "llamaindex";
+import { type MessageType } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
-import { toDataStreamResponse } from "./utils/stream";
+import { toDataStream } from "./utils/stream";
 import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
 import { runWorkflow } from "./utils/workflow";
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       abortController.signal,
     );
 
-    return toDataStreamResponse(workflowEventStream, {
+    const dataStream = toDataStream(workflowEventStream, {
       callbacks: {
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
@@ -61,6 +61,15 @@ export async function POST(req: NextRequest) {
           });
           await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
         },
+      },
+    });
+
+    // TODO: use LlamaIndexWorkflowAdapter.toDataStreamResponse when it's ready
+    return new Response(dataStream.pipeThrough(new TextEncoderStream()), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Vercel-AI-Data-Stream": "v1",
       },
     });
   } catch (error) {
