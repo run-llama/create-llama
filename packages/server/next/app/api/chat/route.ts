@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     });
 
     // TODO: use LlamaIndexWorkflowAdapter.toDataStreamResponse when it's ready
-    return new Response(dataStream.pipeThrough(new TextEncoderStream()), {
+    return new Response(dataStream, {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
