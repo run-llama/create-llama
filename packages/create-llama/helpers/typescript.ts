@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -544,44 +543,16 @@ async function updatePackageJson({
     };
   }
 
-  const useLlamaIndexServer = process.env.USE_LLAMAINDEX_SERVER_PACK;
-  const runnerTemp = process.env.RUNNER_TEMP;
-  const templateType = process.env.TEMPLATE_TYPE;
+  // if having custom server package tgz file, use it for testing @llamaindex/server
   const serverPackagePath = process.env.SERVER_PACKAGE_PATH;
-
-  console.log("useLlamaIndexServer", useLlamaIndexServer);
-  console.log("runnerTemp", runnerTemp);
-  console.log("templateType", templateType);
-  console.log("serverPackagePath", serverPackagePath);
-  // log current working directory
-  console.log("current working directory", process.cwd());
-
-  if (
-    // useLlamaIndexServer &&
-    // !!runnerTemp &&
-    // templateType === "llamaindexserver" &&
-    // framework === "nextjs"
-    serverPackagePath
-  ) {
-    // try to get relative path to llamaindex-server.tgz
-    // const llamaindexServerPath = path.relative(
-    //   process.cwd(),
-    //   path.join(runnerTemp, "llamaindex-server.tgz"),
-    // );
-
-    // console.log("llamaindexServerPath", llamaindexServerPath);
-
-    const fileExists = existsSync(serverPackagePath);
-    if (!fileExists) {
-      console.error("llamaindex-server.tgz does not exist", serverPackagePath);
-      process.exit(1);
-    }
-
+  if (serverPackagePath) {
+    const relativePath = path.relative(process.cwd(), serverPackagePath);
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/server": `file:${serverPackagePath}`,
+      "@llamaindex/server": `file:${relativePath}`,
     };
   }
+
   await fs.writeFile(
     packageJsonFile,
     JSON.stringify(packageJson, null, 2) + os.EOL,
