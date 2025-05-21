@@ -31,7 +31,6 @@ def chat_router(
     suggest_next_questions: bool = True,
 ) -> APIRouter:
     router = APIRouter(prefix="/chat")
-    print(f"suggest_next_questions: {suggest_next_questions}")
 
     @router.post("")
     async def chat(
