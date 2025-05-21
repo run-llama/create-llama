@@ -2,8 +2,8 @@ import { useChatUI } from "@llamaindex/chat-ui";
 import { JSONValue } from "ai";
 import { FC, useState } from "react";
 import { z } from "zod";
-import { Button } from "../../../button";
-import { Card, CardContent, CardFooter } from "../../../card";
+import { Button } from "../../../../../packages/server/next/app/components/ui/button";
+import { Card, CardContent, CardFooter } from "../../../../../packages/server/next/app/components/ui/card";
 
 const HumanEventSchema = z.object({
   type: z.literal("human"),

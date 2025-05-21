@@ -1,4 +1,5 @@
-import hashlib
+import uuid
+from pydantic import Field
 import subprocess
 
 from fastapi import FastAPI
@@ -11,21 +12,38 @@ from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
 
 
+class CLIInputRequiredEvent(InputRequiredEvent):
+    # TODO: this needs to have a to_response method that sends the event in the right format
+    # We don't want this method to be defined here
+    """CLIInputRequiredEvent is sent when the agent needs permission from the user to execute the CLI command or not. Render this event by showing the command and a boolean button to execute the command or not."""
+
+    event_component: str = (
+        "human_response"  # used to find the right component to render the event
+    )
+    command: str = Field(description="The command to execute.")
+
+
+class CLIHumanResponseEvent(HumanResponseEvent):
+    execute: bool = Field(
+        description="True if the human wants to execute the command, False otherwise."
+    )
+    command: str = Field(description="The command to execute.")
+
+
 async def cli_executor(ctx: Context, command: str) -> str:
     """
     This tool carefully waits for user confirmation before executing a command.
     """
-    # a unique id as a flag for the waiter
-    # simply hash this function name and the parameters as a unique id
-    waiter_id = hashlib.sha256(f"cli_executor:{command}".encode("utf-8")).hexdigest()
     confirmation = await ctx.wait_for_event(
-        HumanResponseEvent,
-        waiter_id=waiter_id,
-        waiter_event=InputRequiredEvent(  # type: ignore
-            prefix=f"Do you wanna execute command: `{command}`?",
+        CLIHumanResponseEvent,
+        waiter_id=str(
+            uuid.uuid4()
+        ),  # ideally not needed, should default to something reasonable
+        waiter_event=CLIInputRequiredEvent(  # type: ignore
+            command=command,
         ),
     )
-    if confirmation.response.lower().strip() == "yes":
+    if confirmation.execute:
         return subprocess.check_output(command, shell=True).decode("utf-8")
     else:
         return "Command execution cancelled."
