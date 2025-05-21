@@ -6,6 +6,7 @@ from typing import List, Optional, Union
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings
 from llama_index.server.api.models import ChatAPIMessage
+from llama_index.server.prompts import SUGGEST_NEXT_QUESTION_PROMPT
 
 logger = logging.getLogger("uvicorn")
 
@@ -15,28 +16,11 @@ class SuggestNextQuestionsService:
     Suggest the next questions that user might ask based on the conversation history.
     """
 
-    prompt = PromptTemplate(
-        r"""
-You're a helpful assistant! Your task is to suggest the next questions that user might interested in to keep the conversation going.
-Here is the conversation history
----------------------
-{conversation}
----------------------
-Given the conversation history, please give me 3 questions that user might ask next!
-Your answer should be wrapped in three sticks without any index numbers and follows the following format:
-\`\`\`
-<question 1>
-<question 2>
-<question 3>
-\`\`\`
-"""
-    )
-
     @classmethod
     def get_configured_prompt(cls) -> PromptTemplate:
         prompt = os.getenv("NEXT_QUESTION_PROMPT", None)
         if not prompt:
-            return cls.prompt
+            return PromptTemplate(SUGGEST_NEXT_QUESTION_PROMPT)
         return PromptTemplate(prompt)
 
     @classmethod
