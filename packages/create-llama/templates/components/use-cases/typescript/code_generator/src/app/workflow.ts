@@ -71,7 +71,7 @@ export function workflowFactory(reqBody: any) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody),
+      lastArtifact: extractLastArtifact(reqBody, "code"),
     };
   });
   const workflow = withState(createWorkflow());
@@ -179,8 +179,13 @@ ${user_msg}
     });
 
     if (requirement.next_step === "coding") {
+      const { language, file_name } = state.lastArtifact?.data ?? {};
       return generateArtifactEvent.with({
-        requirement,
+        requirement: {
+          ...requirement,
+          language: requirement.language || language,
+          file_name: requirement.file_name || file_name,
+        },
       });
     } else {
       return synthesizeAnswerEvent.with({});
