@@ -554,7 +554,11 @@ async function updatePackageJson({
   // log current working directory
   console.log("current working directory", process.cwd());
 
-  if (!!runnerTemp && templateType === "llamaindexserver") {
+  if (
+    !!runnerTemp &&
+    templateType === "llamaindexserver" &&
+    framework === "nextjs"
+  ) {
     // try to get relative path to llamaindex-server.tgz
     const llamaindexServerPath = path.relative(
       process.cwd(),
