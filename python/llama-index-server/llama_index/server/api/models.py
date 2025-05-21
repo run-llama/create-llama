@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -28,8 +29,20 @@ class ChatAPIMessage(BaseModel):
     def to_llamaindex_message(self) -> ChatMessage:
         return ChatMessage(role=self.role, content=self.content)
 
+    @property
+    def human_response(self) -> Optional[str]:
+        if self.annotations:
+            for annotation in self.annotations:
+                if (
+                    isinstance(annotation, dict)
+                    and annotation.get("type") == "human_response"
+                ):
+                    return annotation.get("data", {}).get("response", None)
+        return None
+
 
 class ChatRequest(BaseModel):
+    id: str  # provided by FE
     messages: List[ChatAPIMessage]
     data: Optional[Any] = None
     config: Optional[ChatConfig] = ChatConfig()
@@ -38,6 +51,12 @@ class ChatRequest(BaseModel):
     def validate_messages(cls, v: List[ChatAPIMessage]) -> List[ChatAPIMessage]:
         if v[-1].role != MessageRole.USER:
             raise ValueError("Last message must be from user")
+        return v
+
+    @field_validator("id")
+    def validate_id(cls, v: str) -> str:
+        if re.search(r"[^a-zA-Z0-9_-]", v):
+            raise ValueError("ID contains special characters")
         return v
 
 
