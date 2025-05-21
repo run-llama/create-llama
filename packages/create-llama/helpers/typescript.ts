@@ -1,3 +1,4 @@
+import { existsSync } from "fs";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -559,11 +560,21 @@ async function updatePackageJson({
       process.cwd(),
       path.join(runnerTemp, "llamaindex-server.tgz"),
     );
+
     console.log("llamaindexServerPath", llamaindexServerPath);
+
+    const fileExists = existsSync(llamaindexServerPath);
+    if (!fileExists) {
+      console.error(
+        "llamaindex-server.tgz does not exist",
+        llamaindexServerPath,
+      );
+      process.exit(1);
+    }
 
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/server": `file:../../e2e/llamaindex-server.tgz`,
+      "@llamaindex/server": `file:${llamaindexServerPath}`,
     };
   }
   await fs.writeFile(
