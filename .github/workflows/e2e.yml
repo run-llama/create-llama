@@ -146,9 +146,10 @@ jobs:
         run: |
           pnpm pack --pack-destination "${{ runner.temp }}"
           if [ "${{ runner.os }}" == "Windows" ]; then
-            file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1) mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
+            file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1)
+            mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
           else
-            mv "${{ runner.temp }}/llamaindex-server-*.tgz" "${{ runner.temp }}/llamaindex-server.tgz"
+            mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
           fi
         working-directory: packages/server
 
