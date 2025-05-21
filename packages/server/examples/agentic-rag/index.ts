@@ -35,9 +35,13 @@ export const workflowFactory = async () => {
 
 new LlamaIndexServer({
   workflow: workflowFactory,
+  suggestNextQuestions: true,
   uiConfig: {
     appTitle: "LlamaIndex App",
-    starterQuestions: ["What is the color of the dog?"],
+    starterQuestions: [
+      "Why is the sky blue?",
+      "How many L's are in the word 'llamaindex'?",
+    ],
   },
   port: 3000,
 }).start();

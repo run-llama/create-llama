@@ -25,13 +25,15 @@ export class LlamaIndexServer {
   app: ReturnType<typeof next>;
   workflowFactory: () => Promise<Workflow> | Workflow;
   componentsDir?: string | undefined;
+  suggestNextQuestions: boolean;
 
   constructor(options: LlamaIndexServerOptions) {
-    const { workflow, ...nextAppOptions } = options;
+    const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
     this.app = next({ dev, dir: nextDir, ...nextAppOptions });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
+    this.suggestNextQuestions = suggestNextQuestions ?? true;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -59,7 +61,8 @@ export class LlamaIndexServer {
         LLAMA_CLOUD_API: ${JSON.stringify(llamaCloudApi)},
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
         COMPONENTS_API: ${JSON.stringify(componentsApi)},
-        DEV_MODE: ${JSON.stringify(devMode)}
+        DEV_MODE: ${JSON.stringify(devMode)},
+        SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
       }
     `;
     fs.writeFileSync(configFile, content);
@@ -80,7 +83,12 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
 
       if (pathname === "/api/chat" && req.method === "POST") {
-        return handleChat(req, res, this.workflowFactory);
+        return handleChat(
+          req,
+          res,
+          this.workflowFactory,
+          this.suggestNextQuestions,
+        );
       }
 
       if (pathname?.startsWith("/api/files") && req.method === "GET") {
