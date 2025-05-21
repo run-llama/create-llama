@@ -1,7 +1,8 @@
+import { generateEventComponent } from "@llamaindex/server";
 import * as dotenv from "dotenv";
 import "dotenv/config";
 import * as fs from "fs/promises";
-import { LLamaCloudFileService } from "llamaindex";
+import { LLamaCloudFileService, OpenAI } from "llamaindex";
 import * as path from "path";
 import { getIndex } from "./app/data";
 import { initSettings } from "./app/settings";
@@ -88,7 +89,7 @@ async function loadAndIndex() {
   console.log(`Successfully uploaded documents to LlamaCloud!`);
 }
 
-(async () => {
+async function generateDatasource() {
   try {
     checkRequiredEnvVars();
     initSettings();
@@ -96,5 +97,40 @@ async function loadAndIndex() {
     console.log("Finished generating storage.");
   } catch (error) {
     console.error("Error generating storage.", error);
+  }
+}
+
+async function generateUi() {
+  // Also works well with Claude 3.5 Sonnet and Google Gemini 2.5 Pro
+  const llm = new OpenAI({ model: "gpt-4.1" });
+
+  const workflowModule = await import("./app/workflow");
+  const UIEventSchema = (workflowModule as any).UIEventSchema;
+  if (!UIEventSchema) {
+    throw new Error(
+      "To generate the UI, you must define a UIEventSchema in your workflow.",
+    );
+  }
+
+  const generatedCode = await generateEventComponent(UIEventSchema, llm);
+  // Write the generated code to components/ui_event.ts
+  await fs.writeFile("components/ui_event.jsx", generatedCode);
+}
+
+(async () => {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  initSettings();
+
+  if (command === "datasource") {
+    await generateDatasource();
+  } else if (command === "ui") {
+    await generateUi();
+  } else {
+    console.error(
+      'Invalid command. Please use "datasource" or "ui". Running "datasource" by default.',
+    );
+    await generateDatasource(); // Default behavior or could throw an error
   }
 })();
