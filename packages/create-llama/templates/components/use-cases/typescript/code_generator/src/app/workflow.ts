@@ -1,4 +1,4 @@
-import { CodeArtifactData, extractLastArtifact } from "@llamaindex/server";
+import { extractLastArtifact } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -71,7 +71,7 @@ export function workflowFactory(reqBody: any) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody),
+      lastArtifact: extractLastArtifact(reqBody, "code"),
     };
   });
   const workflow = withState(createWorkflow());
@@ -182,8 +182,7 @@ ${user_msg}
     });
 
     if (requirement.next_step === "coding") {
-      const { language, file_name } =
-        (state.lastArtifact?.data as CodeArtifactData) ?? {};
+      const { language, file_name } = state.lastArtifact?.data ?? {};
       return generateArtifactEvent.with({
         requirement: {
           ...requirement,
