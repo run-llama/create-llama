@@ -387,7 +387,7 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "^0.4.0",
+    "@llamaindex/openai": "^0.3.7",
   },
   gemini: {
     "@llamaindex/google": "^0.2.0",
@@ -399,7 +399,7 @@ const providerDependencies: {
     "@llamaindex/mistral": "^0.2.0",
   },
   "azure-openai": {
-    "@llamaindex/openai": "^0.4.0",
+    "@llamaindex/openai": "^0.2.0",
   },
   groq: {
     "@llamaindex/groq": "^0.0.61",
