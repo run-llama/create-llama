@@ -22,7 +22,12 @@ const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["agentic_rag"];
+const templateUseCases = [
+  "agentic_rag",
+  "financial_report",
+  "deep_research",
+  "code_generator",
+];
 
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
