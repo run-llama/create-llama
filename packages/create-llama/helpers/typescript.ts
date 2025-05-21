@@ -543,6 +543,27 @@ async function updatePackageJson({
     };
   }
 
+  const useLlamaIndexServer = process.env.USE_LLAMAINDEX_SERVER_PACK;
+  const runnerTemp = process.env.RUNNER_TEMP;
+
+  console.log("useLlamaIndexServer", useLlamaIndexServer);
+  console.log("runnerTemp", runnerTemp);
+  // log current working directory
+  console.log("current working directory", process.cwd());
+
+  if (!!useLlamaIndexServer && !!runnerTemp) {
+    // try to get relative path to llamaindex-server.tgz
+    const llamaindexServerPath = path.relative(
+      process.cwd(),
+      path.join(runnerTemp, "llamaindex-server.tgz"),
+    );
+    console.log("llamaindexServerPath", llamaindexServerPath);
+
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@llamaindex/server": `file:../../e2e/llamaindex-server.tgz`,
+    };
+  }
   await fs.writeFile(
     packageJsonFile,
     JSON.stringify(packageJson, null, 2) + os.EOL,

@@ -136,6 +136,22 @@ jobs:
         run: pnpm run pack-install
         working-directory: packages/create-llama
 
+      - name: Build server
+        if: matrix.template-types == 'llamaindexserver'
+        run: pnpm run build
+        working-directory: packages/server
+
+      - name: Pack @llamaindex/server package
+        if: matrix.template-types == 'llamaindexserver'
+        run: |
+          pnpm pack --pack-destination ${{ runner.temp }} -C packages/server
+          mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
+        working-directory: packages/server
+
+      - name: Copy tgz file to packages/create-llama/e2e
+        if: matrix.template-types == 'llamaindexserver'
+        run: cp ${{ runner.temp }}/llamaindex-server.tgz packages/create-llama/e2e/
+
       - name: Run Playwright tests for TypeScript
         run: pnpm run e2e:typescript
         env:
@@ -144,6 +160,8 @@ jobs:
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
           TEMPLATE_TYPE: ${{ matrix.template-types }}
+          USE_LLAMAINDEX_SERVER_PACK: ${{ matrix.template-types == 'llamaindexserver' }}
+          RUNNER_TEMP: ${{ runner.temp }}
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
