@@ -12,11 +12,12 @@ from llama_index.server.services.llamacloud.generate import (
     load_to_llamacloud,
 )
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
-def generate_datasource():
+def generate_index():
     init_settings()
     logger.info("Generate index for the provided data")
 
@@ -27,5 +28,26 @@ def generate_datasource():
     load_to_llamacloud(index, logger=logger)
 
 
-if __name__ == "__main__":
-    generate_datasource()
+def generate_ui_for_workflow():
+    """
+    Generate UI for UIEventData event in app/workflow.py
+    """
+    import asyncio
+    from llama_index.llms.openai import OpenAI
+    from main import COMPONENT_DIR
+
+    # To generate UI components for additional event types,
+    # import the corresponding data model (e.g., MyCustomEventData)
+    # and run the generate_ui_for_workflow function with the imported model.
+    # Make sure the output filename of the generated UI component matches the event type (here `ui_event`)
+    try:
+        from app.workflow import UIEventData  # type: ignore
+    except ImportError:
+        raise ImportError("Couldn't generate UI component for the current workflow.")
+    from llama_index.server.gen_ui import generate_event_component
+
+    # works also well with Claude 3.7 Sonnet or Gemini Pro 2.5
+    llm = OpenAI(model="gpt-4.1")
+    code = asyncio.run(generate_event_component(event_cls=UIEventData, llm=llm))
+    with open(f"{COMPONENT_DIR}/ui_event.jsx", "w") as f:
+        f.write(code)
