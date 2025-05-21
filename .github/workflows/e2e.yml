@@ -162,6 +162,7 @@ jobs:
           TEMPLATE_TYPE: ${{ matrix.template-types }}
           USE_LLAMAINDEX_SERVER_PACK: ${{ matrix.template-types == 'llamaindexserver' }}
           RUNNER_TEMP: ${{ runner.temp }}
+          SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
