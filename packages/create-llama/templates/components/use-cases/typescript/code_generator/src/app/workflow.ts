@@ -71,7 +71,7 @@ export function workflowFactory(reqBody: any) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody, "code"),
+      lastArtifact: extractLastArtifact(reqBody),
     };
   });
   const workflow = withState(createWorkflow());
@@ -89,9 +89,7 @@ export function workflowFactory(reqBody: any) {
 
     return planEvent.with({
       userInput: userInput,
-      context: state.lastArtifact
-        ? `The previous code is: \n${JSON.stringify(state.lastArtifact)}`
-        : "",
+      context: state.lastArtifact ? JSON.stringify(state.lastArtifact) : "",
     });
   });
 
@@ -120,7 +118,7 @@ Follow these instructions:
     - "coding": To make the changes to the current code.
     - "answering": If you don't need to update the current code or need clarification from the user.
 Important: Avoid telling the user to update the code themselves, you are the one who will update the code (by planning a coding step).
-3. If the next step is "coding", you must specify the language ("typescript" or "python") and file_name same as the previous artifact, otherwise you can define language and file_name.
+3. If the next step is "coding", you may specify the language ("typescript" or "python") and file_name if known, otherwise set them to null. 
 4. The requirement must be provided clearly what is the user request and what need to be done for the next step in details
     as precise and specific as possible, don't be stingy with in the requirement.
 5. If the next step is "answering", set language and file_name to null, and the requirement should describe what to answer or explain to the user.
@@ -182,14 +180,8 @@ ${user_msg}
     });
 
     if (requirement.next_step === "coding") {
-      const { language, file_name } = state.lastArtifact?.data ?? {};
       return generateArtifactEvent.with({
-        requirement: {
-          ...requirement,
-          // fallback to the previous code artifact if language and file_name are not provided
-          language: requirement.language || language,
-          file_name: requirement.file_name || file_name,
-        },
+        requirement,
       });
     } else {
       return synthesizeAnswerEvent.with({});
