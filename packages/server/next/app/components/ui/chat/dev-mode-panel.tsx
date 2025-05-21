@@ -5,7 +5,7 @@ import {
   fileExtensionToEditorLang,
 } from "@llamaindex/chat-ui/widgets";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../button";
 import { getConfig } from "../lib/utils";
 
@@ -144,9 +144,12 @@ function DevModePanelComp() {
     }
   }, [devModeOpen]);
 
-  const codeEditorLanguage = fileExtensionToEditorLang(
-    workflowFile?.file_path.split(".").pop() ?? "",
-  );
+  const codeEditorLanguage = useMemo(() => {
+    if (!workflowFile?.file_path) return undefined;
+    return fileExtensionToEditorLang(
+      workflowFile.file_path.split(".").pop() ?? "",
+    );
+  }, [workflowFile]);
 
   return (
     <>
