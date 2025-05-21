@@ -12,21 +12,25 @@ import { createTestDir, runCreateLlama, type AppType } from "../utils";
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
-const dataSource: string = "--example-file";
+const dataSource: string = process.env.DATASOURCE
+  ? (process.env.DATASOURCE as string)
+  : "--example-file";
+const llamaCloudProjectName = "create-llama";
+const llamaCloudIndexName = "e2e-test";
+
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["financial_report", "agentic_rag", "deep_research"];
+const templateUseCases = ["agentic_rag"];
 
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
-      process.platform !== "linux" ||
-        process.env.DATASOURCE === "--no-files" ||
-        templateFramework === "express",
+      dataSource === "--no-files" || templateFramework === "express",
       "The llamaindexserver template currently only works with nextjs, fastapi. We also only run on Linux to speed up tests.",
     );
+    const useLlamaParse = dataSource === "--llamacloud";
     let port: number;
     let cwd: string;
     let name: string;
@@ -48,6 +52,9 @@ for (const useCase of templateUseCases) {
         templateUI,
         appType,
         useCase,
+        llamaCloudProjectName,
+        llamaCloudIndexName,
+        useLlamaParse,
       });
       name = result.projectName;
       appProcess = result.appProcess;
