@@ -144,7 +144,7 @@ jobs:
       - name: Pack @llamaindex/server package
         if: ${{ matrix.template-types == 'llamaindexserver' }}
         run: |
-          pnpm pack --pack-destination ${{ runner.temp }}
+          pnpm pack --pack-destination "${{ runner.temp }}"
           mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
         working-directory: packages/server
 
