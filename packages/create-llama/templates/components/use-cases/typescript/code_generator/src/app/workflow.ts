@@ -89,7 +89,9 @@ export function workflowFactory(reqBody: any) {
 
     return planEvent.with({
       userInput: userInput,
-      context: state.lastArtifact ? JSON.stringify(state.lastArtifact) : "",
+      context: state.lastArtifact
+        ? JSON.stringify(state.lastArtifact)
+        : undefined,
     });
   });
 
