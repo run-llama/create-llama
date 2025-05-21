@@ -24,7 +24,6 @@ jobs:
         frameworks: ["fastapi"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
         template-types: ["streaming", "llamaindexserver"]
-        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
