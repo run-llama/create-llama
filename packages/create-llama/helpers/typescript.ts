@@ -555,6 +555,7 @@ async function updatePackageJson({
   console.log("current working directory", process.cwd());
 
   if (
+    useLlamaIndexServer &&
     !!runnerTemp &&
     templateType === "llamaindexserver" &&
     framework === "nextjs"
