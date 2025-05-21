@@ -545,7 +545,8 @@ async function updatePackageJson({
 
   // if having custom server package tgz file, use it for testing @llamaindex/server
   const serverPackagePath = process.env.SERVER_PACKAGE_PATH;
-  if (serverPackagePath) {
+  const templateType = process.env.TEMPLATE_TYPE;
+  if (serverPackagePath && templateType === "llamaindexserver") {
     const relativePath = path.relative(process.cwd(), serverPackagePath);
     packageJson.dependencies = {
       ...packageJson.dependencies,
