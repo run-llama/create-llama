@@ -28,9 +28,17 @@ const userMessage =
 test.describe(`Test streaming template ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
   const isNode18 = process.version.startsWith("v18");
   const isLlamaCloud = dataSource === "--llamacloud";
+  const isLlamaIndexServer = process.env.TEMPLATE_TYPE === "llamaindexserver";
   // llamacloud is using File API which is not supported on node 18
   if (isNode18 && isLlamaCloud) {
     test.skip(true, "Skipping tests for Node 18 and LlamaCloud data source");
+  }
+
+  if (isLlamaIndexServer) {
+    test.skip(
+      true,
+      "We are testing streaming template, llamaindexserver will be skipped",
+    );
   }
 
   let port: number;
