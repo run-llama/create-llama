@@ -145,7 +145,11 @@ jobs:
         if: ${{ matrix.template-types == 'llamaindexserver' }}
         run: |
           pnpm pack --pack-destination "${{ runner.temp }}"
-          mv "${{ runner.temp }}/llamaindex-server-*.tgz" "${{ runner.temp }}/llamaindex-server.tgz"
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1) mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
+          else
+            mv "${{ runner.temp }}/llamaindex-server-*.tgz" "${{ runner.temp }}/llamaindex-server.tgz"
+          fi
         working-directory: packages/server
 
       - name: Run Playwright tests for TypeScript
