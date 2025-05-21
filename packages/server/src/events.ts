@@ -160,7 +160,7 @@ export function extractAllArtifacts(messages: Message[]): Artifact[] {
           ): annotation is z.infer<typeof artifactAnnotationSchema> =>
             artifactAnnotationSchema.safeParse(annotation).success,
         )
-        .map((artifact) => artifact.data as Artifact) ?? [];
+        .map((annotation) => annotation.data as Artifact) ?? [];
 
     allArtifacts.push(...artifacts);
   }
