@@ -27,18 +27,19 @@
     "directory": "packages/server"
   },
   "scripts": {
-    "clean": "rm -rf ./dist ./server next/.next next/out",
+    "dev": "bunchee --watch",
+    "clean": "rm -rf ./dist ./server next/.next next/out ./temp",
     "prebuild": "pnpm clean",
     "build": "bunchee",
-    "build:api": "tsc --skipLibCheck --project tsconfig.api.json",
-    "postbuild": "pnpm build:api && pnpm copy:next-src && pnpm build:static && pnpm copy:static",
-    "copy:api": "rm -rf ./server/app/api && cp -r ./dist/api ./server/app/api",
-    "copy:next-src": "cp -r ./next ./server && pnpm build:css && rm -rf ./server/postcss.config.js && pnpm copy:api",
-    "build:css": "postcss server/app/globals.css -o server/app/globals.css",
-    "prepare:temp": "rm -rf ./temp && cp -r ./next ./temp && rm -rf ./temp/app/api && mv ./temp/next-build.config.ts ./temp/next.config.ts",
-    "build:static": "pnpm prepare:temp && cd ./temp && next build",
-    "copy:static": "cp -r ./temp/out ./dist/static && rm -rf ./temp",
-    "dev": "bunchee --watch"
+    "postbuild": "pnpm prepare:ts-server && pnpm prepare:py-static",
+    "prepare:ts-server": "pnpm copy:next-src && pnpm build:css && pnpm build:api",
+    "prepare:py-static": "pnpm prepare:static && pnpm build:static && pnpm copy:static",
+    "copy:next-src": "cp -r ./next ./server",
+    "build:css": "postcss server/app/globals.css -o server/app/globals.css && rm -rf ./server/postcss.config.js",
+    "build:api": "rm -rf ./server/app/api && tsc --skipLibCheck --project tsconfig.api.json",
+    "prepare:static": "cp -r ./next ./temp && rm -rf ./temp/app/api && mv ./temp/next-build.config.ts ./temp/next.config.ts",
+    "build:static": "cd ./temp && next build",
+    "copy:static": "cp -r ./temp/out ./dist/static && rm -rf ./temp"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
