@@ -545,13 +545,15 @@ async function updatePackageJson({
 
   const useLlamaIndexServer = process.env.USE_LLAMAINDEX_SERVER_PACK;
   const runnerTemp = process.env.RUNNER_TEMP;
+  const templateType = process.env.TEMPLATE_TYPE;
 
   console.log("useLlamaIndexServer", useLlamaIndexServer);
   console.log("runnerTemp", runnerTemp);
+  console.log("templateType", templateType);
   // log current working directory
   console.log("current working directory", process.cwd());
 
-  if (!!useLlamaIndexServer && !!runnerTemp) {
+  if (!!runnerTemp && templateType === "llamaindexserver") {
     // try to get relative path to llamaindex-server.tgz
     const llamaindexServerPath = path.relative(
       process.cwd(),
