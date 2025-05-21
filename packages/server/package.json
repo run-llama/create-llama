@@ -44,7 +44,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/babel__standalone": "^7.1.9",
     "@types/babel__traverse": "^7.20.7",
-    "llamaindex": "0.10.2",
+    "llamaindex": "~0.11.0",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4",
@@ -106,9 +106,9 @@
     "vaul": "^1.1.2"
   },
   "peerDependencies": {
-    "@llamaindex/env": "^0.1.29",
-    "@llamaindex/workflow": "^1.1.0",
-    "llamaindex": "^0.10.2",
+    "@llamaindex/env": "~0.1.30",
+    "@llamaindex/workflow": "~1.1.3",
+    "llamaindex": "~0.11.0",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.23.3"
   },

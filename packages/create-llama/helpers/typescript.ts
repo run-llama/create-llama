@@ -387,7 +387,7 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "^0.3.7",
+    "@llamaindex/openai": "~0.4.0",
   },
   gemini: {
     "@llamaindex/google": "^0.2.0",
@@ -513,7 +513,7 @@ async function updatePackageJson({
   if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/readers": "3.1.3",
+      "@llamaindex/readers": "~3.1.4",
     };
 
     if (vectorDb && vectorDb in vectorDbDependencies) {
