@@ -155,10 +155,12 @@ export function extractAllArtifacts(messages: Message[]): Artifact[] {
     const artifacts =
       message.annotations
         ?.filter(
-          (annotation) =>
+          (
+            annotation,
+          ): annotation is z.infer<typeof artifactAnnotationSchema> =>
             artifactAnnotationSchema.safeParse(annotation).success,
         )
-        .map((artifact) => artifact as Artifact) ?? [];
+        .map((annotation) => annotation.data as Artifact) ?? [];
 
     allArtifacts.push(...artifacts);
   }
