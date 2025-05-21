@@ -6,7 +6,7 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
   framework: "nextjs",
   ui: "shadcn",
   frontend: false,
-  llamaCloudKey: "",
+  llamaCloudKey: undefined,
   useLlamaParse: false,
   communityProjectConfig: undefined,
   llamapack: "",
