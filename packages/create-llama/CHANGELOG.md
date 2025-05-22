@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.5.16
+
+### Patch Changes
+
+- 6f75d4a: fix: unsupported language in code gen workflow
+- d0618fa: Fix LlamaCloud generate script issue
+
 ## 0.5.15
 
 ### Patch Changes
