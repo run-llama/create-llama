@@ -60,10 +60,7 @@ async def test_server_swagger_docs(server: LlamaIndexServer) -> None:
 
 
 # UI Integration Tests
-# Make sure you run the following steps before running these tests:
-# 1. Run `pnpm build` in the `packages/server` directory
-# 2. Copy or link the static files at ../../packages/server/dist/static to the `llama_index/server/static_ui` directory
-
+# Make sure you run the scripts/build_frontend.py script before running these tests
 if UI_TEST:
 
     @pytest.mark.asyncio()
@@ -186,7 +183,6 @@ if UI_TEST:
         assert server.ui_config.ui_path == ".dict_ui"
 
         # Verify the config.js is created with correct content
-        server.mount_ui()
         config_path = os.path.join(".dict_ui", "config.js")
         assert os.path.exists(config_path), "config.js was not created"
 

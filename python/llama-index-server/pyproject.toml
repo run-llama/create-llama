@@ -65,4 +65,4 @@ dev = [
 
 [tool.hatch.build]
 packages = ["llama_index/"]
-force-include = {"llama_index/server/static_ui" = "llama_index/server/static_ui"}
+artifacts = ["llama_index/server/resources"]

@@ -4,13 +4,30 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-PACKAGE_NAME = "llama_index.server"
-RESOURCE_DIR_NAME = "static_ui"
+PACKAGE_NAME = "llama_index.server.resources"
+RESOURCE_DIR_NAME = "ui"
+
+
+def check_ui_resources():
+    """
+    Checks if the UI resources directory exists in the specified package and lists its contents.
+    Raises a FileNotFoundError with a clear message if the directory is missing.
+    """
+    ui_resources_dir = importlib.resources.files(PACKAGE_NAME).joinpath(
+        RESOURCE_DIR_NAME
+    )
+    if not ui_resources_dir.exists() or not ui_resources_dir.is_dir():
+        raise FileNotFoundError(
+            f"UI resources directory '{RESOURCE_DIR_NAME}' not found in package '{PACKAGE_NAME}'."
+        )
 
 
 def copy_bundled_chat_ui(
     logger: Optional[logging.Logger] = None, target_path: str = ".ui"
 ) -> None:
+    # Check if the UI resources directory exists
+    check_ui_resources()
+
     if logger is None:
         logger = logging.getLogger("uvicorn")
 

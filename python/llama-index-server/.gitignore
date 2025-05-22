@@ -5,7 +5,7 @@
 **/venv
 **/env
 **/llama-index-server.egg-info
-llama_index/server/static_ui
+llama_index/server/resources/ui
 
 # Jupyter files
 **/*.ipynb
