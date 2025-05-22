@@ -1,13 +1,13 @@
 "use client";
 
-import { Star, Workflow } from "lucide-react";
+import { Sparkles, Star } from "lucide-react";
 
-export default function Header({ appTitle }: { appTitle: string }) {
+export default function Header() {
   return (
     <div className="flex items-center justify-between px-4 pt-2">
       <div className="flex items-center gap-2">
-        <Workflow className="size-4" />
-        <h1 className="font-semibold">{appTitle}</h1>
+        <Sparkles className="size-4" />
+        <h1 className="font-semibold">LlamaIndex App</h1>
       </div>
       <div className="flex items-center justify-end gap-4">
         <div className="flex items-center gap-2">
