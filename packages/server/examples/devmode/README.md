@@ -6,7 +6,6 @@ First, we need to set `devMode` to `true` in the `uiConfig` of the server.
 new LlamaIndexServer({
   workflow: workflowFactory,
   uiConfig: {
-    appTitle: "Calculator",
     devMode: true,
   },
   port: 3000,

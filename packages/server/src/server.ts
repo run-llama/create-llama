@@ -37,7 +37,6 @@ export class LlamaIndexServer {
 
   private modifyConfig(options: LlamaIndexServerOptions) {
     const { uiConfig } = options;
-    const appTitle = uiConfig?.appTitle ?? "LlamaIndex App";
     const starterQuestions = uiConfig?.starterQuestions ?? [];
     const llamaCloudApi =
       uiConfig?.llamaCloudIndexSelector && getEnv("LLAMA_CLOUD_API_KEY")
@@ -51,7 +50,6 @@ export class LlamaIndexServer {
     const content = `
       window.LLAMAINDEX = {
         CHAT_API: '/api/chat',
-        APP_TITLE: ${JSON.stringify(appTitle)},
         LLAMA_CLOUD_API: ${JSON.stringify(llamaCloudApi)},
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
         COMPONENTS_API: ${JSON.stringify(componentsApi)},

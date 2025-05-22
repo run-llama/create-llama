@@ -17,7 +17,6 @@ const weatherAgent = agent({
 new LlamaIndexServer({
   workflow: () => weatherAgent,
   uiConfig: {
-    appTitle: "Weather App",
     starterQuestions: [
       "What is the weather in Tokyo?",
       "What is the weather in Ho Chi Minh City?",

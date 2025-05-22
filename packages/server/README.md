@@ -30,7 +30,6 @@ const createWorkflow = () => agent({ tools: [wiki()], llm: openai("gpt-4o") });
 new LlamaIndexServer({
   workflow: createWorkflow,
   uiConfig: {
-    appTitle: "LlamaIndex App",
     starterQuestions: ["Who is the first president of the United States?"],
   },
 }).start();
@@ -60,7 +59,6 @@ The `LlamaIndexServer` accepts the following configuration options:
 
 - `workflow`: A callable function that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `uiConfig`: An object to configure the chat UI containing the following properties:
-  - `appTitle`: The title of the application (default: `"LlamaIndex App"`)
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
@@ -194,7 +192,6 @@ To use the generated UI components, you need to initialize the LlamaIndex server
 new LlamaIndexServer({
   workflow: createWorkflow,
   uiConfig: {
-    appTitle: "LlamaIndex App",
     componentsDir: "components",
   },
 }).start();
