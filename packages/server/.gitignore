@@ -1,1 +1,5 @@
+# server contains Nextjs frontend code (not compiled)
 server/
+
+# temp is the copy of next folder but without API folder, used to build frontend static files
+temp/

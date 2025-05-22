@@ -7,13 +7,6 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import { getLlamaCloudConfig } from "./handlers/cloud";
-import { getComponents } from "./handlers/components";
-import {
-  getWorkflowFile,
-  handleServeFiles,
-  updateWorkflowFile,
-} from "./handlers/files";
 import type { LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
@@ -81,8 +74,12 @@ export class LlamaIndexServer {
     const server = createServer((req, res) => {
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
+      const query = parsedUrl.query;
 
       if (pathname === "/api/chat" && req.method === "POST") {
+        // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
+        // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
+        // make sure to keep its semantic in sync with handleChat
         return handleChat(
           req,
           res,
@@ -91,36 +88,16 @@ export class LlamaIndexServer {
         );
       }
 
-      if (pathname?.startsWith("/api/files") && req.method === "GET") {
-        return handleServeFiles(req, res, pathname);
-      }
-
       if (
         this.componentsDir &&
         pathname === "/api/components" &&
         req.method === "GET"
       ) {
-        return getComponents(req, res, this.componentsDir);
-      }
-
-      if (
-        getEnv("LLAMA_CLOUD_API_KEY") &&
-        pathname === "/api/chat/config/llamacloud" &&
-        req.method === "GET"
-      ) {
-        return getLlamaCloudConfig(req, res);
-      }
-
-      if (pathname === "/api/dev/files/workflow" && req.method === "GET") {
-        return getWorkflowFile(req, res);
-      }
-
-      if (pathname === "/api/dev/files/workflow" && req.method === "PUT") {
-        return updateWorkflowFile(req, res);
+        query.componentsDir = this.componentsDir;
       }
 
       const handle = this.app.getRequestHandler();
-      handle(req, res, parsedUrl);
+      handle(req, res, { ...parsedUrl, query });
     });
 
     server.listen(this.port, () => {
