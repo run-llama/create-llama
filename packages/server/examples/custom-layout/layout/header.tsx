@@ -2,7 +2,7 @@
 
 import { Star, Workflow } from "lucide-react";
 
-export function ChatHeader({ appTitle }: { appTitle: string }) {
+export default function Header({ appTitle }: { appTitle: string }) {
   return (
     <div className="flex items-center justify-between px-4 pt-2">
       <div className="flex items-center gap-2">
