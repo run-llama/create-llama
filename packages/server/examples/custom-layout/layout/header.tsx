@@ -1,12 +1,12 @@
 "use client";
 
-import { Sparkles, Star } from "lucide-react";
+import { Star, Workflow } from "lucide-react";
 
 export function ChatHeader({ appTitle }: { appTitle: string }) {
   return (
     <div className="flex items-center justify-between px-4 pt-2">
       <div className="flex items-center gap-2">
-        <Sparkles className="size-4" />
+        <Workflow className="size-4" />
         <h1 className="font-semibold">{appTitle}</h1>
       </div>
       <div className="flex items-center justify-end gap-4">
