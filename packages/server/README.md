@@ -187,13 +187,13 @@ Feel free to modify the generated code to match your needs. If you're not satisf
 
 ## Custom Layout
 
-LlamaIndex Server supports custom layout sections. To use custom layout, you need to initialize the LlamaIndex server with the `layoutDir` that contains your custom layout files.
+LlamaIndex Server supports custom layout for header and footer. To use custom layout, you need to initialize the LlamaIndex server with the `layoutDir` that contains your custom layout files.
 
 ```ts
 new LlamaIndexServer({
   workflow: createWorkflow,
   uiConfig: {
-    layoutDir: "layout", // default is "layout"
+    layoutDir: "layout",
   },
 }).start();
 ```
