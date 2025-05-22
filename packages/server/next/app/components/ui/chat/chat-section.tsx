@@ -13,8 +13,7 @@ import { DynamicEventsErrors } from "./custom/events/dynamic-events-errors";
 import { fetchComponentDefinitions } from "./custom/events/loader";
 import { ComponentDef } from "./custom/events/types";
 import { DevModePanel } from "./dev-mode-panel";
-import { Footer } from "./layout/footer";
-import { Header } from "./layout/header";
+import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
   const handler = useChat({
@@ -33,8 +32,7 @@ export default function ChatSection() {
   });
   return (
     <>
-      <div className="flex h-screen w-screen flex-col overflow-hidden">
-        <Header appTitle={getConfig("APP_TITLE")} />
+      <ChatLayout>
         <ChatUI
           handler={handler}
           className="relative flex min-h-0 flex-1 flex-row justify-center gap-4 px-4 py-0"
@@ -45,8 +43,7 @@ export default function ChatSection() {
           </ResizablePanelGroup>
           <DevModePanel />
         </ChatUI>
-        <Footer />
-      </div>
+      </ChatLayout>
       <ChatInjection />
     </>
   );
