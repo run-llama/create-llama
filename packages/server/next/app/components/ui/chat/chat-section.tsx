@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getConfig } from "../lib/utils";
 import { ResizablePanel, ResizablePanelGroup } from "../resizable";
 import { ChatCanvasPanel } from "./canvas/panel";
-import { ChatHeader } from "./chat-header";
 import { ChatInjection } from "./chat-injection";
 import CustomChatInput from "./chat-input";
 import CustomChatMessages from "./chat-messages";
@@ -14,6 +13,7 @@ import { DynamicEventsErrors } from "./custom/events/dynamic-events-errors";
 import { fetchComponentDefinitions } from "./custom/events/loader";
 import { ComponentDef } from "./custom/events/types";
 import { DevModePanel } from "./dev-mode-panel";
+import { ChatHeader } from "./layout/header";
 
 export default function ChatSection() {
   const handler = useChat({
