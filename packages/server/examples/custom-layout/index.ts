@@ -18,7 +18,11 @@ new LlamaIndexServer({
   workflow: () => weatherAgent,
   uiConfig: {
     appTitle: "Weather App",
-    starterQuestions: ["What is the weather in Tokyo?"],
+    starterQuestions: [
+      "What is the weather in Tokyo?",
+      "What is the weather in Ho Chi Minh City?",
+    ],
+    layoutDir: "layout",
   },
   port: 3000,
 }).start();

@@ -2,7 +2,11 @@
 
 import { Sparkles, Star } from "lucide-react";
 
-export default function Header({ appTitle }: { appTitle: string }) {
+export function Header({ appTitle }: { appTitle: string }) {
+  return <DefaultHeader appTitle={appTitle} />;
+}
+
+function DefaultHeader({ appTitle }: { appTitle: string }) {
   return (
     <div className="flex items-center justify-between px-4 pt-2">
       <div className="flex items-center gap-2">

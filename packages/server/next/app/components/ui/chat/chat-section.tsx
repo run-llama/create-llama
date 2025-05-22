@@ -13,7 +13,8 @@ import { DynamicEventsErrors } from "./custom/events/dynamic-events-errors";
 import { fetchComponentDefinitions } from "./custom/events/loader";
 import { ComponentDef } from "./custom/events/types";
 import { DevModePanel } from "./dev-mode-panel";
-import Header from "./layout/header";
+import { Footer } from "./layout/footer";
+import { Header } from "./layout/header";
 
 export default function ChatSection() {
   const handler = useChat({
@@ -44,6 +45,7 @@ export default function ChatSection() {
           </ResizablePanelGroup>
           <DevModePanel />
         </ChatUI>
+        <Footer />
       </div>
       <ChatInjection />
     </>
