@@ -18,6 +18,7 @@ export class LlamaIndexServer {
   app: ReturnType<typeof next>;
   workflowFactory: () => Promise<Workflow> | Workflow;
   componentsDir?: string | undefined;
+  layoutDir: string;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, ...nextAppOptions } = options;
@@ -25,6 +26,7 @@ export class LlamaIndexServer {
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
+    this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -42,6 +44,7 @@ export class LlamaIndexServer {
         ? "/api/chat/config/llamacloud"
         : undefined;
     const componentsApi = this.componentsDir ? "/api/components" : undefined;
+    const layoutApi = this.layoutDir ? "/api/layout" : undefined;
     const devMode = uiConfig?.devMode ?? false;
 
     // content in javascript format
@@ -52,6 +55,7 @@ export class LlamaIndexServer {
         LLAMA_CLOUD_API: ${JSON.stringify(llamaCloudApi)},
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
         COMPONENTS_API: ${JSON.stringify(componentsApi)},
+        LAYOUT_API: ${JSON.stringify(layoutApi)},
         DEV_MODE: ${JSON.stringify(devMode)}
       }
     `;
@@ -86,6 +90,10 @@ export class LlamaIndexServer {
         req.method === "GET"
       ) {
         query.componentsDir = this.componentsDir;
+      }
+
+      if (pathname === "/api/layout" && req.method === "GET") {
+        query.layoutDir = this.layoutDir;
       }
 
       const handle = this.app.getRequestHandler();

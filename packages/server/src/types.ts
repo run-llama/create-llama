@@ -16,6 +16,7 @@ export type UIConfig = {
   appTitle?: string;
   starterQuestions?: string[];
   componentsDir?: string;
+  layoutDir?: string;
   llamaCloudIndexSelector?: boolean;
   devMode?: boolean;
 };
