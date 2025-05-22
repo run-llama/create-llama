@@ -61,7 +61,7 @@ The `LlamaIndexServer` accepts the following configuration options:
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
-  - `layoutDir`: The directory for custom layout files (currently only `header.tsx` and `footer.tsx` are supported). The default value of `layoutDir` is `layout`.
+  - `layoutDir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](#custom-layout) for more details.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/src/workflow.ts`. Please start server in dev mode (`npm run dev`) to use see this reload feature enabled.
 
@@ -184,6 +184,28 @@ fs.writeFileSync("components/ui_event.jsx", code);
 Feel free to modify the generated code to match your needs. If you're not satisfied with the generated code, we suggest improving the provided JSON schema first or trying another LLM.
 
 > Note that `generateEventComponent` is generating JSX code, but you can also provide a TSX file.
+
+## Custom Layout
+
+LlamaIndex Server supports custom layout sections. To use custom layout, you need to initialize the LlamaIndex server with the `layoutDir` that contains your custom layout files.
+
+```ts
+new LlamaIndexServer({
+  workflow: createWorkflow,
+  uiConfig: {
+    layoutDir: "layout", // default is "layout"
+  },
+}).start();
+```
+
+```
+layout/
+  header.tsx
+  footer.tsx
+```
+
+We currently support custom header and footer for the chat interface. The syntax for these files is the same as events components in components directory.
+Note that by default, we are still rendering the default LlamaIndex Header. It's also the fallback when having errors rendering the custom header.
 
 ### Server Setup
 
