@@ -45,27 +45,16 @@ export async function handleComponentRoute(
     }
 
     const filesInDir = await promisify(fs.readdir)(directory);
+    const validFiles = filesInDir.filter((file) =>
+      VALID_EXTENSIONS.includes(path.extname(file)),
+    );
+    let filesToProcess = filterDuplicateFiles(validFiles);
 
-    let filesToProcess: string[];
-
-    if (itemTypes && itemTypes.length > 0) {
+    if (itemTypes?.length) {
       // Specific item types provided (e.g., for layouts "header", "footer")
-      filesToProcess = itemTypes
-        .map((type) => {
-          // Find .tsx first, then .jsx
-          let foundFile = filesInDir.find((f) => f === `${type}.tsx`);
-          if (!foundFile) {
-            foundFile = filesInDir.find((f) => f === `${type}.jsx`);
-          }
-          return foundFile;
-        })
-        .filter((file): file is string => !!file);
-    } else {
-      // No specific item types, process all valid files in directory (e.g., for components)
-      const validFiles = filesInDir.filter((file) =>
-        VALID_EXTENSIONS.includes(path.extname(file)),
+      filesToProcess = filesToProcess.filter((file) =>
+        itemTypes.includes(path.basename(file, path.extname(file))),
       );
-      filesToProcess = filterDuplicateFiles(validFiles);
     }
 
     const items: Item[] = await Promise.all(
