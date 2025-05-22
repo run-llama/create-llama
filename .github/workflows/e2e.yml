@@ -136,6 +136,21 @@ jobs:
         run: pnpm run pack-install
         working-directory: packages/create-llama
 
+      - name: Build server
+        run: pnpm run build
+        working-directory: packages/server
+
+      - name: Pack @llamaindex/server package
+        run: |
+          pnpm pack --pack-destination "${{ runner.temp }}"
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1)
+            mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
+          else
+            mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
+          fi
+        working-directory: packages/server
+
       - name: Run Playwright tests for TypeScript
         run: pnpm run e2e:typescript
         env:
@@ -144,6 +159,7 @@ jobs:
           FRAMEWORK: ${{ matrix.frameworks }}
           DATASOURCE: ${{ matrix.datasources }}
           TEMPLATE_TYPE: ${{ matrix.template-types }}
+          SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4

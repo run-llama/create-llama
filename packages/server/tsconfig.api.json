@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./next/app/api",
+    "outDir": "./server/app/api",
+    "emitDeclarationOnly": false
+  },
+  "include": ["./next/app/api"],
+  "exclude": ["./next/app/api/chat/route.ts"]
+}

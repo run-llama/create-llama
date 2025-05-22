@@ -1,20 +1,19 @@
 import fs from "fs";
-import type { IncomingMessage, ServerResponse } from "http";
+import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { promisify } from "util";
-import { sendJSONResponse } from "../utils/request";
 
-export const getComponents = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-  componentsDir: string,
-) => {
+export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  const componentsDir = params.get("componentsDir") || "components";
+
   try {
     const exists = await promisify(fs.exists)(componentsDir);
     if (!exists) {
-      return sendJSONResponse(res, 404, {
-        error: "Components directory not found",
-      });
+      return NextResponse.json(
+        { error: "Components directory not found" },
+        { status: 404 },
+      );
     }
 
     const files = await promisify(fs.readdir)(componentsDir);
@@ -40,12 +39,15 @@ export const getComponents = async (
       }),
     );
 
-    sendJSONResponse(res, 200, components);
+    return NextResponse.json(components, { status: 200 });
   } catch (error) {
     console.error("Error reading components:", error);
-    sendJSONResponse(res, 500, { error: "Failed to read components" });
+    return NextResponse.json(
+      { error: "Failed to read components" },
+      { status: 500 },
+    );
   }
-};
+}
 
 function filterDuplicateComponents(files: string[]) {
   const compMap = new Map<string, string>();

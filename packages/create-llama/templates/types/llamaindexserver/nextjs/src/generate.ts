@@ -1,13 +1,10 @@
 import "dotenv/config";
 import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
-import {
-  OpenAI,
-  storageContextFromDefaults,
-  VectorStoreIndex,
-} from "llamaindex";
+import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
 import { initSettings } from "./app/settings";
 import fs from "fs";
 import { generateEventComponent } from "@llamaindex/server";
+import { OpenAI } from "@llamaindex/openai";
 
 async function generateDatasource() {
   console.log(`Generating storage context...`);
