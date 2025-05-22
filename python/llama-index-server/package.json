@@ -1,0 +1,15 @@
+{
+  "name": "@create-llama/llama-index-server",
+  "private": true,
+  "version": "0.1.16",
+  "type": "module",
+  "scripts": {
+    "prebuild": "pnpm --filter @llamaindex/server build && mkdir -p llama_index/server/static_ui && ln -sf $(realpath ../../packages/server/dist/static) llama_index/server/static_ui",
+    "build": "uv build",
+    "clean": "rm -rf dist build *.egg-info",
+    "sync-version": "uv run python scripts/sync_version.py",
+    "preversion": "pnpm run clean",
+    "version": "pnpm run sync-version && git add pyproject.toml",
+    "release": "pnpm run build && uv publish"
+  }
+}

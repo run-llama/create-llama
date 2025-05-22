@@ -13,7 +13,8 @@
   },
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "python/*"
   ],
   "scripts": {
     "dev": "pnpm -r dev",
