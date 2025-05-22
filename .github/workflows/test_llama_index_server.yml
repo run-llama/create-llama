@@ -108,19 +108,24 @@ jobs:
 
       - name: Get the absolute wheel file path and save it to the output
         shell: bash
+        id: get_whl_path
         run: |
           WHL_FILE=$(readlink -f dist/*.whl)
-          echo "WHL_FILE=$WHL_FILE" >> $GITHUB_OUTPUT
+          echo "whl_file=$WHL_FILE" >> $GITHUB_OUTPUT
 
       - name: Test import
         shell: bash
         working-directory: ${{ github.workspace }}
+        env:
+          WHL_FILE: ${{ steps.get_whl_path.outputs.whl_file }}
         run: |
           uv run --with $WHL_FILE python -c "from llama_index.server import LlamaIndexServer"
 
       - name: Check frontend resources is present
         shell: bash
         working-directory: ${{ github.workspace }}
+        env:
+          WHL_FILE: ${{ steps.get_whl_path.outputs.whl_file }}
         run: |
           uv run --with $WHL_FILE python -c "from llama_index.server.chat_ui import check_ui_resources; check_ui_resources()"
 
