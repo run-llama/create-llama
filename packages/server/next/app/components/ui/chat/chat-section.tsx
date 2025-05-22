@@ -13,7 +13,7 @@ import { DynamicEventsErrors } from "./custom/events/dynamic-events-errors";
 import { fetchComponentDefinitions } from "./custom/events/loader";
 import { ComponentDef } from "./custom/events/types";
 import { DevModePanel } from "./dev-mode-panel";
-import { ChatHeader } from "./layout/header";
+import Header from "./layout/header";
 
 export default function ChatSection() {
   const handler = useChat({
@@ -33,7 +33,7 @@ export default function ChatSection() {
   return (
     <>
       <div className="flex h-screen w-screen flex-col overflow-hidden">
-        <ChatHeader appTitle={getConfig("APP_TITLE")} />
+        <Header appTitle={getConfig("APP_TITLE")} />
         <ChatUI
           handler={handler}
           className="relative flex min-h-0 flex-1 flex-row justify-center gap-4 px-4 py-0"
