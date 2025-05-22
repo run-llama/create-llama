@@ -15,7 +15,7 @@ from llama_index.server.api.routers import (
     custom_components_router,
     dev_router,
 )
-from llama_index.server.chat_ui import download_chat_ui
+from llama_index.server.chat_ui import copy_bundled_chat_ui
 from llama_index.server.settings import server_settings
 
 
@@ -185,9 +185,11 @@ class LlamaIndexServer(FastAPI):
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)
                 self.logger.warning(
-                    f"UI files not found, downloading UI to {self.ui_config.ui_path}"
+                    f"UI files not found at {self.ui_config.ui_path}. Copying bundled UI files."
                 )
-                download_chat_ui(logger=self.logger, target_path=self.ui_config.ui_path)
+                copy_bundled_chat_ui(
+                    logger=self.logger, target_path=self.ui_config.ui_path
+                )
             self._mount_static_files(
                 directory=self.ui_config.ui_path,
                 path="/",

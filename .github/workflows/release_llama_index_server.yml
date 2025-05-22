@@ -14,6 +14,35 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
+  prepare-ui:
+    name: Prepare Frontend Assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install frontend dependencies
+        working-directory: packages/server
+        run: pnpm install
+
+      - name: Build frontend statics
+        working-directory: packages/server
+        run: pnpm build
+
+      - name: Upload frontend statics
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-statics
+          path: packages/server/dist/static/
+          if-no-files-found: error
+
   release:
     name: Create Release PR
     runs-on: ubuntu-latest
@@ -82,6 +111,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
+    needs: [prepare-ui]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -95,6 +125,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Download frontend statics
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-statics
+          path: packages/server/dist/static/
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -119,7 +155,13 @@ jobs:
 
       - name: Build package
         shell: bash
-        run: uv build --no-sources
+        run: uv build --no-sources --wheel
+
+      - name: Validate built wheel has static files
+        shell: bash
+        run: |
+          wheel_file=$(ls dist/*.whl)
+          unzip -l $wheel_file | grep -q "static/index.html"
 
       - name: Publish to PyPI
         shell: bash

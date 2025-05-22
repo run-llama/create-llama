@@ -5,10 +5,41 @@ on:
 
 env:
   PYTHON_VERSION: "3.9"
+  UI_TEST: "true"
 
 jobs:
+  prepare-ui:
+    name: Prepare Frontend Assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install frontend dependencies
+        working-directory: packages/server
+        run: pnpm install
+
+      - name: Build frontend statics
+        working-directory: packages/server
+        run: pnpm build
+
+      - name: Upload frontend statics
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-statics
+          path: packages/server/dist/static/
+          if-no-files-found: error
+
   unit-test:
     name: Unit Tests
+    needs: [prepare-ui]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -19,6 +50,14 @@ jobs:
         python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download frontend statics
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-statics
+          path: llama_index/server/static_ui
+        run: |
+          ls -la llama_index/server/static_ui/
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -40,12 +79,21 @@ jobs:
 
   type-check:
     name: Type Check
+    needs: [prepare-ui]
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download frontend statics
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-statics
+          path: llama_index/server/static_ui
+        run: |
+          ls -la llama_index/server/static_ui/
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -66,13 +114,23 @@ jobs:
         run: uv run mypy llama_index
 
   build:
-    needs: [unit-test, type-check]
+    needs: [unit-test, type-check, prepare-ui]
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download frontend statics
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-statics
+          path: llama_index/server/static_ui/
+
+      - name: List frontend statics
+        run: |
+          ls -la llama_index/server/static_ui/
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
