@@ -42,10 +42,16 @@ const installLlamaIndexServerTemplate = async ({
     rename: assetRelocator,
   });
 
-  // copy workflow UI components to output/components folder
+  // copy workflow UI components to components folder in root
   await copy("*", path.join(root, "components"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
+  });
+
+  // copy layout components to layout folder in root
+  await copy("*", path.join(root, "layout"), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ui", "layout"),
   });
 
   // Override generate.ts if workflow use case doesn't use custom UI
