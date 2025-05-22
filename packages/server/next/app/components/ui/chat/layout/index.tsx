@@ -29,6 +29,7 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
     const fetchLayoutComponents = async () => {
       setIsRendering(true);
       const layoutFiles = await fetchLayoutFiles();
+      console.log(layoutFiles);
       if (layoutFiles.length) {
         const layoutComponents = await parseLayoutComponents(layoutFiles);
         setLayoutComponents(layoutComponents);
@@ -46,21 +47,25 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
   if (isRendering) {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center overflow-hidden">
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="text-muted-foreground animate-spin" />
       </div>
     );
   }
 
+  console.log(layoutComponents);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
-      <div className="h-10 w-full bg-yellow-500">
-        <h2 className="text-lg font-bold">
-          Errors happened while rendering the layout:
-        </h2>
-        {errors.map((error) => (
-          <div key={error}>{error}</div>
-        ))}
-      </div>
+      {errors.length > 0 && (
+        <div className="h-10 w-full bg-yellow-500">
+          <h2 className="text-lg font-bold">
+            Errors happened while rendering the layout:
+          </h2>
+          {errors.map((error) => (
+            <div key={error}>{error}</div>
+          ))}
+        </div>
+      )}
 
       <LayoutRenderer
         component={layoutComponents.find((c) => c.type === "header")?.component}
@@ -107,7 +112,7 @@ async function parseLayoutComponents(layoutFiles: LayoutFile[]) {
 
 async function fetchLayoutFiles(): Promise<LayoutFile[]> {
   try {
-    const response = await fetch(getConfig("LAYOUT_DIR"));
+    const response = await fetch(getConfig("LAYOUT_API"));
     const layoutFiles: LayoutFile[] = await response.json();
     return layoutFiles;
   } catch (error) {
