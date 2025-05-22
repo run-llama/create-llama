@@ -1,5 +1,12 @@
 # @llamaindex/server
 
+## 0.2.2
+
+### Patch Changes
+
+- 25fba43: refactor: migrate to Nextjs Route Handler
+- 6f75d4a: fix: unsupported language in code gen workflow
+
 ## 0.2.1
 
 ### Patch Changes
