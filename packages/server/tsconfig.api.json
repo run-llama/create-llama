@@ -5,5 +5,6 @@
     "outDir": "./server/app/api",
     "emitDeclarationOnly": false
   },
-  "include": ["./next/app/api"]
+  "include": ["./next/app/api"],
+  "exclude": ["./next/app/api/chat/route.ts"]
 }
