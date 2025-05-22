@@ -60,6 +60,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download frontend statics
+        run: |
+          echo "Downloading frontend statics from run ${{ github.run_id }}"
+          gh run download ${{ github.run_id }} --name frontend-statics -D llama_index/server/static_ui
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
