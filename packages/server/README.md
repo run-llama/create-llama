@@ -61,6 +61,7 @@ The `LlamaIndexServer` accepts the following configuration options:
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
+  - `layoutDir`: The directory for custom layout files (currently only `header.tsx` and `footer.tsx` are supported). The default value of `layoutDir` is `layout`.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/src/workflow.ts`. Please start server in dev mode (`npm run dev`) to use see this reload feature enabled.
 
