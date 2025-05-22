@@ -20,6 +20,7 @@ jobs:
         python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -30,8 +31,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - uses: pnpm/action-setup@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -55,6 +54,7 @@ jobs:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -81,6 +81,7 @@ jobs:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
 
       - name: Set up Python
         uses: actions/setup-python@v5
