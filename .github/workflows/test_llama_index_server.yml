@@ -38,6 +38,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
+        shell: bash
         run: pnpm install && pnpm build
 
       - name: Run unit tests
@@ -46,7 +47,6 @@ jobs:
 
   type-check:
     name: Type Check
-    needs: [prepare-ui]
     runs-on: ubuntu-latest
     defaults:
       run:
