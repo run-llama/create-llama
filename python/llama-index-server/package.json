@@ -7,10 +7,8 @@
     "prebuild": "uv run -- scripts/frontend.py --mode copy",
     "build": "uv build",
     "clean": "rm -rf dist build *.egg-info",
-    "sync-version": "uv run python scripts/sync_version.py",
-    "preversion": "pnpm run clean",
-    "version": "pnpm run sync-version && git add pyproject.toml",
-    "release": "pnpm run build && uv publish"
+    "new-version": "uv run python scripts/sync_version.py && git add pyproject.toml",
+    "release": "uv publish"
   },
   "dependencies": {
     "@llamaindex/server": "workspace:*"
