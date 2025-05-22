@@ -149,4 +149,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-index-server
-          path: python/llama-index-server/dist/
+          path: dist/
