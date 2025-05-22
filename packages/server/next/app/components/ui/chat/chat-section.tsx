@@ -33,7 +33,7 @@ export default function ChatSection() {
   return (
     <>
       <div className="flex h-screen w-screen flex-col overflow-hidden">
-        <ChatHeader />
+        <ChatHeader appTitle={getConfig("APP_TITLE")} />
         <ChatUI
           handler={handler}
           className="relative flex min-h-0 flex-1 flex-row justify-center gap-4 px-4 py-0"
