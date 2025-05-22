@@ -74,6 +74,9 @@ export class LlamaIndexServer {
       const query = parsedUrl.query;
 
       if (pathname === "/api/chat" && req.method === "POST") {
+        // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
+        // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
+        // make sure to keep its semantic in sync with handleChat
         return handleChat(req, res, this.workflowFactory);
       }
 
