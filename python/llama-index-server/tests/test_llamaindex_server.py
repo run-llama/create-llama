@@ -92,9 +92,9 @@ if UI_TEST:
         print("Files in tmp_ui_dir: ", os.listdir(tmp_ui_dir))
         assert os.path.exists(tmp_ui_dir), "Static directory was not created"
         assert os.path.isdir(tmp_ui_dir), "Static path is not a directory"
-        assert os.path.exists(
-            os.path.join(tmp_ui_dir, "index.html")
-        ), "index.html was not copied from bundle"
+        assert os.path.exists(os.path.join(tmp_ui_dir, "index.html")), (
+            "index.html was not copied from bundle"
+        )
 
         # Check if the config.js was created with correct content
         config_path = os.path.join(tmp_ui_dir, "config.js")
