@@ -29,6 +29,7 @@ def create_app() -> FastAPI:
                 "Write a guideline on how to use LLM effectively",
             ],
             component_dir="components",
+            layout_dir="layout",
         ),
     )
     return app
