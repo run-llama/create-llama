@@ -16,6 +16,7 @@ export const handleChat = async (
   req: IncomingMessage,
   res: ServerResponse,
   workflowFactory: WorkflowFactory,
+  suggestNextQuestions: boolean,
 ) => {
   try {
     const body = await parseRequestBody(req);
@@ -53,7 +54,9 @@ export const handleChat = async (
             role: "assistant" as MessageType,
             content: completion,
           });
-          await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          if (suggestNextQuestions) {
+            await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          }
         },
       },
     });

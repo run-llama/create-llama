@@ -64,6 +64,7 @@ The `LlamaIndexServer` accepts the following configuration options:
   - `layoutDir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](#custom-layout) for more details.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/src/workflow.ts`. Please start server in dev mode (`npm run dev`) to use see this reload feature enabled.
+- `suggestNextQuestions`: Whether to suggest next questions after the assistant's response (default: `true`). You can change the prompt for the next questions by setting the `NEXT_QUESTION_PROMPT` environment variable.
 
 LlamaIndexServer accepts all the configuration options from Nextjs Custom Server such as `port`, `hostname`, `dev`, etc.
 See all Nextjs Custom Server options [here](https://nextjs.org/docs/app/building-your-application/configuring/custom-server).

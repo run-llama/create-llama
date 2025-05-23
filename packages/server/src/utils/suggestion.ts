@@ -1,19 +1,7 @@
+import { getEnv } from "@llamaindex/env";
 import type { DataStreamWriter } from "ai";
 import { type ChatMessage, Settings } from "llamaindex";
-
-const NEXT_QUESTION_PROMPT = `You're a helpful assistant! Your task is to suggest the next question that user might ask. 
-Here is the conversation history
----------------------
-{conversation}
----------------------
-Given the conversation history, please give me 3 questions that user might ask next!
-Your answer should be wrapped in three sticks which follows the following format:
-\`\`\`
-<question 1>
-<question 2>
-<question 3>
-\`\`\`
-`;
+import { NEXT_QUESTION_PROMPT } from "../prompts";
 
 export const sendSuggestedQuestionsEvent = async (
   streamWriter: DataStreamWriter,
@@ -32,10 +20,8 @@ export async function generateNextQuestions(conversation: ChatMessage[]) {
   const conversationText = conversation
     .map((message) => `${message.role}: ${message.content}`)
     .join("\n");
-  const message = NEXT_QUESTION_PROMPT.replace(
-    "{conversation}",
-    conversationText,
-  );
+  const promptTemplate = getEnv("NEXT_QUESTION_PROMPT") || NEXT_QUESTION_PROMPT;
+  const message = promptTemplate.replace("{conversation}", conversationText);
 
   try {
     const response = await Settings.llm.complete({ prompt: message });

@@ -16,7 +16,7 @@ from llama_index.server.api.routers import (
     custom_layout_router,
     dev_router,
 )
-from llama_index.server.chat_ui import download_chat_ui
+from llama_index.server.chat_ui import copy_bundled_chat_ui
 from llama_index.server.settings import server_settings
 
 
@@ -77,11 +77,12 @@ class LlamaIndexServer(FastAPI):
         self,
         workflow_factory: Callable[..., Workflow],
         logger: Optional[logging.Logger] = None,
-        use_default_routers: Optional[bool] = True,
+        use_default_routers: Optional[bool] = None,
         env: Optional[str] = None,
         ui_config: Optional[Union[UIConfig, dict]] = None,
         server_url: Optional[str] = None,
         api_prefix: Optional[str] = None,
+        suggest_next_questions: Optional[bool] = None,
         verbose: bool = False,
         *args: Any,
         **kwargs: Any,
@@ -97,6 +98,7 @@ class LlamaIndexServer(FastAPI):
             ui_config: The configuration for the chat UI.
             server_url: The URL of the server.
             api_prefix: The prefix for the API endpoints.
+            suggest_next_questions: Whether to suggest next questions after the assistant's response.
             verbose: Whether to show verbose logs.
         """
         super().__init__(*args, **kwargs)
@@ -104,7 +106,12 @@ class LlamaIndexServer(FastAPI):
         self.workflow_factory = workflow_factory
         self.logger = logger or logging.getLogger("uvicorn")
         self.verbose = verbose
-        self.use_default_routers = use_default_routers or True
+        self.use_default_routers = (
+            True if use_default_routers is None else use_default_routers
+        )
+        self.suggest_next_questions = (
+            True if suggest_next_questions is None else suggest_next_questions
+        )
         if ui_config is None:
             self.ui_config = UIConfig()
         elif isinstance(ui_config, dict):
@@ -155,6 +162,7 @@ class LlamaIndexServer(FastAPI):
             chat_router(
                 self.workflow_factory,
                 self.logger,
+                self.suggest_next_questions,
             ),
             prefix=server_settings.api_prefix,
         )
@@ -200,9 +208,11 @@ class LlamaIndexServer(FastAPI):
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)
                 self.logger.warning(
-                    f"UI files not found, downloading UI to {self.ui_config.ui_path}"
+                    f"UI files not found at {self.ui_config.ui_path}. Copying bundled UI files."
                 )
-                download_chat_ui(logger=self.logger, target_path=self.ui_config.ui_path)
+                copy_bundled_chat_ui(
+                    logger=self.logger, target_path=self.ui_config.ui_path
+                )
             self._mount_static_files(
                 directory=self.ui_config.ui_path,
                 path="/",

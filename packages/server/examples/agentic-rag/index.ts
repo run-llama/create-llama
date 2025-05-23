@@ -35,6 +35,7 @@ export const workflowFactory = async () => {
 
 new LlamaIndexServer({
   workflow: workflowFactory,
+  suggestNextQuestions: true,
   uiConfig: {
     starterQuestions: ["What is the color of the dog?"],
   },
