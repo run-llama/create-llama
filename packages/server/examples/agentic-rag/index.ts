@@ -38,10 +38,7 @@ new LlamaIndexServer({
   suggestNextQuestions: true,
   uiConfig: {
     appTitle: "LlamaIndex App",
-    starterQuestions: [
-      "Why is the sky blue?",
-      "How many L's are in the word 'llamaindex'?",
-    ],
+    starterQuestions: ["What is the color of the dog?"],
   },
   port: 3000,
 }).start();
