@@ -1,8 +1,8 @@
+import { OpenAI } from "@llamaindex/openai";
 import { LlamaIndexServer } from "@llamaindex/server";
 import { agent } from "@llamaindex/workflow";
 import {
   Document,
-  OpenAI,
   OpenAIEmbedding,
   Settings,
   VectorStoreIndex,

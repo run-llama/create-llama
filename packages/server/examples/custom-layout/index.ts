@@ -1,7 +1,10 @@
+import { OpenAI } from "@llamaindex/openai";
 import { LlamaIndexServer } from "@llamaindex/server";
 import { agent } from "@llamaindex/workflow";
-import { tool } from "llamaindex";
+import { Settings, tool } from "llamaindex";
 import { z } from "zod";
+
+Settings.llm = new OpenAI({ model: "gpt-4o-mini" });
 
 const weatherAgent = agent({
   tools: [

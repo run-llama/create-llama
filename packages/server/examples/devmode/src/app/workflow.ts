@@ -6,10 +6,10 @@ export const workflowFactory = async () => {
   return agent({
     tools: [
       tool({
-        name: "weather",
-        description: "Get the weather in a specific city",
-        parameters: z.object({ city: z.string() }),
-        execute: ({ city }) => `The weather in ${city} is sunny`,
+        name: "add",
+        description: "Adds two numbers",
+        parameters: z.object({ x: z.number(), y: z.number() }),
+        execute: ({ x, y }) => x + y,
       }),
     ],
   });
