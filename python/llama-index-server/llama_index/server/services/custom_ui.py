@@ -10,7 +10,7 @@ class CustomUI:
         self.logger = logger or logging.getLogger(__name__)
 
     def get_components(
-        self, directory: str, filter_types: List[str] | None = None
+        self, directory: str, filter_types: Optional[List[str]] = None
     ) -> List[ComponentDefinition]:
         """
         List all js files in the component directory and return a list of ComponentDefinition objects.
