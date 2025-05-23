@@ -18,13 +18,15 @@ export class LlamaIndexServer {
   app: ReturnType<typeof next>;
   workflowFactory: () => Promise<Workflow> | Workflow;
   componentsDir?: string | undefined;
+  suggestNextQuestions: boolean;
 
   constructor(options: LlamaIndexServerOptions) {
-    const { workflow, ...nextAppOptions } = options;
+    const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
     this.app = next({ dev, dir: nextDir, ...nextAppOptions });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
+    this.suggestNextQuestions = suggestNextQuestions ?? true;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -52,7 +54,8 @@ export class LlamaIndexServer {
         LLAMA_CLOUD_API: ${JSON.stringify(llamaCloudApi)},
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
         COMPONENTS_API: ${JSON.stringify(componentsApi)},
-        DEV_MODE: ${JSON.stringify(devMode)}
+        DEV_MODE: ${JSON.stringify(devMode)},
+        SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
       }
     `;
     fs.writeFileSync(configFile, content);
@@ -77,7 +80,12 @@ export class LlamaIndexServer {
         // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
         // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
         // make sure to keep its semantic in sync with handleChat
-        return handleChat(req, res, this.workflowFactory);
+        return handleChat(
+          req,
+          res,
+          this.workflowFactory,
+          this.suggestNextQuestions,
+        );
       }
 
       if (

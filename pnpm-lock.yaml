@@ -402,6 +402,12 @@ importers:
         specifier: ^5.3.2
         version: 5.8.3
 
+  python/llama-index-server:
+    dependencies:
+      '@llamaindex/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+
 packages:
 
   '@ai-sdk/provider-utils@2.2.7':
