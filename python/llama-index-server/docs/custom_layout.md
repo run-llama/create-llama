@@ -18,5 +18,5 @@ layout/
   footer.tsx
 ```
 
-We currently support custom header and footer for the chat interface. The syntax for these files is the same as events components in components directory (see [Custom UI Component](./custom_ui_component.md) for more details).
+We currently support custom header and footer for the chat interface. The syntax for these files is the same as events components in components directory (see [Custom UI Component](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_ui_component.md) for more details).
 Note that by default, we are still rendering the default LlamaIndex Header. It's also the fallback when having errors rendering the custom header. Example layout files will be generated in the `layout` directory of your project when creating a new project with `create-llama`.

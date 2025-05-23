@@ -80,7 +80,7 @@ The LlamaIndexServer accepts the following configuration parameters:
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
-  - `layout_dir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](./docs/custom_layout.md) for more details.
+  - `layout_dir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_layout.md) for more details.
   - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/workflow.py`. You might also need to set `env="dev"` and start the server with the reload feature enabled.
 - `verbose`: Enable verbose logging
