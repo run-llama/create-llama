@@ -8,7 +8,7 @@ First, install the dependencies:
 npm install
 ```
 
-Third, run the development server:
+Second, run the development server:
 
 ```
 npm run dev
@@ -34,7 +34,7 @@ AI-powered code generator that can help you generate app with a chat interface, 
 
 To update the workflow, you can modify the code in [`workflow.ts`](app/workflow.ts).
 
-You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
+You can start by sending a request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```shell
 curl --location 'localhost:3000/api/chat' \
