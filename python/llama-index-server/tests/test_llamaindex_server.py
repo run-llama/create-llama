@@ -75,7 +75,6 @@ if UI_TEST:
         # Create a new server with UI enabled
         ui_config = UIConfig(
             enabled=True,
-            app_title="Test UI",
             starter_questions=["What's the weather like?"],
             ui_path=tmp_ui_dir,
             component_dir=tmp_component_dir,
@@ -110,7 +109,6 @@ if UI_TEST:
             assert config_json["CHAT_API"] == "/api/chat"
             assert config_json["STARTER_QUESTIONS"] == ["What's the weather like?"]
             assert config_json["LLAMA_CLOUD_API"] is None
-            assert config_json["APP_TITLE"] == "Test UI"
 
         # Verify directory was created
         assert os.path.exists(tmp_component_dir), "Component directory was not created"

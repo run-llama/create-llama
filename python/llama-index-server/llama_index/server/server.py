@@ -13,6 +13,7 @@ from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers import (
     chat_router,
     custom_components_router,
+    custom_layout_router,
     dev_router,
 )
 from llama_index.server.chat_ui import copy_bundled_chat_ui
@@ -21,9 +22,6 @@ from llama_index.server.settings import server_settings
 
 class UIConfig(BaseModel):
     enabled: bool = Field(default=True, description="Whether to enable the chat UI")
-    app_title: str = Field(
-        default="LlamaIndex Server", description="The title of the chat UI"
-    )
     starter_questions: Optional[list[str]] = Field(
         default=None, description="The starter questions for the chat UI"
     )
@@ -37,6 +35,10 @@ class UIConfig(BaseModel):
     component_dir: Optional[str] = Field(
         default=None, description="The directory to custom UI components code"
     )
+    layout_dir: str = Field(
+        default="layout",
+        description="The directory to custom UI layout such as header and footer",
+    )
     dev_mode: bool = Field(
         default=False, description="Whether to enable the UI dev mode"
     )
@@ -46,13 +48,20 @@ class UIConfig(BaseModel):
             {
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "STARTER_QUESTIONS": self.starter_questions or [],
-                "LLAMA_CLOUD_API": f"{server_settings.api_url}/chat/config/llamacloud"
-                if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API_KEY")
-                else None,
-                "APP_TITLE": self.app_title,
-                "COMPONENTS_API": f"{server_settings.api_url}/components"
-                if self.component_dir
-                else None,
+                "LLAMA_CLOUD_API": (
+                    f"{server_settings.api_url}/chat/config/llamacloud"
+                    if self.llamacloud_index_selector
+                    and os.getenv("LLAMA_CLOUD_API_KEY")
+                    else None
+                ),
+                "COMPONENTS_API": (
+                    f"{server_settings.api_url}/components"
+                    if self.component_dir
+                    else None
+                ),
+                "LAYOUT_API": (
+                    f"{server_settings.api_url}/layout" if self.layout_dir else None
+                ),
                 "DEV_MODE": self.dev_mode,
             },
             indent=2,
@@ -170,6 +179,15 @@ class LlamaIndexServer(FastAPI):
             prefix=server_settings.api_prefix,
         )
 
+    def add_layout_router(self) -> None:
+        """
+        Add the layout router.
+        """
+        self.include_router(
+            custom_layout_router(self.ui_config.layout_dir, self.logger),
+            prefix=server_settings.api_prefix,
+        )
+
     def mount_ui(self) -> None:
         """
         Mount the UI.
@@ -181,6 +199,11 @@ class LlamaIndexServer(FastAPI):
                 if not os.path.exists(self.ui_config.component_dir):
                     os.makedirs(self.ui_config.component_dir)
                 self.add_components_router()
+            # Layout dir
+            if self.ui_config.layout_dir:
+                if not os.path.exists(self.ui_config.layout_dir):
+                    os.makedirs(self.ui_config.layout_dir)
+                self.add_layout_router()
             # UI static files
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)

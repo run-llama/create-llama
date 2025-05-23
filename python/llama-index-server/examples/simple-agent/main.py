@@ -10,7 +10,6 @@ def create_app() -> FastAPI:
         suggest_next_questions=True,
         env="dev",
         ui_config=UIConfig(
-            app_title="Artifact",
             starter_questions=[
                 "Tell me a funny joke",
                 "Tell me some jokes about AI",
