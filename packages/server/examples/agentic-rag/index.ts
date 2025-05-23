@@ -1,12 +1,7 @@
-import { OpenAI } from "@llamaindex/openai";
+import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
 import { LlamaIndexServer } from "@llamaindex/server";
 import { agent } from "@llamaindex/workflow";
-import {
-  Document,
-  OpenAIEmbedding,
-  Settings,
-  VectorStoreIndex,
-} from "llamaindex";
+import { Document, Settings, VectorStoreIndex } from "llamaindex";
 
 Settings.llm = new OpenAI({
   model: "gpt-4o-mini",
