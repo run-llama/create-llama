@@ -56,7 +56,7 @@ export class LlamaIndexServer {
         STARTER_QUESTIONS: ${JSON.stringify(starterQuestions)},
         COMPONENTS_API: ${JSON.stringify(componentsApi)},
         LAYOUT_API: ${JSON.stringify(layoutApi)},
-        DEV_MODE: ${JSON.stringify(devMode)}
+        DEV_MODE: ${JSON.stringify(devMode)},
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
       }
     `;
