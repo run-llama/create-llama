@@ -23,7 +23,6 @@ def create_app() -> FastAPI:
     app = LlamaIndexServer(
         workflow_factory=create_workflow,
         ui_config=UIConfig(
-            app_title="Artifact",
             starter_questions=[
                 "Write a simple calculator app",
                 "Write a guideline on how to use LLM effectively",

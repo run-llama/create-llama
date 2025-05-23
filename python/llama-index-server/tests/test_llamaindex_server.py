@@ -67,7 +67,6 @@ async def test_ui_is_downloaded(server: LlamaIndexServer) -> None:
     # Create a new server with UI enabled
     ui_config = UIConfig(
         enabled=True,
-        app_title="Test UI",
         starter_questions=["What's the weather like?"],
     )
     ui_server = LlamaIndexServer(
@@ -96,7 +95,6 @@ async def test_ui_is_downloaded(server: LlamaIndexServer) -> None:
         assert config_json["CHAT_API"] == "/api/chat"
         assert config_json["STARTER_QUESTIONS"] == ["What's the weather like?"]
         assert config_json["LLAMA_CLOUD_API"] is None
-        assert config_json["APP_TITLE"] == "Test UI"
 
     # Check if the UI is mounted and accessible
     async with AsyncClient(
@@ -133,7 +131,6 @@ async def test_ui_config_customization() -> None:
     """
     custom_config = UIConfig(
         enabled=True,
-        app_title="Custom App",
         starter_questions=["Question 1", "Question 2"],
         ui_path=".custom_ui",
     )
@@ -142,7 +139,6 @@ async def test_ui_config_customization() -> None:
         workflow_factory=_agent_workflow, verbose=True, ui_config=custom_config
     )
 
-    assert server.ui_config.app_title == "Custom App"
     assert server.ui_config.starter_questions == ["Question 1", "Question 2"]
     assert server.ui_config.ui_path == ".custom_ui"
 
@@ -158,7 +154,6 @@ async def test_ui_config_from_dict() -> None:
     """
     ui_config_dict = {
         "enabled": True,
-        "app_title": "Dict Config App",
         "starter_questions": ["Dict Q1", "Dict Q2"],
         "ui_path": ".dict_ui",
     }
@@ -171,7 +166,6 @@ async def test_ui_config_from_dict() -> None:
 
     # Verify the config was properly converted to UIConfig object
     assert isinstance(server.ui_config, UIConfig)
-    assert server.ui_config.app_title == "Dict Config App"
     assert server.ui_config.starter_questions == ["Dict Q1", "Dict Q2"]
     assert server.ui_config.ui_path == ".dict_ui"
 
@@ -186,7 +180,6 @@ async def test_ui_config_from_dict() -> None:
         config_json = json.loads(
             config_content.replace("window.LLAMAINDEX = ", "").rstrip(";")
         )
-        assert config_json["APP_TITLE"] == "Dict Config App"
         assert config_json["STARTER_QUESTIONS"] == ["Dict Q1", "Dict Q2"]
         assert config_json["CHAT_API"] == "/api/chat"
         assert config_json["LLAMA_CLOUD_API"] is None
@@ -272,9 +265,9 @@ async def test_ui_config_includes_components_api(
 
     # Check if components API is in UI config
     ui_config = component_server.ui_config
-    assert "COMPONENTS_API" in ui_config.get_config_content(), (
-        "Components API not found in UI config"
-    )
+    assert (
+        "COMPONENTS_API" in ui_config.get_config_content()
+    ), "Components API not found in UI config"
 
 
 @pytest.mark.asyncio()

@@ -44,7 +44,6 @@ app = LlamaIndexServer(
     workflow_factory=create_workflow,  # Supports Workflow or AgentWorkflow
     env="dev",  # Enable development mode
     ui_config={ # Configure the chat UI, optional
-        "app_title": "Weather Bot",
         "starter_questions": ["What is the weather in LA?", "Will it rain in SF?"],
     },
     verbose=True
@@ -78,7 +77,6 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `ui_config`: UI configuration as a dictionary or UIConfig object with options:
   - `enabled`: Whether to enable the chat UI (default: True)
-  - `app_title`: The title of the chat application (default: "LlamaIndex Server")
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.

@@ -22,9 +22,6 @@ from llama_index.server.settings import server_settings
 
 class UIConfig(BaseModel):
     enabled: bool = Field(default=True, description="Whether to enable the chat UI")
-    app_title: str = Field(
-        default="LlamaIndex Server", description="The title of the chat UI"
-    )
     starter_questions: Optional[list[str]] = Field(
         default=None, description="The starter questions for the chat UI"
     )
@@ -57,7 +54,6 @@ class UIConfig(BaseModel):
                     and os.getenv("LLAMA_CLOUD_API_KEY")
                     else None
                 ),
-                "APP_TITLE": self.app_title,
                 "COMPONENTS_API": (
                     f"{server_settings.api_url}/components"
                     if self.component_dir
