@@ -13,6 +13,8 @@ const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
 
+const EJECT_FOLDER = "next";
+
 export class LlamaIndexServer {
   port: number;
   app: ReturnType<typeof next>;
@@ -28,13 +30,13 @@ export class LlamaIndexServer {
     this.eject = process.env.EJECT === "true";
     if (this.eject) {
       console.log(
-        "Eject mode is enabled in ./next folder. Frontend and route handlers will be hot-reloaded when changes are made.",
+        `Eject mode is enabled in ./${EJECT_FOLDER} folder. Frontend and routes will be hot-reloaded when changes are made.`,
       );
     }
 
     this.app = next({
       dev,
-      dir: this.eject ? "./next" : nextDir,
+      dir: this.eject ? EJECT_FOLDER : nextDir,
       ...nextAppOptions,
     });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
@@ -73,7 +75,10 @@ export class LlamaIndexServer {
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
       }
     `;
-    fs.writeFileSync(configFile, content);
+    const configFilePath = this.eject
+      ? path.join(EJECT_FOLDER, "public", "config.js")
+      : configFile;
+    fs.writeFileSync(configFilePath, content);
   }
 
   private async createComponentsDir(componentsDir: string) {
