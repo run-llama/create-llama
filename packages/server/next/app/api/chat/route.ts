@@ -9,7 +9,7 @@ import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
 import { runWorkflow } from "./utils/workflow";
 
 // import workflow factory from local file
-import { workflowFactory } from "../../../../app/workflow";
+import { workflowFactory } from "../../../../src/app/workflow";
 
 export async function POST(req: NextRequest) {
   try {
