@@ -7,7 +7,7 @@
     "prebuild": "uv run -- scripts/frontend.py --mode copy",
     "build": "uv build",
     "clean": "rm -rf dist build *.egg-info",
-    "new-version": "uv run python scripts/sync_version.py && git add pyproject.toml",
+    "new-version": "uv run python scripts/sync_version.py",
     "release": "uv publish"
   },
   "dependencies": {
