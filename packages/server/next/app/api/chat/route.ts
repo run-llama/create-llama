@@ -8,8 +8,11 @@ import { toDataStream } from "./utils/stream";
 import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
 import { runWorkflow } from "./utils/workflow";
 
-// import workflow factory from local file
+// import workflow factory and settings from local file
+import { initSettings } from "../../../../src/app/settings";
 import { workflowFactory } from "../../../../src/app/workflow";
+
+initSettings();
 
 export async function POST(req: NextRequest) {
   try {
