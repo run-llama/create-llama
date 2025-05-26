@@ -8,6 +8,9 @@ const path = require("path");
 // Resolve the source directory (@llamaindex/server/server)
 const sourceDir = path.resolve(__dirname, "../server");
 
+// Resolve the route-handler directory
+const routeHandlerDir = path.resolve(__dirname, "../dist/api");
+
 // Resolve the destination directory (consumer's project root/next)
 const destDir = path.join(process.cwd(), "next");
 
@@ -39,6 +42,19 @@ async function eject() {
       force: false,
       errorOnExist: true,
     });
+
+    // Copy the route handler directory to replace the api directory
+    const destApiDir = path.join(destDir, "app", "api");
+    try {
+      await fs.rm(destApiDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore error if directory doesn't exist
+    }
+    await fs.cp(routeHandlerDir, destApiDir, {
+      recursive: true,
+      force: true,
+    });
+
     console.log("Successfully ejected @llamaindex/server/server to", destDir);
   } catch (error) {
     if (error.code === "EEXIST") {
