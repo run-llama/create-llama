@@ -17,6 +17,9 @@ initSettings();
 export async function POST(req: NextRequest) {
   try {
     const reqBody = await req.json();
+    const params = req.nextUrl.searchParams;
+    const suggestNextQuestions = params.get("suggestNextQuestions") === "true";
+
     const { messages } = reqBody as { messages: Message[] };
     const chatHistory = messages.map((message) => ({
       role: message.role as MessageType,
@@ -57,7 +60,9 @@ export async function POST(req: NextRequest) {
             role: "assistant" as MessageType,
             content: completion,
           });
-          await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          if (suggestNextQuestions) {
+            await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          }
         },
       },
     });
