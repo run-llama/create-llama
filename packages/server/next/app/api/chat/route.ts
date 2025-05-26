@@ -17,8 +17,7 @@ initSettings();
 export async function POST(req: NextRequest) {
   try {
     const reqBody = await req.json();
-    const params = req.nextUrl.searchParams;
-    const suggestNextQuestions = params.get("suggestNextQuestions") === "true";
+    const suggestNextQuestions = process.env.SUGGEST_NEXT_QUESTIONS === "true";
 
     const { messages } = reqBody as { messages: Message[] };
     const chatHistory = messages.map((message) => ({

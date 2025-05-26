@@ -5,6 +5,7 @@ const LAYOUT_TYPES = ["header", "footer"] as const;
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const directory = params.get("layoutDir") || "layout";
+  const directory =
+    params.get("layoutDir") || process.env.LAYOUT_DIR || "layout";
   return handleComponentRoute(directory, LAYOUT_TYPES);
 }
