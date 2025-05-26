@@ -19,8 +19,12 @@
   },
   "files": [
     "dist",
-    "server"
+    "server",
+    "bin"
   ],
+  "bin": {
+    "@llamaindex/server": "./bin/eject.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/run-llama/LlamaIndexTS.git",

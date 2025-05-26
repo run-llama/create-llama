@@ -6,7 +6,8 @@
     "generate:datasource": "tsx src/generate.ts datasource",
     "generate:ui": "tsx src/generate.ts ui",
     "dev": "nodemon",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "eject": "@llamaindex/server eject"
   },
   "dependencies": {
     "@llamaindex/openai": "~0.4.0",
