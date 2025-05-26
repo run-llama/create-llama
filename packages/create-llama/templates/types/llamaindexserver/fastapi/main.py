@@ -17,6 +17,7 @@ def create_app():
         ui_config=UIConfig(
             component_dir=COMPONENT_DIR,
             dev_mode=True,  # Please disable this in production
+            layout_dir="layout",
         ),
         logger=logger,
         env="dev",
