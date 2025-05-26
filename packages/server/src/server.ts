@@ -12,7 +12,6 @@ import type { LlamaIndexServerOptions } from "./types";
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
-const eject = process.env.EJECT === "true";
 
 export class LlamaIndexServer {
   port: number;
@@ -25,15 +24,24 @@ export class LlamaIndexServer {
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
-    const dir = eject ? "./next" : nextDir;
 
-    this.app = next({ dev, dir, ...nextAppOptions });
+    this.eject = process.env.EJECT === "true";
+    if (this.eject) {
+      console.log(
+        "Eject mode is enabled in ./next folder. Frontend and route handlers will be hot-reloaded when changes are made.",
+      );
+    }
+
+    this.app = next({
+      dev,
+      dir: this.eject ? "./next" : nextDir,
+      ...nextAppOptions,
+    });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
-    this.eject = eject;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
