@@ -23,7 +23,7 @@
     "bin"
   ],
   "bin": {
-    "@llamaindex/server": "./bin/eject.js"
+    "llamaindex-server": "./bin/eject.cjs"
   },
   "repository": {
     "type": "git",
