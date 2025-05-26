@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
     );
 
     const dataStream = toDataStream(workflowEventStream, {
-      // TODO: Support enable/disable suggestion
       callbacks: {
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
