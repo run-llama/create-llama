@@ -38,5 +38,3 @@ output/
 storage/
 
 .env
-
-next/

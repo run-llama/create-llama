@@ -7,8 +7,7 @@
     "generate:ui": "tsx src/generate.ts ui",
     "dev": "nodemon",
     "start": "tsx src/index.ts",
-    "eject": "llamaindex-server eject",
-    "dev:eject": "cross-env EJECT=true pnpm dev"
+    "eject": "llamaindex-server eject"
   },
   "dependencies": {
     "@llamaindex/openai": "~0.4.0",
@@ -23,7 +22,6 @@
     "@types/node": "^20.10.3",
     "tsx": "^4.7.2",
     "typescript": "^5.3.2",
-    "nodemon": "^3.1.10",
-    "cross-env": "^7.0.3"
+    "nodemon": "^3.1.10"
   }
 }
