@@ -35,7 +35,7 @@
     "clean": "rm -rf ./dist ./server next/.next next/out ./temp",
     "prebuild": "pnpm clean",
     "build": "bunchee",
-    "postbuild": "pnpm prepare:ts-server",
+    "postbuild": "pnpm prepare:ts-server && pnpm prepare:py-static",
     "prepare:ts-server": "pnpm copy:next-src && pnpm build:css && pnpm build:api && pnpm copy:api",
     "prepare:py-static": "pnpm prepare:static && pnpm build:static && pnpm copy:static",
     "copy:next-src": "cp -r ./next ./server",
