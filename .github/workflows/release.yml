@@ -56,6 +56,8 @@ jobs:
         with:
           commit: Release ${{ steps.get-changeset-status.outputs.new-version }}
           title: Release ${{ steps.get-changeset-status.outputs.new-version }}
+          # bump versions
+          version: pnpm new-version
           # build package and call changeset publish
           publish: pnpm release
         env:
