@@ -43,11 +43,10 @@ curl --location 'localhost:3000/api/chat' \
 
 ## Eject Mode
 
-If you want to fully customize the server UI and routes, you can use `pnpm eject`. When using `pnpm eject`, the server will be rendered in the `next` folder. Frontend and routes will be hot-reloaded when changes are made.
+If you want to fully customize the server UI and routes, you can use `npm eject`. It will create a normal Next.js project with the same functionality as @llamaindex/server.
 
 ```bash
 npm run eject
-npm run dev:eject
 ```
 
 ## Learn More
