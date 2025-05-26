@@ -41,6 +41,15 @@ curl --location 'localhost:3000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Generate a financial report that compares the financial performance of Apple and Tesla" }] }'
 ```
 
+## Eject Mode
+
+If you want to fully customize the server UI and routes, you can use `pnpm eject`. When using `pnpm eject`, the server will be rendered in the `next` folder. Frontend and routes will be hot-reloaded when changes are made.
+
+```bash
+npm run eject
+npm run dev:eject
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
