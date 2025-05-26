@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getConfig } from "../lib/utils";
 import { ResizablePanel, ResizablePanelGroup } from "../resizable";
 import { ChatCanvasPanel } from "./canvas/panel";
-import { ChatHeader } from "./chat-header";
 import { ChatInjection } from "./chat-injection";
 import CustomChatInput from "./chat-input";
 import CustomChatMessages from "./chat-messages";
@@ -14,6 +13,7 @@ import { DynamicEventsErrors } from "./custom/events/dynamic-events-errors";
 import { fetchComponentDefinitions } from "./custom/events/loader";
 import { ComponentDef } from "./custom/events/types";
 import { DevModePanel } from "./dev-mode-panel";
+import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
   const handler = useChat({
@@ -32,8 +32,7 @@ export default function ChatSection() {
   });
   return (
     <>
-      <div className="flex h-screen w-screen flex-col overflow-hidden">
-        <ChatHeader />
+      <ChatLayout>
         <ChatUI
           handler={handler}
           className="relative flex min-h-0 flex-1 flex-row justify-center gap-4 px-4 py-0"
@@ -44,7 +43,7 @@ export default function ChatSection() {
           </ResizablePanelGroup>
           <DevModePanel />
         </ChatUI>
-      </div>
+      </ChatLayout>
       <ChatInjection />
     </>
   );

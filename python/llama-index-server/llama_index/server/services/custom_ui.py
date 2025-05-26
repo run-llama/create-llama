@@ -6,31 +6,28 @@ from llama_index.server.api.models import ComponentDefinition
 
 
 class CustomUI:
-    def __init__(
-        self, component_dir: str, logger: Optional[logging.Logger] = None
-    ) -> None:
-        self.component_dir = component_dir
+    def __init__(self, logger: Optional[logging.Logger] = None) -> None:
         self.logger = logger or logging.getLogger(__name__)
 
-    def get_components(self) -> List[ComponentDefinition]:
+    def get_components(
+        self, directory: str, filter_types: Optional[List[str]] = None
+    ) -> List[ComponentDefinition]:
         """
         List all js files in the component directory and return a list of ComponentDefinition objects.
         Ignores files that fail to load and logs the error.
         TSX files take precedence over JSX files when duplicate component names are found.
         """
         components_dict: dict[str, ComponentDefinition] = {}
-        if not os.path.exists(self.component_dir):
-            self.logger.warning(
-                f"Component directory {self.component_dir} does not exist"
-            )
+        if not os.path.exists(directory):
+            self.logger.warning(f"Component directory {directory} does not exist")
             return []
         try:
-            for file in os.listdir(self.component_dir):
+            for file in os.listdir(directory):
                 if not file.endswith((".jsx", ".tsx")):
                     continue
 
                 component_name = file.split(".")[0]
-                file_path = os.path.join(self.component_dir, file)
+                file_path = os.path.join(directory, file)
                 file_ext = os.path.splitext(file)[1]
 
                 try:
@@ -78,4 +75,11 @@ class CustomUI:
         except Exception as e:
             self.logger.error(f"Error reading component directory: {str(e)}")
 
-        return list(components_dict.values())
+        result = list(components_dict.values())
+
+        if filter_types:
+            result = [
+                component for component in result if component.type in filter_types
+            ]
+
+        return result

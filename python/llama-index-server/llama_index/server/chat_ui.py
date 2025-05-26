@@ -1,55 +1,87 @@
+import importlib.resources
 import logging
 import shutil
 from pathlib import Path
 from typing import Optional
 
-import requests
+PACKAGE_NAME = "llama_index.server.resources"
+RESOURCE_DIR_NAME = "ui"
 
-CHAT_UI_VERSION = "0.2.1"
+
+def check_ui_resources() -> None:
+    """
+    Checks if the UI resources directory exists in the specified package and lists its contents.
+    Raises a FileNotFoundError with a clear message if the directory is missing.
+    """
+    try:
+        _ = importlib.resources.files(PACKAGE_NAME).joinpath(RESOURCE_DIR_NAME)
+    except Exception as e:
+        raise Exception("UI resources not found in bundled package") from e
 
 
-def download_chat_ui(
+def copy_bundled_chat_ui(
     logger: Optional[logging.Logger] = None, target_path: str = ".ui"
 ) -> None:
+    # Check if the UI resources directory exists
+    check_ui_resources()
+
     if logger is None:
         logger = logging.getLogger("uvicorn")
-    path = Path(target_path)
-    temp_dir = _download_package(_get_download_link(CHAT_UI_VERSION))
-    _copy_ui_files(temp_dir, path)
-    logger.info("Chat UI downloaded and copied to static folder")
 
+    destination_path = Path(target_path)
+    destination_path.mkdir(parents=True, exist_ok=True)
 
-def _get_download_link(version: str) -> str:
-    """Get the download link for the chat UI from the npm registry."""
-    return f"https://registry.npmjs.org/@llamaindex/server/-/server-{version}.tgz"
-
-
-def _download_package(url: str) -> Path:
-    """Download tar.gz file and extract all files into a temporary directory."""
-    import io
-    import tarfile
-    import tempfile
-
-    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-    content = response.content
-
-    temp_dir = Path(tempfile.mkdtemp())
-
-    with tarfile.open(fileobj=io.BytesIO(content), mode="r:gz") as tar:
-        tar.extractall(path=temp_dir)
-
-    return temp_dir
-
-
-def _copy_ui_files(temp_dir: Path, target_path: Path) -> None:
-    """Copy files from the .next directory to the static directory."""
-    target_path.mkdir(parents=True, exist_ok=True)
-    next_dir = temp_dir / "package/dist/static"
-
-    if next_dir.exists():
-        for item in next_dir.iterdir():
-            dest = target_path / item.name
+    try:
+        # Clear the destination directory first to avoid stale files
+        for item in destination_path.iterdir():
             if item.is_dir():
-                shutil.copytree(item, dest, dirs_exist_ok=True)
+                shutil.rmtree(item)
             else:
-                shutil.copy2(item, dest)
+                item.unlink()
+
+        # Get a reference to the source directory using importlib.resources.files (Python 3.9+)
+        source_dir_ref = importlib.resources.files(PACKAGE_NAME).joinpath(
+            RESOURCE_DIR_NAME
+        )
+
+        if not source_dir_ref.is_dir():
+            logger.error(
+                f"Static UI resource directory '{RESOURCE_DIR_NAME}' not found in package '{PACKAGE_NAME}'. Path: {source_dir_ref}"
+            )
+            logger.error(
+                "Ensure the static files are correctly bundled with the package and the path is correct."
+            )
+            return
+
+        for source_item_path_ref in source_dir_ref.iterdir():
+            # Skip __init__.py or other non-static files if present (though less likely needed with direct iteration)
+            if source_item_path_ref.name.startswith(
+                "__"
+            ) or source_item_path_ref.name.endswith(".py"):
+                continue
+
+            dest_item_path = destination_path / source_item_path_ref.name
+
+            # importlib.resources.as_file is needed to get a concrete path for shutil operations
+            with importlib.resources.as_file(
+                source_item_path_ref
+            ) as concrete_source_item_path:
+                if concrete_source_item_path.is_dir():
+                    shutil.copytree(
+                        concrete_source_item_path, dest_item_path, dirs_exist_ok=True
+                    )
+                elif concrete_source_item_path.is_file():
+                    shutil.copy2(concrete_source_item_path, dest_item_path)
+                else:
+                    logger.warning(
+                        f"Skipping resource '{source_item_path_ref.name}' as it's not a file or directory."
+                    )
+
+        logger.info(f"Chat UI files copied from package to '{destination_path}'")
+
+    except FileNotFoundError:
+        logger.error(
+            "Oops! The chat UI files are not found. Please report this issue to the LlamaIndex team."
+        )
+    except Exception as e:
+        logger.error(f"Failed to copy bundled chat UI files: {e}.")

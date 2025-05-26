@@ -16,7 +16,6 @@ def create_app():
         workflow_factory=create_workflow,  # A factory function that creates a new workflow for each request
         ui_config=UIConfig(
             component_dir=COMPONENT_DIR,
-            app_title="Chat App",
             dev_mode=True,  # Please disable this in production
         ),
         logger=logger,

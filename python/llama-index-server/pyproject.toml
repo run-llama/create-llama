@@ -1,6 +1,6 @@
 [project]
 name = "llama-index-server"
-version = "0.1.16"
+version = "0.1.17"
 description = "llama-index fastapi server"
 readme = "README.md"
 license = "MIT"
@@ -63,5 +63,6 @@ dev = [
     "llama-cloud>=0.1.17,<1.0.0",
 ]
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ["llama_index/"]
+artifacts = ["llama_index/server/resources"]

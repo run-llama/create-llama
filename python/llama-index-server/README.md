@@ -44,7 +44,6 @@ app = LlamaIndexServer(
     workflow_factory=create_workflow,  # Supports Workflow or AgentWorkflow
     env="dev",  # Enable development mode
     ui_config={ # Configure the chat UI, optional
-        "app_title": "Weather Bot",
         "starter_questions": ["What is the weather in LA?", "Will it rain in SF?"],
     },
     verbose=True
@@ -78,12 +77,13 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `ui_config`: UI configuration as a dictionary or UIConfig object with options:
   - `enabled`: Whether to enable the chat UI (default: True)
-  - `app_title`: The title of the chat application (default: "LlamaIndex Server")
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
+  - `layout_dir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_layout.md) for more details.
   - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/workflow.py`. You might also need to set `env="dev"` and start the server with the reload feature enabled.
+- `suggest_next_questions`: Whether to suggest next questions after the assistant's response (default: True). You can change the prompt for the next questions by setting the `NEXT_QUESTION_PROMPT` environment variable. The default prompt used is defined in  `llama_index.server.prompts.SUGGEST_NEXT_QUESTION_PROMPT`.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)

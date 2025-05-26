@@ -7,11 +7,11 @@ Here is the conversation history
 ---------------------
 Given the conversation history, please give me 3 questions that user might ask next!
 Your answer should be wrapped in three sticks without any index numbers and follows the following format:
-\`\`\`
+```
 <question 1>
 <question 2>
 <question 3>
-\`\`\`
+```
 """
 
 # Used as a prompt for synthesizer

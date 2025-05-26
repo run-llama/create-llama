@@ -28,6 +28,7 @@ from llama_index.server.services.llamacloud import LlamaCloudFileService
 def chat_router(
     workflow_factory: Callable[..., Workflow],
     logger: logging.Logger,
+    suggest_next_questions: bool = True,
 ) -> APIRouter:
     router = APIRouter(prefix="/chat")
 
@@ -56,7 +57,7 @@ def chat_router(
                 SourceNodesFromToolCall(),
                 LlamaCloudFileDownload(background_tasks),
             ]
-            if request.config and request.config.next_question_suggestions:
+            if suggest_next_questions:
                 callbacks.append(SuggestNextQuestions(request))
             stream_handler = StreamHandler(
                 workflow_handler=workflow_handler,
