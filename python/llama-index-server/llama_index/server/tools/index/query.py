@@ -1,13 +1,16 @@
+import logging
 import os
 from typing import Any, Optional
 
 from llama_index.core.base.base_query_engine import BaseQueryEngine
-from llama_index.core.tools.query_engine import QueryEngineTool
-from llama_index.core.response_synthesizers import TreeSummarize
-from llama_index.core.prompts import PromptTemplate
 from llama_index.core.indices.base import BaseIndex
+from llama_index.core.prompts import PromptTemplate
+from llama_index.core.response_synthesizers import TreeSummarize
+from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.server.prompts import CITATION_PROMPT
 from llama_index.server.tools.index.node_citation_processor import NodeCitationProcessor
+
+logger = logging.getLogger(__name__)
 
 
 def create_query_engine(
@@ -26,13 +29,19 @@ def create_query_engine(
         kwargs["similarity_top_k"] = top_k
 
     if enable_citation:
-        qa_prompt = PromptTemplate(
-            template=os.getenv("CITATION_PROMPT", CITATION_PROMPT)
-        )
+        if kwargs.get("response_synthesizer") is not None:
+            # We don't override the provided response synthesizer
+            # Just show a warning
+            logger.warning(
+                "Custom response synthesizer and citation are both used. The citation might not work as intended."
+            )
+        else:
+            kwargs["response_synthesizer"] = TreeSummarize(
+                summary_template=PromptTemplate(
+                    template=os.getenv("CITATION_PROMPT", CITATION_PROMPT)
+                ),
+            )
         kwargs["node_postprocessors"] = [NodeCitationProcessor()]
-        kwargs["response_synthesizer"] = TreeSummarize(
-            verbose=True, summary_template=qa_prompt
-        )
 
     return index.as_query_engine(**kwargs)
 

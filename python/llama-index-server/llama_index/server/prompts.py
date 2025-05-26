@@ -23,11 +23,11 @@ Context information is below.
 ------------------
 
 # Citing sources
-When making your answer, make sure to cite the sources at the end of each idea, sentence or paragraph.
+When making your answer, if `citation_id` is available, make sure to cite the sources at the end of each idea, sentence or paragraph.
 
-If `id` is available, add citations in the following format:
+It's important to follow the following format for citations:
 [citation:id] 
-- where `citation` is always fixed for all citations and `id` is the id provided in the header of the source. 
+- where `citation` is always fixed for all citations and `id` is the `citation_id` field provided in the header of each chunk. 
 
 e.g:
 Baby llama is called cria [citation:bf826322-61c4-4443-980c-7462539b04c2] and is a female.
