@@ -5,7 +5,7 @@ from typing import Any, Optional
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.prompts import PromptTemplate
-from llama_index.core.response_synthesizers import TreeSummarize
+from llama_index.core.response_synthesizers import Accumulate
 from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.server.prompts import CITATION_PROMPT
 from llama_index.server.tools.index.node_citation_processor import NodeCitationProcessor
@@ -36,12 +36,14 @@ def create_query_engine(
                 "Custom response synthesizer and citation are both used. The citation might not work as intended."
             )
         else:
-            kwargs["response_synthesizer"] = TreeSummarize(
-                summary_template=PromptTemplate(
+            kwargs["response_synthesizer"] = Accumulate(
+                text_qa_template=PromptTemplate(
                     template=os.getenv("CITATION_PROMPT", CITATION_PROMPT)
                 ),
             )
-        kwargs["node_postprocessors"] = [NodeCitationProcessor()]
+        kwargs["node_postprocessors"] = kwargs.get("node_postprocessors", []) + [
+            NodeCitationProcessor()
+        ]
 
     return index.as_query_engine(**kwargs)
 

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from llama_index.core.agent.workflow.workflow_events import ToolCallResult
 from llama_index.server.api.callbacks.base import EventCallback
@@ -17,9 +17,16 @@ class SourceNodesFromToolCall(EventCallback):
     def __init__(self, query_tool_name: str = "query_index"):
         self.query_tool_name = query_tool_name
 
-    def transform_tool_call_result(self, event: ToolCallResult) -> SourceNodesEvent:
-        source_nodes = event.tool_output.raw_output.source_nodes
-        return SourceNodesEvent(nodes=source_nodes)
+    def transform_tool_call_result(
+        self, event: ToolCallResult
+    ) -> Optional[SourceNodesEvent]:
+        # Check whether result is error
+        tool_output = event.tool_output
+        if tool_output.is_error:
+            return None
+        else:
+            source_nodes = tool_output.raw_output.source_nodes
+            return SourceNodesEvent(nodes=source_nodes)
 
     async def run(self, event: Any) -> Any:
         if isinstance(event, ToolCallResult):

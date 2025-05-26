@@ -22,20 +22,25 @@ Context information is below.
 {context_str}
 ------------------
 
-# Citing sources
-When making your answer, if `citation_id` is available, make sure to cite the sources at the end of each idea, sentence or paragraph.
+Given the context information and without prior knowledge, answer the query with citations.
+------------------
+{query_str}
+------------------
 
+# Citation format 
 It's important to follow the following format for citations:
-[citation:id] 
-- where `citation` is always fixed for all citations and `id` is the `citation_id` field provided in the header of each chunk. 
+Example:
+```
+    Here is a response that uses context information [citation:id] and other ideas that don't use context information. 
+    The citation block will be displayed automatically with useful information for the user in the UI.
+```
+Where:
+- [citation:] is always fixed for all citations
+- replace `id` with the `citation_id`, which is the uuid provided in the context or previous response.
 
-e.g:
-Baby llama is called cria [citation:bf826322-61c4-4443-980c-7462539b04c2] and is a female.
+## Important:
+1. Do not fake and never use dummy citation_id: [citation:1], [citation:id], [citation:abc],..
+2. If the context includes a previous response that has a citation, it is better to keep the citation block in your response.
 
-Given the context information and not prior knowledge, answer for the query with citations:
-------------------
-Query: {query_str}
-------------------
-
-Answer:
+Now, you answer the query with citations:
 """
