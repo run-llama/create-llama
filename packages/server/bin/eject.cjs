@@ -5,14 +5,11 @@
 const fs = require("fs").promises;
 const path = require("path");
 
-// Resolve the source directory (@llamaindex/server/server)
-const sourceDir = path.resolve(__dirname, "../server");
-
-// Resolve the route-handler directory
-const routeHandlerDir = path.resolve(__dirname, "../dist/api");
+// Resolve the source directory (@llamaindex/server/project)
+const sourceDir = path.resolve(__dirname, "../project");
 
 // Resolve the destination directory (consumer's project root/next)
-const destDir = path.join(process.cwd(), "next");
+const destDir = path.join(process.cwd(), "next"); // TODO: add parameter to specify the destination directory
 
 async function eject() {
   try {
@@ -43,17 +40,8 @@ async function eject() {
       errorOnExist: true,
     });
 
-    // Copy the route handler directory to replace the api directory
-    const destApiDir = path.join(destDir, "app", "api");
-    try {
-      await fs.rm(destApiDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore error if directory doesn't exist
-    }
-    await fs.cp(routeHandlerDir, destApiDir, {
-      recursive: true,
-      force: true,
-    });
+    // TODO: get current package.json and merge it with next-package.json (we need generate scripts)
+    // TODO: copy src/app/workflow.ts & src/app/settings.ts to next/app/api/chat
 
     console.log("Successfully ejected @llamaindex/server/server to", destDir);
   } catch (error) {

@@ -1,63 +1,23 @@
 {
-  "name": "@llamaindex/server",
-  "description": "LlamaIndex Server",
-  "version": "0.2.3",
+  "name": "nextjs-project",
+  "description": "Next.js project with full feature set of @llamaindex/server",
+  "private": true,
+  "version": "0.0.1",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      },
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    }
-  },
-  "files": [
-    "dist",
-    "server",
-    "project",
-    "bin"
-  ],
-  "bin": {
-    "llamaindex-server": "./bin/eject.cjs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/run-llama/LlamaIndexTS.git",
-    "directory": "packages/server"
-  },
   "scripts": {
-    "dev": "bunchee --watch",
-    "clean": "rm -rf ./dist ./server ./project next/.next next/out ./temp",
-    "prebuild": "pnpm clean",
-    "build": "bunchee",
-    "postbuild": "pnpm prepare:project && pnpm prepare:ts-server && pnpm prepare:py-static",
-    "prepare:ts-server": "pnpm copy:next-src && pnpm build:css && pnpm build:api && pnpm copy:routes",
-    "prepare:py-static": "pnpm prepare:static && pnpm build:static && pnpm copy:static",
-    "copy:next-src": "cp -r ./next ./server",
-    "build:css": "postcss server/app/globals.css -o server/app/globals.css && rm -rf ./server/postcss.config.js",
-    "build:api": "rm -rf ./server/app/api && tsc --skipLibCheck --project tsconfig.api.json",
-    "prepare:project": "cp -r ./next ./project && cp -r ./src/utils ./project/app/api/chat",
-    "prepare:static": "cp -r ./next ./temp && rm -rf ./temp/app/api && mv ./temp/next-build.config.ts ./temp/next.config.ts",
-    "build:static": "cd ./temp && next build",
-    "copy:static": "cp -r ./temp/out ./dist/static && rm -rf ./temp"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/babel__standalone": "^7.1.9",
     "@types/babel__traverse": "^7.20.7",
-    "llamaindex": "~0.11.0",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.3",
-    "tw-animate-css": "1.2.5",
-    "vitest": "^2.1.5"
+    "tw-animate-css": "1.2.5"
   },
   "dependencies": {
     "@babel/parser": "^7.27.0",
@@ -110,21 +70,11 @@
     "recharts": "^2.15.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.6.0",
-    "vaul": "^1.1.2"
-  },
-  "peerDependencies": {
+    "vaul": "^1.1.2",
     "@llamaindex/env": "~0.1.30",
     "@llamaindex/workflow": "~1.1.3",
     "llamaindex": "~0.11.0",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.23.3"
-  },
-  "peerDependenciesMeta": {
-    "zod": {
-      "optional": true
-    },
-    "zod-to-json-schema": {
-      "optional": true
-    }
   }
 }
