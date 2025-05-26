@@ -12,6 +12,7 @@ import type { LlamaIndexServerOptions } from "./types";
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
+const eject = process.env.EJECT === "true";
 
 export class LlamaIndexServer {
   port: number;
@@ -20,15 +21,19 @@ export class LlamaIndexServer {
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
+  eject: boolean;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
-    this.app = next({ dev, dir: nextDir, ...nextAppOptions });
+    const dir = eject ? "./next" : nextDir;
+
+    this.app = next({ dev, dir, ...nextAppOptions });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
+    this.eject = eject;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -78,7 +83,7 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
 
-      if (pathname === "/api/chat" && req.method === "POST") {
+      if (pathname === "/api/chat" && req.method === "POST" && !this.eject) {
         // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
         // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
         // make sure to keep its semantic in sync with handleChat
