@@ -23,7 +23,14 @@ async function eject() {
       process.exit(1);
     }
 
-    // Create next directory if it doesn't exist
+    // Remove next directory if it exists
+    try {
+      await fs.rm(destDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore error if directory doesn't exist
+    }
+
+    // Create next directory
     await fs.mkdir(destDir, { recursive: true });
 
     // Copy the server directory to the next folder
