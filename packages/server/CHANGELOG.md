@@ -1,5 +1,13 @@
 # @llamaindex/server
 
+## 0.2.3
+
+### Patch Changes
+
+- eee3230: feat: support custom layout
+- 0bc5a0d: Add suggestNextQuestions config
+- 3acec88: chore: bump chat-ui
+
 ## 0.2.2
 
 ### Patch Changes
