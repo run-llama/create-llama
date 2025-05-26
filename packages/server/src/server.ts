@@ -13,8 +13,6 @@ const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const dev = process.env.NODE_ENV !== "production";
 
-const EJECT_FOLDER = "next";
-
 export class LlamaIndexServer {
   port: number;
   app: ReturnType<typeof next>;
@@ -22,23 +20,10 @@ export class LlamaIndexServer {
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
-  eject: boolean;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
-
-    this.eject = process.env.EJECT === "true";
-    if (this.eject) {
-      console.log(
-        `Eject mode is enabled in ./${EJECT_FOLDER} folder. Frontend and routes will be hot-reloaded when changes are made.`,
-      );
-    }
-
-    this.app = next({
-      dev,
-      dir: this.eject ? EJECT_FOLDER : nextDir,
-      ...nextAppOptions,
-    });
+    this.app = next({ dev, dir: nextDir, ...nextAppOptions });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
@@ -75,10 +60,7 @@ export class LlamaIndexServer {
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
       }
     `;
-    const configFilePath = this.eject
-      ? path.join(EJECT_FOLDER, "public", "config.js")
-      : configFile;
-    fs.writeFileSync(configFilePath, content);
+    fs.writeFileSync(configFile, content);
   }
 
   private async createComponentsDir(componentsDir: string) {
@@ -96,7 +78,7 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
 
-      if (pathname === "/api/chat" && req.method === "POST" && !this.eject) {
+      if (pathname === "/api/chat" && req.method === "POST") {
         // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
         // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
         // make sure to keep its semantic in sync with handleChat
