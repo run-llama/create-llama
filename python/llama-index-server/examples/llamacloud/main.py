@@ -20,6 +20,7 @@ if os.getenv("LLAMA_CLOUD_INDEX_NAME") is None:
 
 Settings.llm = OpenAI(model="gpt-4o-mini")
 
+
 def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
     index = get_index(chat_request=chat_request)
     if index is None:
@@ -30,7 +31,6 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
     # Append the citation system prompt to the system prompt
     system_prompt = """
     You are a helpful assistant that has access to a knowledge base.
-    You can use the query_index tool to get the information you need.
     """
     system_prompt += query_tool.citation_system_prompt
     return AgentWorkflow.from_tools_or_functions(
