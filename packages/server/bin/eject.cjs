@@ -16,7 +16,7 @@ async function eject() {
   try {
     // validate required directories (nextjs project template, src directory, src/app directory)
     const requiredDirs = [projectDir, srcDir, srcAppDir];
-    requiredDirs.forEach(async (dir) => {
+    for (const dir of requiredDirs) {
       const exists = await fs
         .access(dir)
         .then(() => true)
@@ -25,12 +25,15 @@ async function eject() {
         console.error("Error: directory does not exist at", dir);
         process.exit(1);
       }
-    });
+    }
 
-    // Get destination directory from command line arguments
-    const destDir = process.argv[2]
-      ? path.resolve(process.argv[2]) // Use provided path
-      : path.join(process.cwd(), "next"); // Default to "next" folder in the current working directory
+    // Get destination directory from command line arguments (pnpm eject --output <path>)
+    const args = process.argv;
+    const outputIndex = args.indexOf("--output");
+    const destDir =
+      outputIndex !== -1 && args[outputIndex + 1]
+        ? path.resolve(args[outputIndex + 1]) // Use provided path after --output
+        : path.join(process.cwd(), "next"); // Default to "next" folder in the current working directory
 
     // remove destination directory if it exists
     await fs.rm(destDir, { recursive: true, force: true });
@@ -41,10 +44,18 @@ async function eject() {
     // Copy the nextjs project template to the destination directory
     await fs.cp(projectDir, destDir, { recursive: true });
 
-    // copy src/app/* & src/generate.ts to destDir/app/api/chat
+    // copy src/app/* to destDir/app/api/chat
     const chatRouteDir = path.join(destDir, "app", "api", "chat");
-    await fs.cp(srcAppDir, chatRouteDir, { recursive: true });
-    await fs.cp(generateFile, chatRouteDir);
+    await fs.cp(srcAppDir, path.join(chatRouteDir, "app"), { recursive: true });
+
+    // copy generate.ts if it exists
+    const generateFileExists = await fs
+      .access(generateFile)
+      .then(() => true)
+      .catch(() => false);
+    if (generateFileExists) {
+      await fs.cp(generateFile, path.join(chatRouteDir, "generate.ts"));
+    }
 
     // TODO: get current package.json and merge it with next-package.json (we need generate scripts)
 
