@@ -18,7 +18,7 @@ if os.getenv("LLAMA_CLOUD_PROJECT_NAME") is None:
 if os.getenv("LLAMA_CLOUD_INDEX_NAME") is None:
     raise ValueError("LLAMA_CLOUD_INDEX_NAME is not set")
 
-Settings.llm = OpenAI(model="gpt-4o-mini")
+Settings.llm = OpenAI(model="gpt-4.1")
 
 
 def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
