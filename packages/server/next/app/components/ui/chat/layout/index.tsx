@@ -121,7 +121,9 @@ async function parseLayoutComponents(layoutFiles: LayoutFile[]) {
 
 async function fetchLayoutFiles(): Promise<LayoutFile[]> {
   try {
-    const response = await fetch(getConfig("LAYOUT_API"));
+    const layoutApi = getConfig("LAYOUT_API");
+    if (!layoutApi) return [];
+    const response = await fetch(layoutApi);
     const layoutFiles: LayoutFile[] = await response.json();
     return layoutFiles;
   } catch (error) {

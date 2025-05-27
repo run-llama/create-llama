@@ -43,7 +43,6 @@ window.LLAMAINDEX = {
   // these endpoints are fixed in the ejected nextjs project, don't change them
   CHAT_API: '/api/chat',
   COMPONENTS_API: '/api/components',
-  LAYOUT_API: '/api/layout',
 
   // update these values to customize frontend
   DEV_MODE: true, // whether to enable dev mode
@@ -94,7 +93,7 @@ async function eject() {
     await copy(generateFile, path.join(chatRouteDir, "generate.ts"));
 
     // copy folders in root directory if exists
-    const rootFolders = ["components", "layout", "data", "output", "storage"];
+    const rootFolders = ["components", "data", "output", "storage"];
     for (const folder of rootFolders) {
       await copy(path.join(process.cwd(), folder), path.join(destDir, folder));
     }
@@ -134,7 +133,13 @@ async function eject() {
       path.join(destDir, ".gitignore"),
     );
 
-    // remove next-build.config.ts
+    // user can customize layout directory in nextjs project, remove layout api
+    await fs.rm(path.join(destDir, "app", "api", "layout"), {
+      recursive: true,
+      force: true,
+    });
+
+    // clean up, remove no-needed files
     await fs.unlink(path.join(destDir, "next-build.config.ts"));
 
     console.log("Successfully ejected @llamaindex/server to", destDir);
