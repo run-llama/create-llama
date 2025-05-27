@@ -42,17 +42,13 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Get the new version for the release
-      # and check if there is a new python release
       - name: Get changeset status
         id: get-changeset-status
         run: |
           pnpm changeset status --output .changeset/status.json
           new_version=$(jq -r '.releases[0].newVersion' < .changeset/status.json)
-          python_release=$(jq -r '.releases[] | select(.name == "@create-llama/llama-index-server") | .newVersion' < .changeset/status.json)
           rm -v .changeset/status.json
           echo "new-version=${new_version}" >> "$GITHUB_OUTPUT"
-          echo "python-release=${python_release}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -69,5 +65,3 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
-          # if there is a new python release, set a flag to release the python package
-          PYTHON_RELEASE_VERSION: ${{ steps.get-changeset-status.outputs.python-release }}
