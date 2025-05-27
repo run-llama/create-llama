@@ -303,9 +303,10 @@ The server always provides a chat interface at the root path (`/`) with:
 ### Eject Mode
 
 If you want to fully customize the server UI and routes, you can use `npm eject`. It will create a normal Next.js project with the same functionality as @llamaindex/server.
+By default, the ejected project will be in the `next` directory in the current working directory. You can change the output directory by providing the `--output` flag:
 
 ```bash
-pnpm eject
+npm eject --output <path-to-output-directory>
 ```
 
 ## API Reference
