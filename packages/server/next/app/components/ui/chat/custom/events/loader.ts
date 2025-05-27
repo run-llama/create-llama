@@ -17,7 +17,11 @@ export async function fetchComponentDefinitions(): Promise<{
   components: ComponentDef[];
   errors: string[];
 }> {
-  const endpoint = getConfig("COMPONENTS_API");
+  const endpoint =
+    getConfig("COMPONENTS_API") ??
+    (process.env.NEXT_PUBLIC_USE_COMPONENTS_DIR === "true"
+      ? "/api/components"
+      : undefined);
   if (!endpoint) {
     console.warn("/api/components endpoint is not defined in config");
     return { components: [], errors: [] };

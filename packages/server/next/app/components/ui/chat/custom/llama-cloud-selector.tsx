@@ -65,8 +65,14 @@ export function LlamaCloudSelector({
   );
 
   useEffect(() => {
-    if (!config && getConfig("LLAMA_CLOUD_API")) {
-      fetch(getConfig("LLAMA_CLOUD_API"))
+    const llamaCloudAPI =
+      getConfig("LLAMA_CLOUD_API") ??
+      (process.env.NEXT_PUBLIC_SHOW_LLAMACLOUD_SELECTOR === "true"
+        ? "/api/chat/config/llamacloud"
+        : "");
+
+    if (!config && llamaCloudAPI) {
+      fetch(llamaCloudAPI)
         .then((response) => {
           if (!response.ok) {
             return response.json().then((errorData) => {

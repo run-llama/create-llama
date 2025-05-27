@@ -28,25 +28,30 @@ const SERVER_CONFIG_VARS = [
   {
     key: "COMPONENTS_DIR",
     defaultValue: "components",
-    description: "Directory for custom components",
+    description: "Directory for fetching custom components",
+  },
+  {
+    key: "NEXT_PUBLIC_USE_COMPONENTS_DIR",
+    defaultValue: "true",
+    description: "Whether to enable components directory feature on frontend",
+  },
+  {
+    key: "NEXT_PUBLIC_DEV_MODE",
+    defaultValue: "true",
+    description: "Whether to enable dev mode for frontend",
+  },
+  {
+    key: "NEXT_PUBLIC_STARTER_QUESTIONS",
+    defaultValue: "",
+    description: "Initial questions to display in the chat",
+  },
+  {
+    key: "NEXT_PUBLIC_SHOW_LLAMACLOUD_SELECTOR",
+    defaultValue: "false",
+    description:
+      "Whether to show LlamaCloud selector for frontend (need to set LLAMA_CLOUD_API_KEY in .env)",
   },
 ];
-
-// The default frontend config.js file content
-const DEFAULT_FRONTEND_CONFIG = `
-window.LLAMAINDEX = {
-  // these endpoints are fixed in the ejected nextjs project, don't change them
-  CHAT_API: '/api/chat',
-  COMPONENTS_API: '/api/components',
-
-  // update these values to customize frontend
-  DEV_MODE: true, // whether to enable dev mode
-  STARTER_QUESTIONS: [], // initial questions to display in the chat
-
-  // uncomment this to enable LlamaCloud (need to set LLAMA_CLOUD_API_KEY in .env)
-  // LLAMA_CLOUD_API: '/api/chat/config/llamacloud',
-}
-`.trim();
 
 async function eject() {
   try {
@@ -119,18 +124,6 @@ async function eject() {
     }
     await fs.writeFile(path.join(destDir, ".env"), envFileContent);
 
-    // update frontend config.js file
-    const frontendConfigFile = path.join(destDir, "public", "config.js");
-    let frontendConfigContent = DEFAULT_FRONTEND_CONFIG;
-    if (envFileContent.includes("LLAMA_CLOUD_API_KEY")) {
-      // if user has LLAMA_CLOUD_API_KEY in .env, auto enable LlamaCloud for frontend
-      frontendConfigContent = frontendConfigContent.replace(
-        "// LLAMA_CLOUD_API",
-        "LLAMA_CLOUD_API",
-      );
-    }
-    await fs.writeFile(frontendConfigFile, frontendConfigContent);
-
     // rename gitignore -> .gitignore
     await fs.rename(
       path.join(destDir, "gitignore"),
@@ -143,7 +136,11 @@ async function eject() {
       force: true,
     });
 
-    // clean up, remove no-needed files
+    // clean up & remove no-needed files
+    await fs.writeFile(
+      path.join(destDir, "public", "config.js"),
+      "window.LLAMAINDEX = {};",
+    );
     await fs.unlink(path.join(destDir, "next-build.config.ts"));
 
     console.log("Successfully ejected @llamaindex/server to", destDir);
