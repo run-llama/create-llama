@@ -30,11 +30,6 @@ const SERVER_CONFIG_VARS = [
     defaultValue: "components",
     description: "Directory for custom components",
   },
-  {
-    key: "LAYOUT_DIR",
-    defaultValue: "layout",
-    description: "Directory for custom layout",
-  },
 ];
 
 // The default frontend config.js file content
