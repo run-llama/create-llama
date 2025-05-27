@@ -8,7 +8,7 @@
     "build": "uv build",
     "clean": "rm -rf dist build *.egg-info",
     "new-version": "uv run python scripts/sync_version.py",
-    "release": "uv publish"
+    "release": "scripts/release.sh"
   },
   "dependencies": {
     "@llamaindex/server": "workspace:*"
