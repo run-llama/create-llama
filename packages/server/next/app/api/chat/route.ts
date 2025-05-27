@@ -9,8 +9,8 @@ import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
 import { runWorkflow } from "./utils/workflow";
 
 // import workflow factory and settings from local file
-import { initSettings } from "../../../../src/app/settings";
-import { workflowFactory } from "../../../../src/app/workflow";
+import { initSettings } from "./app/settings";
+import { workflowFactory } from "./app/workflow";
 
 initSettings();
 
