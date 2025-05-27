@@ -1342,7 +1342,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641 }
 wheels = [
@@ -1893,19 +1893,6 @@ wheels = [
 ]
 
 [[package]]
-name = "llama-index-embeddings-openai"
-version = "0.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "llama-index-core" },
-    { name = "openai" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/02/a2604ef3a167131fdd701888f45f16c8efa6d523d02efe8c4e640238f4ea/llama_index_embeddings_openai-0.3.1.tar.gz", hash = "sha256:1368aad3ce24cbaed23d5ad251343cef1eb7b4a06d6563d6606d59cb347fef20", size = 5492 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/45/ca55b91c4ac1b6251d4099fa44121a6c012129822906cadcc27b8cfb33a4/llama_index_embeddings_openai-0.3.1-py3-none-any.whl", hash = "sha256:f15a3d13da9b6b21b8bd51d337197879a453d1605e625a1c6d45e741756c0290", size = 6177 },
-]
-
-[[package]]
 name = "llama-index-indices-managed-llama-cloud"
 version = "0.6.11"
 source = { registry = "https://pypi.org/simple" }
@@ -1969,7 +1956,6 @@ dev = [
     { name = "ipython" },
     { name = "jupyter" },
     { name = "llama-cloud" },
-    { name = "llama-index-embeddings-openai" },
     { name = "llama-index-llms-openai" },
     { name = "markdown" },
     { name = "mypy" },
@@ -2009,7 +1995,6 @@ dev = [
     { name = "ipython", specifier = "==8.10.0" },
     { name = "jupyter", specifier = ">=1.0.0,<2.0.0" },
     { name = "llama-cloud", specifier = ">=0.1.17,<1.0.0" },
-    { name = "llama-index-embeddings-openai", specifier = ">=0.3.1" },
     { name = "llama-index-llms-openai", specifier = ">=0.3.38" },
     { name = "markdown", specifier = ">=3.7,<4.0" },
     { name = "mypy", specifier = "==1.15.0" },

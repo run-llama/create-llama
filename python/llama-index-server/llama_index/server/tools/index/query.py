@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_query_engine(
-    index: BaseIndex, enable_citation: bool = True, **kwargs: Any
+    index: BaseIndex, enable_citation: bool = False, **kwargs: Any
 ) -> BaseQueryEngine:
     """
     Create a query engine for the given index.
@@ -30,10 +30,10 @@ def create_query_engine(
 
     if enable_citation:
         if kwargs.get("response_synthesizer") is not None:
-            # We don't override the provided response synthesizer
-            # Just show a warning
-            logger.warning(
-                "Custom response synthesizer and citation are both used. The citation might not work as intended."
+            raise ValueError(
+                "Citation feature uses Accumulate response synthesizer to properly generate citations. "
+                "However, you have provided a custom response synthesizer. "
+                "To use citation feature, either remove your custom response_synthesizer or set enable_citation=False."
             )
         else:
             kwargs["response_synthesizer"] = Accumulate(
@@ -52,7 +52,7 @@ def get_query_engine_tool(
     index: BaseIndex,
     name: Optional[str] = None,
     description: Optional[str] = None,
-    enable_citation: bool = True,
+    enable_citation: bool = False,
     **kwargs: Any,
 ) -> QueryEngineTool:
     """
