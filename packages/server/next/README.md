@@ -1,26 +1,61 @@
-This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Next.js](https://nextjs.org/) bootstrapped with [`llamaindex-server`](https://github.com/run-llama/LlamaIndexTS/tree/main/packages/server).
+This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Next.js](https://nextjs.org/) that is ejected from [`llamaindex-server`](https://github.com/run-llama/create-llama/tree/main/packages/server) via `npm eject` command.
 
-## Getting Started
+## Quick Start
 
-First, install the dependencies:
-
-```
+```bash
 npm install
-```
-
-Second, generate the embeddings of the documents in the `./data` directory:
-
-```
-npm run generate
-```
-
-Third, run the development server:
-
-```
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Configuration
+
+The same as [`llamaindex-server`](https://github.com/run-llama/create-llama/tree/main/packages/server#configuration-options), you can customize the application via .env and public/config.js file.
+
+Here's the examples of how to migrate from LlamaIndexServer configs to Next.js project:
+
+```ts
+// src/index.ts
+new LlamaIndexServer({
+  workflow: workflowFactory,
+  suggestNextQuestions: true,
+  uiConfig: {
+    devMode: true,
+    llamaCloudIndexSelector: true,
+    starterQuestions: ["Summarize the document", "What are the key points?"],
+    componentsDir: "components",
+    layoutDir: "layout",
+  },
+}).start();
+```
+
+.env file:
+
+```bash
+SUGGEST_NEXT_QUESTIONS=true # Whether to suggest next questions
+COMPONENTS_DIR=components # Directory for custom components
+```
+
+public/config.js file:
+
+```js
+window.LLAMAINDEX = {
+  DEV_MODE: true, // whether to enable dev mode
+  STARTER_QUESTIONS: [], // initial questions to display in the chat
+  LLAMA_CLOUD_API: "/api/chat/config/llamacloud", // enable LlamaCloud for frontend
+};
+```
+
+For customizing layout, you can directly edit the layout files in the generated nextjs project (app/components/ui/chat/layout).
+
+## Useful Commands
+
+- Generate Datasource (in case having `./data` folder): `npm run generate`
+- Typecheck: `npm run typecheck`
+- Lint: `npm run lint`
+- Format: `npm run format`
+- Build & Start: `npm run build && npm run start`
 
 ## Learn More
 
