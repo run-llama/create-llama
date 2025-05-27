@@ -67,14 +67,9 @@ def get_query_engine_tool(
     if name is None:
         name = "query_index"
     if description is None:
-        description = (
-            "Use this tool to retrieve information about the text corpus from an index."
-        )
+        description = "Use this tool to retrieve information from a knowledge base."
     if enable_citation:
-        description += (
-            "\nThe output could include citations with the format [citation:id]. "
-            "Don't trim out the citations in the final response to the user."
-        )
+        description += "\nThe output would include citations with the format [citation:id] for each chunk of information in the knowledge base."
     query_engine = create_query_engine(index, enable_citation=enable_citation, **kwargs)
     return QueryEngineTool.from_defaults(
         query_engine=query_engine,

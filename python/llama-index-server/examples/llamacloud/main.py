@@ -27,7 +27,11 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
     return AgentWorkflow.from_tools_or_functions(
         tools_or_functions=[query_tool],
         llm=OpenAI(model="gpt-4o"),
-        system_prompt="You are a helpful assistant.",
+        system_prompt="""
+            You are a helpful assistant that has access to a knowledge base.
+            You can use the query_index tool to get the information you need.
+            Answer the user's question with citations for the parts that use the information from the knowledge base.
+        """,
     )
 
 
