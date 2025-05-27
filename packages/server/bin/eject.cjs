@@ -73,13 +73,11 @@ async function eject() {
       }
     }
 
-    // Get destination directory from command line arguments (pnpm eject --output <path>)
-    const args = process.argv;
-    const outputIndex = args.indexOf("--output");
-    const destDir =
-      outputIndex !== -1 && args[outputIndex + 1]
-        ? path.resolve(args[outputIndex + 1]) // Use provided path after --output
-        : path.join(process.cwd(), "next"); // Default to "next" folder in the current working directory
+    // Get destination directory from command line arguments (pnpm eject <path>)
+    const customPath = process.argv[process.argv.length - 1];
+    const destDir = customPath
+      ? path.resolve(customPath) // Use provided path
+      : path.join(process.cwd(), "next"); // Default to "next" folder in the current working directory
 
     // remove destination directory if it exists
     await fs.rm(destDir, { recursive: true, force: true });
