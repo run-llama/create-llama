@@ -31,6 +31,11 @@ const SERVER_CONFIG_VARS = [
     description: "Directory for fetching custom components",
   },
   {
+    key: "WORKFLOW_FILE_PATH",
+    defaultValue: "app/api/chat/app/workflow.ts",
+    description: "The path to the workflow file (will be updated in dev mode)",
+  },
+  {
     key: "NEXT_PUBLIC_USE_COMPONENTS_DIR",
     defaultValue: "true",
     description: "Whether to enable components directory feature on frontend",
