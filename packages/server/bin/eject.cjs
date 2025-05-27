@@ -40,12 +40,15 @@ const SERVER_CONFIG_VARS = [
 // The default frontend config.js file content, endpoints are fixed
 const DEFAULT_FRONTEND_CONFIG = `
 window.LLAMAINDEX = {
+  // these endpoints are fixed in the ejected nextjs project, don't change them
   CHAT_API: '/api/chat',
   LLAMA_CLOUD_API: '/api/chat/config/llamacloud',
   COMPONENTS_API: '/api/components',
   LAYOUT_API: '/api/layout',
-  DEV_MODE: true,
-  STARTER_QUESTIONS: []
+
+  // update these values to customize frontend
+  DEV_MODE: true, // whether to enable dev mode
+  STARTER_QUESTIONS: [] // initial questions to display in the chat
 }
 `.trim();
 
@@ -112,7 +115,7 @@ async function eject() {
     await fs.writeFile(path.join(destDir, ".env"), envFileContent);
 
     // update frontend config.js file
-    const frontendConfigFile = path.join(destDir, "frontend", "config.js");
+    const frontendConfigFile = path.join(destDir, "public", "config.js");
     await fs.writeFile(frontendConfigFile, DEFAULT_FRONTEND_CONFIG);
 
     // rename gitignore -> .gitignore
