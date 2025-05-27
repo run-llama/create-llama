@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.18
+
+### Patch Changes
+
+- 8d59ef0: Add layout_dir config to the generated python code
+
 ## 0.5.17
 
 ### Patch Changes
