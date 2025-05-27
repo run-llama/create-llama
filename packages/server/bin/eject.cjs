@@ -37,18 +37,20 @@ const SERVER_CONFIG_VARS = [
   },
 ];
 
-// The default frontend config.js file content, endpoints are fixed
+// The default frontend config.js file content
 const DEFAULT_FRONTEND_CONFIG = `
 window.LLAMAINDEX = {
   // these endpoints are fixed in the ejected nextjs project, don't change them
   CHAT_API: '/api/chat',
-  LLAMA_CLOUD_API: '/api/chat/config/llamacloud',
   COMPONENTS_API: '/api/components',
   LAYOUT_API: '/api/layout',
 
   // update these values to customize frontend
   DEV_MODE: true, // whether to enable dev mode
-  STARTER_QUESTIONS: [] // initial questions to display in the chat
+  STARTER_QUESTIONS: [], // initial questions to display in the chat
+
+  // uncomment this to enable LlamaCloud (need to set LLAMA_CLOUD_API_KEY in .env)
+  // LLAMA_CLOUD_API: '/api/chat/config/llamacloud',
 }
 `.trim();
 
@@ -116,7 +118,15 @@ async function eject() {
 
     // update frontend config.js file
     const frontendConfigFile = path.join(destDir, "public", "config.js");
-    await fs.writeFile(frontendConfigFile, DEFAULT_FRONTEND_CONFIG);
+    let frontendConfigContent = DEFAULT_FRONTEND_CONFIG;
+    if (envFileContent.includes("LLAMA_CLOUD_API_KEY")) {
+      // if user has LLAMA_CLOUD_API_KEY in .env, auto enable LlamaCloud for frontend
+      frontendConfigContent = frontendConfigContent.replace(
+        "// LLAMA_CLOUD_API",
+        "LLAMA_CLOUD_API",
+      );
+    }
+    await fs.writeFile(frontendConfigFile, frontendConfigContent);
 
     // rename gitignore -> .gitignore
     await fs.rename(
