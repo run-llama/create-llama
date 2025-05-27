@@ -309,6 +309,14 @@ By default, the ejected project will be in the `next` directory in the current w
 npm eject --output <path-to-output-directory>
 ```
 
+How eject works:
+
+1. Init nextjs project with eslint, prettier, postcss, tailwindcss, shadcn components, etc.
+2. Copy your workflow definition and setting files in src/app/\* to the ejected project in app/api/chat
+3. Copy your components, data, output, storage folders to the ejected project
+4. Copy your current .env file to the ejected project
+5. Clean up files that are no longer needed and update imports
+
 ## API Reference
 
 - [LlamaIndexServer](https://ts.llamaindex.ai/docs/api/classes/LlamaIndexServer)
