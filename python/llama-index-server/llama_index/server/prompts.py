@@ -21,26 +21,31 @@ Context information is below.
 ------------------
 {context_str}
 ------------------
+There would be citation_id that is associated with each text chunk (at the beginning) or previous response (wrapped in `[citation:]` block).
+Use the citation_id for citation construction.
 
-Given the context information and without prior knowledge, answer the query with citations.
+Answer the following query with citations:
 ------------------
 {query_str}
 ------------------
 
-# Citation format 
-It's important to follow the following format for citations:
+# Citation format
+
+[citation:id]
+
+Where:
+- [citation:] is a matching pattern which is required for all citations.
+- `id` is the `citation_id` provided in the context or previous response.
+
 Example:
 ```
-    Here is a response that uses context information [citation:id] and other ideas that don't use context information. 
-    The citation block will be displayed automatically with useful information for the user in the UI.
+    Here is a response that uses context information [citation:90ca859f-4f32-40ca-8cd0-edfad4fb298b] 
+    and other ideas that don't use context information [citation:17b2cc9a-27ae-4b6d-bede-5ca60fc00ff4] .\n
+    The citation block will be displayed automatically with useful information for the user in the UI [citation:1c606612-e75f-490e-8374-44e79f818d19] .
 ```
-Where:
-- [citation:] is always fixed for all citations
-- replace `id` with the `citation_id`, which is the uuid provided in the context or previous response.
 
-## Important:
-1. Do not fake and never use dummy citation_id: [citation:1], [citation:id], [citation:abc],..
-2. If the context includes a previous response that has a citation, it is better to keep the citation block in your response.
-
+## Requirements:
+1. Always include citations for every fact from the context information in your response. 
+2. Make sure that the citation_id is correct with the context, don't mix up the citation_id with other information.
 Now, you answer the query with citations:
 """

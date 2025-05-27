@@ -1,13 +1,13 @@
 import os
 from typing import Optional
 
+from fastapi import FastAPI
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.llms.openai import OpenAI
-from llama_index.server.api.models import ChatRequest
-from llama_index.server.tools.index import get_query_engine_tool
-from llama_index.server.services.llamacloud import get_index
-from fastapi import FastAPI
 from llama_index.server import LlamaIndexServer, UIConfig
+from llama_index.server.api.models import ChatRequest
+from llama_index.server.services.llamacloud import get_index
+from llama_index.server.tools.index import get_query_engine_tool
 
 # Please set the following environment variables to use LlamaCloud
 if os.getenv("LLAMA_CLOUD_API_KEY") is None:
@@ -26,7 +26,7 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
     query_tool = get_query_engine_tool(index=index, enable_citation=True)
     return AgentWorkflow.from_tools_or_functions(
         tools_or_functions=[query_tool],
-        llm=OpenAI(model="gpt-4o-mini"),
+        llm=OpenAI(model="gpt-4o"),
         system_prompt="You are a helpful assistant.",
     )
 
@@ -35,8 +35,8 @@ def create_app() -> FastAPI:
     app = LlamaIndexServer(
         workflow_factory=create_workflow,
         env="dev",
+        suggest_next_questions=False,
         ui_config=UIConfig(
-            app_title="LlamaCloud Index",
             llamacloud_index_selector=True,  # to select different indexes in the UI
         ),
     )
