@@ -13,6 +13,42 @@ const srcAppDir = path.join(srcDir, "app");
 const generateFile = path.join(srcDir, "generate.ts");
 const envFile = path.join(process.cwd(), ".env");
 
+// The environment variables that are used as LlamaIndexServer configs
+const SERVER_CONFIG_VARS = [
+  {
+    key: "OPENAI_API_KEY",
+    defaultValue: "<your-openai-api-key>",
+    description: "OpenAI API key",
+  },
+  {
+    key: "SUGGEST_NEXT_QUESTIONS",
+    defaultValue: "true",
+    description: "Whether to suggest next questions",
+  },
+  {
+    key: "COMPONENTS_DIR",
+    defaultValue: "components",
+    description: "Directory for custom components",
+  },
+  {
+    key: "LAYOUT_DIR",
+    defaultValue: "layout",
+    description: "Directory for custom layout",
+  },
+];
+
+// The default frontend config.js file content, endpoints are fixed
+const DEFAULT_FRONTEND_CONFIG = `
+window.LLAMAINDEX = {
+  CHAT_API: '/api/chat',
+  LLAMA_CLOUD_API: '/api/chat/config/llamacloud',
+  COMPONENTS_API: '/api/components',
+  LAYOUT_API: '/api/layout',
+  DEV_MODE: true,
+  STARTER_QUESTIONS: []
+}
+`.trim();
+
 async function eject() {
   try {
     // validate required directories (nextjs project template, src directory, src/app directory)
@@ -65,30 +101,8 @@ async function eject() {
     }
 
     // update .env file with more server configs
-    const envVars = [
-      {
-        key: "OPENAI_API_KEY",
-        defaultValue: "<your-openai-api-key>",
-        description: "OpenAI API key",
-      },
-      {
-        key: "SUGGEST_NEXT_QUESTIONS",
-        defaultValue: "true",
-        description: "Whether to suggest next questions",
-      },
-      {
-        key: "COMPONENTS_DIR",
-        defaultValue: "components",
-        description: "Directory for custom components",
-      },
-      {
-        key: "LAYOUT_DIR",
-        defaultValue: "layout",
-        description: "Directory for custom layout",
-      },
-    ];
     let envFileContent = await fs.readFile(path.join(destDir, ".env"), "utf-8");
-    for (const envVar of envVars) {
+    for (const envVar of SERVER_CONFIG_VARS) {
       const { key, defaultValue, description } = envVar;
       if (!envFileContent.includes(key)) {
         // if the key is not exists in the env file, add it
@@ -96,6 +110,10 @@ async function eject() {
       }
     }
     await fs.writeFile(path.join(destDir, ".env"), envFileContent);
+
+    // update frontend config.js file
+    const frontendConfigFile = path.join(destDir, "frontend", "config.js");
+    await fs.writeFile(frontendConfigFile, DEFAULT_FRONTEND_CONFIG);
 
     // rename gitignore -> .gitignore
     await fs.rename(
@@ -105,8 +123,6 @@ async function eject() {
 
     // remove next-build.config.ts
     await fs.unlink(path.join(destDir, "next-build.config.ts"));
-
-    // TODO: copy llamaindex package versions
 
     console.log("Successfully ejected @llamaindex/server to", destDir);
   } catch (error) {
