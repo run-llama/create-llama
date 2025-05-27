@@ -10,7 +10,8 @@ const projectDir = path.resolve(__dirname, "../project");
 // Resolve the src directory that contains workflow & setting files
 const srcDir = path.join(process.cwd(), "src");
 const srcAppDir = path.join(srcDir, "app");
-const generateFile = path.join(srcDir, "generate.ts"); // optional, used to generate embeddings for index
+const generateFile = path.join(srcDir, "generate.ts");
+const envFile = path.join(process.cwd(), ".env");
 
 async function eject() {
   try {
@@ -49,13 +50,52 @@ async function eject() {
     await fs.cp(srcAppDir, path.join(chatRouteDir, "app"), { recursive: true });
 
     // copy generate.ts if it exists
-    const generateFileExists = await fs
-      .access(generateFile)
-      .then(() => true)
-      .catch(() => false);
-    if (generateFileExists) {
-      await fs.cp(generateFile, path.join(chatRouteDir, "generate.ts"));
+    await copy(generateFile, path.join(chatRouteDir, "generate.ts"));
+
+    // copy folders in root directory if exists
+    const rootFolders = ["components", "layout", "data", "output", "storage"];
+    for (const folder of rootFolders) {
+      await copy(path.join(process.cwd(), folder), path.join(destDir, folder));
     }
+
+    // copy .env if it exists or create a new one
+    const envFileExists = await copy(envFile, path.join(destDir, ".env"));
+    if (!envFileExists) {
+      await fs.writeFile(path.join(destDir, ".env"), "");
+    }
+
+    // update .env file with more server configs
+    const envVars = [
+      {
+        key: "OPENAI_API_KEY",
+        defaultValue: "<your-openai-api-key>",
+        description: "OpenAI API key",
+      },
+      {
+        key: "SUGGEST_NEXT_QUESTIONS",
+        defaultValue: "true",
+        description: "Whether to suggest next questions",
+      },
+      {
+        key: "COMPONENTS_DIR",
+        defaultValue: "components",
+        description: "Directory for custom components",
+      },
+      {
+        key: "LAYOUT_DIR",
+        defaultValue: "layout",
+        description: "Directory for custom layout",
+      },
+    ];
+    let envFileContent = await fs.readFile(path.join(destDir, ".env"), "utf-8");
+    for (const envVar of envVars) {
+      const { key, defaultValue, description } = envVar;
+      if (!envFileContent.includes(key)) {
+        // if the key is not exists in the env file, add it
+        envFileContent += `\n# ${description}\n${key}=${defaultValue}\n`;
+      }
+    }
+    await fs.writeFile(path.join(destDir, ".env"), envFileContent);
 
     // rename gitignore -> .gitignore
     await fs.rename(
@@ -73,6 +113,18 @@ async function eject() {
     console.error("Error during eject:", error.message);
     process.exit(1);
   }
+}
+
+// copy src to dest if src exists, return true if src exists
+async function copy(src, dest) {
+  const srcExists = await fs
+    .access(src)
+    .then(() => true)
+    .catch(() => false);
+  if (srcExists) {
+    await fs.cp(src, dest, { recursive: true });
+  }
+  return srcExists;
 }
 
 eject();
