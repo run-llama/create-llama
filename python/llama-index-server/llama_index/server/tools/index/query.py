@@ -71,8 +71,10 @@ def get_query_engine_tool(
     if enable_citation:
         description += "\nThe output would include citations with the format [citation:id] for each chunk of information in the knowledge base."
     query_engine = create_query_engine(index, enable_citation=enable_citation, **kwargs)
-    return QueryEngineTool.from_defaults(
+    tool = QueryEngineTool.from_defaults(
         query_engine=query_engine,
         name=name,
         description=description,
     )
+    tool.citation_system_prompt = "Answer the user question with citations for the parts that uses the information from the knowledge base."
+    return tool

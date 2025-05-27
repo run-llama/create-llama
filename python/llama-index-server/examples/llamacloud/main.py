@@ -3,10 +3,12 @@ from typing import Optional
 
 from fastapi import FastAPI
 from llama_index.core.agent.workflow import AgentWorkflow
+from llama_index.core.settings import Settings
+from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.services.llamacloud import get_index
-from llama_index.server.tools.index.citation_agent import create_citation_agent
+from llama_index.server.tools.index.query import get_query_engine_tool
 
 # Please set the following environment variables to use LlamaCloud
 if os.getenv("LLAMA_CLOUD_API_KEY") is None:
@@ -16,29 +18,25 @@ if os.getenv("LLAMA_CLOUD_PROJECT_NAME") is None:
 if os.getenv("LLAMA_CLOUD_INDEX_NAME") is None:
     raise ValueError("LLAMA_CLOUD_INDEX_NAME is not set")
 
+Settings.llm = OpenAI(model="gpt-4o-mini")
+
 def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
     index = get_index(chat_request=chat_request)
     if index is None:
         raise RuntimeError("Index not found!")
-    citation_agent = create_citation_agent(index=index)
-    return AgentWorkflow(agents=[citation_agent])
+    # Create a query tool with citations enabled
+    query_tool = get_query_engine_tool(index=index, enable_citation=True)
 
-# from llama_index.llms.openai import OpenAI
-# def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
-#     index = get_index(chat_request=chat_request)
-#     if index is None:
-#         raise RuntimeError("Index not found!")
-#     # Create a query tool with citations enabled
-#     query_tool = get_query_engine_tool(index=index, enable_citation=True)
-#     return AgentWorkflow.from_tools_or_functions(
-#         tools_or_functions=[query_tool],
-#         llm=OpenAI(model="gpt-4o"),
-#         system_prompt="""
-#             You are a helpful assistant that has access to a knowledge base.
-#             You can use the query_index tool to get the information you need.
-#             Answer the user's question with citations for the parts that use the information from the knowledge base.
-#         """,
-#     )
+    # Append the citation system prompt to the system prompt
+    system_prompt = """
+    You are a helpful assistant that has access to a knowledge base.
+    You can use the query_index tool to get the information you need.
+    """
+    system_prompt += query_tool.citation_system_prompt
+    return AgentWorkflow.from_tools_or_functions(
+        tools_or_functions=[query_tool],
+        system_prompt=system_prompt,
+    )
 
 
 def create_app() -> FastAPI:
