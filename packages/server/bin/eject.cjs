@@ -57,6 +57,12 @@ async function eject() {
       await fs.cp(generateFile, path.join(chatRouteDir, "generate.ts"));
     }
 
+    // rename gitignore -> .gitignore
+    await fs.rename(
+      path.join(destDir, "gitignore"),
+      path.join(destDir, ".gitignore"),
+    );
+
     // TODO: get current package.json and merge it with next-package.json (we need generate scripts)
 
     console.log("Successfully ejected @llamaindex/server/server to", destDir);
