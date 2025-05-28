@@ -1,5 +1,12 @@
 # @llamaindex/server
 
+## 0.2.4
+
+### Patch Changes
+
+- 5fe9e17: support eject to fully customize next folder
+- b8a1ff6: Bump version: chat-ui@0.4.6
+
 ## 0.2.3
 
 ### Patch Changes
