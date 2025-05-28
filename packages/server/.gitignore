@@ -1,6 +1,9 @@
 # server contains Nextjs frontend code (not compiled)
 server/
 
+# bin will be created automatically when running `pnpm install`
+bin/
+
 # the ejected nextjs project
 project/
 
