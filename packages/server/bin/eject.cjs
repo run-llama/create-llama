@@ -106,7 +106,7 @@ async function eject() {
     if (genFileExists) {
       // update the import @llamaindex/server in generate.ts
       let genContent = await fs.readFile(genFilePath, "utf-8");
-      genContent = genContent.replace("@llamaindex/server", "../utils");
+      genContent = genContent.replace("@llamaindex/server", "./utils");
       await fs.writeFile(genFilePath, genContent);
     }
 
