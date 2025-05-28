@@ -77,5 +77,5 @@ def enable_citation(query_engine_tool: QueryEngineTool) -> QueryEngineTool:
     query_engine_tool._query_engine = query_engine
 
     # Update tool metadata
-    query_engine_tool.metadata.description += "\nThe output would include citations with the format [citation:id] for each chunk of information in the knowledge base."
+    query_engine_tool.metadata.description += "\nThe output will include citations with the format [citation:id] for each chunk of information in the knowledge base."
     return query_engine_tool
