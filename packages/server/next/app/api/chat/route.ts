@@ -4,9 +4,11 @@ import { type MessageType } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 
 // import chat utils
-import { toDataStream } from "./utils/stream";
-import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
-import { runWorkflow } from "./utils/workflow";
+import {
+  runWorkflow,
+  sendSuggestedQuestionsEvent,
+  toDataStream,
+} from "./utils";
 
 // import workflow factory and settings from local file
 import { initSettings } from "./app/settings";
