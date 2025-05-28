@@ -145,11 +145,8 @@ async function eject() {
       force: true,
     });
 
-    // clean up & remove no-needed files
-    await fs.writeFile(
-      path.join(destDir, "public", "config.js"),
-      "window.LLAMAINDEX = {};",
-    );
+    // remove no-needed files
+    await fs.unlink(path.join(destDir, "public", "config.js"));
     await fs.unlink(path.join(destDir, "next-build.config.ts"));
 
     console.log("Successfully ejected @llamaindex/server to", destDir);
