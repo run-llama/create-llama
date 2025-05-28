@@ -95,14 +95,18 @@ async function eject() {
     // nextjs project doesn't depend on @llamaindex/server anymore, we need to update the imports in workflow file
     const workflowFile = path.join(chatRouteDir, "app", "workflow.ts");
     let workflowContent = await fs.readFile(workflowFile, "utf-8");
-    workflowContent = workflowContent.replace(
-      "@llamaindex/server",
-      "../utils/events",
-    );
+    workflowContent = workflowContent.replace("@llamaindex/server", "../utils");
     await fs.writeFile(workflowFile, workflowContent);
 
     // copy generate.ts if it exists
-    await copy(generateFile, path.join(chatRouteDir, "generate.ts"));
+    const genFilePath = path.join(chatRouteDir, "generate.ts");
+    const genFileExists = await copy(generateFile, genFilePath);
+    if (genFileExists) {
+      // update the import @llamaindex/server in generate.ts
+      let genContent = await fs.readFile(genFilePath, "utf-8");
+      genContent = genContent.replace("@llamaindex/server", "../utils");
+      await fs.writeFile(genFilePath, genContent);
+    }
 
     // copy folders in root directory if exists
     const rootFolders = ["components", "data", "output", "storage"];
