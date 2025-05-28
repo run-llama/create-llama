@@ -23,12 +23,12 @@ const SERVER_CONFIG_VARS = [
   {
     key: "SUGGEST_NEXT_QUESTIONS",
     defaultValue: "true",
-    description: "Whether to suggest next questions",
+    description: "Whether to suggest next questions (`suggestNextQuestions`)",
   },
   {
     key: "COMPONENTS_DIR",
     defaultValue: "components",
-    description: "Directory for fetching custom components",
+    description: "Directory for custom components (`componentsDir`)",
   },
   {
     key: "WORKFLOW_FILE_PATH",
@@ -43,18 +43,19 @@ const SERVER_CONFIG_VARS = [
   {
     key: "NEXT_PUBLIC_DEV_MODE",
     defaultValue: "true",
-    description: "Whether to enable dev mode for frontend",
+    description: "Whether to enable dev mode (`devMode`)",
   },
   {
     key: "NEXT_PUBLIC_STARTER_QUESTIONS",
     defaultValue: '["Summarize the document", "What are the key points?"]',
-    description: "Initial questions to display in the chat",
+    description:
+      "Initial questions to display in the chat (`starterQuestions`)",
   },
   {
     key: "NEXT_PUBLIC_SHOW_LLAMACLOUD_SELECTOR",
     defaultValue: "false",
     description:
-      "Whether to show LlamaCloud selector for frontend (need to set LLAMA_CLOUD_API_KEY in .env)",
+      "Whether to show LlamaCloud selector for frontend (`llamaCloudIndexSelector`)",
   },
 ];
 

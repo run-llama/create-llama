@@ -2,6 +2,8 @@ This is a [LlamaIndex](https://www.llamaindex.ai/) project using [Next.js](https
 
 ## Quick Start
 
+As this is a Next.js project, you can use the following commands to start the development server:
+
 ```bash
 npm install
 npm run dev
@@ -9,48 +11,29 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Configuration
-
-The same as [`llamaindex-server`](https://github.com/run-llama/create-llama/tree/main/packages/server#configuration-options), you can customize the application via .env file.
-
-Here's the examples of how to migrate from LlamaIndexServer configs to Next.js project:
-
-```ts
-// src/index.ts
-new LlamaIndexServer({
-  workflow: workflowFactory,
-  suggestNextQuestions: true,
-  uiConfig: {
-    devMode: true,
-    llamaCloudIndexSelector: true,
-    starterQuestions: ["Summarize the document", "What are the key points?"],
-    componentsDir: "components",
-    layoutDir: "layout",
-  },
-}).start();
-```
-
-.env file:
-
-```
-SUGGEST_NEXT_QUESTIONS=true # Whether to suggest next questions (`suggestNextQuestions`)
-COMPONENTS_DIR=components # Directory for custom components (`componentsDir`)
-
-NEXT_PUBLIC_DEV_MODE=true # Whether to enable dev mode (`devMode`)
-NEXT_PUBLIC_STARTER_QUESTIONS=[] # Initial questions to display in the chat (`starterQuestions`)
-NEXT_PUBLIC_SHOW_LLAMACLOUD_SELECTOR=true # Whether to show LlamaCloud selector for frontend (`llamaCloudIndexSelector`)
-NEXT_PUBLIC_USE_COMPONENTS_DIR=true # Whether to use components directory for frontend
-```
-
-For customizing layout, you can directly edit the layout files in the generated nextjs project (app/components/ui/chat/layout).
-
 ## Useful Commands
 
-- Generate Datasource (in case having `./data` folder): `npm run generate`
+- Generate Datasource (in case you're having a `./data` folder): `npm run generate`
 - Typecheck: `npm run typecheck`
 - Lint: `npm run lint`
 - Format: `npm run format`
 - Build & Start: `npm run build && npm run start`
+
+## Deployment
+
+The project can be deployed to any platform that supports Next.js like Vercel.
+
+## Configuration
+
+Your original [`llamaindex-server`](https://github.com/run-llama/create-llama/tree/main/packages/server#configuration-options) configurations have been migrated to a [`.env`](.env) file.
+
+Changing the `.env` file will change the behavior of the application, e.g. for changing the initial questions to display in the chat, you can do:
+
+```
+NEXT_PUBLIC_STARTER_QUESTIONS=['What is the capital of France?']
+```
+
+Alternatively, you can also change the file referencing `process.env.NEXT_PUBLIC_STARTER_QUESTIONS` directly in the source code.
 
 ## Learn More
 
