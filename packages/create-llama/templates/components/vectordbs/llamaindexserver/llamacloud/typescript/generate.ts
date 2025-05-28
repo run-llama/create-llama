@@ -1,8 +1,9 @@
+import { OpenAI } from "@llamaindex/openai";
 import { generateEventComponent } from "@llamaindex/server";
 import * as dotenv from "dotenv";
 import "dotenv/config";
 import * as fs from "fs/promises";
-import { LLamaCloudFileService, OpenAI } from "llamaindex";
+import { LLamaCloudFileService } from "llamaindex";
 import * as path from "path";
 import { getIndex } from "./app/data";
 import { initSettings } from "./app/settings";

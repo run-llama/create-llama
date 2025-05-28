@@ -17,7 +17,7 @@ import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
   const handler = useChat({
-    api: getConfig("CHAT_API"),
+    api: getConfig("CHAT_API") || "/api/chat",
     onError: (error: unknown) => {
       if (!(error instanceof Error)) throw error;
       let errorMessage: string;

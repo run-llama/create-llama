@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { promisify } from "util";
 
-const DEFAULT_WORKFLOW_FILE_PATH = "src/app/workflow.ts"; // TODO: we can make it as a parameter in server later
+const DEFAULT_WORKFLOW_FILE_PATH =
+  process.env.WORKFLOW_FILE_PATH || "src/app/workflow.ts";
 
 export async function GET(request: NextRequest) {
   const filePath = DEFAULT_WORKFLOW_FILE_PATH;

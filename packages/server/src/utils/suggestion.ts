@@ -1,7 +1,7 @@
 import { getEnv } from "@llamaindex/env";
 import type { DataStreamWriter } from "ai";
 import { type ChatMessage, Settings } from "llamaindex";
-import { NEXT_QUESTION_PROMPT } from "../prompts";
+import { NEXT_QUESTION_PROMPT } from "./prompts";
 
 export const sendSuggestedQuestionsEvent = async (
   streamWriter: DataStreamWriter,

@@ -19,7 +19,8 @@ type WorkflowFile = {
 };
 
 export function DevModePanel() {
-  const devModeEnabled = getConfig("DEV_MODE");
+  const devModeEnabled =
+    getConfig("DEV_MODE") ?? process.env.NEXT_PUBLIC_DEV_MODE === "true";
   if (!devModeEnabled) return null;
   return <DevModePanelComp />;
 }

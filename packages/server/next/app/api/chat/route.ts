@@ -4,16 +4,23 @@ import { type MessageType } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 
 // import chat utils
-import { toDataStream } from "./utils/stream";
-import { sendSuggestedQuestionsEvent } from "./utils/suggestion";
-import { runWorkflow } from "./utils/workflow";
+import {
+  runWorkflow,
+  sendSuggestedQuestionsEvent,
+  toDataStream,
+} from "./utils";
 
-// import workflow factory from local file
-import { workflowFactory } from "../../../../app/workflow";
+// import workflow factory and settings from local file
+import { initSettings } from "./app/settings";
+import { workflowFactory } from "./app/workflow";
+
+initSettings();
 
 export async function POST(req: NextRequest) {
   try {
     const reqBody = await req.json();
+    const suggestNextQuestions = process.env.SUGGEST_NEXT_QUESTIONS === "true";
+
     const { messages } = reqBody as { messages: Message[] };
     const chatHistory = messages.map((message) => ({
       role: message.role as MessageType,
@@ -47,14 +54,15 @@ export async function POST(req: NextRequest) {
     );
 
     const dataStream = toDataStream(workflowEventStream, {
-      // TODO: Support enable/disable suggestion
       callbacks: {
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,
             content: completion,
           });
-          await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          if (suggestNextQuestions) {
+            await sendSuggestedQuestionsEvent(dataStreamWriter, chatHistory);
+          }
         },
       },
     });

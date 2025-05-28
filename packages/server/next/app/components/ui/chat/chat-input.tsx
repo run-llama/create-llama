@@ -8,7 +8,11 @@ import { LlamaCloudSelector } from "./custom/llama-cloud-selector";
 export default function CustomChatInput() {
   const { requestData, isLoading, input } = useChatUI();
   const uploadAPI = getConfig("UPLOAD_API") ?? "";
-  const llamaCloudAPI = getConfig("LLAMA_CLOUD_API") ?? "";
+  const llamaCloudAPI =
+    getConfig("LLAMA_CLOUD_API") ??
+    (process.env.NEXT_PUBLIC_SHOW_LLAMACLOUD_SELECTOR === "true"
+      ? "/api/chat/config/llamacloud"
+      : "");
   const {
     imageUrl,
     setImageUrl,

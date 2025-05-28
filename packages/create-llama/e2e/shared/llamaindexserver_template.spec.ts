@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ChildProcess } from "child_process";
+import { ChildProcess, execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import type {
@@ -28,6 +28,7 @@ const templateUseCases = [
   "deep_research",
   "code_generator",
 ];
+const ejectDir = "next";
 
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
@@ -108,6 +109,28 @@ for (const useCase of templateUseCases) {
       console.log(`Response body: ${responseBody}`);
 
       expect(response.ok()).toBeTruthy();
+    });
+
+    test("Should successfully eject, install dependencies and build without errors", async () => {
+      test.skip(
+        templateFramework !== "nextjs" ||
+          useCase !== "code_generator" ||
+          dataSource === "--llamacloud",
+        "Eject test only applies to Next.js framework, code generator use case, and non-llamacloud",
+      );
+
+      // Run eject command
+      execSync("npm run eject", { cwd: path.join(cwd, name) });
+
+      // Verify next directory exists
+      const nextDirExists = fs.existsSync(path.join(cwd, name, ejectDir));
+      expect(nextDirExists).toBeTruthy();
+
+      // Install dependencies in next directory
+      execSync("npm install", { cwd: path.join(cwd, name, ejectDir) });
+
+      // Run build
+      execSync("npm run build", { cwd: path.join(cwd, name, ejectDir) });
     });
 
     // clean processes
