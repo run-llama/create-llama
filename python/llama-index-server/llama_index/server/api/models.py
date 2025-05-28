@@ -1,14 +1,15 @@
 import logging
 import os
-import re
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, field_validator
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
 from llama_index.server.settings import server_settings
-from pydantic import BaseModel, field_validator
+from llama_index.server.utils import llamacloud
 
 logger = logging.getLogger("uvicorn")
 
@@ -92,15 +93,6 @@ class SourceNodes(BaseModel):
         )
 
     @classmethod
-    def get_local_llamacloud_file_name(
-        cls, llamacloud_file_name: str, pipeline_id: str
-    ) -> str:
-        file_ext = os.path.splitext(llamacloud_file_name)[1]
-        file_name = llamacloud_file_name.replace(file_ext, "")
-        sanitized_file_name = re.sub(r"[^A-Za-z0-9_\-]", "_", file_name)
-        return f"{sanitized_file_name}_{pipeline_id}{file_ext}"
-
-    @classmethod
     def get_url_from_metadata(
         cls,
         metadata: Dict[str, Any],
@@ -112,10 +104,8 @@ class SourceNodes(BaseModel):
         file_name = metadata.get("file_name")
 
         if file_name and url_prefix:
-            pipeline_id = metadata.get("pipeline_id")
-            if pipeline_id:
-                # file is from LlamaCloud
-                file_name = cls.get_local_llamacloud_file_name(file_name, pipeline_id)
+            if llamacloud.is_llamacloud_file(metadata):
+                file_name = llamacloud.get_local_file_name(metadata)
                 return f"{url_prefix}/output/llamacloud/{file_name}"
             is_private = metadata.get("private", "false") == "true"
             if is_private:

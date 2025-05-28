@@ -8,10 +8,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
+from pydantic import BaseModel
+
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.models import SourceNodes
 from llama_index.server.services.llamacloud.index import get_client
-from pydantic import BaseModel
+from llama_index.server.utils import llamacloud
 
 logger = logging.getLogger("uvicorn")
 
@@ -156,7 +158,9 @@ class LlamaCloudFileService:
 
     @classmethod
     def _get_file_path(cls, name: str, pipeline_id: str) -> str:
-        file_name = SourceNodes.get_local_llamacloud_file_name(name, pipeline_id)
+        file_name = llamacloud.get_local_file_name(
+            llamacloud_file_name=name, pipeline_id=pipeline_id
+        )
         return os.path.join(cls.LOCAL_STORE_PATH, file_name)
 
     @classmethod
