@@ -5,6 +5,7 @@ import { parse, stringify } from "smol-toml";
 import terminalLink from "terminal-link";
 import { isUvAvailable, tryUvSync } from "./uv";
 
+import { isCI } from "ci-info";
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
 import { Tool } from "./tools";
@@ -276,6 +277,14 @@ const getAdditionalDependencies = (
         version: ">=0.3.0,<0.4.0",
       });
     }
+  }
+
+  // If CI and SERVER_PACKAGE_PATH is set, add @llamaindex/server to dependencies
+  if (isCI && process.env.SERVER_PACKAGE_PATH) {
+    dependencies.push({
+      name: "llama-index-server",
+      version: `@file://${process.env.SERVER_PACKAGE_PATH}`,
+    });
   }
 
   return dependencies;

@@ -64,6 +64,11 @@ jobs:
         run: pnpm run pack-install
         working-directory: packages/create-llama
 
+      - name: Build and store server package
+        run: |
+          pnpm run build
+          mv dist ${{ runner.temp }}/llamaindex-server-dist
+
       - name: Run Playwright tests for Python
         run: pnpm run e2e:python
         env:
@@ -74,6 +79,7 @@ jobs:
           TEMPLATE_TYPE: ${{ matrix.template-types }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
+          SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server-dist
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
