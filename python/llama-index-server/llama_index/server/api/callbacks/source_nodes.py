@@ -21,12 +21,14 @@ class SourceNodesFromToolCall(EventCallback):
 
     def __init__(
         self,
-        tool_suffixes: List[str] = [
-            "query_engine",
-            "query_index",
-        ],  # keep query_index for backward compatibility
+        tool_suffixes: Optional[List[str]] = None,
         tool_name: Optional[str] = None,
     ):
+        if tool_suffixes is None:
+            tool_suffixes = [
+                "query_engine",
+                "query_index",
+            ]  # keep query_index for backward compatibility
         if tool_name is not None:
             logger.warning(
                 f"Tool name has been deprecated. Please use tool_suffixes instead. "

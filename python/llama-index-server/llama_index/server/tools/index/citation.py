@@ -36,11 +36,11 @@ class CitationSynthesizer(Accumulate):
     2. Update text_qa_template to include citations
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         text_qa_template = kwargs.pop("text_qa_template", None)
         if text_qa_template is None:
             text_qa_template = PromptTemplate(template=CITATION_PROMPT)
-        super().__init__(text_qa_template=text_qa_template, *args, **kwargs)
+        super().__init__(text_qa_template=text_qa_template, **kwargs)
 
 
 # Add this prompt to your agent system prompt
