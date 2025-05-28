@@ -54,9 +54,7 @@ CITATION_SYSTEM_PROMPT = (
 def enable_citation(query_engine_tool: QueryEngineTool) -> QueryEngineTool:
     """
     Enable citation for a query engine tool by using CitationSynthesizer and NodePostprocessor.
-    Note:
-        - Your query engine tool name must end with "_query_engine".
-        - This function will override the response synthesizer of your query engine.
+    Note: This function will override the response synthesizer of your query engine.
     """
     query_engine = query_engine_tool.query_engine
     if not isinstance(query_engine, RetrieverQueryEngine):
@@ -64,15 +62,6 @@ def enable_citation(query_engine_tool: QueryEngineTool) -> QueryEngineTool:
             "Citation feature requires a RetrieverQueryEngine. Your tool's query engine is a "
             f"{type(query_engine)}."
         )
-    tool_name = query_engine_tool.metadata.name
-    if tool_name is None:
-        tool_name = "default_query_engine"
-    elif not tool_name.endswith("_query_engine"):
-        logger.warning(
-            "Your query engine tool name is required to end with '_query_engine'. "
-            "We will add the '_query_engine' suffix to the tool name."
-        )
-        tool_name += "_query_engine"
     # Update the response synthesizer and node postprocessors
     query_engine._response_synthesizer = CitationSynthesizer()
     query_engine._node_postprocessors += [NodeCitationProcessor()]
