@@ -113,8 +113,10 @@ for (const useCase of templateUseCases) {
 
     test("Should successfully eject, install dependencies and build without errors", async () => {
       test.skip(
-        templateFramework !== "nextjs" || useCase !== "code_generator",
-        "Eject test only applies to Next.js framework",
+        templateFramework !== "nextjs" ||
+          useCase !== "code_generator" ||
+          dataSource === "--llamacloud",
+        "Eject test only applies to Next.js framework, code generator use case, and non-llamacloud",
       );
 
       // Run eject command
