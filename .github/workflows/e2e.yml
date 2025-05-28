@@ -66,8 +66,10 @@ jobs:
 
       - name: Build and store server package
         run: |
-          pnpm run build
-          mv dist ${{ runner.temp }}/llamaindex-server-dist
+          uv build
+          wheel_file=$(ls dist/*.whl | head -n 1)
+          cp "$wheel_file" ${{ runner.temp }}/
+          echo "SERVER_PACKAGE_PATH=${{ runner.temp }}/$(basename "$wheel_file")" >> $GITHUB_ENV
         working-directory: python/llama-index-server
 
       - name: Run Playwright tests for Python
@@ -80,7 +82,7 @@ jobs:
           TEMPLATE_TYPE: ${{ matrix.template-types }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
-          SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server-dist
+          SERVER_PACKAGE_PATH: ${{ env.SERVER_PACKAGE_PATH }}
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
