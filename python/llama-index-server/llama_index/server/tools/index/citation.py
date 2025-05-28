@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from llama_index.core import QueryBundle
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
@@ -36,7 +36,7 @@ class CitationSynthesizer(Accumulate):
     2. Update text_qa_template to include citations
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         text_qa_template = kwargs.pop("text_qa_template", None)
         if text_qa_template is None:
             text_qa_template = PromptTemplate(template=CITATION_PROMPT)
@@ -65,7 +65,9 @@ def enable_citation(query_engine_tool: QueryEngineTool) -> QueryEngineTool:
             f"{type(query_engine)}."
         )
     tool_name = query_engine_tool.metadata.name
-    if not tool_name.endswith("_query_engine"):
+    if tool_name is None:
+        tool_name = "default_query_engine"
+    elif not tool_name.endswith("_query_engine"):
         logger.warning(
             "Your query engine tool name is required to end with '_query_engine'. "
             "We will add the '_query_engine' suffix to the tool name."
