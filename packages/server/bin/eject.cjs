@@ -47,7 +47,7 @@ const SERVER_CONFIG_VARS = [
   },
   {
     key: "NEXT_PUBLIC_STARTER_QUESTIONS",
-    defaultValue: "",
+    defaultValue: '["Summarize the document", "What are the key points?"]',
     description: "Initial questions to display in the chat",
   },
   {
