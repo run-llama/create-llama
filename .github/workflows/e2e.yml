@@ -68,6 +68,7 @@ jobs:
         run: |
           pnpm run build
           mv dist ${{ runner.temp }}/llamaindex-server-dist
+        working-directory: python/llama-index-server
 
       - name: Run Playwright tests for Python
         run: pnpm run e2e:python
