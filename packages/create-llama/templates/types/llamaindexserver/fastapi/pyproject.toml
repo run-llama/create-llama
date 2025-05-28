@@ -46,6 +46,9 @@ disable_error_code = [ "return-value", "assignment" ]
 module = "app.*"
 ignore_missing_imports = false
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [build-system]
 requires = [ "hatchling>=1.24" ]
 build-backend = "hatchling.build"

@@ -9,6 +9,7 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
 from llama_index.server.settings import server_settings
+from llama_index.server.utils import llamacloud
 
 logger = logging.getLogger("uvicorn")
 
@@ -103,11 +104,8 @@ class SourceNodes(BaseModel):
         file_name = metadata.get("file_name")
 
         if file_name and url_prefix:
-            # file_name exists and file server is configured
-            pipeline_id = metadata.get("pipeline_id")
-            if pipeline_id:
-                # file is from LlamaCloud
-                file_name = f"{pipeline_id}${file_name}"
+            if llamacloud.is_llamacloud_file(metadata):
+                file_name = llamacloud.get_local_file_name(metadata)
                 return f"{url_prefix}/output/llamacloud/{file_name}"
             is_private = metadata.get("private", "false") == "true"
             if is_private:
