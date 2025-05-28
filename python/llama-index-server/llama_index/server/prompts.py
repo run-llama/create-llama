@@ -21,7 +21,7 @@ Context information is below.
 ------------------
 {context_str}
 ------------------
-There would be citation_id that is associated with each text chunk (at the beginning) or previous response (wrapped in `[citation:]` block).
+The context are multiple text chunks, each text chunk has its own citation_id at the beginning.
 Use the citation_id for citation construction.
 
 Answer the following query with citations:
@@ -29,7 +29,7 @@ Answer the following query with citations:
 {query_str}
 ------------------
 
-# Citation format
+## Citation format
 
 [citation:id]
 
@@ -47,5 +47,6 @@ Example:
 ## Requirements:
 1. Always include citations for every fact from the context information in your response. 
 2. Make sure that the citation_id is correct with the context, don't mix up the citation_id with other information.
+
 Now, you answer the query with citations:
 """

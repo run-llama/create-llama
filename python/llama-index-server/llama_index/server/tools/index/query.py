@@ -5,10 +5,13 @@ from typing import Any, Optional
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.prompts import PromptTemplate
-from llama_index.core.response_synthesizers import Accumulate
 from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.server.prompts import CITATION_PROMPT
-from llama_index.server.tools.index.node_citation_processor import NodeCitationProcessor
+from llama_index.server.tools.index.citation import (
+    CITATION_SYSTEM_PROMPT,
+    CitationSynthesizer,
+    NodeCitationProcessor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +39,7 @@ def create_query_engine(
                 "To use citation feature, either remove your custom response_synthesizer or set enable_citation=False."
             )
         else:
-            kwargs["response_synthesizer"] = Accumulate(
+            kwargs["response_synthesizer"] = CitationSynthesizer(
                 text_qa_template=PromptTemplate(
                     template=os.getenv("CITATION_PROMPT", CITATION_PROMPT)
                 ),
@@ -76,5 +79,5 @@ def get_query_engine_tool(
         name=name,
         description=description,
     )
-    tool.citation_system_prompt = "Answer the user question with citations for the parts that uses the information from the knowledge base."
+    tool.citation_system_prompt = CITATION_SYSTEM_PROMPT
     return tool
