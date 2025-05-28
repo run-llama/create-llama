@@ -68,7 +68,8 @@ jobs:
         run: |
           uv build
           wheel_file=$(ls dist/*.whl | head -n 1)
-          cp "$wheel_file" ${{ runner.temp }}/
+          mkdir -p "${{ runner.temp }}"
+          cp "$wheel_file" "${{ runner.temp }}/"
           echo "SERVER_PACKAGE_PATH=${{ runner.temp }}/$(basename "$wheel_file")" >> $GITHUB_ENV
         working-directory: python/llama-index-server
 
