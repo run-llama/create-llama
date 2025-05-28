@@ -19,8 +19,8 @@ export function ChatMessageContent({
       <ToolAnnotations />
       <ChatMessage.Content.Image />
       <DynamicEvents componentDefs={componentDefs} appendError={appendError} />
-      <ChatMessage.Content.Artifact />
       <ChatMessage.Content.Markdown />
+      <ChatMessage.Content.Artifact />
       <ChatMessage.Content.DocumentFile />
       <ChatMessage.Content.Source />
       <ChatMessage.Content.SuggestedQuestions />
