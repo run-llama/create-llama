@@ -145,6 +145,19 @@ const uiEvent = workflowEvent<{
   data: UIEventData;
 }>();
 
+const artifactEvent = workflowEvent<{
+  type: "artifact";
+  data: {
+    type: "document";
+    created_at: number;
+    data: {
+      title: string;
+      content: string;
+      type: "markdown" | "html";
+    };
+  };
+}>();
+
 // workflow definition
 export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
   const retriever = index.asRetriever({ similarityTopK: TOP_K });
@@ -339,6 +352,23 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         }),
       );
     }
+
+    // Open the generated report in Canvas
+    sendEvent(
+      artifactEvent.with({
+        type: "artifact",
+        data: {
+          type: "document",
+          created_at: Date.now(),
+          data: {
+            title: "DeepResearch Report",
+            content: response,
+            type: "markdown",
+          },
+        },
+      }),
+    );
+
     return stopAgentEvent.with({
       result: response,
     });
