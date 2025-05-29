@@ -67,8 +67,8 @@ export const SOURCE_MAP: Record<string, () => Promise<any>> = {
     import("../../../toggle-group"),
   [`${SHADCN_IMPORT_PREFIX}/tooltip`]: () => import("../../../tooltip"),
 
-  ///// WIDGETS FROM CHAT_UI /////
-  [`@llamaindex/chat-ui/widgets`]: () => import("@llamaindex/chat-ui/widgets"),
+  ///// CHAT_UI /////
+  [`@llamaindex/chat-ui`]: () => import("@llamaindex/chat-ui"),
 
   ///// ICONS /////
   [`lucide-react`]: () => import("lucide-react"),
