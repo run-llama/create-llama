@@ -6,14 +6,13 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
     AgentStream,
 )
 from llama_index.core.workflow import (
-    HumanResponseEvent,
-    InputRequiredEvent,
     StopEvent,
     Workflow,
 )
@@ -25,7 +24,7 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
-from llama_index.server.api.models import ChatRequest
+from llama_index.server.api.models import ChatRequest, HumanInputEvent
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
 from llama_index.server.api.utils.workflow import WorkflowService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
@@ -57,16 +56,11 @@ def chat_router(
                 workflow = workflow_factory()
 
             # Check if we should resume a chat with a human response
-            human_response = last_message.human_response
-            if human_response:
-                previous_ctx = WorkflowService.load_context(request.id, workflow)
-                # send a new human response event then resume the workflow with the previous context
-                previous_ctx.send_event(
-                    HumanResponseEvent(
-                        response=human_response,
-                    )
+            hitl_data = last_message.human_response
+            if hitl_data:
+                workflow_handler = await WorkflowService.resume_with_hitl_response(
+                    workflow, hitl_data, request_id=request.id
                 )
-                workflow_handler = workflow.run(ctx=previous_ctx)
             else:
                 workflow_handler = workflow.run(
                     user_msg=user_message.content,
@@ -150,26 +144,24 @@ async def _stream_content(
                 async for chunk in _text_stream(event):
                     handler.accumulate_text(chunk)
                     yield VercelStreamResponse.convert_text(chunk)
+            elif isinstance(event, HumanInputEvent):
+                ctx = handler.workflow_handler.ctx
+                if ctx is None:
+                    raise RuntimeError("Context is None")
+                # Save the context with the HITL event
+                await WorkflowService.save_context(
+                    chat_id=chat_id,
+                    ctx=ctx,
+                    hitl_event=event,
+                )
+                yield VercelStreamResponse.convert_data(event.to_response())
+                # Break to stop the stream
+                break
             elif isinstance(event, dict):
                 yield VercelStreamResponse.convert_data(event)
             elif hasattr(event, "to_response"):
                 event_response = event.to_response()
                 yield VercelStreamResponse.convert_data(event_response)
-            elif isinstance(event, InputRequiredEvent):
-                ctx = handler.workflow_handler.ctx
-                if ctx is None:
-                    raise RuntimeError("Context is None")
-                chat_id = WorkflowService.save_context(
-                    chat_id=chat_id,
-                    ctx=ctx,
-                )
-                yield VercelStreamResponse.convert_data(
-                    {
-                        "type": "human",
-                        "data": event.model_dump(),
-                    }
-                )
-                break
             else:
                 # Ignore unnecessary agent workflow events
                 if not isinstance(event, (AgentInput, AgentSetup)):

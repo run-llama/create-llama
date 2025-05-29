@@ -2,9 +2,9 @@ import logging
 import os
 import re
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Type, Union
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
@@ -24,14 +24,14 @@ class ChatAPIMessage(BaseModel):
         return ChatMessage(role=self.role, content=self.content)
 
     @property
-    def human_response(self) -> Optional[str]:
+    def human_response(self) -> Optional[Any]:
         if self.annotations:
             for annotation in self.annotations:
                 if (
                     isinstance(annotation, dict)
                     and annotation.get("type") == "human_response"
                 ):
-                    return annotation.get("data", {}).get("response", None)
+                    return annotation.get("data", {})
         return None
 
 
@@ -212,4 +212,30 @@ class ArtifactEvent(Event):
         return {
             "type": self.type,
             "data": self.data.model_dump(),
+        }
+
+
+# TODO: Some of models here should should be in higher level?
+class HumanInputEvent(Event):
+    """
+    Use this event to request input from human.
+    It'll block the workflow execution until the human responds.
+    """
+
+    response_event_type: Type[Event] = Field(
+        description="The type of event that the workflow is waiting for.",
+    )
+    event_type: str = Field(
+        description="An identifier for UI component that will be used to render the input.",
+    )
+    data: Dict[str, Any] | BaseModel = Field(
+        description="The data to be sent to the UI component that will be used to render the input.",
+    )
+
+    def to_response(self) -> dict:
+        return {
+            "type": self.event_type,
+            "data": self.data
+            if isinstance(self.data, dict)
+            else self.data.model_dump(),
         }

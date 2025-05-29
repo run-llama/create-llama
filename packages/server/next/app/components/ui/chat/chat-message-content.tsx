@@ -12,7 +12,6 @@ export function ChatMessageContent({
   componentDefs: ComponentDef[];
   appendError: (error: string) => void;
 }) {
-
   return (
     <ChatMessage.Content>
       <ChatMessage.Content.Event />
