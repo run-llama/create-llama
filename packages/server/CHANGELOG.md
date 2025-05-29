@@ -1,5 +1,11 @@
 # @llamaindex/server
 
+## 0.2.5
+
+### Patch Changes
+
+- 058b376: Fix generate script for ejected project
+
 ## 0.2.4
 
 ### Patch Changes
