@@ -6,7 +6,6 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
-
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
@@ -19,6 +18,7 @@ from llama_index.core.workflow import (
     Workflow,
 )
 from llama_index.server.api.callbacks import (
+    AgentCallTool,
     EventCallback,
     LlamaCloudFileDownload,
     SourceNodesFromToolCall,
@@ -34,6 +34,7 @@ from llama_index.server.services.llamacloud import LlamaCloudFileService
 def chat_router(
     workflow_factory: Callable[..., Workflow],
     logger: logging.Logger,
+    suggest_next_questions: bool = True,
 ) -> APIRouter:
     router = APIRouter(prefix="/chat")
 
@@ -73,10 +74,11 @@ def chat_router(
                 )
 
             callbacks: list[EventCallback] = [
+                AgentCallTool(),
                 SourceNodesFromToolCall(),
                 LlamaCloudFileDownload(background_tasks),
             ]
-            if request.config and request.config.next_question_suggestions:
+            if suggest_next_questions:
                 callbacks.append(SuggestNextQuestions(request))
             stream_handler = StreamHandler(
                 workflow_handler=workflow_handler,

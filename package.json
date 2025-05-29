@@ -13,7 +13,8 @@
   },
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "python/*"
   ],
   "scripts": {
     "dev": "pnpm -r dev",
@@ -24,8 +25,10 @@
     "format:write": "prettier --ignore-unknown --write .",
     "prepare": "husky",
     "new-snapshot": "pnpm -r build && changeset version --snapshot",
-    "new-version": "pnpm -r build && changeset version",
-    "release": "pnpm -r build && changeset publish",
+    "new-version-python": "pnpm --filter @create-llama/llama-index-server new-version",
+    "new-version": "pnpm -r build && changeset version && pnpm new-version-python",
+    "release-python": "pnpm --filter @create-llama/llama-index-server release",
+    "release": "pnpm -r build && changeset publish && pnpm release-python",
     "release-snapshot": "pnpm -r build && changeset publish --tag snapshot"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.9"
+  UI_TEST: "true"
 
 jobs:
   unit-test:
@@ -19,20 +20,27 @@ jobs:
         python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
 
       - name: Install dependencies
         shell: bash
-        run: uv sync --all-extras --dev
+        run: pnpm install && pnpm build
 
       - name: Run unit tests
         shell: bash
@@ -46,20 +54,20 @@ jobs:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       - name: Install dependencies
-        shell: bash
-        run: uv sync --all-extras --dev
+        run: pnpm install
 
       - name: Run mypy
         shell: bash
@@ -73,27 +81,56 @@ jobs:
         working-directory: python/llama-index-server
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
+      - uses: pnpm/action-setup@v3
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install build package
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install && pnpm build
+
+      - name: Build package
         shell: bash
-        run: uv sync --all-extras
+        run: uv build
+
+      - name: Get the absolute wheel file path and save it to the output
+        shell: bash
+        id: get_whl_path
+        run: |
+          WHL_FILE=$(readlink -f dist/*.whl)
+          echo "whl_file=$WHL_FILE" >> $GITHUB_OUTPUT
 
       - name: Test import
         shell: bash
-        run: uv run python -c "from llama_index.server import LlamaIndexServer"
+        working-directory: ${{ github.workspace }}
+        env:
+          WHL_FILE: ${{ steps.get_whl_path.outputs.whl_file }}
+        run: |
+          uv run --with $WHL_FILE python -c "from llama_index.server import LlamaIndexServer"
+
+      - name: Check frontend resources is present
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        env:
+          WHL_FILE: ${{ steps.get_whl_path.outputs.whl_file }}
+        run: |
+          uv run --with $WHL_FILE python -c "from llama_index.server.chat_ui import check_ui_resources; check_ui_resources()"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: llama-index-server
-          path: python/llama-index-server/dist/
+          path: dist/

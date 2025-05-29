@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ChildProcess } from "child_process";
+import { ChildProcess, execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import type {
@@ -12,21 +12,31 @@ import { createTestDir, runCreateLlama, type AppType } from "../utils";
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
-const dataSource: string = "--example-file";
+const dataSource: string = process.env.DATASOURCE
+  ? (process.env.DATASOURCE as string)
+  : "--example-file";
+const llamaCloudProjectName = "create-llama";
+const llamaCloudIndexName = "e2e-test";
+
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
-const templateUseCases = ["financial_report", "agentic_rag", "deep_research"];
+const templateUseCases = [
+  "agentic_rag",
+  "financial_report",
+  "deep_research",
+  "code_generator",
+];
+const ejectDir = "next";
 
 for (const useCase of templateUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
     test.skip(
-      process.platform !== "linux" ||
-        process.env.DATASOURCE === "--no-files" ||
-        templateFramework === "express",
+      dataSource === "--no-files" || templateFramework === "express",
       "The llamaindexserver template currently only works with nextjs, fastapi. We also only run on Linux to speed up tests.",
     );
+    const useLlamaParse = dataSource === "--llamacloud";
     let port: number;
     let cwd: string;
     let name: string;
@@ -48,6 +58,9 @@ for (const useCase of templateUseCases) {
         templateUI,
         appType,
         useCase,
+        llamaCloudProjectName,
+        llamaCloudIndexName,
+        useLlamaParse,
       });
       name = result.projectName;
       appProcess = result.appProcess;
@@ -96,6 +109,28 @@ for (const useCase of templateUseCases) {
       console.log(`Response body: ${responseBody}`);
 
       expect(response.ok()).toBeTruthy();
+    });
+
+    test("Should successfully eject, install dependencies and build without errors", async () => {
+      test.skip(
+        templateFramework !== "nextjs" ||
+          useCase !== "code_generator" ||
+          dataSource === "--llamacloud",
+        "Eject test only applies to Next.js framework, code generator use case, and non-llamacloud",
+      );
+
+      // Run eject command
+      execSync("npm run eject", { cwd: path.join(cwd, name) });
+
+      // Verify next directory exists
+      const nextDirExists = fs.existsSync(path.join(cwd, name, ejectDir));
+      expect(nextDirExists).toBeTruthy();
+
+      // Install dependencies in next directory
+      execSync("npm install", { cwd: path.join(cwd, name, ejectDir) });
+
+      // Run build
+      execSync("npm run build", { cwd: path.join(cwd, name, ejectDir) });
     });
 
     // clean processes

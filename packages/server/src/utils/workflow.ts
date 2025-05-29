@@ -19,7 +19,7 @@ import {
   toAgentRunEvent,
   toSourceEvent,
   type SourceEventNode,
-} from "../events";
+} from "./events";
 import { downloadFile } from "./file";
 
 export async function runWorkflow(

@@ -57,6 +57,9 @@ export default tseslint.config(
       "**/out/**",
       "**/node_modules/**",
       "**/build/**",
+      "packages/server/server/**",
+      "packages/server/project/**",
+      "packages/server/bin/**",
     ],
   },
 );

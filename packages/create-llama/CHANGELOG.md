@@ -1,5 +1,48 @@
 # create-llama
 
+## 0.5.19
+
+### Patch Changes
+
+- 5fe9e17: support eject to fully customize next folder
+- b8a1ff6: Support citation for agentic template (Python)
+
+## 0.5.18
+
+### Patch Changes
+
+- 8d59ef0: Add layout_dir config to the generated python code
+
+## 0.5.17
+
+### Patch Changes
+
+- eee3230: feat: support custom layout
+
+## 0.5.16
+
+### Patch Changes
+
+- 6f75d4a: fix: unsupported language in code gen workflow
+- d0618fa: Fix LlamaCloud generate script issue
+
+## 0.5.15
+
+### Patch Changes
+
+- 527075c: Enable dev mode that allows updating code directly in the UI
+
+## 0.5.14
+
+### Patch Changes
+
+- 1df8cfb: Split artifacts use case to document generator and code generator
+- 1b5a519: chore: improve dev experience with nodemon
+- b3eb0ba: Fix typing check issue
+- 556f33c: fix chromadb dependency issue
+- 2451539: fix: remove dead generated ai code
+- 7a70390: Deprecate pro mode
+
 ## 0.5.13
 
 ### Patch Changes

@@ -13,17 +13,15 @@ from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers import (
     chat_router,
     custom_components_router,
+    custom_layout_router,
     dev_router,
 )
-from llama_index.server.chat_ui import download_chat_ui
+from llama_index.server.chat_ui import copy_bundled_chat_ui
 from llama_index.server.settings import server_settings
 
 
 class UIConfig(BaseModel):
     enabled: bool = Field(default=True, description="Whether to enable the chat UI")
-    app_title: str = Field(
-        default="LlamaIndex Server", description="The title of the chat UI"
-    )
     starter_questions: Optional[list[str]] = Field(
         default=None, description="The starter questions for the chat UI"
     )
@@ -37,6 +35,10 @@ class UIConfig(BaseModel):
     component_dir: Optional[str] = Field(
         default=None, description="The directory to custom UI components code"
     )
+    layout_dir: str = Field(
+        default="layout",
+        description="The directory to custom UI layout such as header and footer",
+    )
     dev_mode: bool = Field(
         default=False, description="Whether to enable the UI dev mode"
     )
@@ -46,13 +48,20 @@ class UIConfig(BaseModel):
             {
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "STARTER_QUESTIONS": self.starter_questions or [],
-                "LLAMA_CLOUD_API": f"{server_settings.api_url}/chat/config/llamacloud"
-                if self.llamacloud_index_selector and os.getenv("LLAMA_CLOUD_API_KEY")
-                else None,
-                "APP_TITLE": self.app_title,
-                "COMPONENTS_API": f"{server_settings.api_url}/components"
-                if self.component_dir
-                else None,
+                "LLAMA_CLOUD_API": (
+                    f"{server_settings.api_url}/chat/config/llamacloud"
+                    if self.llamacloud_index_selector
+                    and os.getenv("LLAMA_CLOUD_API_KEY")
+                    else None
+                ),
+                "COMPONENTS_API": (
+                    f"{server_settings.api_url}/components"
+                    if self.component_dir
+                    else None
+                ),
+                "LAYOUT_API": (
+                    f"{server_settings.api_url}/layout" if self.layout_dir else None
+                ),
                 "DEV_MODE": self.dev_mode,
             },
             indent=2,
@@ -68,11 +77,12 @@ class LlamaIndexServer(FastAPI):
         self,
         workflow_factory: Callable[..., Workflow],
         logger: Optional[logging.Logger] = None,
-        use_default_routers: Optional[bool] = True,
+        use_default_routers: Optional[bool] = None,
         env: Optional[str] = None,
         ui_config: Optional[Union[UIConfig, dict]] = None,
         server_url: Optional[str] = None,
         api_prefix: Optional[str] = None,
+        suggest_next_questions: Optional[bool] = None,
         verbose: bool = False,
         *args: Any,
         **kwargs: Any,
@@ -88,6 +98,7 @@ class LlamaIndexServer(FastAPI):
             ui_config: The configuration for the chat UI.
             server_url: The URL of the server.
             api_prefix: The prefix for the API endpoints.
+            suggest_next_questions: Whether to suggest next questions after the assistant's response.
             verbose: Whether to show verbose logs.
         """
         super().__init__(*args, **kwargs)
@@ -95,7 +106,12 @@ class LlamaIndexServer(FastAPI):
         self.workflow_factory = workflow_factory
         self.logger = logger or logging.getLogger("uvicorn")
         self.verbose = verbose
-        self.use_default_routers = use_default_routers or True
+        self.use_default_routers = (
+            True if use_default_routers is None else use_default_routers
+        )
+        self.suggest_next_questions = (
+            True if suggest_next_questions is None else suggest_next_questions
+        )
         if ui_config is None:
             self.ui_config = UIConfig()
         elif isinstance(ui_config, dict):
@@ -146,6 +162,7 @@ class LlamaIndexServer(FastAPI):
             chat_router(
                 self.workflow_factory,
                 self.logger,
+                self.suggest_next_questions,
             ),
             prefix=server_settings.api_prefix,
         )
@@ -162,6 +179,15 @@ class LlamaIndexServer(FastAPI):
             prefix=server_settings.api_prefix,
         )
 
+    def add_layout_router(self) -> None:
+        """
+        Add the layout router.
+        """
+        self.include_router(
+            custom_layout_router(self.ui_config.layout_dir, self.logger),
+            prefix=server_settings.api_prefix,
+        )
+
     def mount_ui(self) -> None:
         """
         Mount the UI.
@@ -173,13 +199,20 @@ class LlamaIndexServer(FastAPI):
                 if not os.path.exists(self.ui_config.component_dir):
                     os.makedirs(self.ui_config.component_dir)
                 self.add_components_router()
+            # Layout dir
+            if self.ui_config.layout_dir:
+                if not os.path.exists(self.ui_config.layout_dir):
+                    os.makedirs(self.ui_config.layout_dir)
+                self.add_layout_router()
             # UI static files
             if not os.path.exists(self.ui_config.ui_path):
                 os.makedirs(self.ui_config.ui_path)
                 self.logger.warning(
-                    f"UI files not found, downloading UI to {self.ui_config.ui_path}"
+                    f"UI files not found at {self.ui_config.ui_path}. Copying bundled UI files."
                 )
-                download_chat_ui(logger=self.logger, target_path=self.ui_config.ui_path)
+                copy_bundled_chat_ui(
+                    logger=self.logger, target_path=self.ui_config.ui_path
+                )
             self._mount_static_files(
                 directory=self.ui_config.ui_path,
                 path="/",

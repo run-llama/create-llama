@@ -1,14 +1,10 @@
 import "dotenv/config";
 import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
-import {
-  OpenAI,
-  storageContextFromDefaults,
-  VectorStoreIndex,
-} from "llamaindex";
+import { storageContextFromDefaults, VectorStoreIndex } from "llamaindex";
 import { initSettings } from "./app/settings";
 import fs from "fs";
 import { generateEventComponent } from "@llamaindex/server";
-import { UIEventSchema } from "./app/workflow";
+import { OpenAI } from "@llamaindex/openai";
 
 async function generateDatasource() {
   console.log(`Generating storage context...`);
@@ -29,6 +25,14 @@ async function generateDatasource() {
 async function generateUi() {
   // Also works well with Claude 3.5 Sonnet and Google Gemini 2.5 Pro
   const llm = new OpenAI({ model: "gpt-4.1" });
+
+  const workflowModule = await import("./app/workflow");
+  const UIEventSchema = (workflowModule as any).UIEventSchema;
+  if (!UIEventSchema) {
+    throw new Error(
+      "To generate the UI, you must define a UIEventSchema in your workflow.",
+    );
+  }
 
   // You can also generate for other workflow events
   const generatedCode = await generateEventComponent(UIEventSchema, llm);

@@ -1,9 +1,12 @@
+import logging
 import os
 from typing import Any, Optional
 
 from llama_index.core.base.base_query_engine import BaseQueryEngine
-from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.core.indices.base import BaseIndex
+from llama_index.core.tools.query_engine import QueryEngineTool
+
+logger = logging.getLogger(__name__)
 
 
 def create_query_engine(index: BaseIndex, **kwargs: Any) -> BaseQueryEngine:
@@ -38,12 +41,11 @@ def get_query_engine_tool(
     if name is None:
         name = "query_index"
     if description is None:
-        description = (
-            "Use this tool to retrieve information about the text corpus from an index."
-        )
+        description = "Use this tool to retrieve information from a knowledge base. Provide a specific query and can call the tool multiple times if necessary."
     query_engine = create_query_engine(index, **kwargs)
-    return QueryEngineTool.from_defaults(
+    tool = QueryEngineTool.from_defaults(
         query_engine=query_engine,
         name=name,
         description=description,
     )
+    return tool

@@ -17,8 +17,7 @@ const calculatorAgent = agent({
 new LlamaIndexServer({
   workflow: () => calculatorAgent,
   uiConfig: {
-    appTitle: "Calculator",
     starterQuestions: ["1 + 1", "2 + 2"],
   },
-  port: 4000,
+  port: 3000,
 }).start();

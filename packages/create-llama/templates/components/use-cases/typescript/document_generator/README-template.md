@@ -8,7 +8,7 @@ First, install the dependencies:
 npm install
 ```
 
-Third, run the development server:
+Second, run the development server:
 
 ```
 npm run dev
@@ -34,12 +34,20 @@ AI-powered document generator that can help you generate documents with a chat i
 
 To update the workflow, you can modify the code in [`workflow.ts`](app/workflow.ts).
 
-You can start by sending an request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
+You can start by sending a request on the [chat UI](http://localhost:3000) or you can test the `/api/chat` endpoint with the following curl request:
 
 ```shell
 curl --location 'localhost:3000/api/chat' \
 --header 'Content-Type: application/json' \
 --data '{ "messages": [{ "role": "user", "content": "Compare the financial performance of Apple and Tesla" }] }'
+```
+
+## Eject Mode
+
+If you want to fully customize the server UI and routes, you can use `npm eject`. It will create a normal Next.js project with the same functionality as @llamaindex/server.
+
+```bash
+npm run eject
 ```
 
 ## Learn More

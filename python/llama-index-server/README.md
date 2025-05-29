@@ -44,7 +44,6 @@ app = LlamaIndexServer(
     workflow_factory=create_workflow,  # Supports Workflow or AgentWorkflow
     env="dev",  # Enable development mode
     ui_config={ # Configure the chat UI, optional
-        "app_title": "Weather Bot",
         "starter_questions": ["What is the weather in LA?", "Will it rain in SF?"],
     },
     verbose=True
@@ -72,21 +71,47 @@ app = LlamaIndexServer(
 
 The LlamaIndexServer accepts the following configuration parameters:
 
-- `workflow_factory`: A callable that creates a workflow instance for each request
+- `workflow_factory`: A callable that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `logger`: Optional logger instance (defaults to uvicorn logger)
 - `use_default_routers`: Whether to include default routers (chat, static file serving)
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `ui_config`: UI configuration as a dictionary or UIConfig object with options:
   - `enabled`: Whether to enable the chat UI (default: True)
-  - `app_title`: The title of the chat application (default: "LlamaIndex Server")
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
+  - `layout_dir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_layout.md) for more details.
   - `llamacloud_index_selector`: Whether to show the LlamaCloud index selector in the chat UI (default: False). Requires `LLAMA_CLOUD_API_KEY` to be set.
   - `dev_mode`: When enabled, you can update workflow code in the UI and see the changes immediately. It's currently in beta and only supports updating workflow code at `app/workflow.py`. You might also need to set `env="dev"` and start the server with the reload feature enabled.
+- `suggest_next_questions`: Whether to suggest next questions after the assistant's response (default: True). You can change the prompt for the next questions by setting the `NEXT_QUESTION_PROMPT` environment variable. The default prompt used is defined in  `llama_index.server.prompts.SUGGEST_NEXT_QUESTION_PROMPT`.
 - `verbose`: Enable verbose logging
 - `api_prefix`: API route prefix (default: "/api")
 - `server_url`: The deployment URL of the server (default is None)
+
+## Workflow factory contract
+
+The `workflow_factory` provided will be called for each chat request to initialize a new workflow instance. Additionally, we provide the [ChatRequest](https://github.com/run-llama/create-llama/blob/afe9e9fc16427d20e1dfb635a45e7ed4b46285cb/python/llama-index-server/llama_index/server/api/models.py#L32) object, which includes the request information that is helpful for initializing the workflow. For example:
+```python
+def create_workflow(chat_request: ChatRequest) -> Workflow:
+    # using messages from the chat request to initialize the workflow
+    return MyCustomWorkflow(chat_request.messages)
+```
+
+Your workflow will be executed once for each chat request with the following input parameters are included in workflow's `StartEvent`:
+- `user_msg` [str]: The current user message
+- `chat_history` [list[[ChatMessage](https://docs.llamaindex.ai/en/stable/api_reference/prompts/#llama_index.core.prompts.ChatMessage)]]: All the previous messages of the conversation
+
+Example:
+```python
+@step
+def handle_start_event(ev: StartEvent) -> MyNextEvent:
+    user_msg = ev.user_msg
+    chat_history = ev.chat_history
+    ...
+```
+
+Your workflows can emit `UIEvent` events to render [Custom UI Components](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_ui_component.md) in the chat UI to improve the user experience.
+Furthermore, you can send `ArtifactEvent` events to render code or document [Artifacts](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/docs/custom_artifact_event.md) in a dedicated Canvas panel in the chat UI.
 
 ## Default Routers and Features
 
@@ -107,11 +132,6 @@ When enabled, the server provides a chat interface at the root path (`/`) with:
 - Configurable starter questions
 - Real-time chat interface
 - API endpoint integration
-
-### Custom UI Components
-
-You can add custom UI components for your workflow by providing `component_dir` config and adding custom .jsx or .tsx files to the directory.
-See [Custom UI Components](https://github.com/run-llama/create-llama/blob/main/llama-index-server/docs/custom_ui_component.md) for more details.
 
 ## Development Mode
 
@@ -135,7 +155,6 @@ app = LlamaIndexServer(
 
 **Note**: The workflow editor is currently in beta and only supports updating LlamaIndexServer projects created with [create-llama](https://github.com/run-llama/create-llama/). You also need to start the server via `fastapi dev` so that the server can hot reload the workflow code.
 
-
 ## API Endpoints
 
 The server provides the following default endpoints:
@@ -146,11 +165,10 @@ The server provides the following default endpoints:
 
 ## Best Practices
 
-1. Always provide a workflow factory that creates fresh workflow instances
-2. Use environment variables for sensitive configuration
-3. Enable verbose logging during development
-4. Configure CORS appropriately for your deployment environment
-5. Use starter questions to guide users in the chat UI
+1. Use environment variables for sensitive configuration
+2. Enable verbose logging during development
+3. Configure CORS appropriately for your deployment environment
+4. Use starter questions to guide users in the chat UI
 
 ## Getting Started with a New Project
 

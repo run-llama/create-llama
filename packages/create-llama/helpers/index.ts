@@ -18,6 +18,7 @@ import {
   ModelConfig,
   TemplateDataSource,
   TemplateFramework,
+  TemplateUseCase,
   TemplateVectorDB,
 } from "./types";
 import { installTSTemplate } from "./typescript";
@@ -60,6 +61,7 @@ async function generateContextData(
   vectorDb?: TemplateVectorDB,
   llamaCloudKey?: string,
   useLlamaParse?: boolean,
+  useCase?: TemplateUseCase,
 ) {
   if (packageManager) {
     const runGenerate = `${cyan(
@@ -96,7 +98,12 @@ async function generateContextData(
         }
       } else {
         console.log(`Running ${runGenerate} to generate the context data.`);
-        await callPackageManager(packageManager, true, ["run", "generate"]);
+        const shouldRunGenerate =
+          useCase !== "code_generator" && useCase !== "document_generator"; // Artifact use case doesn't use index.
+
+        if (shouldRunGenerate) {
+          await callPackageManager(packageManager, true, ["run", "generate"]);
+        }
         return;
       }
     }
@@ -224,6 +231,7 @@ export const installTemplate = async (
         props.vectorDb,
         props.llamaCloudKey,
         props.useLlamaParse,
+        props.useCase,
       );
     }
 

@@ -4,21 +4,15 @@ import re
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
 from llama_index.server.settings import server_settings
+from llama_index.server.utils import llamacloud
 
 logger = logging.getLogger("uvicorn")
-
-
-class ChatConfig(BaseModel):
-    next_question_suggestions: bool = Field(
-        default=True,
-        description="Whether to suggest next questions",
-    )
 
 
 class ChatAPIMessage(BaseModel):
@@ -45,7 +39,6 @@ class ChatRequest(BaseModel):
     id: str  # provided by FE
     messages: List[ChatAPIMessage]
     data: Optional[Any] = None
-    config: Optional[ChatConfig] = ChatConfig()
 
     @field_validator("messages")
     def validate_messages(cls, v: List[ChatAPIMessage]) -> List[ChatAPIMessage]:
@@ -130,11 +123,8 @@ class SourceNodes(BaseModel):
         file_name = metadata.get("file_name")
 
         if file_name and url_prefix:
-            # file_name exists and file server is configured
-            pipeline_id = metadata.get("pipeline_id")
-            if pipeline_id:
-                # file is from LlamaCloud
-                file_name = f"{pipeline_id}${file_name}"
+            if llamacloud.is_llamacloud_file(metadata):
+                file_name = llamacloud.get_local_file_name(metadata)
                 return f"{url_prefix}/output/llamacloud/{file_name}"
             is_private = metadata.get("private", "false") == "true"
             if is_private:

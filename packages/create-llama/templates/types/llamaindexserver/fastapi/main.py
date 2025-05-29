@@ -16,9 +16,11 @@ def create_app():
         workflow_factory=create_workflow,  # A factory function that creates a new workflow for each request
         ui_config=UIConfig(
             component_dir=COMPONENT_DIR,
-            app_title="Chat App",
+            dev_mode=True,  # Please disable this in production
+            layout_dir="layout",
         ),
         logger=logger,
+        env="dev",
     )
     # You can also add custom FastAPI routes to app
     app.add_api_route("/api/health", lambda: {"message": "OK"}, status_code=200)

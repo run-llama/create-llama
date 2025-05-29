@@ -42,10 +42,16 @@ const installLlamaIndexServerTemplate = async ({
     rename: assetRelocator,
   });
 
-  // copy workflow UI components to output/components folder
+  // copy workflow UI components to components folder in root
   await copy("*", path.join(root, "components"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
+  });
+
+  // copy layout components to layout folder in root
+  await copy("*", path.join(root, "layout"), {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ui", "layout"),
   });
 
   // Override generate.ts if workflow use case doesn't use custom UI
@@ -387,7 +393,7 @@ const providerDependencies: {
   [key in ModelProvider]?: Record<string, string>;
 } = {
   openai: {
-    "@llamaindex/openai": "^0.3.7",
+    "@llamaindex/openai": "~0.4.0",
   },
   gemini: {
     "@llamaindex/google": "^0.2.0",
@@ -513,7 +519,7 @@ async function updatePackageJson({
   if (backend) {
     packageJson.dependencies = {
       ...packageJson.dependencies,
-      "@llamaindex/readers": "^3.1.3",
+      "@llamaindex/readers": "~3.1.4",
     };
 
     if (vectorDb && vectorDb in vectorDbDependencies) {
@@ -540,6 +546,16 @@ async function updatePackageJson({
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       "node-loader": "^2.0.0",
+    };
+  }
+
+  // if having custom server package tgz file, use it for testing @llamaindex/server
+  const serverPackagePath = process.env.SERVER_PACKAGE_PATH;
+  if (serverPackagePath && template === "llamaindexserver") {
+    const relativePath = path.relative(process.cwd(), serverPackagePath);
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      "@llamaindex/server": `file:${relativePath}`,
     };
   }
 

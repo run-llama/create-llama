@@ -41,6 +41,14 @@ curl --location 'localhost:3000/api/chat' \
 --data '{ "messages": [{ "role": "user", "content": "Generate a financial report that compares the financial performance of Apple and Tesla" }] }'
 ```
 
+## Eject Mode
+
+If you want to fully customize the server UI and routes, you can use `npm eject`. It will create a normal Next.js project with the same functionality as @llamaindex/server.
+
+```bash
+npm run eject
+```
+
 ## Learn More
 
 To learn more about LlamaIndex, take a look at the following resources:
