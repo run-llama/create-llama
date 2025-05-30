@@ -5,10 +5,13 @@ from llama_index.server.settings import server_settings
 from llama_index.server.utils import llamacloud
 
 
-def get_url_from_metadata(
+def get_file_url_from_metadata(
     metadata: Dict[str, Any],
     data_dir: Optional[str] = None,
 ) -> Optional[str]:
+    """
+    Get the URL of a file from the source node metadata.
+    """
     url_prefix = server_settings.file_server_url_prefix
     if data_dir is None:
         data_dir = "data"

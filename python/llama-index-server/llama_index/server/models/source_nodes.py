@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.workflow.events import Event
-from llama_index.server.utils.source_nodes import get_url_from_metadata
+from llama_index.server.utils.chat_file import get_file_url_from_metadata
 
 
 class SourceNodesEvent(Event):
@@ -32,7 +32,7 @@ class SourceNodes(BaseModel):
     @classmethod
     def from_source_node(cls, source_node: NodeWithScore) -> "SourceNodes":
         metadata = source_node.node.metadata
-        url = get_url_from_metadata(metadata)
+        url = get_file_url_from_metadata(metadata)
 
         return cls(
             id=source_node.node.node_id,
