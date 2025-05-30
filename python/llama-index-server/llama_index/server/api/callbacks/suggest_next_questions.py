@@ -2,7 +2,7 @@ import logging
 from typing import Any, Optional
 
 from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.models import ChatRequest
+from llama_index.server.models.chat import ChatRequest
 from llama_index.server.services.suggest_next_question import (
     SuggestNextQuestionsService,
 )

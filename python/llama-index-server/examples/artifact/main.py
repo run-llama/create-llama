@@ -7,7 +7,7 @@ from examples.artifact.code_workflow import ArtifactWorkflow
 from llama_index.core.workflow import Workflow
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
-from llama_index.server.api.models import ChatRequest
+from llama_index.server.models import ChatRequest
 
 
 def create_workflow(chat_request: ChatRequest) -> Workflow:

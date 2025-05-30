@@ -24,9 +24,10 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
-from llama_index.server.api.models import ChatRequest, HumanInputEvent
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
 from llama_index.server.api.utils.workflow import WorkflowService
+from llama_index.server.models.chat import ChatRequest
+from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 

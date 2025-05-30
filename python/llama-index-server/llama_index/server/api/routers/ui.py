@@ -2,7 +2,8 @@ import logging
 from typing import List
 
 from fastapi import APIRouter
-from llama_index.server.api.models import ComponentDefinition
+
+from llama_index.server.models.ui import ComponentDefinition
 from llama_index.server.services.custom_ui import CustomUI
 
 

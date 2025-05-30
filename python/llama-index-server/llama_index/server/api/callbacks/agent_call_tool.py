@@ -3,7 +3,7 @@ from typing import Any
 
 from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
 from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.models import AgentRunEvent
+from llama_index.server.models.ui import AgentRunEvent
 
 logger = logging.getLogger("uvicorn")
 

@@ -8,8 +8,8 @@ from httpx import ASGITransport, AsyncClient
 
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.core.workflow.handler import WorkflowHandler
-from llama_index.server.api.models import ChatAPIMessage, ChatRequest, MessageRole
 from llama_index.server.api.routers.chat import chat_router
+from llama_index.server.models.chat import ChatAPIMessage, ChatRequest, MessageRole
 
 
 @pytest.fixture()

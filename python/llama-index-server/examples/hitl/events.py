@@ -2,7 +2,7 @@ from typing import Type
 
 from pydantic import BaseModel, Field
 
-from llama_index.server.api.models import HumanInputEvent, HumanResponseEvent
+from llama_index.server.models import HumanInputEvent, HumanResponseEvent
 
 
 class CLIHumanResponseEvent(HumanResponseEvent):
