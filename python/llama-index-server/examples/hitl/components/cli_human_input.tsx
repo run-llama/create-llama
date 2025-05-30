@@ -2,24 +2,24 @@ import { JSONValue, useChatUI } from "@llamaindex/chat-ui";
 import React, { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { z } from "zod";
 
-// Manual type definition to replace zod schema
-interface HumanEvent {
-  prefix: string;
-  event_component?: string;
-  command?: string;
-}
+const CLIInputEventSchema = z.object({
+  command: z.string(),
+});
+type CLIInputEvent = z.infer<typeof CLIInputEventSchema>;
 
 
 const CLIHumanInput: FC<{
   events: JSONValue[];
 }> = ({ events }) => {
-  const aggregateEvents = () => {
-    if (!events || events.length === 0) return null;
-    return events[events.length - 1];
-  };
-
-  const event = aggregateEvents() as unknown as HumanEvent;
+  const inputEvent = (events || [])
+    .map((ev) => {
+      const parseResult = CLIInputEventSchema.safeParse(ev);
+      return parseResult.success ? parseResult.data : null;
+    })
+    .filter((ev): ev is CLIInputEvent => ev !== null)
+    .at(-1);
 
   const { append } = useChatUI();
   const [confirmedValue, setConfirmedValue] = useState<boolean | null>(null);
@@ -33,7 +33,7 @@ const CLIHumanInput: FC<{
           type: "human_response",
           data: {
             execute: true,
-            command: event.command,
+            command: inputEvent?.command,
           },
         },
       ],
@@ -50,7 +50,7 @@ const CLIHumanInput: FC<{
           type: "human_response",
           data: {
             execute: false,
-            command: event.command,
+            command: inputEvent?.command,
           },
         },
       ],
@@ -65,7 +65,7 @@ const CLIHumanInput: FC<{
           Do you want to execute the following command?
         </p>
         <pre className="bg-gray-100 rounded p-3 my-2 text-xs font-mono text-gray-800 overflow-x-auto">
-          {event.command}
+          {inputEvent?.command}
         </pre>
       </CardContent>
       {confirmedValue === null ? (

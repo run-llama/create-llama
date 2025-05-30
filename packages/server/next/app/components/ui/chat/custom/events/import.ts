@@ -67,8 +67,11 @@ export const SOURCE_MAP: Record<string, () => Promise<any>> = {
     import("../../../toggle-group"),
   [`${SHADCN_IMPORT_PREFIX}/tooltip`]: () => import("../../../tooltip"),
 
-  ///// CHAT_UI /////
+  ///// CHAT_UI GENERAL  /////
   [`@llamaindex/chat-ui`]: () => import("@llamaindex/chat-ui"),
+
+  ///// WIDGETS FROM CHAT_UI /////
+  [`@llamaindex/chat-ui/widgets`]: () => import("@llamaindex/chat-ui/widgets"),
 
   ///// ICONS /////
   [`lucide-react`]: () => import("lucide-react"),
@@ -76,6 +79,9 @@ export const SOURCE_MAP: Record<string, () => Promise<any>> = {
   ///// UTILS /////
   [`@/components/lib/utils`]: () => import("../../../lib/utils"),
   [`@/lib/utils`]: () => import("../../../lib/utils"), // for v0 compatibility
+
+  ///// ZOD /////
+  [`zod`]: () => import("zod"),
 };
 
 // parse imports from code to get Function constructor arguments and component name
