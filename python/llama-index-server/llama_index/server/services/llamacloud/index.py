@@ -3,14 +3,15 @@ import os
 from typing import TYPE_CHECKING, Any, Optional
 
 from llama_cloud import PipelineType
+from pydantic import BaseModel, Field, field_validator
+
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.ingestion.api_utils import (
     get_client as llama_cloud_get_client,
 )
 from llama_index.core.settings import Settings
 from llama_index.indices.managed.llama_cloud import LlamaCloudIndex
-from llama_index.server.api.models import ChatRequest
-from pydantic import BaseModel, Field, field_validator
+from llama_index.server.models.chat import ChatRequest
 
 if TYPE_CHECKING:
     from llama_cloud.client import LlamaCloud

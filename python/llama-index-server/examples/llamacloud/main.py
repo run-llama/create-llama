@@ -2,13 +2,14 @@ import os
 from typing import List, Optional
 
 from fastapi import FastAPI
+
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 from llama_index.core.settings import Settings
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
-from llama_index.server.api.models import ChatRequest
+from llama_index.server.models import ChatRequest
 from llama_index.server.services.llamacloud import LlamaCloudIndex, get_index
 from llama_index.server.tools.index.citation import (
     CITATION_SYSTEM_PROMPT,

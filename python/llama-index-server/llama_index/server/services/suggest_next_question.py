@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.settings import Settings
-from llama_index.server.api.models import ChatAPIMessage
+from llama_index.server.models.chat import ChatAPIMessage
 from llama_index.server.prompts import SUGGEST_NEXT_QUESTION_PROMPT
 
 logger = logging.getLogger("uvicorn")

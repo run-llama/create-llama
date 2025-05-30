@@ -6,12 +6,16 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
     AgentStream,
 )
-from llama_index.core.workflow import StopEvent, Workflow
+from llama_index.core.workflow import (
+    StopEvent,
+    Workflow,
+)
 from llama_index.server.api.callbacks import (
     AgentCallTool,
     EventCallback,
@@ -20,8 +24,10 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
-from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.api.utils.workflow import WorkflowService
+from llama_index.server.models.chat import ChatRequest
+from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
@@ -38,7 +44,8 @@ def chat_router(
         background_tasks: BackgroundTasks,
     ) -> StreamingResponse:
         try:
-            user_message = request.messages[-1].to_llamaindex_message()
+            last_message = request.messages[-1]
+            user_message = last_message.to_llamaindex_message()
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
@@ -48,10 +55,18 @@ def chat_router(
                 workflow = workflow_factory(chat_request=request)
             else:
                 workflow = workflow_factory()
-            workflow_handler = workflow.run(
-                user_msg=user_message.content,
-                chat_history=chat_history,
-            )
+
+            # Check if we should resume a chat with a human response
+            hitl_data = last_message.human_response
+            if hitl_data:
+                workflow_handler = await WorkflowService.resume_with_hitl_response(
+                    workflow, hitl_data, request_id=request.id
+                )
+            else:
+                workflow_handler = workflow.run(
+                    user_msg=user_message.content,
+                    chat_history=chat_history,
+                )
 
             callbacks: list[EventCallback] = [
                 AgentCallTool(),
@@ -66,7 +81,11 @@ def chat_router(
             )
 
             return VercelStreamResponse(
-                content_generator=_stream_content(stream_handler, request, logger),
+                content_generator=_stream_content(
+                    stream_handler,
+                    logger,
+                    request.id,
+                ),
             )
         except Exception as e:
             logger.error(e)
@@ -99,8 +118,8 @@ def chat_router(
 
 async def _stream_content(
     handler: StreamHandler,
-    request: ChatRequest,
     logger: logging.Logger,
+    chat_id: str,
 ) -> AsyncGenerator[str, None]:
     async def _text_stream(
         event: Union[AgentStream, StopEvent],
@@ -126,6 +145,19 @@ async def _stream_content(
                 async for chunk in _text_stream(event):
                     handler.accumulate_text(chunk)
                     yield VercelStreamResponse.convert_text(chunk)
+            elif isinstance(event, HumanInputEvent):
+                ctx = handler.workflow_handler.ctx
+                if ctx is None:
+                    raise RuntimeError("Context is None")
+                # Save the context with the HITL event
+                await WorkflowService.save_context(
+                    chat_id=chat_id,
+                    ctx=ctx,
+                    hitl_event=event,
+                )
+                yield VercelStreamResponse.convert_data(event.to_response())
+                # Break to stop the stream
+                break
             elif isinstance(event, dict):
                 yield VercelStreamResponse.convert_data(event)
             elif hasattr(event, "to_response"):

@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 from llama_index.core.agent.workflow.workflow_events import ToolCallResult
 from llama_index.core.schema import NodeWithScore
 from llama_index.server.api.callbacks.base import EventCallback
-from llama_index.server.api.models import SourceNodesEvent
+from llama_index.server.models.source_nodes import SourceNodesEvent
 
 logger = logging.getLogger(__name__)
 

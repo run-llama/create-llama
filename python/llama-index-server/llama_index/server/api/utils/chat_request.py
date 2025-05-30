@@ -1,6 +1,7 @@
 from typing import List, Optional
 
-from llama_index.server.api.models import Artifact, ChatRequest
+from llama_index.server.models.artifacts import Artifact
+from llama_index.server.models.chat import ChatRequest
 
 
 def get_artifacts(chat_request: ChatRequest) -> List[Artifact]:

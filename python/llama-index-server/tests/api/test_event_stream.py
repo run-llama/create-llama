@@ -9,9 +9,9 @@ from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.types import MessageRole
 from llama_index.core.workflow import StopEvent
 from llama_index.core.workflow.handler import WorkflowHandler
-from llama_index.server.api.models import ChatAPIMessage, ChatRequest
 from llama_index.server.api.routers.chat import _stream_content
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.models.chat import ChatAPIMessage, ChatRequest
 
 
 @pytest.fixture()
@@ -22,7 +22,8 @@ def logger() -> logging.Logger:
 @pytest.fixture()
 def chat_request() -> ChatRequest:
     return ChatRequest(
-        messages=[ChatAPIMessage(role=MessageRole.USER, content="test message")]
+        id="test",
+        messages=[ChatAPIMessage(role=MessageRole.USER, content="test message")],
     )
 
 
@@ -50,7 +51,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -75,7 +76,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -99,7 +100,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -124,7 +125,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -148,7 +149,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -171,7 +172,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -196,7 +197,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
