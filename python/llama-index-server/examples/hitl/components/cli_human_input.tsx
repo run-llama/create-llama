@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { z } from "zod";
 
+// This schema is equivalent to the CLICommand model defined in events.py
 const CLIInputEventSchema = z.object({
   command: z.string(),
 });

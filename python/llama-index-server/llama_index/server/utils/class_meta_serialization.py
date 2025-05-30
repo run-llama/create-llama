@@ -1,3 +1,4 @@
+# Helper functions for serializing and deserializing class metadata.
 import importlib
 from typing import Type
 

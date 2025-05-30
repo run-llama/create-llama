@@ -4,8 +4,6 @@ import re
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Type, Union
 
-from pydantic import BaseModel, Field, field_validator
-
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.types import ChatMessage, MessageRole
 from llama_index.core.workflow import Event
@@ -17,6 +15,7 @@ from llama_index.core.workflow.events import (
 )
 from llama_index.server.settings import server_settings
 from llama_index.server.utils import llamacloud
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger("uvicorn")
 
@@ -42,7 +41,7 @@ class ChatAPIMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    id: str  # provided by FE
+    id: str  # see https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat#id - constant for the same chat session
     messages: List[ChatAPIMessage]
     data: Optional[Any] = None
 

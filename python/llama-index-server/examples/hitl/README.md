@@ -21,12 +21,14 @@ To do this, you will need to implement two custom events:
 + [HumanInputEvent](../../llama_index/server/api/models.py#L225): This event is used to request input from the user.
 + [HumanResponseEvent](../../llama_index/server/api/models.py#L258): This event is sent to the workflow to resume execution with input from the user.
 
-Assume that we have implemented two custom events:
+In this example, we have implemented these two custom events:  
+
 - [CLIHumanInputEvent](events.py#L20) – to request input from the user for CLI command execution.
 - [CLIHumanResponseEvent](events.py#L8) – to resume the workflow with the response from the user.
 
-Then, for [AgentWorkflow](agent_workflow.py), we will use the `wait_for_event()` method to wait for the human response when calling a tool.
+We also have a custom component, [cli_human_input.tsx](./components/cli_human_input.tsx), which displays a card that the user can update the command and choose to execute or cancel the command execution.
 
+To make the [AgentWorkflow](agent_workflow.py) work, we use the `wait_for_event()` method to wait for the human response when a tool is called.
 
 Example:
 ```python
@@ -54,7 +56,7 @@ async def cli_executor(ctx: Context, command: str) -> str:
 
 ```
 
-Or for [Custom Workflow](custom_workflow.py), we can define a step that send the `CLIHumanInputEvent` and another step that wait for the `CLIHumanResponseEvent`.
+And for [Custom Workflow](custom_workflow.py), we can define a step that send the `CLIHumanInputEvent` and another step that wait for the `CLIHumanResponseEvent`.
 
 Example:
 ```python
