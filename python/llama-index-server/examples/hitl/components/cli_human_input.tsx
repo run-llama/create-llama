@@ -23,6 +23,14 @@ const CLIHumanInput: FC<{
 
   const { append } = useChatUI();
   const [confirmedValue, setConfirmedValue] = useState<boolean | null>(null);
+  const [editableCommand, setEditableCommand] = useState<string | undefined>(
+    inputEvent?.command,
+  );
+
+  // Update editableCommand if inputEvent changes (e.g. new event comes in)
+  React.useEffect(() => {
+    setEditableCommand(inputEvent?.command);
+  }, [inputEvent?.command]);
 
   const handleConfirm = () => {
     append({
@@ -33,7 +41,7 @@ const CLIHumanInput: FC<{
           type: "human_response",
           data: {
             execute: true,
-            command: inputEvent?.command,
+            command: editableCommand, // Use editable command
           },
         },
       ],
@@ -64,9 +72,12 @@ const CLIHumanInput: FC<{
         <p className="text-sm text-gray-700">
           Do you want to execute the following command?
         </p>
-        <pre className="bg-gray-100 rounded p-3 my-2 text-xs font-mono text-gray-800 overflow-x-auto">
-          {inputEvent?.command}
-        </pre>
+        <input
+          type="text"
+          value={editableCommand || ""}
+          onChange={(e) => setEditableCommand(e.target.value)}
+          className="bg-gray-100 rounded p-3 my-2 text-xs font-mono text-gray-800 overflow-x-auto w-full border border-gray-300"
+        />
       </CardContent>
       {confirmedValue === null ? (
         <CardFooter className="flex justify-end gap-2">
