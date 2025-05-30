@@ -234,7 +234,7 @@ class HumanInputEvent(InputRequiredEvent):
     event_type: str = Field(
         description="An identifier for the UI component that will be used to render the input.",
     )
-    data: Dict[str, Any] | BaseModel = Field(
+    data: Union[Dict[str, Any], BaseModel] = Field(
         description="The data to be sent to the UI component that will be used to render the input.",
     )
 
