@@ -94,8 +94,8 @@
 
   /* Tailwind v4 removed cursor pointer of button and use default cursor */
   /* https://github.com/shadcn-ui/ui/issues/6843#issuecomment-2696947980 */
-  button,
-  [role="button"] {
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
     cursor: pointer;
   }
 }
