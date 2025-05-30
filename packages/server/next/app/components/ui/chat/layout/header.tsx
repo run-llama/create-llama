@@ -4,7 +4,7 @@ import { Sparkles, Star } from "lucide-react";
 
 export function DefaultHeader() {
   return (
-    <div className="flex items-center justify-between px-4 pt-2">
+    <div className="flex items-center justify-between p-2 px-4">
       <div className="flex items-center gap-2">
         <Sparkles className="size-4" />
         <h1 className="font-semibold">LlamaIndex App</h1>
