@@ -32,7 +32,10 @@ export default function CustomChatMessages({
             <ChatMessage.Actions />
           </ChatMessage>
         ))}
-        <ChatMessages.Empty />
+        <ChatMessages.Empty
+          heading="Hello there!"
+          subheading="I'm here to help you with your questions."
+        />
         <ChatMessages.Loading />
       </ChatMessages.List>
       <ChatStarter />

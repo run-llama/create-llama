@@ -12,7 +12,7 @@
     "format": "prettier --ignore-unknown --cache --check .",
     "format:write": "prettier --ignore-unknown --write .",
     "typecheck": "tsc --noEmit",
-    "generate": "tsx app\\api\\chat\\generate.ts"
+    "generate": "tsx app/api/chat/generate.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
