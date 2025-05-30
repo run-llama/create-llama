@@ -22,7 +22,8 @@ def logger() -> logging.Logger:
 @pytest.fixture()
 def chat_request() -> ChatRequest:
     return ChatRequest(
-        messages=[ChatAPIMessage(role=MessageRole.USER, content="test message")]
+        id="test",
+        messages=[ChatAPIMessage(role=MessageRole.USER, content="test message")],
     )
 
 
@@ -50,7 +51,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -75,7 +76,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -99,7 +100,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -124,7 +125,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -148,7 +149,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -171,7 +172,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 
@@ -196,7 +197,7 @@ class TestEventStream:
         result = [
             chunk
             async for chunk in _stream_content(
-                mock_workflow_handler, chat_request, logger
+                mock_workflow_handler, logger, chat_request.id
             )
         ]
 

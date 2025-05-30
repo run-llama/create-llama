@@ -1,4 +1,5 @@
 import logging
+from typing import AsyncGenerator, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -7,31 +8,32 @@ from httpx import ASGITransport, AsyncClient
 
 from llama_index.core.workflow import StopEvent, Workflow
 from llama_index.core.workflow.handler import WorkflowHandler
-from llama_index.server.api.models import ChatAPIMessage, ChatRequest
+from llama_index.server.api.models import ChatAPIMessage, ChatRequest, MessageRole
 from llama_index.server.api.routers.chat import chat_router
 
 
 @pytest.fixture()
-def logger():
+def logger() -> logging.Logger:
     return logging.getLogger("test")
 
 
 @pytest.fixture()
-def chat_request():
+def chat_request() -> ChatRequest:
     """Create a simple chat request with one user message."""
     return ChatRequest(
-        messages=[ChatAPIMessage(role="user", content="Hello, how are you?")]
+        id="test",
+        messages=[ChatAPIMessage(role=MessageRole.USER, content="Hello, how are you?")],
     )
 
 
 @pytest.fixture()
-def mock_workflow():
+def mock_workflow() -> MagicMock:
     """Create a mock workflow that returns a simple response."""
     workflow = MagicMock(spec=Workflow)
     handler = AsyncMock(spec=WorkflowHandler)
 
     # Setup the handler to stream a simple response event
-    async def mock_stream_events():
+    async def mock_stream_events() -> AsyncGenerator[StopEvent, None]:
         yield StopEvent(result="I'm doing well, thank you for asking!")
 
     handler.stream_events.return_value = mock_stream_events()
@@ -41,17 +43,21 @@ def mock_workflow():
 
 
 @pytest.fixture()
-def workflow_factory(mock_workflow):
+def workflow_factory(mock_workflow: MagicMock) -> Callable[[], MagicMock]:
     """Create a factory function that returns our mock workflow."""
 
-    def factory(verbose=False):
+    def factory(verbose: bool = False) -> MagicMock:
         return mock_workflow
 
     return factory
 
 
 @pytest.mark.asyncio()
-async def test_chat_router(chat_request, workflow_factory, logger):
+async def test_chat_router(
+    chat_request: ChatRequest,
+    workflow_factory: Callable[[], MagicMock],
+    logger: logging.Logger,
+) -> None:
     """Test that the chat router handles a request correctly."""
     # Create a FastAPI app and mount our router
     app = FastAPI()
@@ -90,14 +96,14 @@ async def test_chat_router(chat_request, workflow_factory, logger):
 
 
 @pytest.mark.asyncio()
-async def test_chat_with_agent_workflow(logger):
+async def test_chat_with_agent_workflow(logger: logging.Logger) -> None:
     """Test that the chat router works with a workflow that mimics an agent workflow."""
     # Create a simple workflow that mimics an agent workflow
     mock_workflow = MagicMock(spec=Workflow)
     handler = AsyncMock(spec=WorkflowHandler)
 
     # Setup the handler to stream a simple response about weather
-    async def mock_stream_events():
+    async def mock_stream_events() -> AsyncGenerator[StopEvent, None]:
         yield StopEvent(
             result="The weather in New York is sunny. I used the weather tool to get this information."
         )
@@ -106,7 +112,7 @@ async def test_chat_with_agent_workflow(logger):
     mock_workflow.run.return_value = handler
 
     # Create a factory function that returns our mock workflow
-    def workflow_factory(verbose=False):
+    def workflow_factory(verbose: bool = False) -> MagicMock:
         return mock_workflow
 
     # Create a FastAPI app and mount our router
@@ -116,9 +122,12 @@ async def test_chat_with_agent_workflow(logger):
 
     # Create a chat request asking about weather
     chat_request = ChatRequest(
+        id="test",
         messages=[
-            ChatAPIMessage(role="user", content="What's the weather in New York?")
-        ]
+            ChatAPIMessage(
+                role=MessageRole.USER, content="What's the weather in New York?"
+            )
+        ],
     )
 
     # Make a request to the chat endpoint
