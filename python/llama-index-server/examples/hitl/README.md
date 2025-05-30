@@ -36,13 +36,8 @@ async def cli_executor(ctx: Context, command: str) -> str:
     """
     This tool carefully waits for user confirmation before executing a command.
     """
-    # You can use other pattern to generate the waiter_id, 
-    # but make sure it'll be same when we resume the workflow and re-execute the tool call.
-    waiter_id = hashlib.sha256(f"cli_executor:{command}".encode("utf-8")).hexdigest()
-
     confirmation = await ctx.wait_for_event(
         CLIHumanResponseEvent,
-        waiter_id=waiter_id,
         waiter_event=CLIHumanInputEvent(
             data=CLICommand(command=command),
         ),
