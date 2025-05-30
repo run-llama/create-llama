@@ -53,8 +53,14 @@ class WorkflowService:
         chat_id: str,
         workflow: Workflow,
     ) -> Context:
-        with open(cls.get_storage_path(chat_id), "r") as f:
-            ctx_data = json.load(f)
+        file_path = cls.get_storage_path(chat_id)
+        if not file_path.exists():
+            raise FileNotFoundError(f"No checkpoint found for chat_id: {chat_id}")
+        try:
+            with open(file_path, "r") as f:
+                ctx_data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid checkpoint data for chat_id {chat_id}: {e}")
         ctx = Context.from_dict(
             workflow=workflow,
             data=ctx_data,
@@ -74,8 +80,12 @@ class WorkflowService:
         """
         if not isinstance(event, Event):
             raise ValueError(
-                "HITL event must be an instance of Event and have a response_event_type attribute"
+                "HITL event must be an instance of Event. "
                 "Your event is of type: " + type(event).__name__
+            )
+        if not hasattr(event, "response_event_type"):
+            raise ValueError(
+                f"HITL event {type(event).__name__} must have a response_event_type attribute"
             )
         await context.set(
             key=cls.HITL_CONTEXT_KEY,
