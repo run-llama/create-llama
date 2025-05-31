@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.5.20
+
+### Patch Changes
+
+- 3ff0a18: fix: default header padding
+
 ## 0.5.19
 
 ### Patch Changes
