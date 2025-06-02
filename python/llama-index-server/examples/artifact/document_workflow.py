@@ -16,7 +16,8 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import (
+from llama_index.server.api.utils import get_last_artifact
+from llama_index.server.models import (
     Artifact,
     ArtifactEvent,
     ArtifactType,
@@ -24,7 +25,6 @@ from llama_index.server.api.models import (
     DocumentArtifactData,
     UIEvent,
 )
-from llama_index.server.api.utils import get_last_artifact
 
 
 class DocumentRequirement(BaseModel):

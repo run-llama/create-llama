@@ -67,6 +67,9 @@ export const SOURCE_MAP: Record<string, () => Promise<any>> = {
     import("../../../toggle-group"),
   [`${SHADCN_IMPORT_PREFIX}/tooltip`]: () => import("../../../tooltip"),
 
+  ///// CHAT_UI GENERAL  /////
+  [`@llamaindex/chat-ui`]: () => import("@llamaindex/chat-ui"),
+
   ///// WIDGETS FROM CHAT_UI /////
   [`@llamaindex/chat-ui/widgets`]: () => import("@llamaindex/chat-ui/widgets"),
 
@@ -76,6 +79,9 @@ export const SOURCE_MAP: Record<string, () => Promise<any>> = {
   ///// UTILS /////
   [`@/components/lib/utils`]: () => import("../../../lib/utils"),
   [`@/lib/utils`]: () => import("../../../lib/utils"), // for v0 compatibility
+
+  ///// ZOD /////
+  [`zod`]: () => import("zod"),
 };
 
 // parse imports from code to get Function constructor arguments and component name
@@ -122,7 +128,7 @@ export async function parseImports(code: string) {
   const importPromises = imports.map(async ({ name, source }) => {
     if (!(source in SOURCE_MAP)) {
       throw new Error(
-        `Fail to import ${name} from ${source}. Reason: Module not found. \nCurrently we only support importing UI components from Shadcn components, widgets from "llamaindex/chat-ui/widgets" and icons from "lucide-react"`,
+        `Fail to import ${name} from ${source}. Reason: Module not found. \nCurrently we only support importing UI components from Shadcn components, widgets and hooks from "llamaindex/chat-ui", icons from "lucide-react" and zod for data validation.`,
       );
     }
     try {

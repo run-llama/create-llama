@@ -41,7 +41,7 @@
     "@babel/traverse": "^7.27.0",
     "@babel/types": "^7.27.0",
     "@hookform/resolvers": "^5.0.1",
-    "@llamaindex/chat-ui": "0.4.5",
+    "@llamaindex/chat-ui": "0.4.9",
     "@llamaindex/env": "~0.1.30",
     "@llamaindex/openai": "~0.4.0",
     "@llamaindex/readers": "~3.1.4",

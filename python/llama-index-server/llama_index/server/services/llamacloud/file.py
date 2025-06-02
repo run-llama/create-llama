@@ -11,7 +11,7 @@ from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadata
 from pydantic import BaseModel
 
 from llama_index.core.schema import NodeWithScore
-from llama_index.server.api.models import SourceNodes
+from llama_index.server.models.source_nodes import SourceNodes
 from llama_index.server.services.llamacloud.index import get_client
 from llama_index.server.utils import llamacloud
 
