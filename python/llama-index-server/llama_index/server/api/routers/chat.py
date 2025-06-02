@@ -24,10 +24,10 @@ from llama_index.server.api.callbacks import (
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
-from llama_index.server.api.utils.workflow import HITLWorkflowService
 from llama_index.server.models.chat import ChatRequest
 from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.services.llamacloud import LlamaCloudFileService
+from llama_index.server.services.workflow import HITLWorkflowService
 
 
 def chat_router(
@@ -56,10 +56,12 @@ def chat_router(
                 workflow = workflow_factory()
 
             # Check if we should resume a chat with a human response
-            hitl_data = last_message.human_response
-            if hitl_data:
-                workflow_handler = await HITLWorkflowService.resume_with_hitl_response(
-                    workflow, hitl_data, request_id=request.id
+            human_response = last_message.human_response
+            if human_response:
+                workflow_handler = await HITLWorkflowService.resume(
+                    id=request.id,
+                    workflow=workflow,
+                    data=human_response,
                 )
             else:
                 workflow_handler = workflow.run(
@@ -150,9 +152,9 @@ async def _stream_content(
                     raise RuntimeError("Context is None")
                 # Save the context with the HITL event
                 await HITLWorkflowService.save_context(
-                    chat_id=chat_id,
+                    id=chat_id,
                     ctx=ctx,
-                    hitl_event=event,
+                    resume_event_type=event.response_event_type,
                 )
                 yield VercelStreamResponse.convert_data(event.to_response())
                 # Break to stop the stream
