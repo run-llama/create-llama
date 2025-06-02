@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
@@ -24,7 +25,7 @@ from llama_index.server.api.callbacks import (
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
-from llama_index.server.api.utils.workflow import HITLWorkflowService
+from llama_index.server.api.utils.workflow import WorkflowService
 from llama_index.server.models.chat import ChatRequest
 from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.services.llamacloud import LlamaCloudFileService
@@ -58,7 +59,7 @@ def chat_router(
             # Check if we should resume a chat with a human response
             hitl_data = last_message.human_response
             if hitl_data:
-                workflow_handler = await HITLWorkflowService.resume_with_hitl_response(
+                workflow_handler = await WorkflowService.resume_with_hitl_response(
                     workflow, hitl_data, request_id=request.id
                 )
             else:
@@ -149,7 +150,7 @@ async def _stream_content(
                 if ctx is None:
                     raise RuntimeError("Context is None")
                 # Save the context with the HITL event
-                await HITLWorkflowService.save_context(
+                await WorkflowService.save_context(
                     chat_id=chat_id,
                     ctx=ctx,
                     hitl_event=event,
