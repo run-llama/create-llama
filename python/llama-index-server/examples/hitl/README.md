@@ -18,8 +18,8 @@ uv run -- custom_workflow.py
 The human-in-the-loop approach used here is based on a simple idea: the workflow pauses and waits for a human response before proceeding to the next step.
 
 To do this, you will need to implement two custom events: 
-+ [HumanInputEvent](../../llama_index/server/api/models.py#L225): This event is used to request input from the user.
-+ [HumanResponseEvent](../../llama_index/server/api/models.py#L258): This event is sent to the workflow to resume execution with input from the user.
++ [HumanInputEvent](../../llama_index/server/models/hitl.py#L10): This event is used to request input from the user.
++ [HumanResponseEvent](../../llama_index/server/models/hitl.py#L43): This event is sent to the workflow to resume execution with input from the user.
 
 In this example, we have implemented these two custom events:  
 

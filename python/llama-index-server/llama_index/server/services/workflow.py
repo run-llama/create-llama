@@ -5,11 +5,10 @@ from typing import Type
 
 from llama_index.core.workflow import (
     Context,
-    Event,
     JsonSerializer,
     Workflow,
 )
-from llama_index.core.workflow.handler import WorkflowHandler
+from llama_index.server.models.hitl import HumanResponseEvent
 from llama_index.server.utils.class_meta_serialization import (
     type_from_identifier,
     type_identifier,
@@ -38,7 +37,7 @@ class HITLWorkflowService:
         cls,
         id: str,
         ctx: Context,
-        resume_event_type: Type[Event],
+        resume_event_type: Type[HumanResponseEvent],
     ) -> None:
         """
         Save the current checkpoint to a file and return the id
@@ -46,7 +45,7 @@ class HITLWorkflowService:
         Args:
             id: The id to save the context to.
             ctx: The context to save.
-            response_event_type [Optional]: Save workflow context with a resume event.
+            resume_event_type [Optional]: Save workflow context with a resume event.
         """
         await ctx.set(
             key=cls.HITL_CONTEXT_KEY,
@@ -58,10 +57,11 @@ class HITLWorkflowService:
             json.dump(ctx_data, f)
 
     @classmethod
-    def load_context(
+    async def load_context(
         cls,
         id: str,
         workflow: Workflow,
+        data: dict,
     ) -> Context:
         file_path = cls.get_storage_path(id)
         if not file_path.exists():
@@ -76,10 +76,14 @@ class HITLWorkflowService:
             data=ctx_data,
             serializer=JsonSerializer(),
         )
+        resume_event = await cls._construct_resume_event(ctx, data)
+        ctx.send_event(resume_event)
         return ctx
 
     @classmethod
-    async def _construct_resume_event(cls, context: Context, data: dict) -> Event:
+    async def _construct_resume_event(
+        cls, context: Context, data: dict
+    ) -> HumanResponseEvent:
         """
         Get the HITL event from the context.
         """
@@ -89,6 +93,10 @@ class HITLWorkflowService:
                 "Cannot resume the workflow because there is no resume event type in the context"
             )
         resume_event_type = type_from_identifier(event_type_str)
+        if not issubclass(resume_event_type, HumanResponseEvent):
+            raise ValueError(
+                f"Cannot resume the workflow because the resume event type {resume_event_type} is not a HumanResponseEvent"
+            )
         try:
             return resume_event_type(**data)
         except Exception as e:
@@ -96,27 +104,3 @@ class HITLWorkflowService:
                 f"Error constructing resume event: {e}. "
                 f"Make sure the provided data is valid for the event type {resume_event_type}"
             )
-
-    @classmethod
-    async def resume(
-        cls,
-        id: str,
-        workflow: Workflow,
-        data: dict,
-    ) -> WorkflowHandler:
-        """
-        Resume the workflow.
-
-        Args:
-            id: The id of the workflow.
-            workflow: The workflow to resume.
-            data: The data of the resume event for resuming the workflow with.
-
-        Returns:
-            The workflow handler.
-        """
-        context = cls.load_context(id, workflow)
-        event = await cls._construct_resume_event(context, data)
-        context.send_event(event)
-        handler = workflow.run(ctx=context)
-        return handler

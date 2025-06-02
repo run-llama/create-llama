@@ -58,11 +58,12 @@ def chat_router(
             # Check if we should resume a chat with a human response
             human_response = last_message.human_response
             if human_response:
-                workflow_handler = await HITLWorkflowService.resume(
+                ctx = await HITLWorkflowService.load_context(
                     id=request.id,
                     workflow=workflow,
                     data=human_response,
                 )
+                workflow_handler = workflow.run(ctx=ctx)
             else:
                 workflow_handler = workflow.run(
                     user_msg=user_message.content,

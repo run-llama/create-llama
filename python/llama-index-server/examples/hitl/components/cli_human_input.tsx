@@ -74,7 +74,7 @@ const CLIHumanInput: FC<{
           Do you want to execute the following command?
         </p>
         <input
-          disabled={confirmedValue !== null}
+          disabled
           type="text"
           value={editableCommand || ""}
           onChange={(e) => setEditableCommand(e.target.value)}
