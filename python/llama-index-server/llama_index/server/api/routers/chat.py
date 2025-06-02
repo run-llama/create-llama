@@ -11,7 +11,12 @@ from llama_index.core.agent.workflow.workflow_events import (
     AgentSetup,
     AgentStream,
 )
-from llama_index.core.workflow import StopEvent, Workflow
+from llama_index.core.workflow import (
+    HumanResponseEvent,
+    InputRequiredEvent,
+    StopEvent,
+    Workflow,
+)
 from llama_index.server.api.callbacks import (
     AgentCallTool,
     EventCallback,
@@ -22,6 +27,7 @@ from llama_index.server.api.callbacks import (
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.models import ChatRequest
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
+from llama_index.server.api.utils.workflow import WorkflowService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 
 
@@ -38,7 +44,8 @@ def chat_router(
         background_tasks: BackgroundTasks,
     ) -> StreamingResponse:
         try:
-            user_message = request.messages[-1].to_llamaindex_message()
+            last_message = request.messages[-1]
+            user_message = last_message.to_llamaindex_message()
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
@@ -48,10 +55,23 @@ def chat_router(
                 workflow = workflow_factory(chat_request=request)
             else:
                 workflow = workflow_factory()
-            workflow_handler = workflow.run(
-                user_msg=user_message.content,
-                chat_history=chat_history,
-            )
+
+            # Check if we should resume a chat with a human response
+            human_response = last_message.human_response
+            if human_response:
+                previous_ctx = WorkflowService.load_context(request.id, workflow)
+                # send a new human response event then resume the workflow with the previous context
+                previous_ctx.send_event(
+                    HumanResponseEvent(
+                        response=human_response,
+                    )
+                )
+                workflow_handler = workflow.run(ctx=previous_ctx)
+            else:
+                workflow_handler = workflow.run(
+                    user_msg=user_message.content,
+                    chat_history=chat_history,
+                )
 
             callbacks: list[EventCallback] = [
                 AgentCallTool(),
@@ -66,7 +86,11 @@ def chat_router(
             )
 
             return VercelStreamResponse(
-                content_generator=_stream_content(stream_handler, request, logger),
+                content_generator=_stream_content(
+                    stream_handler,
+                    logger,
+                    request.id,
+                ),
             )
         except Exception as e:
             logger.error(e)
@@ -99,8 +123,8 @@ def chat_router(
 
 async def _stream_content(
     handler: StreamHandler,
-    request: ChatRequest,
     logger: logging.Logger,
+    chat_id: str,
 ) -> AsyncGenerator[str, None]:
     async def _text_stream(
         event: Union[AgentStream, StopEvent],
@@ -131,6 +155,21 @@ async def _stream_content(
             elif hasattr(event, "to_response"):
                 event_response = event.to_response()
                 yield VercelStreamResponse.convert_data(event_response)
+            elif isinstance(event, InputRequiredEvent):
+                ctx = handler.workflow_handler.ctx
+                if ctx is None:
+                    raise RuntimeError("Context is None")
+                chat_id = WorkflowService.save_context(
+                    chat_id=chat_id,
+                    ctx=ctx,
+                )
+                yield VercelStreamResponse.convert_data(
+                    {
+                        "type": "human",
+                        "data": event.model_dump(),
+                    }
+                )
+                break
             else:
                 # Ignore unnecessary agent workflow events
                 if not isinstance(event, (AgentInput, AgentSetup)):
