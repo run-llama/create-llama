@@ -1,5 +1,16 @@
 # @create-llama/llama-index-server
 
+## 0.1.20
+
+### Patch Changes
+
+- 087c961: Add support for human-in-the-loop
+- 087c961: Refactor models.py into a separate module
+- Updated dependencies [3ff0a18]
+- Updated dependencies [df10474]
+- Updated dependencies [087c961]
+  - @llamaindex/server@0.2.6
+
 ## 0.1.19
 
 ### Patch Changes
