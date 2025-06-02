@@ -9,13 +9,14 @@ from llama_index.core.workflow import (
     Workflow,
 )
 from llama_index.core.workflow.handler import WorkflowHandler
+from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.utils.class_meta_serialization import (
     type_from_identifier,
     type_identifier,
 )
 
 
-class WorkflowService:
+class HITLWorkflowService:
     # A key in context that stores the HITL event type
     HITL_CONTEXT_KEY = "human_response_type"
 
@@ -31,7 +32,7 @@ class WorkflowService:
         cls,
         chat_id: str,
         ctx: Context,
-        hitl_event: Optional[Event] = None,
+        hitl_event: Optional[HumanInputEvent] = None,
     ) -> None:
         """
         Save the current checkpoint to a file and return the chat_id
@@ -74,19 +75,10 @@ class WorkflowService:
             cls.get_storage_path(chat_id).unlink()
 
     @classmethod
-    async def attach_hitl_event(cls, context: Context, event: Event) -> None:
+    async def attach_hitl_event(cls, context: Context, event: HumanInputEvent) -> None:
         """
         Attach the HITL event to the context.
         """
-        if not isinstance(event, Event):
-            raise ValueError(
-                "HITL event must be an instance of Event. "
-                "Your event is of type: " + type(event).__name__
-            )
-        if not hasattr(event, "response_event_type"):
-            raise ValueError(
-                f"HITL event {type(event).__name__} must have a response_event_type attribute"
-            )
         await context.set(
             key=cls.HITL_CONTEXT_KEY,
             value=type_identifier(event.response_event_type),
