@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  getCustomAnnotations,
+  getAnnotationData,
   JSONValue,
   MessageAnnotation,
   MessageAnnotationType,
@@ -25,9 +25,8 @@ export const DynamicEvents = ({
   componentDefs: ComponentDef[];
   appendError: (error: string) => void;
 }) => {
-  const {
-    message: { annotations },
-  } = useChatMessage();
+  const { message } = useChatMessage();
+  const annotations = message.annotations;
 
   const shownWarningsRef = useRef<Set<string>>(new Set()); // track warnings
   const [hasErrors, setHasErrors] = useState(false);
@@ -48,11 +47,11 @@ export const DynamicEvents = ({
       const type = annotation.type;
       if (!type) return; // Skip if annotation doesn't have a type
 
-      const events = getCustomAnnotations(annotations, type);
+      const events = getAnnotationData<JSONValue>(message, type);
 
       // Skip if it's a built-in component or if we've already shown the warning
       if (
-        BUILT_IN_CHATUI_COMPONENTS.includes(type) ||
+        BUILT_IN_CHATUI_COMPONENTS.includes(type as MessageAnnotationType) ||
         shownWarningsRef.current.has(type)
       ) {
         return;
@@ -70,10 +69,7 @@ export const DynamicEvents = ({
 
   const components: EventComponent[] = componentDefs
     .map((comp) => {
-      const events = getCustomAnnotations(
-        annotations,
-        comp.type,
-      ) as JSONValue[]; // get all event data by type
+      const events = getAnnotationData<JSONValue>(message, comp.type);
       if (!events?.length) return null;
       return { ...comp, events };
     })
