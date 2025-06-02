@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  getChatUIAnnotation,
+  getCustomAnnotations,
   JSONValue,
   MessageAnnotation,
   MessageAnnotationType,
@@ -43,11 +43,12 @@ export const DynamicEvents = ({
 
     const availableComponents = new Set(componentDefs.map((comp) => comp.type));
 
-    annotations.forEach((annotation: MessageAnnotation) => {
+    annotations.forEach((item: JSONValue) => {
+      const annotation = item as MessageAnnotation;
       const type = annotation.type;
-      if (!type) return; // skip if annotation doesn't have a type
+      if (!type) return; // Skip if annotation doesn't have a type
 
-      const events = getChatUIAnnotation(annotations, type);
+      const events = getCustomAnnotations(annotations, type);
 
       // Skip if it's a built-in component or if we've already shown the warning
       if (
@@ -69,7 +70,10 @@ export const DynamicEvents = ({
 
   const components: EventComponent[] = componentDefs
     .map((comp) => {
-      const events = getChatUIAnnotation(annotations, comp.type) as JSONValue[]; // get all event data by type
+      const events = getCustomAnnotations(
+        annotations,
+        comp.type,
+      ) as JSONValue[]; // get all event data by type
       if (!events?.length) return null;
       return { ...comp, events };
     })

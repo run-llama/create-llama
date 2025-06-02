@@ -4,6 +4,7 @@ import {
   Message,
   MessageAnnotation,
   getChatUIAnnotation,
+  getCustomAnnotations,
   useChatMessage,
   useChatUI,
 } from "@llamaindex/chat-ui";
@@ -84,7 +85,7 @@ function getArtifactVersion(
   let versionIndex = 1;
   for (const m of messages) {
     const toolData = m.annotations
-      ? (getChatUIAnnotation(m.annotations, "tools") as unknown as ToolData[])
+      ? (getCustomAnnotations(m.annotations, "tools") as unknown as ToolData[])
       : null;
 
     if (toolData?.some((t) => t.toolCall.name === "artifact")) {
