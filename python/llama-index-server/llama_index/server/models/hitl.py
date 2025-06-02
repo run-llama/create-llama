@@ -1,10 +1,21 @@
 from typing import Any, Dict, Type, Union
 
-from llama_index.core.workflow.events import Event, InputRequiredEvent
 from llama_index.core.workflow.events import (
     HumanResponseEvent as FrameworkHumanResponseEvent,
 )
+from llama_index.core.workflow.events import InputRequiredEvent
 from pydantic import BaseModel, Field
+
+
+class HumanResponseEvent(FrameworkHumanResponseEvent):
+    """
+    Use this event to send a response from a human.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        if "response" not in kwargs:
+            kwargs["response"] = f"Human response with data: {kwargs.get('data', {})}"
+        super().__init__(**kwargs)
 
 
 class HumanInputEvent(InputRequiredEvent):
@@ -13,7 +24,7 @@ class HumanInputEvent(InputRequiredEvent):
     It will block the workflow execution until the human responds.
     """
 
-    response_event_type: Type[Event] = Field(
+    response_event_type: Type[HumanResponseEvent] = Field(
         description="The type of event that the workflow is waiting for.",
     )
     event_type: str = Field(
@@ -38,14 +49,3 @@ class HumanInputEvent(InputRequiredEvent):
             if isinstance(self.data, dict)
             else self.data.model_dump(),
         }
-
-
-class HumanResponseEvent(FrameworkHumanResponseEvent):
-    """
-    Use this event to send a response from a human.
-    """
-
-    def __init__(self, **kwargs: Any) -> None:
-        if "response" not in kwargs:
-            kwargs["response"] = f"Human response with data: {kwargs.get('data', {})}"
-        super().__init__(**kwargs)
