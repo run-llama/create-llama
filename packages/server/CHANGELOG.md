@@ -1,5 +1,13 @@
 # @llamaindex/server
 
+## 0.2.6
+
+### Patch Changes
+
+- 3ff0a18: fix: default header padding
+- df10474: fix: missing cursor pointer for button
+- 087c961: Support zod and chat-ui hooks for custom components
+
 ## 0.2.5
 
 ### Patch Changes
