@@ -1,0 +1,52 @@
+import json
+from typing import Optional
+
+from llama_index.core.agent.workflow import AgentWorkflow
+from llama_index.core.settings import Settings
+from llama_index.core.tools import FunctionTool
+from llama_index.llms.openai import OpenAI
+from llama_index.server.models import ChatRequest
+from llama_index.server.services.file import FileService
+from llama_index.server.utils.chat_attachments import get_file_attachments
+
+
+def read_file(file_id: str) -> str:
+    file_path = FileService.get_private_file_path(file_id)
+    try:
+        with open(file_path, "r") as file:
+            return file.read()
+    except Exception as e:
+        return f"Error reading file {file_path}: {e}"
+
+
+def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:
+    """
+    Create a tool to read file if the user uploads a file.
+    """
+    # it's possible to add description for each file and use it for LLM
+    # but just use the default description for now
+    file_ids = []
+    for file in get_file_attachments(chat_request):
+        file_ids.append(file.id)
+    if len(file_ids) == 0:
+        return None
+
+    file_tool_description = (
+        "Use this tool with a file id to read the content of the file."
+        f"\nYou only have access to the following file ids: {json.dumps(file_ids)}"
+    )
+
+    return FunctionTool.from_defaults(
+        fn=read_file,
+        name="read_file",
+        description=file_tool_description,
+    )
+
+
+def create_workflow(chat_request: ChatRequest) -> AgentWorkflow:
+    file_tool = create_file_tool(chat_request)
+    return AgentWorkflow.from_tools_or_functions(
+        tools_or_functions=[file_tool] if file_tool else [],
+        llm=Settings.llm or OpenAI(model="gpt-4.1-mini"),
+        system_prompt="You are a helpful assistant that can help users with their uploaded files.",
+    )

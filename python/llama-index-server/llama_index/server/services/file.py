@@ -3,41 +3,19 @@ import os
 import re
 import uuid
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
-from pydantic import BaseModel, Field
-
+from llama_index.server.models.chat import ServerFile
 from llama_index.server.settings import server_settings
 
 logger = logging.getLogger(__name__)
 
 PRIVATE_STORE_PATH = str(Path("output", "private"))
-TOOL_STORE_PATH = str(Path("output", "tools"))
-LLAMA_CLOUD_STORE_PATH = str(Path("output", "llamacloud"))
-
-
-class PrivateFile(BaseModel):
-    id: str
-    name: str
-    type: Optional[str] = None
-    size: Optional[int] = None
-    url: Optional[str] = None
-    path: Optional[str] = Field(
-        None,
-        description="The stored file path. Used internally in the server.",
-        exclude=True,
-    )
-
-
-class DocumentFile(PrivateFile):
-    refs: Optional[List[str]] = Field(
-        None, description="The document ids in the index."
-    )
 
 
 class FileService:
     """
-    Stores files uploaded by the user.
+    Store files to server
     """
 
     @classmethod
@@ -46,23 +24,22 @@ class FileService:
         content: Union[bytes, str],
         file_name: str,
         save_dir: Optional[str] = None,
-    ) -> PrivateFile:
+    ) -> ServerFile:
         """
         Save the content to a file in the local file server (accessible via URL).
 
         Args:
             content (bytes | str): The content to save, either bytes or string.
             file_name (str): The original name of the file.
-            save_dir (Optional[str]): The relative path from the current working directory. Defaults to the `output/uploaded` directory.
-
+            save_dir (Optional[str]): The path to store the file. Defaults is set to PRIVATE_STORE_PATH (output/private) if not provided.
         Returns:
             The metadata of the saved file.
         """
         if save_dir is None:
             save_dir = os.path.join("output", "private")
 
-        file_id, new_file_name, extension = cls._generate_file_name(file_name)
-        file_path = os.path.join(save_dir, new_file_name)
+        file_id, extension = cls._process_file_name(file_name)
+        file_path = os.path.join(save_dir, file_id)
 
         # Write the file directly, handling both str and bytes
         try:
@@ -86,40 +63,43 @@ class FileService:
         logger.info(f"Saved file to {file_path}")
 
         file_size = os.path.getsize(file_path)
-        file_url = cls.get_file_url(new_file_name, save_dir)
-        return PrivateFile(
+        file_url = cls._get_file_url(file_id, save_dir)
+        return ServerFile(
             id=file_id,
-            name=new_file_name,
             type=extension,
             size=file_size,
             url=file_url,
-            path=file_path,
         )
 
-    @staticmethod
-    def _generate_file_name(file_name: str) -> tuple[str, str, str]:
+    @classmethod
+    def _process_file_name(cls, file_name: str) -> tuple[str, str]:
         """
-        Generate a unique file name using a UUID and sanitize the original name.
-
-        Returns:
-            Tuple of (file_id, new_file_name, extension)
+        Process original file name to generate a unique file id and extension.
         """
-        file_id = str(uuid.uuid4())
+        _id = str(uuid.uuid4())
         name, extension = os.path.splitext(file_name)
         extension = extension.lstrip(".")
         if extension == "":
-            raise ValueError("File type is not supported!")
-        sanitized_name = re.sub(r"[^a-zA-Z0-9.]", "_", name)
-        new_file_name = f"{sanitized_name}_{file_id}.{extension}"
-        return file_id, new_file_name, extension
+            raise ValueError("File name is not valid! It must have an extension.")
+        # sanitize the name
+        name = re.sub(r"[^a-zA-Z0-9.]", "_", name)
+        file_id = f"{name}_{_id}.{extension}"
+        return file_id, extension
 
     @classmethod
-    def get_file_url(cls, file_name: str, save_dir: Optional[str] = None) -> str:
+    def _get_file_url(cls, file_id: str, save_dir: Optional[str] = None) -> str:
         """
         Get the URL of a file.
         """
         if save_dir is None:
             save_dir = os.path.join("output", "private")
         # Ensure the path uses forward slashes for URLs
-        url_path = f"{save_dir}/{file_name}".replace("\\", "/")
+        url_path = f"{save_dir}/{file_id}".replace("\\", "/")
         return f"{server_settings.file_server_url_prefix}/{url_path}"
+
+    @classmethod
+    def get_private_file_path(cls, file_id: str) -> str:
+        """
+        Get the path of a private file. (the file must be stored in default store path)
+        """
+        return os.path.join(PRIVATE_STORE_PATH, file_id)

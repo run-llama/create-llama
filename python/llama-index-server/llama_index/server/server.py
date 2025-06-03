@@ -51,6 +51,11 @@ class UIConfig(BaseModel):
         return json.dumps(
             {
                 "CHAT_API": f"{server_settings.api_url}/chat",
+                "UPLOAD_API": (
+                    f"{server_settings.api_url}/chat/file"
+                    if self.file_upload_enabled
+                    else None
+                ),
                 "FILE_UPLOAD_ENABLED": self.file_upload_enabled,
                 "STARTER_QUESTIONS": self.starter_questions or [],
                 "LLAMA_CLOUD_API": (

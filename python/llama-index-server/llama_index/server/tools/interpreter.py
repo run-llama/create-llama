@@ -4,9 +4,11 @@ import os
 import uuid
 from typing import Any, List, Optional
 
-from llama_index.core.tools import FunctionTool
-from llama_index.server.services.file import DocumentFile, FileService
 from pydantic import BaseModel
+
+from llama_index.core.tools import FunctionTool
+from llama_index.server.models.chat import ServerFile
+from llama_index.server.services.file import FileService
 
 logger = logging.getLogger("uvicorn")
 
@@ -87,7 +89,7 @@ class E2BCodeInterpreter:
                         self.interpreter.files.write(file_path, content)
             logger.info(f"Uploaded {len(sandbox_files)} files to sandbox")
 
-    def _save_to_disk(self, base64_data: str, ext: str) -> DocumentFile:
+    def _save_to_disk(self, base64_data: str, ext: str) -> ServerFile:
         buffer = base64.b64decode(base64_data)
 
         # Output from e2b doesn't have a name. Create a random name for it.
@@ -117,7 +119,7 @@ class E2BCodeInterpreter:
                     output.append(
                         InterpreterExtraResult(
                             type=ext,
-                            filename=document_file.name,
+                            filename=document_file.id,
                             url=document_file.url,
                         )
                     )
