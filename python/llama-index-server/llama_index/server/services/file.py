@@ -5,19 +5,20 @@ import uuid
 from pathlib import Path
 from typing import List, Optional, Union
 
-from llama_index.server.settings import server_settings
 from pydantic import BaseModel, Field
+
+from llama_index.server.settings import server_settings
 
 logger = logging.getLogger(__name__)
 
-PRIVATE_STORE_PATH = str(Path("output", "uploaded"))
+PRIVATE_STORE_PATH = str(Path("output", "private"))
 TOOL_STORE_PATH = str(Path("output", "tools"))
 LLAMA_CLOUD_STORE_PATH = str(Path("output", "llamacloud"))
 
 
-class DocumentFile(BaseModel):
+class PrivateFile(BaseModel):
     id: str
-    name: str  # Stored file name
+    name: str
     type: Optional[str] = None
     size: Optional[int] = None
     url: Optional[str] = None
@@ -26,6 +27,9 @@ class DocumentFile(BaseModel):
         description="The stored file path. Used internally in the server.",
         exclude=True,
     )
+
+
+class DocumentFile(PrivateFile):
     refs: Optional[List[str]] = Field(
         None, description="The document ids in the index."
     )
@@ -33,7 +37,7 @@ class DocumentFile(BaseModel):
 
 class FileService:
     """
-    To store the files uploaded by the user.
+    Stores files uploaded by the user.
     """
 
     @classmethod
@@ -42,7 +46,7 @@ class FileService:
         content: Union[bytes, str],
         file_name: str,
         save_dir: Optional[str] = None,
-    ) -> DocumentFile:
+    ) -> PrivateFile:
         """
         Save the content to a file in the local file server (accessible via URL).
 
@@ -55,25 +59,20 @@ class FileService:
             The metadata of the saved file.
         """
         if save_dir is None:
-            save_dir = os.path.join("output", "uploaded")
+            save_dir = os.path.join("output", "private")
 
-        file_id = str(uuid.uuid4())
-        name, extension = os.path.splitext(file_name)
-        extension = extension.lstrip(".")
-        sanitized_name = _sanitize_file_name(name)
-        if extension == "":
-            raise ValueError("File is not supported!")
-        new_file_name = f"{sanitized_name}_{file_id}.{extension}"
-
+        file_id, new_file_name, extension = cls._generate_file_name(file_name)
         file_path = os.path.join(save_dir, new_file_name)
 
-        if isinstance(content, str):
-            content = content.encode()
-
+        # Write the file directly, handling both str and bytes
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, "wb") as file:
-                file.write(content)
+            mode = "wb"
+            with open(file_path, mode) as f:
+                if isinstance(content, str):
+                    f.write(content.encode())
+                else:
+                    f.write(content)
         except PermissionError as e:
             logger.error(f"Permission denied when writing to file {file_path}: {e!s}")
             raise
@@ -87,18 +86,32 @@ class FileService:
         logger.info(f"Saved file to {file_path}")
 
         file_size = os.path.getsize(file_path)
-        file_url = (
-            f"{server_settings.file_server_url_prefix}/{save_dir}/{new_file_name}"
-        )
-        return DocumentFile(
+        file_url = cls.get_file_url(new_file_name, save_dir)
+        return PrivateFile(
             id=file_id,
             name=new_file_name,
             type=extension,
             size=file_size,
-            path=file_path,
             url=file_url,
-            refs=None,
+            path=file_path,
         )
+
+    @staticmethod
+    def _generate_file_name(file_name: str) -> tuple[str, str, str]:
+        """
+        Generate a unique file name using a UUID and sanitize the original name.
+
+        Returns:
+            Tuple of (file_id, new_file_name, extension)
+        """
+        file_id = str(uuid.uuid4())
+        name, extension = os.path.splitext(file_name)
+        extension = extension.lstrip(".")
+        if extension == "":
+            raise ValueError("File type is not supported!")
+        sanitized_name = re.sub(r"[^a-zA-Z0-9.]", "_", name)
+        new_file_name = f"{sanitized_name}_{file_id}.{extension}"
+        return file_id, new_file_name, extension
 
     @classmethod
     def get_file_url(cls, file_name: str, save_dir: Optional[str] = None) -> str:
@@ -106,12 +119,7 @@ class FileService:
         Get the URL of a file.
         """
         if save_dir is None:
-            save_dir = os.path.join("output", "uploaded")
-        return f"{server_settings.file_server_url_prefix}/{save_dir}/{file_name}"
-
-
-def _sanitize_file_name(file_name: str) -> str:
-    """
-    Sanitize the file name by replacing all non-alphanumeric characters with underscores.
-    """
-    return re.sub(r"[^a-zA-Z0-9.]", "_", file_name)
+            save_dir = os.path.join("output", "private")
+        # Ensure the path uses forward slashes for URLs
+        url_path = f"{save_dir}/{file_name}".replace("\\", "/")
+        return f"{server_settings.file_server_url_prefix}/{url_path}"

@@ -29,6 +29,10 @@ class UIConfig(BaseModel):
         default=False,
         description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API_KEY environment variable)",
     )
+    file_upload_enabled: bool = Field(
+        default=False,
+        description="Whether to enable file upload in the chat UI",
+    )
     ui_path: str = Field(
         default=".ui", description="The path that stores static files for the chat UI"
     )
@@ -47,6 +51,7 @@ class UIConfig(BaseModel):
         return json.dumps(
             {
                 "CHAT_API": f"{server_settings.api_url}/chat",
+                "FILE_UPLOAD_ENABLED": self.file_upload_enabled,
                 "STARTER_QUESTIONS": self.starter_questions or [],
                 "LLAMA_CLOUD_API": (
                     f"{server_settings.api_url}/chat/config/llamacloud"

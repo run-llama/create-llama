@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
@@ -24,8 +25,9 @@ from llama_index.server.api.callbacks import (
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
-from llama_index.server.models.chat import ChatRequest
+from llama_index.server.models.chat import ChatFile, ChatRequest
 from llama_index.server.models.hitl import HumanInputEvent
+from llama_index.server.services.file import FileService, PrivateFile
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 from llama_index.server.services.workflow import HITLWorkflowService
 
@@ -93,6 +95,21 @@ def chat_router(
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
 
+    # we just simply save the file to the server and don't index it
+    @router.post("/file")
+    async def upload_file(request: ChatFile) -> PrivateFile:
+        """
+        Upload a file to the server to be used in the chat session.
+        """
+        try:
+            chat_id = request.chat_id
+            save_dir = os.path.join("output", "private", chat_id)
+            file = FileService.save_file(request.base64, request.name, save_dir)
+            return file
+        except Exception:
+            raise HTTPException(status_code=500, detail="Error uploading file")
+
+    # Specific to LlamaCloud
     if LlamaCloudFileService.is_configured():
 
         @router.get("/config/llamacloud")
