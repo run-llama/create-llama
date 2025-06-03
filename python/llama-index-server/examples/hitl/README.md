@@ -2,6 +2,10 @@
 
 This example shows how to use the LlamaIndexServer with a human in the loop. It allows you to start CLI commands that are reviewed by a human before execution.
 
+## Prerequisites
+
+Please follow the setup instructions in the [examples README](../README.md).
+
 ## Getting Started
 
 ### AgentWorkflow

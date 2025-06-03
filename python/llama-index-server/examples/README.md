@@ -12,11 +12,16 @@ This directory contains examples for llama-index-server.
     uv sync
     ```
 
-3. Navigate to the example you want to run and follow the instructions in the example's README.md file.
+3. Navigate to one of the example folders and follow the instructions in the example's README.md file:
+
+- [Simple Agent](./simple-agent/README.md)
+- [HITL](./hitl/README.md)
+- [Artifact](./artifact/README.md)
+- [LlamaCloud](./llamacloud/README.md)
 
 ## Local Development
 
-1. For local development, you first need to build UI resources for the server. At the root of the project, run the following command:
+1. For local development, you first need to build the UI resources for the server. At the root of the project, run the following command:
 
     ```bash
     pnpm install
