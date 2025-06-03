@@ -9,13 +9,6 @@ import {
 import { z } from "zod";
 import { getInlineAnnotations } from "./inline";
 
-export const AnnotationSchema = z.object({
-  type: z.string(),
-  data: z.any(),
-});
-
-export type Annotation = z.infer<typeof AnnotationSchema>;
-
 // Events that appended to stream as annotations
 export type SourceEventNode = {
   id: string;

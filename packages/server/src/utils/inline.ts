@@ -1,7 +1,14 @@
 import { type ChatMessage } from "llamaindex";
-import { type Annotation, AnnotationSchema } from "./events";
+import { z } from "zod";
 
 const INLINE_ANNOTATION_KEY = "annotation"; // the language key to detect inline annotation code in markdown
+
+export const AnnotationSchema = z.object({
+  type: z.string(),
+  data: z.any(),
+});
+
+export type Annotation = z.infer<typeof AnnotationSchema>;
 
 export function getInlineAnnotations(message: ChatMessage): Annotation[] {
   const markdownContent = getMessageMarkdownContent(message);
