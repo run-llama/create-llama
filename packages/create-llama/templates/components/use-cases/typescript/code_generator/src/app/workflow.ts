@@ -259,7 +259,6 @@ ${user_msg}
 
     const response = await llm.complete({
       prompt,
-      // stream: true, // TODO: streaming artifact
     });
 
     // Extract the code from the response

@@ -1,4 +1,8 @@
-import { extractLastArtifact } from "@llamaindex/server";
+import {
+  DocumentArtifact,
+  extractLastArtifact,
+  toInlineAnnotation,
+} from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -55,26 +59,16 @@ const synthesizeAnswerEvent = workflowEvent<{
 
 const uiEvent = workflowEvent<UIEvent>();
 
-const artifactEvent = workflowEvent<{
-  type: "artifact";
-  data: {
-    type: "document";
-    created_at: number;
-    data: {
-      title: string;
-      content: string;
-      type: "markdown" | "html";
-    };
-  };
-}>();
-
 export function workflowFactory(reqBody: any) {
   const llm = Settings.llm;
 
-  const { withState, getContext } = createStatefulMiddleware(() => {
+  const { withState, getContext } = createStatefulMiddleware<{
+    memory: ChatMemoryBuffer;
+    lastArtifact: DocumentArtifact | undefined;
+  }>(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody),
+      lastArtifact: undefined,
     };
   });
   const workflow = withState(createWorkflow());
@@ -87,11 +81,11 @@ export function workflowFactory(reqBody: any) {
     if (!userInput) {
       throw new Error("Missing user input to start the workflow");
     }
-    state.memory.set(chatHistory);
-    state.memory.put({ role: "user", content: userInput });
+    const messages = await state.memory.getMessages();
+    state.lastArtifact = extractLastArtifact(messages, "document");
 
     return planEvent.with({
-      userInput,
+      userInput: userInput,
       context: state.lastArtifact
         ? JSON.stringify(state.lastArtifact)
         : undefined,
@@ -250,19 +244,24 @@ export function workflowFactory(reqBody: any) {
           content: `Generated document: \n${response.text}`,
         });
 
-        // To show the Canvas panel for the artifact
+        // Show inline artifact
         sendEvent(
-          artifactEvent.with({
-            type: "artifact",
-            data: {
-              type: "document",
-              created_at: Date.now(),
+          agentStreamEvent.with({
+            delta: toInlineAnnotation({
+              type: "artifact",
               data: {
-                title: requirement.title,
-                content: content,
-                type: docType,
+                type: "document",
+                created_at: Date.now(),
+                data: {
+                  title: requirement.title,
+                  content: content,
+                  type: docType,
+                },
               },
-            },
+            }),
+            response: "",
+            currentAgentName: "assistant",
+            raw: content,
           }),
         );
       }
