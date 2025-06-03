@@ -223,63 +223,87 @@ new LlamaIndexServer({
 
 ## Sending Artifacts to the UI
 
-In addition to UI events for custom components, LlamaIndex Server supports a special `ArtifactEvent` to send structured data like generated documents or code snippets to the UI. These artifacts are displayed in a dedicated "Canvas" panel in the chat interface.
+LlamaIndex Server supports sending structured data like generated documents or code snippets to the UI as inline artifacts. These artifacts are displayed in a dedicated "Canvas" panel in the chat interface and are embedded directly in the stream response.
 
-### Artifact Event Structure
+### Inline Artifact Structure
 
-To send an artifact, your workflow needs to emit an event with `type: "artifact"`. The `data` payload of this event should include:
+To send an artifact, you need to use the `toInlineAnnotation` function from `@llamaindex/server` within an `agentStreamEvent`. The artifact data should include:
 
-- `type`: A string indicating the type of artifact (e.g., `"document"`, `"code"`).
-- `created_at`: A timestamp (e.g., `Date.now()`) indicating when the artifact was created.
-- `data`: An object containing the specific details of the artifact. The structure of this object depends on the artifact `type`.
+- `type`: Always set to `"artifact"` for the top-level type
+- `data`: An object containing:
+  - `type`: A string indicating the specific type of artifact (e.g., `"document"`, `"code"`)
+  - `created_at`: A timestamp (e.g., `Date.now()`) indicating when the artifact was created
+  - `data`: An object containing the specific details of the artifact, structure depends on the artifact type
 
-### Defining and Sending an ArtifactEvent
+### Sending Inline Artifacts
 
-First, define your artifact event using `workflowEvent` from `@llamaindex/workflow`:
+First, import the necessary functions:
 
 ```typescript
-import { workflowEvent } from "@llamaindex/workflow";
-
-// Example for a document artifact
-const artifactEvent = workflowEvent<{
-  type: "artifact"; // Must be "artifact"
-  data: {
-    type: "document"; // Custom type for your artifact (e.g., "document", "code")
-    created_at: number;
-    data: {
-      // Specific data for the document artifact type
-      title: string;
-      content: string;
-      type: "markdown" | "html"; // document format
-    };
-  };
-}>();
+import { toInlineAnnotation } from "@llamaindex/server";
+import { agentStreamEvent } from "@llamaindex/workflow";
 ```
 
-Then, within your workflow logic, use `sendEvent` (obtained from `getContext()`) to emit the event:
+Then, within your workflow logic, use `sendEvent` to emit the artifact inline:
 
 ```typescript
-// Assuming 'sendEvent' is available in your workflow handler
-// and 'documentDetails' contains the content for the artifact.
-
+// Example for a document artifact
 sendEvent(
-  artifactEvent.with({
-    type: "artifact", // This top-level type must be "artifact"
-    data: {
-      type: "document", // This is your specific artifact type
-      created_at: Date.now(),
+  agentStreamEvent.with({
+    delta: toInlineAnnotation({
+      type: "artifact",
       data: {
-        title: "My Generated Document",
-        content: "# Hello World
-This is a markdown document.",
-        type: "markdown",
+        type: "document", // Specific artifact type
+        created_at: Date.now(),
+        data: {
+          title: "My Generated Document",
+          content: "# Hello World\nThis is a markdown document.",
+          type: "markdown", // document format: "markdown" | "html"
+        },
       },
-    },
+    }),
+    response: "",
+    currentAgentName: "assistant",
+    raw: "", // Optional: raw content for debugging
+  }),
+);
+
+// Example for a code artifact
+sendEvent(
+  agentStreamEvent.with({
+    delta: toInlineAnnotation({
+      type: "artifact",
+      data: {
+        type: "code", // Specific artifact type
+        created_at: Date.now(),
+        data: {
+          language: "typescript",
+          file_name: "MyComponent.tsx",
+          code: `import React from "react";
+
+export default function MyComponent() {
+  return <div>Hello World</div>;
+}`,
+        },
+      },
+    }),
+    response: "",
+    currentAgentName: "assistant",
+    raw: "",
   }),
 );
 ```
 
-This will send the artifact to the LlamaIndex Server UI, where it will be rendered in the [ChatCanvasPanel](/packages/server/next/app/components/ui/chat/canvas/panel.tsx) by a renderer depending on the artifact type. For type `document` this is using the [DocumentArtifactViewer](https://github.com/run-llama/chat-ui/blob/bacb75fc6edceacf742fba18632404a2483b5a81/packages/chat-ui/src/chat/canvas/artifacts/document.tsx#L17).
+The `toInlineAnnotation` function wraps the artifact data in a special code block format that the UI can parse and render appropriately. This approach embeds artifacts directly in the response stream, making them part of the natural conversation flow.
+
+### Supported Artifact Types
+
+Common artifact types include:
+
+- **`document`**: For markdown or HTML documents with `title`, `content`, and `type` fields
+- **`code`**: For code snippets with `language`, `file_name`, and `code` fields
+
+The artifacts will be automatically rendered in the [ChatCanvasPanel](/packages/server/next/app/components/ui/chat/canvas/panel.tsx) by the appropriate renderer based on the artifact type.
 
 ## Default Endpoints and Features
 
