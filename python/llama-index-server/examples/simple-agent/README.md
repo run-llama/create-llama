@@ -4,7 +4,9 @@ This guide explains how to set up and use the LlamaIndex server with a simple ch
 
 ## Prerequisites
 
-- [uv](https://github.com/astral-sh/uv) installed (a fast Python package manager and runner)
+Please follow the setup instructions in the [examples README](../README.md).
+
+You will also need:
 - An OpenAI API key
 
 ## Steps
@@ -22,10 +24,10 @@ This guide explains how to set up and use the LlamaIndex server with a simple ch
    Start the server with the following command:
 
    ```sh
-   uv run workflow.py
+   uv run main.py
    ```
 
-   This will launch the FastAPI server using the workflow defined in `main.py`.
+   This will launch the FastAPI server using the workflow defined in `app/workflow.py`.
 
 3. **Access the Application**
 
