@@ -118,11 +118,6 @@ export type DocumentArtifact = Artifact<DocumentArtifactData> & {
   type: "document";
 };
 
-export const artifactEvent = workflowEvent<{
-  type: "artifact";
-  data: Artifact;
-}>();
-
 export const codeArtifactSchema = z.object({
   type: z.literal("code"),
   data: z.object({
