@@ -1,5 +1,5 @@
-import { extractLastArtifact } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
+import { extractLastArtifact, toInlineAnnotationCode } from "../utils";
 
 import {
   agentStreamEvent,
@@ -262,6 +262,7 @@ ${user_msg}
 
     const response = await llm.complete({
       prompt,
+      // stream: true, // TODO: streaming artifact
     });
 
     // Extract the code from the response
@@ -278,19 +279,24 @@ ${user_msg}
       content: `Updated the code: \n${response.text}`,
     });
 
-    // To show the Canvas panel for the artifact
+    // Show inline artifact
     sendEvent(
-      artifactEvent.with({
-        type: "artifact",
-        data: {
-          type: "code",
-          created_at: Date.now(),
+      agentStreamEvent.with({
+        delta: toInlineAnnotationCode({
+          type: "artifact",
           data: {
-            language: planData.requirement.language || "",
-            file_name: planData.requirement.file_name || "",
-            code,
+            type: "code",
+            created_at: Date.now(),
+            data: {
+              language: planData.requirement.language || "",
+              file_name: planData.requirement.file_name || "",
+              code,
+            },
           },
-        },
+        }),
+        response: "",
+        currentAgentName: "assistant",
+        raw: code,
       }),
     );
 

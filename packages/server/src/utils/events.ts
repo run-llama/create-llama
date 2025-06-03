@@ -4,6 +4,8 @@ import type { Message } from "ai";
 import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
 import { z } from "zod";
 
+const INLINE_ANNOTATION_KEY = "annotation"; // the language key to detect inline annotation code in markdown
+
 // Events that appended to stream as annotations
 export type SourceEventNode = {
   id: string;
@@ -210,4 +212,20 @@ export function extractLastArtifact(
   }
 
   return artifacts[artifacts.length - 1];
+}
+
+/**
+ * To append inline annotations to the stream, we need to wrap the annotation in a code block with the language key.
+ * The language key is `annotation` and the code block is wrapped in backticks.
+ * The prefix `0:` ensures it will be treated as inline markdown. Example:
+ *
+ * 0:\`\`\`annotation
+ * \{
+ *   "type": "artifact",
+ *   "data": \{...\}
+ * \}
+ * \`\`\`
+ */
+export function toInlineAnnotationCode(item: object) {
+  return `\n\`\`\`${INLINE_ANNOTATION_KEY}\n${JSON.stringify(item)}\n\`\`\`\n`;
 }
