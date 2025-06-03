@@ -1,5 +1,9 @@
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
-import { extractLastArtifact, toInlineAnnotationCode } from "../utils";
+import {
+  CodeArtifact,
+  extractLastArtifact,
+  toInlineAnnotation,
+} from "../utils";
 
 import {
   agentStreamEvent,
@@ -52,26 +56,16 @@ const synthesizeAnswerEvent = workflowEvent<object>();
 
 const uiEvent = workflowEvent<UIEvent>();
 
-const artifactEvent = workflowEvent<{
-  type: "artifact";
-  data: {
-    type: "code";
-    created_at: number;
-    data: {
-      language: string;
-      file_name: string;
-      code: string;
-    };
-  };
-}>();
-
 export function workflowFactory(reqBody: any) {
   const llm = Settings.llm;
 
-  const { withState, getContext } = createStatefulMiddleware(() => {
+  const { withState, getContext } = createStatefulMiddleware<{
+    memory: ChatMemoryBuffer;
+    lastArtifact: CodeArtifact | undefined;
+  }>(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody),
+      lastArtifact: undefined,
     };
   });
   const workflow = withState(createWorkflow());
@@ -86,6 +80,9 @@ export function workflowFactory(reqBody: any) {
     }
     state.memory.set(chatHistory);
     state.memory.put({ role: "user", content: userInput });
+
+    const messages = await state.memory.getMessages();
+    state.lastArtifact = extractLastArtifact(messages, "code");
 
     return planEvent.with({
       userInput: userInput,
@@ -282,7 +279,7 @@ ${user_msg}
     // Show inline artifact
     sendEvent(
       agentStreamEvent.with({
-        delta: toInlineAnnotationCode({
+        delta: toInlineAnnotation({
           type: "artifact",
           data: {
             type: "code",

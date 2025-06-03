@@ -1,10 +1,20 @@
 import { randomUUID } from "@llamaindex/env";
 import { workflowEvent } from "@llamaindex/workflow";
-import type { Message } from "ai";
-import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
+import {
+  MetadataMode,
+  type ChatMessage,
+  type Metadata,
+  type NodeWithScore,
+} from "llamaindex";
 import { z } from "zod";
+import { getInlineAnnotations } from "./inline";
 
-const INLINE_ANNOTATION_KEY = "annotation"; // the language key to detect inline annotation code in markdown
+export const AnnotationSchema = z.object({
+  type: z.string(),
+  data: z.any(),
+});
+
+export type Annotation = z.infer<typeof AnnotationSchema>;
 
 // Events that appended to stream as annotations
 export type SourceEventNode = {
@@ -150,49 +160,46 @@ export const artifactAnnotationSchema = z.object({
   data: artifactSchema,
 });
 
-export function extractAllArtifacts(messages: Message[]): Artifact[] {
-  const allArtifacts: Artifact[] = [];
+export function extractArtifactsFromMessage(message: ChatMessage): Artifact[] {
+  const inlineAnnotations = getInlineAnnotations(message);
+  const artifacts = inlineAnnotations.filter(
+    (annotation): annotation is z.infer<typeof artifactAnnotationSchema> => {
+      return artifactAnnotationSchema.safeParse(annotation).success;
+    },
+  );
+  return artifacts.map((artifact) => artifact.data);
+}
 
-  for (const message of messages) {
-    const artifacts =
-      message.annotations
-        ?.filter(
-          (
-            annotation,
-          ): annotation is z.infer<typeof artifactAnnotationSchema> =>
-            artifactAnnotationSchema.safeParse(annotation).success,
-        )
-        .map((annotation) => annotation.data as Artifact) ?? [];
-
-    allArtifacts.push(...artifacts);
-  }
-
-  return allArtifacts;
+export function extractArtifactsFromAllMessages(
+  messages: ChatMessage[],
+): Artifact[] {
+  return messages
+    .flatMap((message) => extractArtifactsFromMessage(message))
+    .sort((a, b) => a.created_at - b.created_at);
 }
 
 export function extractLastArtifact(
-  requestBody: unknown,
+  messages: ChatMessage[],
   type: "code",
 ): CodeArtifact | undefined;
 
 export function extractLastArtifact(
-  requestBody: unknown,
+  messages: ChatMessage[],
   type: "document",
 ): DocumentArtifact | undefined;
 
 export function extractLastArtifact(
-  requestBody: unknown,
+  messages: ChatMessage[],
   type?: ArtifactType,
 ): Artifact | undefined;
 
 export function extractLastArtifact(
-  requestBody: unknown,
+  messages: ChatMessage[],
   type?: ArtifactType,
 ): CodeArtifact | DocumentArtifact | Artifact | undefined {
-  const { messages } = (requestBody as { messages?: Message[] }) ?? {};
-  if (!messages) return undefined;
+  if (messages?.length === 0) return undefined;
 
-  const artifacts = extractAllArtifacts(messages);
+  const artifacts = extractArtifactsFromAllMessages(messages);
   if (!artifacts.length) return undefined;
 
   if (type) {
@@ -212,20 +219,4 @@ export function extractLastArtifact(
   }
 
   return artifacts[artifacts.length - 1];
-}
-
-/**
- * To append inline annotations to the stream, we need to wrap the annotation in a code block with the language key.
- * The language key is `annotation` and the code block is wrapped in backticks.
- * The prefix `0:` ensures it will be treated as inline markdown. Example:
- *
- * 0:\`\`\`annotation
- * \{
- *   "type": "artifact",
- *   "data": \{...\}
- * \}
- * \`\`\`
- */
-export function toInlineAnnotationCode(item: object) {
-  return `\n\`\`\`${INLINE_ANNOTATION_KEY}\n${JSON.stringify(item)}\n\`\`\`\n`;
 }
