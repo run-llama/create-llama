@@ -1,0 +1,12 @@
+[project]
+name = "llama-index-server-examples"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "llama-index-server",
+    "llama-index-llms-openai>=0.4.2",
+    "e2b-code-interpreter>=1.1.1,<2.0.0",
+    "llama-cloud>=0.1.17,<1.0.0",
+    "markdown>=3.7,<4.0",
+    "xhtml2pdf>=0.2.17,<1.0.0",
+]
