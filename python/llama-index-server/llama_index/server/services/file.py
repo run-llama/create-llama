@@ -1,9 +1,11 @@
+import base64
 import logging
+import mimetypes
 import os
 import re
 import uuid
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 from llama_index.server.models.chat import ServerFile
 from llama_index.server.settings import server_settings
@@ -44,8 +46,7 @@ class FileService:
         # Write the file directly, handling both str and bytes
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            mode = "wb"
-            with open(file_path, mode) as f:
+            with open(file_path, "wb") as f:
                 if isinstance(content, str):
                     f.write(content.encode())
                 else:
@@ -103,3 +104,13 @@ class FileService:
         Get the path of a private file. (the file must be stored in default store path)
         """
         return os.path.join(PRIVATE_STORE_PATH, file_id)
+
+    @staticmethod
+    def _preprocess_base64_file(base64_content: str) -> Tuple[bytes, str]:
+        header, data = base64_content.split(",", 1)
+        mime_type = header.split(";")[0].split(":", 1)[1]
+        extension = mimetypes.guess_extension(mime_type)
+        if extension is None:
+            raise ValueError(f"Unsupported file type: {mime_type}")
+        extension = extension.lstrip(".")
+        return base64.b64decode(data), extension

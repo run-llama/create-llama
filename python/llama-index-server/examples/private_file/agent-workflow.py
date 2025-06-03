@@ -1,30 +1,22 @@
 import json
 from typing import Optional
 
+from fastapi import FastAPI
+
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.settings import Settings
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.openai import OpenAI
+from llama_index.server import LlamaIndexServer, UIConfig
 from llama_index.server.models import ChatRequest
 from llama_index.server.services.file import FileService
 from llama_index.server.utils.chat_attachments import get_file_attachments
-
-
-def read_file(file_id: str) -> str:
-    file_path = FileService.get_private_file_path(file_id)
-    try:
-        with open(file_path, "r") as file:
-            return file.read()
-    except Exception as e:
-        return f"Error reading file {file_path}: {e}"
 
 
 def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:
     """
     Create a tool to read file if the user uploads a file.
     """
-    # it's possible to add description for each file and use it for LLM
-    # but just use the default description for now
     file_ids = []
     for file in get_file_attachments(chat_request):
         file_ids.append(file.id)
@@ -35,6 +27,14 @@ def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:
         "Use this tool with a file id to read the content of the file."
         f"\nYou only have access to the following file ids: {json.dumps(file_ids)}"
     )
+
+    def read_file(file_id: str) -> str:
+        file_path = FileService.get_private_file_path(file_id)
+        try:
+            with open(file_path, "r") as file:
+                return file.read()
+        except Exception as e:
+            return f"Error reading file {file_path}: {e}"
 
     return FunctionTool.from_defaults(
         fn=read_file,
@@ -50,3 +50,24 @@ def create_workflow(chat_request: ChatRequest) -> AgentWorkflow:
         llm=Settings.llm or OpenAI(model="gpt-4.1-mini"),
         system_prompt="You are a helpful assistant that can help users with their uploaded files.",
     )
+
+
+def create_app() -> FastAPI:
+    app = LlamaIndexServer(
+        workflow_factory=create_workflow,
+        suggest_next_questions=False,
+        ui_config=UIConfig(
+            file_upload_enabled=True,
+            component_dir="components",
+        ),
+    )
+    return app
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("agent-workflow:app", host="0.0.0.0", port=8000, reload=True)

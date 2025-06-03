@@ -103,7 +103,8 @@ def chat_router(
         """
         try:
             save_dir = os.path.join("output", "private")
-            file = FileService.save_file(request.base64, request.name, save_dir)
+            content, _ = FileService._preprocess_base64_file(request.base64)
+            file = FileService.save_file(content, request.name, save_dir)
             return file
         except Exception:
             raise HTTPException(status_code=500, detail="Error uploading file")
