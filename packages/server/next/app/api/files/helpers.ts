@@ -2,31 +2,23 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const MIME_TYPE_TO_EXT: Record<string, string> = {
-  "application/pdf": "pdf",
-  "text/plain": "txt",
-  "text/csv": "csv",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    "docx",
-};
-
 export const UPLOADED_FOLDER = "output/uploaded";
 
-export async function storeFile(
-  name: string,
-  fileBuffer: Buffer,
-  mimeType: string,
-) {
-  const fileExt = MIME_TYPE_TO_EXT[mimeType];
-  if (!fileExt) throw new Error(`Unsupported document type: ${mimeType}`);
+export async function storeFile(name: string, fileBuffer: Buffer) {
+  const parts = name.split(".");
+  const fileName = parts[0];
+  const fileExt = parts[1];
+
+  if (!fileExt) {
+    throw new Error("File extension is required");
+  }
 
   const id = crypto.randomUUID();
-  const fileId = `${sanitizeFileName(name)}_${id}.${fileExt}`;
+  const fileId = `${sanitizeFileName(fileName)}_${id}.${fileExt}`;
   const filepath = path.join(UPLOADED_FOLDER, fileId);
   const fileUrl = await saveDocument(filepath, fileBuffer);
   return {
     id: fileId,
-    name: name,
     size: fileBuffer.length,
     type: fileExt,
     url: fileUrl,
@@ -53,7 +45,5 @@ export async function saveDocument(filepath: string, content: string | Buffer) {
 }
 
 function sanitizeFileName(fileName: string) {
-  // Remove file extension and ensure we have a valid string before sanitizing
-  const nameWithoutExt = fileName.split(".")[0] || fileName;
-  return nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return fileName.replace(/[^a-zA-Z0-9_-]/g, "_");
 }

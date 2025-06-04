@@ -33,11 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mimeType = header.replace("data:", "").replace(";base64", "");
     const fileBuffer = Buffer.from(content, "base64");
 
-    // Store file in local storage
-    const file = await storeFile(name, fileBuffer, mimeType);
+    const file = await storeFile(name, fileBuffer);
 
     return NextResponse.json(file);
   } catch (error) {
