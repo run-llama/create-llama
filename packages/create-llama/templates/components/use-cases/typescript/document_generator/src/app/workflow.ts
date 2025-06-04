@@ -61,7 +61,7 @@ export function workflowFactory(reqBody: any) {
   const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: extractLastArtifact(reqBody?.messages || []),
+      lastArtifact: extractLastArtifact(reqBody),
     };
   });
   const workflow = withState(createWorkflow());

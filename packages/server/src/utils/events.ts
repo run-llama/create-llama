@@ -172,25 +172,26 @@ export function extractArtifactsFromAllMessages(
 }
 
 export function extractLastArtifact(
-  messages: ChatMessage[],
+  requestBody: unknown,
   type: "code",
 ): CodeArtifact | undefined;
 
 export function extractLastArtifact(
-  messages: ChatMessage[],
+  requestBody: unknown,
   type: "document",
 ): DocumentArtifact | undefined;
 
 export function extractLastArtifact(
-  messages: ChatMessage[],
+  requestBody: unknown,
   type?: ArtifactType,
 ): Artifact | undefined;
 
 export function extractLastArtifact(
-  messages: ChatMessage[],
+  requestBody: unknown,
   type?: ArtifactType,
 ): CodeArtifact | DocumentArtifact | Artifact | undefined {
-  if (messages?.length === 0) return undefined;
+  const { messages } = (requestBody as { messages?: ChatMessage[] }) ?? {};
+  if (!messages) return undefined;
 
   const artifacts = extractArtifactsFromAllMessages(messages);
   if (!artifacts.length) return undefined;
