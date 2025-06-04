@@ -240,61 +240,46 @@ To send an artifact, you need to use the `toInlineAnnotation` function from `@ll
 First, import the necessary functions:
 
 ```typescript
-import { toInlineAnnotation } from "@llamaindex/server";
-import { agentStreamEvent } from "@llamaindex/workflow";
+import {
+  toArtifactEvent,
+  CodeArtifact,
+  DocumentArtifact,
+} from "@llamaindex/server";
 ```
 
-Then, within your workflow logic, use `sendEvent` to emit the artifact inline:
+Then, within your workflow logic, use `sendEvent` to emit the artifact:
 
 ```typescript
 // Example for a document artifact
-sendEvent(
-  agentStreamEvent.with({
-    delta: toInlineAnnotation({
-      type: "artifact",
-      data: {
-        type: "document", // Specific artifact type
-        created_at: Date.now(),
-        data: {
-          title: "My Generated Document",
-          content: "# Hello World\nThis is a markdown document.",
-          type: "markdown", // document format: "markdown" | "html"
-        },
-      },
-    }),
-    response: "",
-    currentAgentName: "assistant",
-    raw: "", // Optional: raw content for debugging
-  }),
-);
+const documentArtifact: DocumentArtifact = {
+  type: "document", // Specific artifact type
+  created_at: Date.now(),
+  data: {
+    title: "My Generated Document",
+    content: "# Hello World\nThis is a markdown document.",
+    type: "markdown", // document format: "markdown" | "html"
+  },
+};
+sendEvent(toArtifactEvent(documentArtifact));
 
 // Example for a code artifact
-sendEvent(
-  agentStreamEvent.with({
-    delta: toInlineAnnotation({
-      type: "artifact",
-      data: {
-        type: "code", // Specific artifact type
-        created_at: Date.now(),
-        data: {
-          language: "typescript",
-          file_name: "MyComponent.tsx",
-          code: `import React from "react";
+const codeArtifact: CodeArtifact = {
+  type: "code", // Specific artifact type
+  created_at: Date.now(),
+  data: {
+    language: "typescript",
+    file_name: "MyComponent.tsx",
+    code: `import React from "react";
 
 export default function MyComponent() {
   return <div>Hello World</div>;
 }`,
-        },
-      },
-    }),
-    response: "",
-    currentAgentName: "assistant",
-    raw: "",
-  }),
-);
+  },
+};
+sendEvent(toArtifactEvent(codeArtifact));
 ```
 
-The `toInlineAnnotation` function wraps the artifact data in a special code block format that the UI can parse and render appropriately. This approach embeds artifacts directly in the response stream, making them part of the natural conversation flow.
+The `toArtifactEvent` function automatically wraps the artifact data in the proper format for the UI to parse and render appropriately. This approach embeds artifacts directly in the response stream, making them part of the natural conversation flow.
 
 ### Supported Artifact Types
 
