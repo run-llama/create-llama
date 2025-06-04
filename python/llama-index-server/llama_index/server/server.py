@@ -7,8 +7,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import Mount
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
-
 from llama_index.core.workflow import Workflow
 from llama_index.server.api.routers import (
     chat_router,
@@ -18,6 +16,7 @@ from llama_index.server.api.routers import (
 )
 from llama_index.server.chat_ui import copy_bundled_chat_ui
 from llama_index.server.settings import server_settings
+from pydantic import BaseModel, Field
 
 
 class UIConfig(BaseModel):
@@ -29,7 +28,7 @@ class UIConfig(BaseModel):
         default=False,
         description="Whether to show the LlamaCloud index selector in the chat UI (need to set the LLAMA_CLOUD_API_KEY environment variable)",
     )
-    file_upload_enabled: bool = Field(
+    enable_file_upload: bool = Field(
         default=False,
         description="Whether to enable file upload in the chat UI",
     )
@@ -53,10 +52,9 @@ class UIConfig(BaseModel):
                 "CHAT_API": f"{server_settings.api_url}/chat",
                 "UPLOAD_API": (
                     f"{server_settings.api_url}/chat/file"
-                    if self.file_upload_enabled
+                    if self.enable_file_upload
                     else None
                 ),
-                "FILE_UPLOAD_ENABLED": self.file_upload_enabled,
                 "STARTER_QUESTIONS": self.starter_questions or [],
                 "LLAMA_CLOUD_API": (
                     f"{server_settings.api_url}/chat/config/llamacloud"
