@@ -17,8 +17,8 @@ from llama_index.core.workflow import (
 )
 from llama_index.server.api.callbacks import (
     AgentCallTool,
-    ArtifactTransform,
     EventCallback,
+    InlineAnnotationTransformer,
     LlamaCloudFileDownload,
     SourceNodesFromToolCall,
     SuggestNextQuestions,
@@ -73,7 +73,7 @@ def chat_router(
 
             callbacks: list[EventCallback] = [
                 AgentCallTool(),
-                ArtifactTransform(),
+                InlineAnnotationTransformer(),
                 SourceNodesFromToolCall(),
                 LlamaCloudFileDownload(background_tasks),
             ]
