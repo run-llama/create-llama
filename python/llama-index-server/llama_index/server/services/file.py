@@ -38,7 +38,7 @@ class FileService:
             The metadata of the saved file.
         """
         if save_dir is None:
-            save_dir = os.path.join("output", "private")
+            save_dir = PRIVATE_STORE_PATH
 
         file_id, extension = cls._process_file_name(file_name)
         file_path = os.path.join(save_dir, file_id)
@@ -94,17 +94,53 @@ class FileService:
         Get the URL of a file.
         """
         if save_dir is None:
-            save_dir = os.path.join("output", "private")
+            save_dir = PRIVATE_STORE_PATH
         # Ensure the path uses forward slashes for URLs
         url_path = f"{save_dir}/{file_id}".replace("\\", "/")
         return f"{server_settings.file_server_url_prefix}/{url_path}"
 
     @classmethod
-    def get_private_file_path(cls, file_id: str) -> str:
+    def get_file_path(cls, file_id: str, save_dir: Optional[str] = None) -> str:
         """
-        Get the path of a private file. (the file must be stored in default store path)
+        Get the path of a private file.
+
+        Args:
+            file_id (str): The ID of the file.
+            save_dir (Optional[str]): The path where the file is stored. Defaults to output/private if not provided.
+
+        Returns:
+            str: The full path to the file.
         """
-        return os.path.join(PRIVATE_STORE_PATH, file_id)
+        if save_dir is None:
+            save_dir = PRIVATE_STORE_PATH
+        return os.path.join(save_dir, file_id)
+
+    @classmethod
+    def get_file(cls, file_id: str, save_dir: Optional[str] = None) -> bytes:
+        """
+        Read and return the content of a file.
+
+        Args:
+            file_id (str): The ID of the file.
+            save_dir (Optional[str]): The path where the file is stored. Defaults to output/private if not provided.
+
+        Returns:
+            bytes: The content of the file.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+        """
+        file_path = cls.get_file_path(file_id, save_dir)
+
+        try:
+            with open(file_path, "rb") as f:
+                return f.read()
+        except FileNotFoundError as e:
+            logger.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File with ID '{file_id}' not found") from e
+        except Exception as e:
+            logger.error(f"Unexpected error when reading file {file_path}: {e!s}")
+            raise
 
     @staticmethod
     def _preprocess_base64_file(base64_content: str) -> Tuple[bytes, str]:
