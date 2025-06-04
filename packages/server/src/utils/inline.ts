@@ -72,7 +72,7 @@ function getMessageMarkdownContent(message: ChatMessage): string {
   } else {
     message.content.forEach((item) => {
       if (item.type === "text") {
-        markdownContent = item.text;
+        markdownContent += item.text;
       }
     });
   }

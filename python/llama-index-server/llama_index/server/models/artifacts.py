@@ -5,7 +5,7 @@ from typing import Literal, Optional, Union
 from llama_index.core.workflow.events import Event
 from llama_index.server.models.chat import ChatAPIMessage
 from pydantic import BaseModel
-from ..utils.inline import get_inline_annotations
+from llama_index.server.utils.inline import get_inline_annotations
 
 logger = logging.getLogger(__name__)
 
