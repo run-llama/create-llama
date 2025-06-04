@@ -1,7 +1,6 @@
 from typing import Any
 
 from fastapi import FastAPI
-
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import PromptTemplate
@@ -52,7 +51,33 @@ class FileHelpWorkflow(Workflow):
     @step
     async def read_files(self, ctx: Context, ev: StartEvent) -> FileHelpEvent:
         user_msg = ev.user_msg
-        last_file = self.uploaded_files[-1]
+
+        # 1. Access through workflow instance as is
+        # last_file = self.uploaded_files[-1]
+
+
+        # 2. Access through user_msg (if it's a ChatMessage)
+        # llama_index support ChatMessage with DocumentBlock which mostly the same as our FileServer.
+        # (but I guess we'll get back to dealing with other problems
+        # that we need to pass other data to the workflow later)
+        # e.g:
+        # files = [
+        #     ServerFile.from_document_block(block)
+        #     for block in user_msg.blocks
+        #     if isinstance(block, DocumentBlock)
+        # ]
+        #
+        # or they can just use files: List[DocumentBlock] as is.
+
+        
+        # 3. Introduce server start event with additional fields
+        # e.g:
+        # class ChatStartEvent(StartEvent):
+        #     user_msg: Union[str, ChatMessage]
+        #     chat_history: list[ChatMessage]
+        #     attachments: list[ServerFile]
+        # Then the user can clearly know what do they have with the StartEvent
+
         file_path = FileService.get_private_file_path(last_file.id)
         with open(file_path, "r", encoding="utf-8") as f:
             file_content = f.read()
