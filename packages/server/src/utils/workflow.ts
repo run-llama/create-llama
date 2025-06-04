@@ -1,5 +1,4 @@
 import {
-  agentStreamEvent,
   agentToolCallEvent,
   agentToolCallResultEvent,
   run,
@@ -19,11 +18,11 @@ import {
   artifactEvent,
   sourceEvent,
   toAgentRunEvent,
+  toInlineAnnotationEvent,
   toSourceEvent,
   type SourceEventNode,
 } from "./events";
 import { downloadFile } from "./file";
-import { toInlineAnnotation } from "./inline";
 
 export async function runWorkflow(
   workflow: Workflow,
@@ -79,13 +78,7 @@ function processWorkflowStream(
           }
           // Handle artifact events, transform to agentStreamEvent
           else if (artifactEvent.include(event)) {
-            const artifactAnnotation = event.data;
-            transformedEvent = agentStreamEvent.with({
-              delta: toInlineAnnotation(artifactAnnotation),
-              response: "",
-              currentAgentName: "assistant",
-              raw: artifactAnnotation,
-            });
+            transformedEvent = toInlineAnnotationEvent(event);
           }
           // Post-process for llama-cloud files
           if (sourceEvent.include(transformedEvent)) {

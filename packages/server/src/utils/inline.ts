@@ -60,7 +60,7 @@ export function getInlineAnnotations(message: ChatMessage): Annotation[] {
  * \}
  * \`\`\`
  */
-export function toInlineAnnotation(item: object) {
+export function toInlineAnnotation(item: unknown) {
   return `\n\`\`\`${INLINE_ANNOTATION_KEY}\n${JSON.stringify(item)}\n\`\`\`\n`;
 }
 
