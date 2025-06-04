@@ -1,3 +1,4 @@
+import { agentStreamEvent, type WorkflowEventData } from "@llamaindex/workflow";
 import { type ChatMessage } from "llamaindex";
 import { z } from "zod";
 
@@ -62,6 +63,15 @@ export function getInlineAnnotations(message: ChatMessage): Annotation[] {
  */
 export function toInlineAnnotation(item: unknown) {
   return `\n\`\`\`${INLINE_ANNOTATION_KEY}\n${JSON.stringify(item)}\n\`\`\`\n`;
+}
+
+export function toInlineAnnotationEvent(event: WorkflowEventData<unknown>) {
+  return agentStreamEvent.with({
+    delta: toInlineAnnotation(event.data),
+    response: "",
+    currentAgentName: "assistant",
+    raw: event.data,
+  });
 }
 
 function getMessageMarkdownContent(message: ChatMessage): string {

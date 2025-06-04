@@ -18,11 +18,11 @@ import {
   artifactEvent,
   sourceEvent,
   toAgentRunEvent,
-  toInlineAnnotationEvent,
   toSourceEvent,
   type SourceEventNode,
 } from "./events";
 import { downloadFile } from "./file";
+import { toInlineAnnotationEvent } from "./inline";
 
 export async function runWorkflow(
   workflow: Workflow,
