@@ -3,9 +3,9 @@ from enum import Enum
 from typing import Literal, Optional, Union
 
 from llama_index.core.workflow.events import Event
-from .chat import ChatAPIMessage
+from llama_index.server.models.chat import ChatAPIMessage
+from pydantic import BaseModel
 from ..utils.inline import get_inline_annotations
-from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 
