@@ -1,7 +1,7 @@
 import {
   CodeArtifact,
   extractLastArtifact,
-  toInlineAnnotation,
+  toArtifactEvent,
 } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
@@ -276,25 +276,16 @@ ${user_msg}
     });
 
     // Show inline artifact
-    sendEvent(
-      agentStreamEvent.with({
-        delta: toInlineAnnotation({
-          type: "artifact",
-          data: {
-            type: "code",
-            created_at: Date.now(),
-            data: {
-              language: planData.requirement.language || "",
-              file_name: planData.requirement.file_name || "",
-              code,
-            },
-          },
-        }),
-        response: "",
-        currentAgentName: "assistant",
-        raw: code,
-      }),
-    );
+    const artifact: CodeArtifact = {
+      type: "code",
+      created_at: Date.now(),
+      data: {
+        language: planData.requirement.language || "",
+        file_name: planData.requirement.file_name || "",
+        code,
+      },
+    };
+    sendEvent(toArtifactEvent(artifact));
 
     return synthesizeAnswerEvent.with({});
   });

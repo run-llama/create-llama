@@ -1,8 +1,3 @@
-import {
-  DocumentArtifact,
-  extractLastArtifact,
-  toInlineAnnotation,
-} from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -14,6 +9,11 @@ import {
   workflowEvent,
 } from "@llamaindex/workflow";
 
+import {
+  DocumentArtifact,
+  extractLastArtifact,
+  toArtifactEvent,
+} from "@llamaindex/server";
 import { z } from "zod";
 
 export const DocumentRequirementSchema = z.object({
@@ -245,25 +245,16 @@ export function workflowFactory(reqBody: any) {
         });
 
         // Show inline artifact
-        sendEvent(
-          agentStreamEvent.with({
-            delta: toInlineAnnotation({
-              type: "artifact",
-              data: {
-                type: "document",
-                created_at: Date.now(),
-                data: {
-                  title: requirement.title,
-                  content: content,
-                  type: docType,
-                },
-              },
-            }),
-            response: "",
-            currentAgentName: "assistant",
-            raw: content,
-          }),
-        );
+        const artifact: DocumentArtifact = {
+          type: "document",
+          created_at: Date.now(),
+          data: {
+            title: requirement.title,
+            content: content,
+            type: docType,
+          },
+        };
+        sendEvent(toArtifactEvent(artifact));
       }
 
       return synthesizeAnswerEvent.with({
