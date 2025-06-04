@@ -70,6 +70,7 @@ class FileService:
             type=extension,
             size=file_size,
             url=file_url,
+            path=file_path,
         )
 
     @classmethod

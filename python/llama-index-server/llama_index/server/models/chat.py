@@ -11,6 +11,11 @@ class ServerFile(BaseModel):
     type: Optional[str] = None
     size: Optional[int] = None
     url: Optional[str] = None
+    path: Optional[str] = Field(
+        default=None,
+        description="The path of the file in the server",
+        exclude=True,
+    )
 
 
 class FileData(BaseModel):
