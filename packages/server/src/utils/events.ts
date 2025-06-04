@@ -1,5 +1,5 @@
 import { randomUUID } from "@llamaindex/env";
-import { agentStreamEvent, workflowEvent } from "@llamaindex/workflow";
+import { workflowEvent } from "@llamaindex/workflow";
 import {
   MetadataMode,
   type ChatMessage,
@@ -7,7 +7,7 @@ import {
   type NodeWithScore,
 } from "llamaindex";
 import { z } from "zod";
-import { getInlineAnnotations, toInlineAnnotation } from "./inline";
+import { getInlineAnnotations } from "./inline";
 
 // Events that appended to stream as annotations
 export type SourceEventNode = {
@@ -90,17 +90,10 @@ export function toAgentRunEvent(input: {
   });
 }
 
-export function toArtifactEvent(data: Artifact) {
-  return agentStreamEvent.with({
-    delta: toInlineAnnotation({
-      type: "artifact",
-      data,
-    }),
-    response: "",
-    currentAgentName: "assistant",
-    raw: data,
-  });
-}
+export const artifactEvent = workflowEvent<{
+  type: "artifact";
+  data: Artifact;
+}>();
 
 export type ArtifactType = "code" | "document";
 

@@ -1,3 +1,4 @@
+import { artifactEvent, extractLastArtifact } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -9,11 +10,6 @@ import {
   workflowEvent,
 } from "@llamaindex/workflow";
 
-import {
-  DocumentArtifact,
-  extractLastArtifact,
-  toArtifactEvent,
-} from "@llamaindex/server";
 import { z } from "zod";
 
 export const DocumentRequirementSchema = z.object({
@@ -62,13 +58,10 @@ const uiEvent = workflowEvent<UIEvent>();
 export function workflowFactory(reqBody: any) {
   const llm = Settings.llm;
 
-  const { withState, getContext } = createStatefulMiddleware<{
-    memory: ChatMemoryBuffer;
-    lastArtifact: DocumentArtifact | undefined;
-  }>(() => {
+  const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: undefined,
+      lastArtifact: extractLastArtifact(reqBody?.messages || []),
     };
   });
   const workflow = withState(createWorkflow());
@@ -81,11 +74,11 @@ export function workflowFactory(reqBody: any) {
     if (!userInput) {
       throw new Error("Missing user input to start the workflow");
     }
-    const messages = await state.memory.getMessages();
-    state.lastArtifact = extractLastArtifact(messages, "document");
+    state.memory.set(chatHistory);
+    state.memory.put({ role: "user", content: userInput });
 
     return planEvent.with({
-      userInput: userInput,
+      userInput,
       context: state.lastArtifact
         ? JSON.stringify(state.lastArtifact)
         : undefined,
@@ -244,17 +237,21 @@ export function workflowFactory(reqBody: any) {
           content: `Generated document: \n${response.text}`,
         });
 
-        // Show inline artifact
-        const artifact: DocumentArtifact = {
-          type: "document",
-          created_at: Date.now(),
-          data: {
-            title: requirement.title,
-            content: content,
-            type: docType,
-          },
-        };
-        sendEvent(toArtifactEvent(artifact));
+        // To show the Canvas panel for the artifact
+        sendEvent(
+          artifactEvent.with({
+            type: "artifact",
+            data: {
+              type: "document",
+              created_at: Date.now(),
+              data: {
+                title: requirement.title,
+                content: content,
+                type: docType,
+              },
+            },
+          }),
+        );
       }
 
       return synthesizeAnswerEvent.with({

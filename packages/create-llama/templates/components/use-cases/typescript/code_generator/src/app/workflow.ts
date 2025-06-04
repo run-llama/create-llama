@@ -1,8 +1,4 @@
-import {
-  CodeArtifact,
-  extractLastArtifact,
-  toArtifactEvent,
-} from "@llamaindex/server";
+import { artifactEvent, extractLastArtifact } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -59,13 +55,10 @@ const uiEvent = workflowEvent<UIEvent>();
 export function workflowFactory(reqBody: any) {
   const llm = Settings.llm;
 
-  const { withState, getContext } = createStatefulMiddleware<{
-    memory: ChatMemoryBuffer;
-    lastArtifact: CodeArtifact | undefined;
-  }>(() => {
+  const { withState, getContext } = createStatefulMiddleware(() => {
     return {
       memory: new ChatMemoryBuffer({ llm }),
-      lastArtifact: undefined,
+      lastArtifact: extractLastArtifact(reqBody?.messages || []),
     };
   });
   const workflow = withState(createWorkflow());
@@ -80,9 +73,6 @@ export function workflowFactory(reqBody: any) {
     }
     state.memory.set(chatHistory);
     state.memory.put({ role: "user", content: userInput });
-
-    const messages = await state.memory.getMessages();
-    state.lastArtifact = extractLastArtifact(messages, "code");
 
     return planEvent.with({
       userInput: userInput,
@@ -275,17 +265,21 @@ ${user_msg}
       content: `Updated the code: \n${response.text}`,
     });
 
-    // Show inline artifact
-    const artifact: CodeArtifact = {
-      type: "code",
-      created_at: Date.now(),
-      data: {
-        language: planData.requirement.language || "",
-        file_name: planData.requirement.file_name || "",
-        code,
-      },
-    };
-    sendEvent(toArtifactEvent(artifact));
+    // To show the Canvas panel for the artifact
+    sendEvent(
+      artifactEvent.with({
+        type: "artifact",
+        data: {
+          type: "code",
+          created_at: Date.now(),
+          data: {
+            language: planData.requirement.language || "",
+            file_name: planData.requirement.file_name || "",
+            code,
+          },
+        },
+      }),
+    );
 
     return synthesizeAnswerEvent.with({});
   });

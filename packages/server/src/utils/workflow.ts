@@ -1,4 +1,5 @@
 import {
+  agentStreamEvent,
   agentToolCallEvent,
   agentToolCallResultEvent,
   run,
@@ -15,12 +16,14 @@ import {
   type NodeWithScore,
 } from "llamaindex";
 import {
+  artifactEvent,
   sourceEvent,
   toAgentRunEvent,
   toSourceEvent,
   type SourceEventNode,
 } from "./events";
 import { downloadFile } from "./file";
+import { toInlineAnnotation } from "./inline";
 
 export async function runWorkflow(
   workflow: Workflow,
@@ -73,6 +76,16 @@ function processWorkflowStream(
                 rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[];
               transformedEvent = toSourceEvent(sourceNodes);
             }
+          }
+          // Handle artifact events, transform to agentStreamEvent
+          else if (artifactEvent.include(event)) {
+            const artifactAnnotation = event.data;
+            transformedEvent = agentStreamEvent.with({
+              delta: toInlineAnnotation(artifactAnnotation),
+              response: "",
+              currentAgentName: "assistant",
+              raw: artifactAnnotation,
+            });
           }
           // Post-process for llama-cloud files
           if (sourceEvent.include(transformedEvent)) {
