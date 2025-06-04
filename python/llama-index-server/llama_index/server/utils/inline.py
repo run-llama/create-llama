@@ -4,7 +4,9 @@ from typing import Any, List
 
 from pydantic import ValidationError
 
+from llama_index.core.workflow.events import Event
 from llama_index.server.models.chat import ChatAPIMessage
+from llama_index.core.agent.workflow.workflow_events import AgentStream
 
 INLINE_ANNOTATION_KEY = (
     "annotation"  # the language key to detect inline annotation code in markdown
@@ -64,3 +66,17 @@ def to_inline_annotation(item: dict) -> str:
     ```
     """
     return f"\n```{INLINE_ANNOTATION_KEY}\n{json.dumps(item)}\n```\n"
+
+
+def to_inline_annotation_event(event: Event) -> AgentStream:
+    """
+    Convert an event to an AgentStream with inline annotation format.
+    """
+    event_dict = event.model_dump()
+    return AgentStream(
+        delta=to_inline_annotation(event_dict),
+        response="",
+        current_agent_name="assistant",
+        tool_calls=[],
+        raw=event_dict,
+    )
