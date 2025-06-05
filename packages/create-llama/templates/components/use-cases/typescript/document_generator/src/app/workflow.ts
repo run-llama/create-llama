@@ -1,4 +1,4 @@
-import { extractLastArtifact } from "@llamaindex/server";
+import { artifactEvent, extractLastArtifact } from "@llamaindex/server";
 import { ChatMemoryBuffer, MessageContent, Settings } from "llamaindex";
 
 import {
@@ -54,19 +54,6 @@ const synthesizeAnswerEvent = workflowEvent<{
 }>();
 
 const uiEvent = workflowEvent<UIEvent>();
-
-const artifactEvent = workflowEvent<{
-  type: "artifact";
-  data: {
-    type: "document";
-    created_at: number;
-    data: {
-      title: string;
-      content: string;
-      type: "markdown" | "html";
-    };
-  };
-}>();
 
 export function workflowFactory(reqBody: any) {
   const llm = Settings.llm;
