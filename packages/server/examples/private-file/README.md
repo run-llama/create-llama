@@ -1,0 +1,63 @@
+# Upload File Example
+
+This example shows how to use the uploaded file (private file) from the user in the workflow.
+
+## Prerequisites
+
+Please follow the setup instructions in the [examples README](../README.md).
+
+You will also need:
+
+- An OpenAI API key
+- Text files for processing (the examples are optimized for smaller text files)
+
+## How to get the uploaded files in your workflow:
+
+In LlamaIndexServer, the uploaded file is included in chat message annotations. You can easily get the uploaded files from chat messages using the [extractFileAttachments](https://github.com/llamaindex/llamaindex/blob/main/packages/server/src/utils/chat_attachments.ts) function.
+
+```typescript
+import { extractFileAttachments } from "@llamaindex/server";
+
+const attachments = extractFileAttachments(chatMessages);
+```
+
+### AgentWorkflow
+
+If you are using AgentWorkflow, to provide file access to the agent, you can create a tool to read the file content.
+
+```typescript
+const readFileTool = tool(
+  ({ filePath }) => {
+    return fsPromises.readFile(filePath, "utf8");
+  },
+  {
+    name: "read_file",
+    description: `Use this tool with the file path to read the file content. The available file are: [${files.map((file) => file.path).join(", ")}]`,
+    parameters: z.object({
+      filePath: z.string(),
+    }),
+  },
+);
+```
+
+**Note:**
+
+- You can either put the attachments file information to the tool description or agent's system prompt.
+
+- To avoid showing internal file path to the user, you can use the `getStoredFilePath` function to get the file path from the file id.
+
+  ```typescript
+  import { getStoredFilePath } from "@llamaindex/server";
+
+  const filePath = getStoredFilePath({ id });
+  ```
+
+Check: [agent-workflow.ts](./agent-workflow.ts) for the full example.
+
+### Custom Workflow
+
+In custom workflow, instead of defining a tool, you can use the helper functions (`extractFileAttachments` and `getStoredFilePath`) to work with file attachments in your workflow.
+
+Check: [custom-workflow.ts](./custom-workflow.ts) for the full example.
+
+> To run custom workflow example, update the `index.ts` file to use the `workflowFactory` from `custom-workflow.ts` instead of `agent-workflow.ts`.
