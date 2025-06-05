@@ -378,7 +378,10 @@ class DeepResearchWorkflow(Workflow):
 
         final_response = ""
 
-        if self.stream:
+        from collections.abc import AsyncGenerator
+
+        if isinstance(res, AsyncGenerator):
+            # Handle streaming response (CompletionResponseAsyncGen)
             async for chunk in res:
                 final_response += chunk.delta or ""
                 ctx.write_event_to_stream(
@@ -391,6 +394,7 @@ class DeepResearchWorkflow(Workflow):
                     )
                 )
         else:
+            # Handle non-streaming response (CompletionResponse)
             final_response = res.text
 
         ctx.write_event_to_stream(
