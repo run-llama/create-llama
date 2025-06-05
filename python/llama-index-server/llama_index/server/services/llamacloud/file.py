@@ -8,10 +8,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from fastapi import BackgroundTasks
 from llama_cloud import ManagedIngestionStatus, PipelineFileCreateCustomMetadataValue
-from llama_index.core.schema import NodeWithScore
-from llama_index.server.api.models import SourceNodes
-from llama_index.server.services.llamacloud.index import get_client
 from pydantic import BaseModel
+
+from llama_index.core.schema import NodeWithScore
+from llama_index.server.models.source_nodes import SourceNodes
+from llama_index.server.services.llamacloud.index import get_client
+from llama_index.server.utils import llamacloud
 
 logger = logging.getLogger("uvicorn")
 
@@ -33,7 +35,6 @@ class LlamaCloudFile(BaseModel):
 
 class LlamaCloudFileService:
     LOCAL_STORE_PATH = "output/llamacloud"
-    DOWNLOAD_FILE_NAME_TPL = "{pipeline_id}${filename}"
 
     @classmethod
     def get_all_projects_with_pipelines(cls) -> List[Dict[str, Any]]:
@@ -156,12 +157,11 @@ class LlamaCloudFileService:
         return set(llama_cloud_files)
 
     @classmethod
-    def _get_file_name(cls, name: str, pipeline_id: str) -> str:
-        return cls.DOWNLOAD_FILE_NAME_TPL.format(pipeline_id=pipeline_id, filename=name)
-
-    @classmethod
     def _get_file_path(cls, name: str, pipeline_id: str) -> str:
-        return os.path.join(cls.LOCAL_STORE_PATH, cls._get_file_name(name, pipeline_id))
+        file_name = llamacloud.get_local_file_name(
+            llamacloud_file_name=name, pipeline_id=pipeline_id
+        )
+        return os.path.join(cls.LOCAL_STORE_PATH, file_name)
 
     @classmethod
     def _download_file(cls, url: str, local_file_path: str) -> None:

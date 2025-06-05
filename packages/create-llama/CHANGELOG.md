@@ -1,5 +1,18 @@
 # create-llama
 
+## 0.5.20
+
+### Patch Changes
+
+- 3ff0a18: fix: default header padding
+
+## 0.5.19
+
+### Patch Changes
+
+- 5fe9e17: support eject to fully customize next folder
+- b8a1ff6: Support citation for agentic template (Python)
+
 ## 0.5.18
 
 ### Patch Changes

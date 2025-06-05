@@ -1,7 +1,9 @@
 "use client";
 
-import { SourceData } from "@llamaindex/chat-ui";
-import { Markdown as MarkdownUI } from "@llamaindex/chat-ui/widgets";
+import {
+  Markdown as MarkdownUI,
+  SourceData,
+} from "@llamaindex/chat-ui/widgets";
 import { getConfig } from "../../lib/utils";
 const preprocessMedia = (content: string) => {
   // Remove `sandbox:` from the beginning of the URL before rendering markdown

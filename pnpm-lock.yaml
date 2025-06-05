@@ -181,8 +181,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.1(react@19.1.0))
       '@llamaindex/chat-ui':
-        specifier: 0.4.5
-        version: 0.4.5(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 0.4.9
+        version: 0.4.9(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@llamaindex/env':
         specifier: ~0.1.30
         version: 0.1.30
@@ -1189,8 +1189,8 @@ packages:
       zod:
         optional: true
 
-  '@llamaindex/chat-ui@0.4.5':
-    resolution: {integrity: sha512-LWN+w8vJncbMokSaUDsX7/0iGQoVnT3zSemqHc8FM8WwmWGPQ9RPgxygaxrzZxtQueGJtrGLVYfJJmkMFGiN6w==}
+  '@llamaindex/chat-ui@0.4.9':
+    resolution: {integrity: sha512-KEdydC+aJ22VK/TltxIHlMWbWLfh6I0YkyVd1D/CS3FRfLt8l9jfQ/YjY10MiEd8oc1fFfk6ek/FhVWe9Szstg==}
     peerDependencies:
       react: ^18.2.0 || ^19.0.0 || ^19.0.0-rc
 
@@ -7219,7 +7219,7 @@ snapshots:
       p-retry: 6.2.1
       zod: 3.24.3
 
-  '@llamaindex/chat-ui@0.4.5(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@llamaindex/chat-ui@0.4.9(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.0)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.10)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.36.7)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@codemirror/lang-css': 6.3.1
       '@codemirror/lang-html': 6.4.9

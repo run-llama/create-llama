@@ -2,8 +2,7 @@
 
 import {
   Message,
-  MessageAnnotation,
-  getChatUIAnnotation,
+  getAnnotationData,
   useChatMessage,
   useChatUI,
 } from "@llamaindex/chat-ui";
@@ -21,13 +20,10 @@ export function ToolAnnotations() {
     [messages, message],
   );
   // Get the tool data from the message annotations
-  const annotations = message.annotations as MessageAnnotation[] | undefined;
-  const toolData = annotations
-    ? (getChatUIAnnotation(annotations, "tools") as unknown as ToolData[])
-    : null;
-  return toolData?.[0] ? (
-    <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />
-  ) : null;
+  const toolData = getAnnotationData<ToolData>(message, "tools");
+  if (toolData.length === 0) return null;
+
+  return <ChatTools data={toolData[0]} artifactVersion={artifactVersion} />;
 }
 
 // TODO: Used to render outputs of tools. If needed, add more renderers here.
@@ -83,9 +79,7 @@ function getArtifactVersion(
   if (!messageId) return undefined;
   let versionIndex = 1;
   for (const m of messages) {
-    const toolData = m.annotations
-      ? (getChatUIAnnotation(m.annotations, "tools") as unknown as ToolData[])
-      : null;
+    const toolData = getAnnotationData<ToolData>(m, "tools");
 
     if (toolData?.some((t) => t.toolCall.name === "artifact")) {
       if ("id" in m && m.id === messageId) {

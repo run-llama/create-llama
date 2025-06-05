@@ -7,6 +7,7 @@ build/
 .next/
 out/
 packages/server/server/
+packages/server/project/
 **/playwright-report/
 **/test-results/
 

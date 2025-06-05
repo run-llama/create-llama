@@ -2,7 +2,7 @@ import logging
 import os
 from typing import List, Optional
 
-from llama_index.server.api.models import ComponentDefinition
+from llama_index.server.models.ui import ComponentDefinition
 
 
 class CustomUI:

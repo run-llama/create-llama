@@ -4,7 +4,9 @@ This guide explains how to set up and use the LlamaIndex server with the artifac
 
 ## Prerequisites
 
-- [uv](https://github.com/astral-sh/uv) installed (a fast Python package manager and runner)
+Please follow the setup instructions in the [examples README](../README.md).
+
+You will also need:
 - An OpenAI API key
 
 ## Steps

@@ -8,6 +8,7 @@ LlamaIndexServer is a FastAPI-based application that allows you to quickly launc
 - Built on FastAPI for high performance and easy API development
 - Optional built-in chat UI with extendable UI components
 - Prebuilt development code
+- Human-in-the-loop (HITL) support, check out the [Human-in-the-loop](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/examples/hitl/README.md) documentation for more details.
 
 ## Installation
 

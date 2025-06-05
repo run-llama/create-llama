@@ -14,7 +14,7 @@ from llama_index.core.tools import (
     ToolSelection,
 )
 from llama_index.core.workflow import Context
-from llama_index.server.api.models import AgentRunEvent, AgentRunEventType
+from llama_index.server.models.ui import AgentRunEvent, AgentRunEventType
 from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
 
 logger = logging.getLogger("uvicorn")
