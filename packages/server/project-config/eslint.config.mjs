@@ -18,6 +18,7 @@ const eslintConfig = [
       "react-hooks/exhaustive-deps": "off",
       "@next/next/no-img-element": "off",
       "@next/next/no-assign-module-variable": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
   {
