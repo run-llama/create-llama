@@ -18,7 +18,7 @@ def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:
     Create a tool to read file if the user uploads a file.
     """
     file_ids = []
-    for file in get_file_attachments(chat_request):
+    for file in get_file_attachments(chat_request.messages):
         file_ids.append(file.id)
     if len(file_ids) == 0:
         return None
@@ -29,7 +29,7 @@ def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:
     )
 
     def read_file(file_id: str) -> str:
-        file_path = FileService.get_private_file_path(file_id)
+        file_path = FileService.get_file_path(file_id)
         try:
             with open(file_path, "r") as file:
                 return file.read()
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
         workflow_factory=create_workflow,
         suggest_next_questions=False,
         ui_config=UIConfig(
-            file_upload_enabled=True,
+            enable_file_upload=True,
             component_dir="components",
         ),
     )

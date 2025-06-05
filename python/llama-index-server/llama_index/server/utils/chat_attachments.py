@@ -1,23 +1,26 @@
 from typing import List
 
-from llama_index.server.models.chat import ChatRequest, FileAnnotation, ServerFile
+from llama_index.core.types import MessageRole
+from llama_index.server.models.chat import ChatAPIMessage, FileAnnotation, ServerFile
 
 
-def get_file_attachments(chat_request: ChatRequest) -> List[ServerFile]:
+def get_file_attachments(messages: List[ChatAPIMessage]) -> List[ServerFile]:
     """
-    Extract all file attachments from the chat request.
+    Extract all file attachments from user messages.
 
     Args:
-        chat_request (ChatRequest): The chat request.
+        messages (List[ChatAPIMessage]): The list of messages.
 
     Returns:
-        List[PrivateFile]: The list of private files.
+        List[ServerFile]: The list of private files.
     """
-    message_annotations = [
-        message.annotations for message in chat_request.messages if message.annotations
+    user_message_annotations = [
+        message.annotations
+        for message in messages
+        if message.annotations and message.role == MessageRole.USER
     ]
     files: List[ServerFile] = []
-    for annotation in message_annotations:
+    for annotation in user_message_annotations:
         if isinstance(annotation, list):
             for item in annotation:
                 if isinstance(item, FileAnnotation):

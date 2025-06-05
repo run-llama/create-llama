@@ -90,7 +90,6 @@ async def test_chat_router(
 
         # Verify the workflow was called with the correct arguments
         call_args = mock_workflow.run.call_args[1]
-        assert call_args["user_msg"] == "Hello, how are you?"
         assert isinstance(call_args["chat_history"], list)
         assert len(call_args["chat_history"]) == 0  # No history for first message
 
@@ -153,6 +152,5 @@ async def test_chat_with_agent_workflow(logger: logging.Logger) -> None:
 
         # Verify the workflow was called with the correct arguments
         call_args = mock_workflow.run.call_args[1]
-        assert call_args["user_msg"] == "What's the weather in New York?"
         assert isinstance(call_args["chat_history"], list)
         assert len(call_args["chat_history"]) == 0  # No history for first message

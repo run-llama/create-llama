@@ -1,9 +1,8 @@
 import re
 from typing import Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
-
 from llama_index.core.types import ChatMessage, MessageRole
+from pydantic import BaseModel, Field, field_validator
 
 
 class ServerFile(BaseModel):
@@ -74,6 +73,10 @@ class ChatAPIMessage(BaseModel):
     annotations: Optional[List[Union[FileAnnotation, Any]]] = None
 
     def to_llamaindex_message(self) -> ChatMessage:
+        """
+        Simply convert text content of API message to llama_index's ChatMessage.
+        Annotations are not included.
+        """
         return ChatMessage(role=self.role, content=self.content)
 
     @property

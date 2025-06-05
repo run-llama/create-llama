@@ -8,7 +8,9 @@ export async function storeFile(name: string, fileBuffer: Buffer) {
   const parts = name.split(".");
   const fileName = parts[0];
   const fileExt = parts[1];
-
+  if (!fileName) {
+    throw new Error("File name is required");
+  }
   if (!fileExt) {
     throw new Error("File extension is required");
   }
