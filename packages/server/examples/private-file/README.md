@@ -9,7 +9,14 @@ Please follow the setup instructions in the [examples README](../README.md).
 You will also need:
 
 - An OpenAI API key
-- Text files for processing (the examples are optimized for smaller text files)
+- The `enableFileUpload` option in the `uiConfig` is set to `true`.
+
+```typescript
+new LlamaIndexServer({
+  // ... other options
+  uiConfig: { enableFileUpload: true },
+}).start();
+```
 
 ## How to get the uploaded files in your workflow:
 

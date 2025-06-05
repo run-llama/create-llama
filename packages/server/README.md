@@ -60,6 +60,7 @@ The `LlamaIndexServer` accepts the following configuration options:
 - `workflow`: A callable function that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
+  - `enableFileUpload`: Whether to enable file upload in the chat UI (default: `false`). See [Upload file example](./examples/private-file/README.md) for more details.
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
   - `layoutDir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](#custom-layout) for more details.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
