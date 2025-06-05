@@ -14,7 +14,6 @@ def create_app() -> FastAPI:
                 "Tell me a funny joke",
                 "Tell me some jokes about AI",
             ],
-            file_upload_enabled=True,  # Show the file upload button in the chat UI
             component_dir="components",
             dev_mode=True,  # To show the dev UI, should disable this in production
         ),
