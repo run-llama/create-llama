@@ -1,8 +1,9 @@
 import re
 from typing import Any, List, Literal, Optional, Union
 
-from llama_index.core.types import ChatMessage, MessageRole
 from pydantic import BaseModel, Field, field_validator
+
+from llama_index.core.types import ChatMessage, MessageRole
 
 
 class ServerFile(BaseModel):
@@ -12,9 +13,19 @@ class ServerFile(BaseModel):
     url: Optional[str] = None
     path: Optional[str] = Field(
         default=None,
-        description="The path of the file in the server",
+        description="The path of the file in the server (internal use only)",
         exclude=True,
     )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": "string",
+                "type": "string",
+                "size": 0,
+                "url": "string",
+            }
+        }
 
 
 class FileData(BaseModel):

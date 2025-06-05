@@ -1,9 +1,8 @@
+from code_workflow import ArtifactWorkflow
 from fastapi import FastAPI
 
-from examples.artifact.code_workflow import ArtifactWorkflow
-
 # To use document artifact workflow, uncomment the following line
-# from examples.artifact.document_workflow import ArtifactWorkflow
+# from document_workflow import ArtifactWorkflow
 from llama_index.core.workflow import Workflow
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
