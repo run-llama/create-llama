@@ -1,4 +1,4 @@
-import { toSourceEvent } from "@llamaindex/server";
+import { artifactEvent, toSourceEvent } from "@llamaindex/server";
 import {
   agentStreamEvent,
   createStatefulMiddleware,
@@ -143,19 +143,6 @@ type UIEventData = z.infer<typeof UIEventSchema>;
 const uiEvent = workflowEvent<{
   type: "ui_event";
   data: UIEventData;
-}>();
-
-const artifactEvent = workflowEvent<{
-  type: "artifact";
-  data: {
-    type: "document";
-    created_at: number;
-    data: {
-      title: string;
-      content: string;
-      type: "markdown" | "html";
-    };
-  };
 }>();
 
 // workflow definition
