@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import FastAPI
 
 from llama_index.core.agent.workflow import AgentWorkflow
-from llama_index.core.settings import Settings
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
@@ -47,7 +46,7 @@ def create_workflow(chat_request: ChatRequest) -> AgentWorkflow:
     file_tool = create_file_tool(chat_request)
     return AgentWorkflow.from_tools_or_functions(
         tools_or_functions=[file_tool] if file_tool else [],
-        llm=Settings.llm or OpenAI(model="gpt-4.1-mini"),
+        llm=OpenAI(model="gpt-4.1-mini"),
         system_prompt="You are a helpful assistant that can help users with their uploaded files.",
     )
 
