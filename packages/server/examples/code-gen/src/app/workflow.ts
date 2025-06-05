@@ -52,7 +52,7 @@ const synthesizeAnswerEvent = workflowEvent<object>();
 
 const uiEvent = workflowEvent<UIEvent>();
 
-export function workflowFactory(reqBody: any) {
+export function workflowFactory(reqBody: unknown) {
   const llm = Settings.llm;
 
   const { withState, getContext } = createStatefulMiddleware(() => {

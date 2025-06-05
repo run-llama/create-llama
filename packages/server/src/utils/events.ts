@@ -1,8 +1,13 @@
 import { randomUUID } from "@llamaindex/env";
 import { workflowEvent } from "@llamaindex/workflow";
-import type { Message } from "ai";
-import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
+import {
+  MetadataMode,
+  type ChatMessage,
+  type Metadata,
+  type NodeWithScore,
+} from "llamaindex";
 import { z } from "zod";
+import { getInlineAnnotations } from "./inline";
 
 // Events that appended to stream as annotations
 export type SourceEventNode = {
@@ -148,24 +153,22 @@ export const artifactAnnotationSchema = z.object({
   data: artifactSchema,
 });
 
-export function extractAllArtifacts(messages: Message[]): Artifact[] {
-  const allArtifacts: Artifact[] = [];
+export function extractArtifactsFromMessage(message: ChatMessage): Artifact[] {
+  const inlineAnnotations = getInlineAnnotations(message);
+  const artifacts = inlineAnnotations.filter(
+    (annotation): annotation is z.infer<typeof artifactAnnotationSchema> => {
+      return artifactAnnotationSchema.safeParse(annotation).success;
+    },
+  );
+  return artifacts.map((artifact) => artifact.data);
+}
 
-  for (const message of messages) {
-    const artifacts =
-      message.annotations
-        ?.filter(
-          (
-            annotation,
-          ): annotation is z.infer<typeof artifactAnnotationSchema> =>
-            artifactAnnotationSchema.safeParse(annotation).success,
-        )
-        .map((annotation) => annotation.data as Artifact) ?? [];
-
-    allArtifacts.push(...artifacts);
-  }
-
-  return allArtifacts;
+export function extractArtifactsFromAllMessages(
+  messages: ChatMessage[],
+): Artifact[] {
+  return messages
+    .flatMap((message) => extractArtifactsFromMessage(message))
+    .sort((a, b) => a.created_at - b.created_at);
 }
 
 export function extractLastArtifact(
@@ -187,10 +190,10 @@ export function extractLastArtifact(
   requestBody: unknown,
   type?: ArtifactType,
 ): CodeArtifact | DocumentArtifact | Artifact | undefined {
-  const { messages } = (requestBody as { messages?: Message[] }) ?? {};
+  const { messages } = (requestBody as { messages?: ChatMessage[] }) ?? {};
   if (!messages) return undefined;
 
-  const artifacts = extractAllArtifacts(messages);
+  const artifacts = extractArtifactsFromAllMessages(messages);
   if (!artifacts.length) return undefined;
 
   if (type) {

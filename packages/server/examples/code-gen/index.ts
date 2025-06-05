@@ -10,11 +10,11 @@ Settings.llm = new OpenAI({
 new LlamaIndexServer({
   workflow: workflowFactory,
   uiConfig: {
-    devMode: true,
     starterQuestions: [
-      "What is the weather in Tokyo?",
-      "What is the weather in New York?",
+      "Generate a calculator app",
+      "Create a simple todo list app",
     ],
+    componentsDir: "components",
   },
   port: 3000,
 }).start();
