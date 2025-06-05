@@ -23,7 +23,17 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import ChatRequest, SourceNodesEvent, UIEvent
+from llama_index.server.api.models import (
+    ArtifactEvent,
+    ArtifactType,
+    ChatRequest,
+    SourceNodesEvent,
+    UIEvent,
+    Artifact,
+    DocumentArtifactData,
+)
+import time
+from llama_index.core.agent.workflow.workflow_events import AgentStream
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -365,8 +375,40 @@ class DeepResearchWorkflow(Workflow):
             user_request=self.user_request,
             stream=self.stream,
         )
+
+        final_response = ""
+
+        if self.stream:
+            async for chunk in res:
+                final_response += chunk.delta or ""
+                ctx.write_event_to_stream(
+                    AgentStream(
+                        delta=chunk.delta or "",
+                        response=final_response,
+                        current_agent_name="assistant",
+                        tool_calls=[],
+                        raw=chunk.delta or "",
+                    )
+                )
+        else:
+            final_response = res.text
+
+        ctx.write_event_to_stream(
+            ArtifactEvent(
+                data=Artifact(
+                    type=ArtifactType.DOCUMENT,
+                    created_at=int(time.time()),
+                    data=DocumentArtifactData(
+                        title="DeepResearch Report",
+                        content=final_response,
+                        type="markdown",
+                    ),
+                ),
+            )
+        )
+
         return StopEvent(
-            result=res,
+            result="",
         )
 
 
