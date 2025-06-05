@@ -1,8 +1,9 @@
 from typing import Any
 
 from fastapi import FastAPI
+
 from llama_index.core.agent.workflow.workflow_events import AgentStream
-from llama_index.core.llms import LLM, ChatMessage, DocumentBlock
+from llama_index.core.llms import LLM
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.workflow import (
     Context,
@@ -43,18 +44,18 @@ class FileHelpWorkflow(Workflow):
 
     @step
     async def read_files(self, ctx: Context, ev: StartEvent) -> FileHelpEvent:
-        user_msg: ChatMessage = ev.user_msg
-        # All the uploaded files are included in the user_msg.blocks as DocumentBlock
-        files = [block for block in user_msg.blocks if isinstance(block, DocumentBlock)]
-        if len(files) != 1:
-            raise WorkflowRuntimeError("Please upload only one file")
+        user_msg = ev.user_msg
+        attachments = ev.attachments
+        if len(attachments) != 1:
+            raise WorkflowRuntimeError("Please upload one file to start")
 
-        # Simply call resolve_document() to get the file content
-        file_content = files[0].resolve_document().read().decode("utf-8")
+        # Read the file content
+        with open(attachments[0].path, "r") as f:
+            file_content = f.read()
 
         return FileHelpEvent(
             file_content=file_content,
-            user_request=ev.user_msg.content,
+            user_request=user_msg,
         )
 
     @step

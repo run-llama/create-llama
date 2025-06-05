@@ -18,7 +18,8 @@ class ServerFile(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        exclude_api = {"path"}
+        json_schema_extra = {
             "example": {
                 "id": "string",
                 "type": "string",

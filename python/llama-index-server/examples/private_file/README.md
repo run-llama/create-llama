@@ -15,10 +15,10 @@ You will also need:
 The uploaded file information is included in the annotations of a [ChatAPIMessage](../../llama_index/server/models/chat.py#66). You can manually access it through the `chat_request` parameter in the workflow factory. We already provided a [get_file_attachments](../../llama_index/server/utils/chat_attachments.py) helper function to get the uploaded files from the chat request easier.
 
 ```python
-from llama_index.server.utils.chat_attachments import get_file_attachments
+from llama_index.server.api.utils.chat_attachments import get_file_attachments
 
 def create_workflow(chat_request: ChatRequest) -> Workflow:
-    uploaded_files = get_file_attachments(chat_request)
+    uploaded_files = get_file_attachments(chat_request.messages)
     ...
 ```
 
@@ -36,8 +36,8 @@ Each uploaded file item is a [ServerFile](../../llama_index/server/models/chat.p
       Create a tool to read file if the user uploads a file.
       """
       file_ids = []
-      # Get the uploaded file ids from the chat request
-      for file in get_file_attachments(chat_request):
+      # Get the uploaded file ids from the the chat messages
+      for file in get_file_attachments(chat_request.messages):
          file_ids.append(file.id)
       if len(file_ids) == 0:
          return None
@@ -49,7 +49,7 @@ Each uploaded file item is a [ServerFile](../../llama_index/server/models/chat.p
       )
 
       def read_file(file_id: str) -> str:
-         file_path = FileService.get_private_file_path(file_id)
+         file_path = FileService.get_file_path(file_id)
          try:
                with open(file_path, "r") as file:
                   return file.read()
@@ -73,18 +73,24 @@ Each uploaded file item is a [ServerFile](../../llama_index/server/models/chat.p
      then go to the UI at `http://localhost:8000` and upload the [example.txt](example.txt) file.
 
 ### For custom workflow:
-   - Because the workflow instance is created for each chat request so you can easily use the `get_file_attachments` helper function to get the uploaded files and create a workflow instance with the uploaded files.
+   - The attachments are included in the `attachments` parameter of the `StartEvent` so you can easily access them in the workflow.
 
    ```python
    class MyWorkflow(Workflow):
-      def __init__(
-         self,
-         chat_request: ChatRequest,  # Initial the workflow with the chat request
-         **kwargs: Any,
-      ):
-         super().__init__(**kwargs)
-         # Get the uploaded files from the chat request and stores them in the workflow instance for accessing later
-         self.uploaded_files = get_file_attachments(chat_request)
+      @step
+      async def start_event_handler(self, ctx: Context, ev: StartEvent) -> StopEvent:
+         # Get attachments from the start event
+         attachments = ev.attachments
+         # Do something with the attachments
+         # e.g. read the file content
+         last_file = attachments[-1]
+         if last_file:
+            with open(last_file.path, "r") as f:
+               file_content = f.read()
+            ...
+         # or save it to the context for later use
+         await ctx.set("file_content", file_content)
+         return StopEvent()
    ```
    - Check out the [custom-workflow.py](custom-workflow.py) for more details.
 

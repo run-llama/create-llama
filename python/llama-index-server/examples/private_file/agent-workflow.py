@@ -8,9 +8,9 @@ from llama_index.core.settings import Settings
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
+from llama_index.server.api.utils.chat_attachments import get_file_attachments
 from llama_index.server.models import ChatRequest
 from llama_index.server.services.file import FileService
-from llama_index.server.utils.chat_attachments import get_file_attachments
 
 
 def create_file_tool(chat_request: ChatRequest) -> Optional[FunctionTool]:

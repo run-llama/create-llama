@@ -2,6 +2,7 @@ from typing import List
 
 from llama_index.core.types import MessageRole
 from llama_index.server.models.chat import ChatAPIMessage, FileAnnotation, ServerFile
+from llama_index.server.services.file import FileService
 
 
 def get_file_attachments(messages: List[ChatAPIMessage]) -> List[ServerFile]:
@@ -24,5 +25,7 @@ def get_file_attachments(messages: List[ChatAPIMessage]) -> List[ServerFile]:
         if isinstance(annotation, list):
             for item in annotation:
                 if isinstance(item, FileAnnotation):
+                    for file in item.data.files:
+                        file.path = FileService.get_file_path(file.id)
                     files.extend(item.data.files)
     return files
