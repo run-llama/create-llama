@@ -1,3 +1,4 @@
+import { type FileAnnotation } from "@llamaindex/server";
 import { NextRequest, NextResponse } from "next/server";
 import { storeFile } from "./helpers";
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     const file = await storeFile(name, fileBuffer);
 
-    return NextResponse.json(file);
+    return NextResponse.json(file as FileAnnotation);
   } catch (error) {
     console.error("[Upload API]", error);
     return NextResponse.json(

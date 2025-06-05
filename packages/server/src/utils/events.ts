@@ -3,6 +3,7 @@ import { workflowEvent } from "@llamaindex/workflow";
 import type { Message } from "ai";
 import { MetadataMode, type Metadata, type NodeWithScore } from "llamaindex";
 import { z } from "zod";
+import { getStoredFilePath } from "./file";
 
 // Events that appended to stream as annotations
 export type SourceEventNode = {
@@ -210,4 +211,47 @@ export function extractLastArtifact(
   }
 
   return artifacts[artifacts.length - 1];
+}
+
+export const fileAnnotationSchema = z.object({
+  id: z.string(),
+  size: z.number(),
+  type: z.string(),
+  url: z.string(),
+});
+
+export const documentFileAnnotationSchema = z.object({
+  type: z.literal("document_file"),
+  data: z.object({
+    files: z.array(fileAnnotationSchema),
+  }),
+});
+type DocumentFileAnnotation = z.infer<typeof documentFileAnnotationSchema>;
+
+export type FileAnnotation = z.infer<typeof fileAnnotationSchema>;
+
+export type ServerFile = FileAnnotation & {
+  path: string;
+};
+
+export function extractFileAttachments(messages: Message[]): ServerFile[] {
+  const fileAttachments: ServerFile[] = [];
+
+  for (const message of messages) {
+    if (message.role === "user" && message.annotations) {
+      for (const annotation of message.annotations) {
+        if (documentFileAnnotationSchema.safeParse(annotation).success) {
+          const { data } = annotation as DocumentFileAnnotation;
+          for (const file of data.files) {
+            fileAttachments.push({
+              ...file,
+              path: getStoredFilePath({ id: file.id }),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return fileAttachments;
 }

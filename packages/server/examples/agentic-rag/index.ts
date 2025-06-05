@@ -33,7 +33,6 @@ new LlamaIndexServer({
   suggestNextQuestions: true,
   uiConfig: {
     starterQuestions: ["What is the color of the dog?"],
-    enableFileUpload: true,
   },
   port: 3000,
 }).start();
