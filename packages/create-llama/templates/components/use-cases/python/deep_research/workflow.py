@@ -34,7 +34,7 @@ from llama_index.server.api.models import (
     DocumentArtifactSource,
 )
 import time
-from llama_index.core.agent.workflow.workflow_events import AgentStream
+from llama_index.server.utils.stream import handle_llm_response_stream
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -377,24 +377,7 @@ class DeepResearchWorkflow(Workflow):
             stream=self.stream,
         )
 
-        final_response = ""
-
-        if isinstance(res, AsyncGenerator):
-            # Handle streaming response (CompletionResponseAsyncGen)
-            async for chunk in res:
-                final_response += chunk.delta or ""
-                ctx.write_event_to_stream(
-                    AgentStream(
-                        delta=chunk.delta or "",
-                        response=final_response,
-                        current_agent_name="assistant",
-                        tool_calls=[],
-                        raw=chunk.delta or "",
-                    )
-                )
-        else:
-            # Handle non-streaming response (CompletionResponse)
-            final_response = res.text
+        final_response = await handle_llm_response_stream(res, ctx)
 
         ctx.write_event_to_stream(
             ArtifactEvent(
@@ -407,7 +390,7 @@ class DeepResearchWorkflow(Workflow):
                         type="markdown",
                         sources=[
                             DocumentArtifactSource(
-                                id=NodeWithScore(node=node).node.node_id,
+                                id=node.id_,
                             )
                             for node in self.context_nodes
                         ],
