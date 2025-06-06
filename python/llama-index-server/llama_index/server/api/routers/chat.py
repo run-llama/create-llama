@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
+
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
@@ -25,8 +26,14 @@ from llama_index.server.api.callbacks import (
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
-from llama_index.server.models.chat import ChatRequest
+from llama_index.server.models.chat import (
+    ChatRequest,
+    FileUpload,
+    MessageRole,
+)
+from llama_index.server.models.file import ServerFileResponse
 from llama_index.server.models.hitl import HumanInputEvent
+from llama_index.server.services.file import FileService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 from llama_index.server.services.workflow import HITLWorkflowService
 
@@ -45,7 +52,8 @@ def chat_router(
     ) -> StreamingResponse:
         try:
             last_message = request.messages[-1]
-            user_message = last_message.to_llamaindex_message()
+            if last_message.role != MessageRole.USER:
+                raise ValueError("Last message must be from user")
             chat_history = [
                 message.to_llamaindex_message() for message in request.messages[:-1]
             ]
@@ -67,7 +75,7 @@ def chat_router(
                 workflow_handler = workflow.run(ctx=ctx)
             else:
                 workflow_handler = workflow.run(
-                    user_msg=user_message.content,
+                    user_msg=last_message.content,
                     chat_history=chat_history,
                 )
 
@@ -95,6 +103,21 @@ def chat_router(
             logger.error(e)
             raise HTTPException(status_code=500, detail=str(e))
 
+    # we just simply save the file to the server and don't index it
+    @router.post("/file")
+    async def upload_file(request: FileUpload) -> ServerFileResponse:
+        """
+        Upload a file to the server to be used in the chat session.
+        """
+        try:
+            save_dir = os.path.join("output", "private")
+            content, _ = FileService._preprocess_base64_file(request.base64)
+            file = FileService.save_file(content, request.name, save_dir)
+            return file.to_server_file_response()
+        except Exception:
+            raise HTTPException(status_code=500, detail="Error uploading file")
+
+    # Specific to LlamaCloud
     if LlamaCloudFileService.is_configured():
 
         @router.get("/config/llamacloud")

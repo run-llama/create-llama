@@ -18,6 +18,7 @@ export type UIConfig = {
   layoutDir?: string;
   llamaCloudIndexSelector?: boolean;
   devMode?: boolean;
+  enableFileUpload?: boolean;
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {

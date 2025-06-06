@@ -47,7 +47,7 @@ export class LlamaIndexServer {
     const componentsApi = this.componentsDir ? "/api/components" : undefined;
     const layoutApi = this.layoutDir ? "/api/layout" : undefined;
     const devMode = uiConfig?.devMode ?? false;
-
+    const enableFileUpload = uiConfig?.enableFileUpload ?? false;
     // content in javascript format
     const content = `
       window.LLAMAINDEX = {
@@ -57,7 +57,8 @@ export class LlamaIndexServer {
         COMPONENTS_API: ${JSON.stringify(componentsApi)},
         LAYOUT_API: ${JSON.stringify(layoutApi)},
         DEV_MODE: ${JSON.stringify(devMode)},
-        SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)}
+        SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
+        UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)}
       }
     `;
     fs.writeFileSync(configFile, content);

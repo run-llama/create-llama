@@ -78,6 +78,7 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `ui_config`: UI configuration as a dictionary or UIConfig object with options:
   - `enabled`: Whether to enable the chat UI (default: True)
+  - `enable_file_upload`: Whether to enable file upload in the chat UI (default: False). Check [How to get the uploaded files in your workflow](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/examples/private_file/README.md#how-to-get-the-uploaded-files-in-your-workflow) for more details.
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
@@ -161,6 +162,7 @@ app = LlamaIndexServer(
 The server provides the following default endpoints:
 
 - `/api/chat`: Chat interaction endpoint
+- `/api/chat/file`: File upload endpoint (only available when `enable_file_upload` in `ui_config` is True)
 - `/api/files/data/*`: Access to data directory files
 - `/api/files/output/*`: Access to output directory files
 
