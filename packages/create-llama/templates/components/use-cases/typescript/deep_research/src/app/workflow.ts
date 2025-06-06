@@ -353,7 +353,6 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
             type: "markdown",
             sources: state.contextNodes.map((node) => ({
               id: node.node.id_,
-              score: node.score,
             })),
           },
         },

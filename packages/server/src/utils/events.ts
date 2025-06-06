@@ -108,7 +108,7 @@ export type DocumentArtifactData = {
   title: string;
   content: string;
   type: string; // markdown, html,...
-  sources?: { id: string; score: number }[]; // sources that are used to render citation numbers in the document
+  sources?: { id: string }[]; // sources that are used to render citation numbers in the document
 };
 
 export type CodeArtifact = Artifact<CodeArtifactData> & {
