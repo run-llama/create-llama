@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from typing import List, Literal, Optional, AsyncGenerator
+from typing import List, Literal, Optional
 
 from app.index import get_index
 from llama_index.core.base.llms.types import (
