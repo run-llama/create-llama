@@ -351,6 +351,10 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
             title: "DeepResearch Report",
             content: response,
             type: "markdown",
+            sources: state.contextNodes.map((node) => ({
+              id: node.node.id_,
+              score: node.score,
+            })),
           },
         },
       }),
