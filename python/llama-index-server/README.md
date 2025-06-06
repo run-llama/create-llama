@@ -78,7 +78,7 @@ The LlamaIndexServer accepts the following configuration parameters:
 - `env`: Environment setting ('dev' enables CORS and UI by default)
 - `ui_config`: UI configuration as a dictionary or UIConfig object with options:
   - `enabled`: Whether to enable the chat UI (default: True)
-  - `enable_file_upload`: Whether to enable file upload in the chat UI (default: False)
+  - `enable_file_upload`: Whether to enable file upload in the chat UI (default: False). Check [How to get the uploaded files in your workflow](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/examples/private_file/README.md#how-to-get-the-uploaded-files-in-your-workflow) for more details.
   - `starter_questions`: List of starter questions for the chat UI (default: None)
   - `ui_path`: Path for downloaded UI static files (default: ".ui")
   - `component_dir`: The directory for custom UI components rendering events emitted by the workflow. The default is None, which does not render custom UI components.
@@ -102,7 +102,6 @@ def create_workflow(chat_request: ChatRequest) -> Workflow:
 Your workflow will be executed once for each chat request with the following input parameters are included in workflow's `StartEvent`:
 - `user_msg` [str]: The current user message
 - `chat_history` [list[[ChatMessage](https://docs.llamaindex.ai/en/stable/api_reference/prompts/#llama_index.core.prompts.ChatMessage)]]: All the previous messages of the conversation
-- `attachments` [list[[ServerFile](https://github.com/run-llama/create-llama/blob/main/python/llama-index-server/llama_index/server/models/chat.py#L9)]]: All the uploaded files by the user
 
 Example:
 ```python
@@ -110,7 +109,6 @@ Example:
 def handle_start_event(ev: StartEvent) -> MyNextEvent:
     user_msg = ev.user_msg
     chat_history = ev.chat_history
-    attachments = ev.attachments
     ...
 ```
 

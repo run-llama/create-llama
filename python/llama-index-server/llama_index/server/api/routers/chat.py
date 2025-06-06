@@ -25,7 +25,6 @@ from llama_index.server.api.callbacks import (
     SuggestNextQuestions,
 )
 from llama_index.server.api.callbacks.stream_handler import StreamHandler
-from llama_index.server.api.utils.chat_attachments import get_file_attachments
 from llama_index.server.api.utils.vercel_stream import VercelStreamResponse
 from llama_index.server.models.chat import ChatFile, ChatRequest, MessageRole
 from llama_index.server.models.hitl import HumanInputEvent
@@ -48,7 +47,6 @@ def chat_router(
     ) -> StreamingResponse:
         try:
             last_message = request.messages[-1]
-            attachments = get_file_attachments(request.messages)
             if last_message.role != MessageRole.USER:
                 raise ValueError("Last message must be from user")
             chat_history = [
@@ -74,7 +72,6 @@ def chat_router(
                 workflow_handler = workflow.run(
                     user_msg=last_message.content,
                     chat_history=chat_history,
-                    attachments=attachments,
                 )
 
             callbacks: list[EventCallback] = [
