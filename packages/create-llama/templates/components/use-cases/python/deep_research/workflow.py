@@ -34,7 +34,7 @@ from llama_index.server.api.models import (
     DocumentArtifactSource,
 )
 import time
-from llama_index.server.utils.stream import handle_llm_response_stream
+from llama_index.server.utils.stream import write_response_to_stream
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -377,7 +377,7 @@ class DeepResearchWorkflow(Workflow):
             stream=self.stream,
         )
 
-        final_response = await handle_llm_response_stream(res, ctx)
+        final_response = await write_response_to_stream(res, ctx)
 
         ctx.write_event_to_stream(
             ArtifactEvent(

@@ -7,7 +7,7 @@ from llama_index.core.workflow import Context
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 
 
-async def handle_llm_response_stream(
+async def write_response_to_stream(
     res: Union[CompletionResponse, CompletionResponseAsyncGen],
     ctx: Context,
     current_agent_name: str = "assistant",
@@ -28,16 +28,16 @@ async def handle_llm_response_stream(
     if isinstance(res, AsyncGenerator):
         # Handle streaming response (CompletionResponseAsyncGen)
         async for chunk in res:
-            final_response += chunk.delta or ""
             ctx.write_event_to_stream(
                 AgentStream(
                     delta=chunk.delta or "",
                     response=final_response,
                     current_agent_name=current_agent_name,
                     tool_calls=[],
-                    raw=chunk.delta or "",
+                    raw=chunk.raw or "",
                 )
             )
+            final_response = chunk.text
     else:
         # Handle non-streaming response (CompletionResponse)
         final_response = res.text
