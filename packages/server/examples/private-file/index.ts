@@ -15,7 +15,7 @@ Settings.embedModel = new OpenAIEmbedding({
 
 new LlamaIndexServer({
   workflow: workflowFactory,
-  suggestNextQuestions: true,
+  suggestNextQuestions: false,
   uiConfig: {
     enableFileUpload: true,
   },

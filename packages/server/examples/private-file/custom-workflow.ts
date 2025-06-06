@@ -6,6 +6,7 @@ import {
   createStatefulMiddleware,
   createWorkflow,
   startAgentEvent,
+  stopAgentEvent,
   workflowEvent,
 } from "@llamaindex/workflow";
 import { Message } from "ai";
@@ -90,6 +91,7 @@ ${data.userInput}
         }),
       );
     }
+    sendEvent(stopAgentEvent.with({ result: "" }));
   });
 
   return workflow;
