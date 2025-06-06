@@ -1,9 +1,9 @@
-import { LlamaIndexServer } from "@llamaindex/server";
-// import { workflowFactory } from "./agent-workflow";
-// Uncomment this to use a custom workflow
 import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
+import { LlamaIndexServer } from "@llamaindex/server";
 import { Settings } from "llamaindex";
-import { workflowFactory } from "./custom-workflow";
+import { workflowFactory } from "./agent-workflow";
+// Uncomment this to use a custom workflow
+// import { workflowFactory } from "./custom-workflow";
 
 Settings.llm = new OpenAI({
   model: "gpt-4o-mini",
