@@ -1,4 +1,4 @@
-import { toSourceEvent } from "@llamaindex/server";
+import { artifactEvent, toSourceEvent } from "@llamaindex/server";
 import {
   agentStreamEvent,
   createStatefulMiddleware,
@@ -339,6 +339,26 @@ export function getWorkflow(index: VectorStoreIndex | LlamaCloudIndex) {
         }),
       );
     }
+
+    // Open the generated report in Canvas
+    sendEvent(
+      artifactEvent.with({
+        type: "artifact",
+        data: {
+          type: "document",
+          created_at: Date.now(),
+          data: {
+            title: "DeepResearch Report",
+            content: response,
+            type: "markdown",
+            sources: state.contextNodes.map((node) => ({
+              id: node.node.id_,
+            })),
+          },
+        },
+      }),
+    );
+
     return stopAgentEvent.with({
       result: response,
     });

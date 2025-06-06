@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, AsyncGenerator
 
 from app.index import get_index
 from llama_index.core.base.llms.types import (
@@ -23,7 +23,18 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import ChatRequest, SourceNodesEvent, UIEvent
+from llama_index.server.api.models import (
+    ArtifactEvent,
+    ArtifactType,
+    ChatRequest,
+    SourceNodesEvent,
+    UIEvent,
+    Artifact,
+    DocumentArtifactData,
+    DocumentArtifactSource,
+)
+import time
+from llama_index.server.utils.stream import write_response_to_stream
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
@@ -365,8 +376,31 @@ class DeepResearchWorkflow(Workflow):
             user_request=self.user_request,
             stream=self.stream,
         )
+
+        final_response = await write_response_to_stream(res, ctx)
+
+        ctx.write_event_to_stream(
+            ArtifactEvent(
+                data=Artifact(
+                    type=ArtifactType.DOCUMENT,
+                    created_at=int(time.time()),
+                    data=DocumentArtifactData(
+                        title="DeepResearch Report",
+                        content=final_response,
+                        type="markdown",
+                        sources=[
+                            DocumentArtifactSource(
+                                id=node.id_,
+                            )
+                            for node in self.context_nodes
+                        ],
+                    ),
+                ),
+            )
+        )
+
         return StopEvent(
-            result=res,
+            result="",
         )
 
 
