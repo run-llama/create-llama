@@ -20,7 +20,7 @@ new LlamaIndexServer({
 
 ## How to get the uploaded files in your workflow:
 
-In LlamaIndexServer, the uploaded file is included in chat message annotations. You can easily get the uploaded files from chat messages using the [extractFileAttachments](https://github.com/llamaindex/llamaindex/blob/main/packages/server/src/utils/chat_attachments.ts) function.
+In LlamaIndexServer, the uploaded file is included in chat message annotations. You can easily get the uploaded files from chat messages using the [extractFileAttachments](https://github.com/llamaindex/llamaindex/blob/main/packages/server/src/utils/events.ts) function.
 
 ```typescript
 import { type Message } from "ai";
@@ -47,7 +47,7 @@ const readFileTool = tool(
   },
   {
     name: "read_file",
-    description: `Use this tool with the file id to read the file content. The available file are: [${file_attachments.map((file) => file.id).join(", ")}]`,
+    description: `Use this tool with the file id to read the file content. The available file are: [${attachments.map((file) => file.id).join(", ")}]`,
     parameters: z.object({
       fileId: z.string(),
     }),
