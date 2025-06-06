@@ -407,7 +407,7 @@ class DeepResearchWorkflow(Workflow):
                         type="markdown",
                         sources=[
                             DocumentArtifactSource(
-                                id=node.node.node_id,
+                                id=NodeWithScore(node=node).node.node_id,
                             )
                             for node in self.context_nodes
                         ],
