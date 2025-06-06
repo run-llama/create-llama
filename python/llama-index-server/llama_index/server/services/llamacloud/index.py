@@ -92,14 +92,14 @@ class IndexConfig(BaseModel):
     def from_default(cls, chat_request: Optional[ChatRequest] = None) -> "IndexConfig":
         default_config = cls()
         if chat_request is not None and chat_request.data is not None:
-            llamacloud_config = chat_request.data.get("llamaCloudPipeline")
+            llamacloud_config = chat_request.data.llama_cloud_pipeline
             if llamacloud_config is not None:
-                default_config.llama_cloud_pipeline_config.pipeline = llamacloud_config[
-                    "pipeline"
-                ]
-                default_config.llama_cloud_pipeline_config.project = llamacloud_config[
-                    "project"
-                ]
+                default_config.llama_cloud_pipeline_config.pipeline = (
+                    llamacloud_config.pipeline
+                )
+                default_config.llama_cloud_pipeline_config.project = (
+                    llamacloud_config.project
+                )
         return default_config
 
 

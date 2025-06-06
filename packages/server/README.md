@@ -60,6 +60,7 @@ The `LlamaIndexServer` accepts the following configuration options:
 - `workflow`: A callable function that creates a workflow instance for each request. See [Workflow factory contract](#workflow-factory-contract) for more details.
 - `uiConfig`: An object to configure the chat UI containing the following properties:
   - `starterQuestions`: List of starter questions for the chat UI (default: `[]`)
+  - `enableFileUpload`: Whether to enable file upload in the chat UI (default: `false`). See [Upload file example](./examples/private-file/README.md) for more details.
   - `componentsDir`: The directory for custom UI components rendering events emitted by the workflow. The default is undefined, which does not render custom UI components.
   - `layoutDir`: The directory for custom layout sections. The default value is `layout`. See [Custom Layout](#custom-layout) for more details.
   - `llamaCloudIndexSelector`: Whether to show the LlamaCloud index selector in the chat UI (requires `LLAMA_CLOUD_API_KEY` to be set in the environment variables) (default: `false`)
@@ -71,9 +72,18 @@ See all Nextjs Custom Server options [here](https://nextjs.org/docs/app/building
 
 ## Workflow factory contract
 
-The `workflow` provided will be called for each chat request to initialize a new workflow instance. The contract of the generated workflow must be the same as for the [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow).
+The `workflow` provided will be called for each chat request to initialize a new workflow instance. For advanced use cases, you can define workflowFactory with a chatBody which include list of UI messages in the request body.
 
-This means that the workflow must handle a `startAgentEvent` event, which is the entry point of the workflow and contains the following information in it's `data` property:
+```typescript
+import { type Message } from "ai";
+import { agent } from "@llamaindex/workflow";
+
+const workflowFactory = (chatBody: { messages: Message[] }) => {
+  ...
+};
+```
+
+The contract of the generated workflow must be the same as for the [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow). This means that the workflow must handle a `startAgentEvent` event, which is the entry point of the workflow and contains the following information in it's `data` property:
 
 ```typescript
 {
