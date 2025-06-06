@@ -7,7 +7,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel
 
 from llama_index.core.tools import FunctionTool
-from llama_index.server.models.chat import ServerFile
+from llama_index.server.models.file import ServerFile
 from llama_index.server.services.file import FileService
 
 logger = logging.getLogger("uvicorn")

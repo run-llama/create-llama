@@ -4,29 +4,7 @@ from typing import Any, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 
 from llama_index.core.types import ChatMessage, MessageRole
-
-
-class ServerFile(BaseModel):
-    id: str
-    type: Optional[str] = None
-    size: Optional[int] = None
-    url: Optional[str] = None
-    path: Optional[str] = Field(
-        default=None,
-        description="The path of the file in the server (internal use only)",
-        exclude=True,
-    )
-
-    class Config:
-        exclude_api = {"path"}
-        json_schema_extra = {
-            "example": {
-                "id": "string",
-                "type": "string",
-                "size": 0,
-                "url": "string",
-            }
-        }
+from llama_index.server.models.file import ServerFileResponse
 
 
 class FileData(BaseModel):
@@ -34,7 +12,7 @@ class FileData(BaseModel):
     The data of a file.
     """
 
-    files: List[ServerFile]
+    files: List[ServerFileResponse]
 
 
 class FileAnnotation(BaseModel):
@@ -46,7 +24,7 @@ class FileAnnotation(BaseModel):
     data: FileData
 
 
-class ChatFile(BaseModel):
+class FileUpload(BaseModel):
     """
     The file to be uploaded to the chat.
     """

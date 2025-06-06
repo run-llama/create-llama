@@ -17,7 +17,8 @@ from llama_index.core.workflow import (
 from llama_index.llms.openai import OpenAI
 from llama_index.server import LlamaIndexServer, UIConfig
 from llama_index.server.api.utils.chat_attachments import get_file_attachments
-from llama_index.server.models.chat import ChatRequest, ServerFile
+from llama_index.server.models.chat import ChatRequest
+from llama_index.server.models.file import ServerFile
 
 
 class FileHelpEvent(Event):
@@ -39,21 +40,21 @@ class FileHelpWorkflow(Workflow):
     def __init__(
         self,
         llm: LLM,
-        attachments: List[ServerFile],
+        file_attachments: List[ServerFile],
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
         self.llm = llm
-        self.attachments = attachments
+        self.file_attachments = file_attachments
 
     @step
     async def read_files(self, ctx: Context, ev: StartEvent) -> FileHelpEvent:
         user_msg = ev.user_msg
-        if len(self.attachments) == 0:
+        if len(self.file_attachments) == 0:
             raise WorkflowRuntimeError("Please upload one file to start")
 
         # Read the file content
-        last_file = self.attachments[-1]
+        last_file = self.file_attachments[-1]
         with open(last_file.path, "r") as f:
             file_content = f.read()
 
@@ -96,10 +97,11 @@ class FileHelpWorkflow(Workflow):
 
 
 def create_workflow(chat_request: ChatRequest) -> Workflow:
-    attachments = get_file_attachments(chat_request.messages)
+    # Use get_file_attachments to get the file attachments from the chat messages
+    file_attachments = get_file_attachments(chat_request.messages)
     return FileHelpWorkflow(
         llm=OpenAI(model="gpt-4.1-mini"),
-        attachments=attachments,
+        file_attachments=file_attachments,
     )
 
 

@@ -7,7 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
-from llama_index.server.models.chat import ServerFile
+from llama_index.server.models.file import ServerFile
 from llama_index.server.settings import server_settings
 
 logger = logging.getLogger(__name__)
