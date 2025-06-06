@@ -1,5 +1,13 @@
 # @llamaindex/server
 
+## 0.2.7
+
+### Patch Changes
+
+- af9ad3c: feat: show document artifact after generating report
+- a543a27: feat: bump chat-ui with inline artifact
+- 1ff6eaf: Add support for chat upload file
+
 ## 0.2.6
 
 ### Patch Changes
