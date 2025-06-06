@@ -1,5 +1,17 @@
 # @create-llama/llama-index-server
 
+## 0.1.21
+
+### Patch Changes
+
+- 1ff6eaf: Add support for upload file
+- af9ad3c: feat: show document artifact after generating report
+- a543a27: feat: bump chat-ui with inline artifact
+- Updated dependencies [af9ad3c]
+- Updated dependencies [a543a27]
+- Updated dependencies [1ff6eaf]
+  - @llamaindex/server@0.2.7
+
 ## 0.1.20
 
 ### Patch Changes

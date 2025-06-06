@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.5.21
+
+### Patch Changes
+
+- af9ad3c: feat: show document artifact after generating report
+- a543a27: feat: bump chat-ui with inline artifact
+
 ## 0.5.20
 
 ### Patch Changes
