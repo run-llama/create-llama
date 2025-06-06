@@ -72,9 +72,18 @@ See all Nextjs Custom Server options [here](https://nextjs.org/docs/app/building
 
 ## Workflow factory contract
 
-The `workflow` provided will be called for each chat request to initialize a new workflow instance. The contract of the generated workflow must be the same as for the [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow).
+The `workflow` provided will be called for each chat request to initialize a new workflow instance. For advanced use cases, you can define workflowFactory with a chatBody which include list of UI messages in the request body.
 
-This means that the workflow must handle a `startAgentEvent` event, which is the entry point of the workflow and contains the following information in it's `data` property:
+```typescript
+import { type Message } from "ai";
+import { agent } from "@llamaindex/workflow";
+
+const workflowFactory = (chatBody: { messages: Message[] }) => {
+  ...
+};
+```
+
+The contract of the generated workflow must be the same as for the [Agent Workflow](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflow). This means that the workflow must handle a `startAgentEvent` event, which is the entry point of the workflow and contains the following information in it's `data` property:
 
 ```typescript
 {
