@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from llama_index.core.workflow.events import Event
 from llama_index.server.models.chat import ChatAPIMessage
@@ -21,10 +21,16 @@ class CodeArtifactData(BaseModel):
     language: str
 
 
+class DocumentArtifactSource(BaseModel):
+    id: str
+    # we can add more fields here
+
+
 class DocumentArtifactData(BaseModel):
     title: str
     content: str
     type: Literal["markdown", "html"]
+    sources: Optional[List[DocumentArtifactSource]] = None
 
 
 class Artifact(BaseModel):

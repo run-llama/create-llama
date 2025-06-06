@@ -4,6 +4,7 @@ from llama_index.server.models.artifacts import (
     ArtifactType,
     CodeArtifactData,
     DocumentArtifactData,
+    DocumentArtifactSource,
 )
 from llama_index.server.models.chat import ChatAPIMessage, ChatRequest
 from llama_index.server.models.hitl import HumanInputEvent, HumanResponseEvent
@@ -20,6 +21,7 @@ __all__ = [
     "ArtifactEvent",
     "ArtifactType",
     "DocumentArtifactData",
+    "DocumentArtifactSource",
     "CodeArtifactData",
     "ChatAPIMessage",
     "ChatRequest",

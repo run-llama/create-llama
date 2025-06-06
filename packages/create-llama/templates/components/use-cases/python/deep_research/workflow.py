@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, AsyncGenerator
 
 from app.index import get_index
 from llama_index.core.base.llms.types import (
@@ -31,6 +31,7 @@ from llama_index.server.api.models import (
     UIEvent,
     Artifact,
     DocumentArtifactData,
+    DocumentArtifactSource,
 )
 import time
 from llama_index.core.agent.workflow.workflow_events import AgentStream
@@ -378,8 +379,6 @@ class DeepResearchWorkflow(Workflow):
 
         final_response = ""
 
-        from collections.abc import AsyncGenerator
-
         if isinstance(res, AsyncGenerator):
             # Handle streaming response (CompletionResponseAsyncGen)
             async for chunk in res:
@@ -406,6 +405,12 @@ class DeepResearchWorkflow(Workflow):
                         title="DeepResearch Report",
                         content=final_response,
                         type="markdown",
+                        sources=[
+                            DocumentArtifactSource(
+                                id=node.node.node_id,
+                            )
+                            for node in self.context_nodes
+                        ],
                     ),
                 ),
             )
