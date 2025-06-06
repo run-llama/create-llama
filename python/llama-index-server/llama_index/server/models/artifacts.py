@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from llama_index.core.workflow.events import Event
 from llama_index.server.models.chat import ChatAPIMessage
