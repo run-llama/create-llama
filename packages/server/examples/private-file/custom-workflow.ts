@@ -26,7 +26,7 @@ export function workflowFactory(reqBody: { messages: Message[] }) {
   // First, extract the uploaded file from the messages
   const attachments = extractFileAttachments(reqBody.messages);
 
-  if (attachments.length !== 1) {
+  if (attachments.length === 0) {
     throw new Error("Please upload a file to start");
   }
 
