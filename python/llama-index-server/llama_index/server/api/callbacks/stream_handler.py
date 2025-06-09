@@ -25,6 +25,10 @@ class StreamHandler:
         """Cancel the workflow handler."""
         await self.workflow_handler.cancel_run()
 
+    async def wait_for_completion(self) -> Any:
+        """Wait for the workflow to finish."""
+        await self.workflow_handler
+
     async def stream_events(self) -> AsyncGenerator[Any, None]:
         """Stream events through the processor chain."""
         try:
