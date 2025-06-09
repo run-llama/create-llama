@@ -1,8 +1,13 @@
-import type { AgentInputData } from "@llamaindex/workflow";
+import type { AgentInputData, WorkflowContext } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
 import type { MessageType } from "llamaindex";
 import { type WorkflowFactory } from "../types";
+import {
+  createWorkflowContextFromHumanResponse,
+  getHumanResponseFromMessage,
+  pauseForHumanInput,
+} from "../utils/hitl";
 import {
   parseRequestBody,
   pipeStreamToResponse,
@@ -19,6 +24,7 @@ export const handleChat = async (
   suggestNextQuestions: boolean,
 ) => {
   try {
+    const requestId = req.headers["x-request-id"] as string; // TODO: update for chat route also
     const body = await parseRequestBody(req);
     const { messages } = body as { messages: Message[] };
     const chatHistory = messages.map((message) => ({
@@ -41,14 +47,30 @@ export const handleChat = async (
     res.on("close", () => abortController.abort("Connection closed"));
 
     const workflow = await workflowFactory(body);
+    let context: WorkflowContext;
+
+    // if there is human response, we need to create a workflow context from the human response
+    // otherwise, we can start with empty context
+    const humanResponse = getHumanResponseFromMessage(lastMessage);
+    if (humanResponse) {
+      context = await createWorkflowContextFromHumanResponse(
+        workflow,
+        requestId,
+        humanResponse,
+      );
+    } else {
+      context = workflow.createContext();
+    }
+
     const workflowEventStream = await runWorkflow(
-      workflow,
+      context,
       workflowInput,
       abortController.signal,
     );
 
     const dataStream = toDataStream(workflowEventStream, {
       callbacks: {
+        onPauseForHumanInput: () => pauseForHumanInput(context, requestId),
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,

@@ -5,6 +5,7 @@ import {
   type DataStreamWriter,
   type JSONValue,
 } from "ai";
+import { humanInputEvent, type HumanInputEventData } from "./hitl";
 
 /**
  * Configuration options and helper callback methods for stream lifecycle events.
@@ -24,6 +25,9 @@ export interface StreamCallbacks {
     text: string,
     dataStreamWriter: DataStreamWriter,
   ) => Promise<void> | void;
+
+  /** `onPauseForHumanInput`: Called when human input   event is emitted. */
+  onPauseForHumanInput?: (event: HumanInputEventData) => Promise<void> | void;
 }
 
 /**
@@ -61,6 +65,12 @@ export function toDataStream(
               await callbacks.onText(content, dataStreamWriter);
             }
           }
+        } else if (humanInputEvent.include(event)) {
+          if (callbacks?.onPauseForHumanInput) {
+            await callbacks.onPauseForHumanInput(event.data);
+          }
+          dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
+          break; // break to stop the stream
         } else {
           dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
         }

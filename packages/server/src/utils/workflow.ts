@@ -1,12 +1,11 @@
 import {
   agentToolCallEvent,
   agentToolCallResultEvent,
-  run,
   startAgentEvent,
   stopAgentEvent,
   WorkflowStream,
   type AgentInputData,
-  type Workflow,
+  type WorkflowContext,
   type WorkflowEventData,
 } from "@llamaindex/workflow";
 import {
@@ -25,19 +24,20 @@ import { downloadFile } from "./file";
 import { toInlineAnnotationEvent } from "./inline";
 
 export async function runWorkflow(
-  workflow: Workflow,
+  context: WorkflowContext,
   input: AgentInputData,
   abortSignal?: AbortSignal,
 ): Promise<WorkflowStream<WorkflowEventData<unknown>>> {
   if (!input.userInput) {
     throw new Error("Missing user input to start the workflow");
   }
-  const workflowStream = run(workflow, [
+  context.sendEvent(
     startAgentEvent.with({
       userInput: input.userInput,
       chatHistory: input.chatHistory,
     }),
-  ]);
+  );
+  const workflowStream = context.stream;
 
   // Transform the stream to handle annotations
   return processWorkflowStream(workflowStream).until(
