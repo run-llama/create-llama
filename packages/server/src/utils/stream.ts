@@ -93,7 +93,7 @@ export function toDataStream(
 }
 
 export async function writeResponseToStream(
-  generator: AsyncGenerator<ChatResponseChunk>,
+  generator: AsyncIterable<ChatResponseChunk<object>>,
   sendEvent: (event: WorkflowEventData<unknown>) => void,
 ) {
   let response = "";
@@ -111,12 +111,4 @@ export async function writeResponseToStream(
     }
   }
   return response;
-}
-
-export async function* toAsyncGenerator(
-  iterable: AsyncIterable<ChatResponseChunk<object>>,
-): AsyncGenerator<ChatResponseChunk> {
-  for await (const chunk of iterable) {
-    yield chunk;
-  }
 }
