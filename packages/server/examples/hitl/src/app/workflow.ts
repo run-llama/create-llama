@@ -2,7 +2,6 @@ import { OpenAI } from "@llamaindex/openai";
 import {
   humanInputEvent,
   humanResponseEvent,
-  humanResponseEventSchema,
   writeResponseToStream,
 } from "@llamaindex/server";
 import { chatWithTools } from "@llamaindex/tools";
@@ -15,21 +14,11 @@ import {
   withSnapshot,
 } from "@llamaindex/workflow";
 import { Settings, ToolCallLLM } from "llamaindex";
-import { z } from "zod";
 import { cliExecutor } from "./tools";
 
 Settings.llm = new OpenAI({
   model: "gpt-4o-mini",
 });
-
-export const cliHumanResponseEventSchema = humanResponseEventSchema.extend({
-  data: z.object({
-    execute: z.boolean(),
-    command: z.string(),
-  }),
-});
-
-type CLIHumanResponseEventData = z.infer<typeof cliHumanResponseEventSchema>;
 
 export const workflowFactory = () => {
   const llm = Settings.llm as ToolCallLLM;
@@ -77,15 +66,10 @@ export const workflowFactory = () => {
   });
 
   workflow.handle([humanResponseEvent], async ({ data }) => {
-    const parsedData = cliHumanResponseEventSchema.safeParse(data);
-    if (!parsedData.success) {
-      return stopAgentEvent.with({
-        result: "Invalid input data for human response event",
-      });
-    }
+    // TODO: check data is valid
 
     const { sendEvent } = getContext();
-    const { command, execute } = parsedData.data;
+    const { command, execute } = data.data;
 
     if (!execute) {
       // stop the workflow if user reject to execute the command
@@ -94,7 +78,7 @@ export const workflowFactory = () => {
       });
     }
 
-    const result = await cliExecutor.execute(command);
+    const result = await cliExecutor.call({ command });
     const stream = await llm.chat({
       messages: [
         {
