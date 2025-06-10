@@ -28,7 +28,9 @@ export interface StreamCallbacks {
   ) => Promise<void> | void;
 
   /** `onPauseForHumanInput`: Called when human input event is emitted. */
-  onPauseForHumanInput?: (event: HumanInputEventData) => Promise<void> | void;
+  onPauseForHumanInput?:
+    | ((event: HumanInputEventData) => Promise<void> | void)
+    | undefined;
 }
 
 /**
@@ -70,8 +72,8 @@ export function toDataStream(
           if (callbacks?.onPauseForHumanInput) {
             await callbacks.onPauseForHumanInput(event.data);
           }
-          dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
-          break; // break to stop the stream
+          dataStreamWriter.writeMessageAnnotation(event.data as JSONValue); // show human input in UI
+          return; // stop the stream
         } else {
           dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
         }

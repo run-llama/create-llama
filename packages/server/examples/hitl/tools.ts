@@ -7,7 +7,6 @@ export const cliExecutor = tool({
   description: "This tool executes a command and returns the output.",
   parameters: z.object({ command: z.string() }),
   execute: async ({ command }) => {
-    // TODO: how we can use workflow context here to make sure user has confirmed the command?
     try {
       const output = execSync(command, {
         encoding: "utf-8",

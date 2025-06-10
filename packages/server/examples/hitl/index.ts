@@ -3,11 +3,11 @@ import {
   humanInputEvent,
   humanResponseEvent,
   LlamaIndexServer,
-  toAsyncGenerator,
   writeResponseToStream,
 } from "@llamaindex/server";
 import { chatWithTools } from "@llamaindex/tools";
 import {
+  agentStreamEvent,
   createWorkflow,
   getContext,
   startAgentEvent,
@@ -59,12 +59,10 @@ const workflowFactory = () => {
     const cliExecutorToolCall = toolCallResponse.toolCalls.find(
       (toolCall) => toolCall.name === cliExecutor.metadata.name,
     );
-    if (cliExecutorToolCall?.input?.command) {
-      console.log("cliExecutorToolCall", cliExecutorToolCall?.input?.command);
+    const command = cliExecutorToolCall?.input?.command;
+    if (command) {
       return humanInputEvent.with({
-        data: {
-          command: cliExecutorToolCall.input.command as string,
-        },
+        data: { command },
         type: "cli_human_input",
       });
     }
@@ -75,10 +73,7 @@ const workflowFactory = () => {
 
   workflow.handle([humanResponseEvent], async ({ data }) => {
     const { sendEvent } = getContext();
-
     const { command, execute } = data as CLIHumanResponseEventData;
-
-    console.log("humanResponseEvent", data, command, execute);
 
     if (!command || !execute) {
       // stop the workflow if user reject to execute the command
@@ -87,19 +82,30 @@ const workflowFactory = () => {
       });
     }
 
-    const result = await cliExecutor.call({ command });
     const stream = await llm.chat({
-      // TODO: add other history here
       messages: [
         {
-          role: "assistant",
-          content: `The result of the command "${command}" is ${result}`,
+          role: "user",
+          content: `Execute the command "${command}" and return the result.`,
         },
       ],
+      tools: [cliExecutor],
       stream: true,
     });
-    const generator = toAsyncGenerator(stream);
-    const response = await writeResponseToStream(generator, sendEvent);
+
+    let response = "";
+    for await (const chunk of stream) {
+      response += chunk.delta;
+      sendEvent(
+        agentStreamEvent.with({
+          delta: chunk.delta,
+          response,
+          currentAgentName: "",
+          raw: stream,
+        }),
+      );
+    }
+
     return stopAgentEvent.with({ result: response });
   });
 

@@ -1,12 +1,11 @@
-import type { AgentInputData, WorkflowContext } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
 import type { MessageType } from "llamaindex";
 import { type WorkflowFactory } from "../types";
+import { sendSuggestedQuestionsEvent } from "../utils";
 import {
   getHumanResponsesFromMessage,
   pauseForHumanInput,
-  resumeWorkflowFromHumanResponses,
 } from "../utils/hitl";
 import {
   parseRequestBody,
@@ -14,7 +13,6 @@ import {
   sendJSONResponse,
 } from "../utils/request";
 import { toDataStream } from "../utils/stream";
-import { sendSuggestedQuestionsEvent } from "../utils/suggestion";
 import { runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
@@ -23,8 +21,10 @@ export const handleChat = async (
   workflowFactory: WorkflowFactory,
   suggestNextQuestions: boolean,
 ) => {
+  const abortController = new AbortController();
+  res.on("close", () => abortController.abort("Connection closed"));
+
   try {
-    // const requestId = req.headers["x-request-id"] as string; // TODO: update for chat route also
     const requestId = "test-request-id"; // FIXME: remove this
 
     const body = await parseRequestBody(req);
@@ -35,42 +35,21 @@ export const handleChat = async (
     }));
 
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role !== "user") {
+    if (lastMessage?.role !== "user" || !lastMessage.content) {
       return sendJSONResponse(res, 400, {
         error: "Messages cannot be empty and last message must be from user",
       });
     }
-    const workflowInput: AgentInputData = {
-      userInput: lastMessage.content,
-      chatHistory,
-    };
 
-    const abortController = new AbortController();
-    res.on("close", () => abortController.abort("Connection closed"));
+    const { stream, context } = await runWorkflow({
+      workflow: await workflowFactory(body),
+      input: { userInput: lastMessage.content, chatHistory },
+      humanResponses: getHumanResponsesFromMessage(lastMessage),
+      abortSignal: abortController.signal,
+      requestId,
+    });
 
-    const workflow = await workflowFactory(body);
-    let context: WorkflowContext;
-
-    // if there is human response, we need to resume the workflow from the human response
-    // otherwise, we can start with empty context
-    const humanResponses = getHumanResponsesFromMessage(lastMessage);
-    if (humanResponses.length > 0) {
-      context = await resumeWorkflowFromHumanResponses(
-        workflow,
-        humanResponses,
-        requestId,
-      );
-    } else {
-      context = workflow.createContext();
-    }
-
-    const workflowEventStream = await runWorkflow(
-      context,
-      workflowInput,
-      abortController.signal,
-    );
-
-    const dataStream = toDataStream(workflowEventStream, {
+    const dataStream = toDataStream(stream, {
       callbacks: {
         onPauseForHumanInput: () => pauseForHumanInput(context, requestId),
         onFinal: async (completion, dataStreamWriter) => {

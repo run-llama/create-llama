@@ -5,6 +5,7 @@ import {
   stopAgentEvent,
   WorkflowStream,
   type AgentInputData,
+  type Workflow,
   type WorkflowContext,
   type WorkflowEventData,
 } from "@llamaindex/workflow";
@@ -21,31 +22,56 @@ import {
   type SourceEventNode,
 } from "./events";
 import { downloadFile } from "./file";
+import {
+  resumeWorkflowFromHumanResponses,
+  type HumanResponseData,
+} from "./hitl";
 import { toInlineAnnotationEvent } from "./inline";
 
-export async function runWorkflow(
-  context: WorkflowContext,
-  input: AgentInputData,
-  abortSignal?: AbortSignal,
-): Promise<WorkflowStream<WorkflowEventData<unknown>>> {
-  if (!input.userInput) {
-    throw new Error("Missing user input to start the workflow");
+export async function runWorkflow({
+  workflow,
+  input,
+  humanResponses,
+  requestId,
+  abortSignal,
+}: {
+  workflow: Workflow;
+  input: AgentInputData;
+  humanResponses?: HumanResponseData[];
+  requestId?: string;
+  abortSignal?: AbortSignal;
+}): Promise<{
+  stream: WorkflowStream<WorkflowEventData<unknown>>;
+  context: WorkflowContext;
+}> {
+  let context: WorkflowContext;
+  if (humanResponses?.length) {
+    // resume the workflow if there is human response
+    context = await resumeWorkflowFromHumanResponses(
+      workflow,
+      humanResponses,
+      requestId,
+    );
+  } else {
+    // otherwise, create a new empty context and run the workflow with startAgentEvent
+    context = workflow.createContext();
+    context.sendEvent(
+      startAgentEvent.with({
+        userInput: input.userInput,
+        chatHistory: input.chatHistory,
+      }),
+    );
   }
-  context.sendEvent(
-    startAgentEvent.with({
-      userInput: input.userInput,
-      chatHistory: input.chatHistory,
-    }),
-  );
-  const workflowStream = context.stream;
 
   // Transform the stream to handle annotations
-  return processWorkflowStream(workflowStream).until(
+  const stream = processWorkflowStream(context.stream).until(
     (event) => abortSignal?.aborted || stopAgentEvent.include(event),
   );
+
+  return { stream, context };
 }
 
-function processWorkflowStream(
+export function processWorkflowStream(
   stream: WorkflowStream<WorkflowEventData<unknown>>,
 ) {
   return stream.pipeThrough(

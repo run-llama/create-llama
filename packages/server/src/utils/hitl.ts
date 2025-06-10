@@ -112,8 +112,12 @@ export const getHumanResponsesFromMessage = (
 export const resumeWorkflowFromHumanResponses = async (
   workflow: Workflow, // the workflow to resume
   humanResponses: Array<HumanResponseData>, // human can send multiple responses
-  requestId: string, // TODO: I think it's good if we have requestId inside humanResponses
+  requestId?: string, // TODO: I think it's good if we have requestId inside humanResponses
 ): Promise<SnapshotWorkflowContext> => {
+  if (!requestId) {
+    throw new Error("Request id is required to resume the workflow");
+  }
+
   // check workflow is snapshotable
   const snapshotWorkflow = ensureSnapshotWorkflow(workflow);
 
