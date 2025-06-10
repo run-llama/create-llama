@@ -51,34 +51,21 @@ export const workflowFactory = (body: unknown) => {
 
   const workflow = withSnapshot(withState(createWorkflow()));
 
-  workflow.handle([startAgentEvent], async ({ data }) => {
-    const { sendEvent } = getContext();
-    const { userInput, chatHistory = [] } = data;
+  workflow.handle([startAgentEvent], async () => {
+    const { state } = getContext();
+    const chatHistory = await state.memory.getMessages();
 
-    // Prepare chat history
-    if (!userInput) {
-      throw new Error("Missing user input to start the workflow");
-    }
-
+    // if cli executor is called, emit HumanInputEvent to ask user for permission
     const toolCallResponse = await chatWithTools(
       llm,
       [cliExecutor],
-      chatHistory.concat([{ role: "user", content: userInput }]),
+      chatHistory,
     );
-
-    // if cli executor is called, emit HumanInputEvent to ask user for permission
     const cliExecutorToolCall = toolCallResponse.toolCalls.find(
       (toolCall) => toolCall.name === cliExecutor.metadata.name,
     );
     const command = cliExecutorToolCall?.input?.command;
     if (command) {
-      sendEvent(
-        toAgentRunEvent({
-          agent: "CLI Executor",
-          text: `Execute the command "${command}" and return the result`,
-          type: "text",
-        }),
-      );
       return humanInputEvent.with({
         data: { command },
         type: "cli_human_input",
@@ -90,6 +77,8 @@ export const workflowFactory = (body: unknown) => {
   });
 
   workflow.handle([humanResponseEvent], async ({ data }) => {
+    const { sendEvent } = getContext();
+
     const parsedData = cliHumanInputEventSchema.safeParse(data);
     if (!parsedData.success) {
       throw new Error("Invalid human input event data");
@@ -101,6 +90,13 @@ export const workflowFactory = (body: unknown) => {
       return summaryEvent.with(`User reject to execute the command ${command}`);
     }
 
+    sendEvent(
+      toAgentRunEvent({
+        agent: "CLI Executor",
+        text: `Execute the command "${command}" and return the result`,
+        type: "text",
+      }),
+    );
     const result = (await cliExecutor.call({ command })) as string;
     return summaryEvent.with(
       `Execute the command ${command} and return the result: ${result}`,
@@ -109,7 +105,6 @@ export const workflowFactory = (body: unknown) => {
 
   workflow.handle([summaryEvent], async ({ data: summaryResult }) => {
     const { state, sendEvent } = getContext();
-
     const chatHistory = await state.memory.getMessages();
     const stream = await llm.chat({
       messages: chatHistory.concat([{ role: "user", content: summaryResult }]),
