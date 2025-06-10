@@ -74,11 +74,12 @@ const workflowFactory = () => {
   });
 
   workflow.handle([humanResponseEvent], async ({ data }) => {
-    console.log("humanResponseEvent", data);
     const { sendEvent } = getContext();
 
-    const { command, execute } =
-      (data?.data as CLIHumanResponseEventData) ?? {};
+    const { command, execute } = data as CLIHumanResponseEventData;
+
+    console.log("humanResponseEvent", data, command, execute);
+
     if (!command || !execute) {
       // stop the workflow if user reject to execute the command
       return stopAgentEvent.with({

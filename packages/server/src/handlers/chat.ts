@@ -4,9 +4,9 @@ import { IncomingMessage, ServerResponse } from "http";
 import type { MessageType } from "llamaindex";
 import { type WorkflowFactory } from "../types";
 import {
-  createWorkflowContextFromHumanResponse,
-  getHumanResponseFromMessage,
+  getHumanResponsesFromMessage,
   pauseForHumanInput,
+  resumeWorkflowFromHumanResponses,
 } from "../utils/hitl";
 import {
   parseRequestBody,
@@ -24,7 +24,9 @@ export const handleChat = async (
   suggestNextQuestions: boolean,
 ) => {
   try {
-    const requestId = req.headers["x-request-id"] as string; // TODO: update for chat route also
+    // const requestId = req.headers["x-request-id"] as string; // TODO: update for chat route also
+    const requestId = "test-request-id"; // FIXME: remove this
+
     const body = await parseRequestBody(req);
     const { messages } = body as { messages: Message[] };
     const chatHistory = messages.map((message) => ({
@@ -49,14 +51,14 @@ export const handleChat = async (
     const workflow = await workflowFactory(body);
     let context: WorkflowContext;
 
-    // if there is human response, we need to create a workflow context from the human response
+    // if there is human response, we need to resume the workflow from the human response
     // otherwise, we can start with empty context
-    const humanResponse = getHumanResponseFromMessage(lastMessage);
-    if (humanResponse) {
-      context = await createWorkflowContextFromHumanResponse(
+    const humanResponses = getHumanResponsesFromMessage(lastMessage);
+    if (humanResponses.length > 0) {
+      context = await resumeWorkflowFromHumanResponses(
         workflow,
+        humanResponses,
         requestId,
-        humanResponse,
       );
     } else {
       context = workflow.createContext();

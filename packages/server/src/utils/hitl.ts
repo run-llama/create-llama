@@ -12,9 +12,30 @@ import { z } from "zod";
 
 // @llama-flow doesn't export snapshot types, we need to infer them from the functions
 export type SnapshotWorkflow = ReturnType<typeof withSnapshot<Workflow>>;
+
 export type SnapshotWorkflowContext = ReturnType<
   SnapshotWorkflow["createContext"]
 >;
+
+export function ensureSnapshotWorkflow(workflow: Workflow): SnapshotWorkflow {
+  if (!("resume" in workflow)) {
+    throw new Error(
+      "Workflow is not a snapshot workflow. Please use withSnapshot() to make it snapshotable.",
+    );
+  }
+  return workflow as SnapshotWorkflow;
+}
+
+export function ensureSnapshotWorkflowContext(
+  context: WorkflowContext,
+): SnapshotWorkflowContext {
+  if (!("snapshot" in context)) {
+    throw new Error(
+      "Cannot get snapshot of the workflow. Please use withSnapshot() to make workflow snapshotable.",
+    );
+  }
+  return context as SnapshotWorkflowContext;
+}
 
 export const serializableMemoryMap = new Map<string, any>();
 
@@ -43,74 +64,17 @@ export const humanInputEvent = workflowEvent<HumanInputEventData>();
 // Then render it as a form in UI with https://github.com/rjsf-team/react-jsonschema-form
 // we can call it formInputEvent (same logic as humanInputEvent but useful when requesting multiple inputs)
 
-export type HumanResponseEventData = {
-  data: unknown; // The response data from user
-};
-
 // When user make a response to the input request, workflow will be re-created from the last snapshot
 // and then trigger humanResponseEvent to resume the workflow
-export const humanResponseEvent = workflowEvent<HumanResponseEventData>();
+export const humanResponseEvent = workflowEvent<unknown>();
 
-export const humanResponseAnnotationSchema = z.object({
-  type: z.literal("human_response"),
-  data: z.any(),
-});
-
-export const getHumanResponseFromMessage = (message: Message) => {
-  if (message.annotations) {
-    for (const annotation of message.annotations) {
-      if (humanResponseAnnotationSchema.safeParse(annotation).success) {
-        return (annotation as z.infer<typeof humanResponseAnnotationSchema>)
-          .data;
-      }
-    }
-  }
-  return null;
-};
-
-export const createWorkflowContextFromHumanResponse = async (
-  workflow: Workflow,
-  requestId: string,
-  humanResponse: any,
-): Promise<SnapshotWorkflowContext> => {
-  // check workflow is snapshotable
-  if (!("resume" in workflow)) {
-    // TODO: ensure AgentWorkflow is snapshotable
-    throw new Error(
-      "Workflow is not a snapshot workflow. Please use withSnapshot() to make it snapshotable.",
-    );
-  }
-
-  // if there is no snapshot, we can't resume the workflow
-  const snapshot = await loadSnapshot(requestId);
-  if (!snapshot) {
-    throw new Error("No snapshot found for request id: " + requestId);
-  }
-
-  console.log("humanResponse", humanResponse);
-  console.log("snapshot", snapshot);
-
-  // resume the workflow from the snapshot with human response
-  const context = (workflow as SnapshotWorkflow).resume(
-    [humanResponse],
-    snapshot,
-  );
-
-  return context;
-};
-
+// pause the workflow and save the snapshot
 export const pauseForHumanInput = async (
   context: WorkflowContext,
   requestId: string,
 ) => {
-  if (!("snapshot" in context)) {
-    // check workflow is snapshotable
-    throw new Error(
-      "Cannot get snapshot of the workflow. Please use withSnapshot() to make workflow snapshotable.",
-    );
-  }
-
-  const { snapshot, sendEvent } = context as SnapshotWorkflowContext;
+  const snapshotWorkflowContext = ensureSnapshotWorkflowContext(context);
+  const { snapshot, sendEvent } = snapshotWorkflowContext;
 
   // send a request event to save the missing step (`humanResponseEvent`) to the snapshot
   sendEvent(request(humanResponseEvent));
@@ -118,6 +82,49 @@ export const pauseForHumanInput = async (
   // get and save snapshot
   const [_, snapshotData] = await snapshot();
   await saveSnapshot(requestId, snapshotData);
+};
 
-  console.log("snapshot", snapshotData, requestId);
+export const humanResponseAnnotationSchema = z.object({
+  type: z.literal("human_response"),
+  data: z.any(),
+});
+
+export type HumanResponseAnnotation = z.infer<
+  typeof humanResponseAnnotationSchema
+>;
+
+export type HumanResponseData = HumanResponseAnnotation["data"];
+
+// extract a list of human responses from the message annotations
+export const getHumanResponsesFromMessage = (
+  message: Message,
+): Array<HumanResponseData> => {
+  return (
+    message.annotations
+      ?.filter(
+        (annotation): annotation is HumanResponseAnnotation =>
+          humanResponseAnnotationSchema.safeParse(annotation).success,
+      )
+      .map((annotation) => annotation.data) ?? []
+  );
+};
+
+export const resumeWorkflowFromHumanResponses = async (
+  workflow: Workflow, // the workflow to resume
+  humanResponses: Array<HumanResponseData>, // human can send multiple responses
+  requestId: string, // TODO: I think it's good if we have requestId inside humanResponses
+): Promise<SnapshotWorkflowContext> => {
+  // check workflow is snapshotable
+  const snapshotWorkflow = ensureSnapshotWorkflow(workflow);
+
+  const snapshot = await loadSnapshot(requestId);
+  if (!snapshot) {
+    // if there is no snapshot, we can't resume the workflow
+    throw new Error("No snapshot found for request id: " + requestId);
+  }
+
+  // resume the workflow from the snapshot with human response
+  const context = snapshotWorkflow.resume(humanResponses, snapshot);
+
+  return context;
 };
