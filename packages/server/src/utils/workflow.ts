@@ -24,8 +24,8 @@ import {
 import { downloadFile } from "./file";
 import {
   resumeWorkflowFromHumanResponses,
-  type HumanResponseData,
-} from "./hitl";
+  type HumanResponseEventData,
+} from "./hitl/index";
 import { toInlineAnnotationEvent } from "./inline";
 
 export async function runWorkflow({
@@ -37,7 +37,7 @@ export async function runWorkflow({
 }: {
   workflow: Workflow;
   input: AgentInputData;
-  humanResponses?: HumanResponseData[];
+  humanResponses?: HumanResponseEventData[];
   requestId?: string;
   abortSignal?: AbortSignal;
 }): Promise<{

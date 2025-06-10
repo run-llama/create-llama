@@ -29,10 +29,6 @@ export const handleChat = async (
 
     const body = await parseRequestBody(req);
     const { messages } = body as { messages: Message[] };
-    const chatHistory = messages.map((message) => ({
-      role: message.role as MessageType,
-      content: message.content,
-    }));
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role !== "user" || !lastMessage.content) {
@@ -41,12 +37,17 @@ export const handleChat = async (
       });
     }
 
+    const chatHistory = messages.map((message) => ({
+      role: message.role as MessageType,
+      content: message.content,
+    }));
+
     const { stream, context } = await runWorkflow({
       workflow: await workflowFactory(body),
       input: { userInput: lastMessage.content, chatHistory },
       humanResponses: getHumanResponsesFromMessage(lastMessage),
       abortSignal: abortController.signal,
-      requestId,
+      requestId, // TODO: requestId can be in humanResponses
     });
 
     const dataStream = toDataStream(stream, {

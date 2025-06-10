@@ -6,7 +6,7 @@ import {
   type JSONValue,
 } from "ai";
 import type { ChatResponseChunk } from "llamaindex";
-import { humanInputEvent, type HumanInputEventData } from "./hitl";
+import { humanInputEvent, type HumanInputEventData } from "./hitl/index";
 
 /**
  * Configuration options and helper callback methods for stream lifecycle events.
@@ -72,7 +72,7 @@ export function toDataStream(
           if (callbacks?.onPauseForHumanInput) {
             await callbacks.onPauseForHumanInput(event.data);
           }
-          dataStreamWriter.writeMessageAnnotation(event.data as JSONValue); // show human input in UI
+          dataStreamWriter.writeMessageAnnotation(event.data); // show human input in UI
           return; // stop the stream
         } else {
           dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
