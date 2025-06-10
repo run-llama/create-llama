@@ -5,6 +5,7 @@ import {
   type DataStreamWriter,
   type JSONValue,
 } from "ai";
+import type { ChatResponseChunk } from "llamaindex";
 import { humanInputEvent, type HumanInputEventData } from "./hitl";
 
 /**
@@ -26,7 +27,7 @@ export interface StreamCallbacks {
     dataStreamWriter: DataStreamWriter,
   ) => Promise<void> | void;
 
-  /** `onPauseForHumanInput`: Called when human input   event is emitted. */
+  /** `onPauseForHumanInput`: Called when human input event is emitted. */
   onPauseForHumanInput?: (event: HumanInputEventData) => Promise<void> | void;
 }
 
@@ -87,4 +88,33 @@ export function toDataStream(
         : "An unknown error occurred during stream finalization";
     },
   });
+}
+
+export async function writeResponseToStream(
+  generator: AsyncGenerator<ChatResponseChunk>,
+  sendEvent: (event: WorkflowEventData<unknown>) => void,
+) {
+  let response = "";
+  if (generator) {
+    for await (const chunk of generator) {
+      response += chunk.delta;
+      sendEvent(
+        agentStreamEvent.with({
+          delta: chunk.delta,
+          response,
+          currentAgentName: "LLM",
+          raw: chunk.raw,
+        }),
+      );
+    }
+  }
+  return response;
+}
+
+export async function* toAsyncGenerator(
+  iterable: AsyncIterable<ChatResponseChunk<object>>,
+): AsyncGenerator<ChatResponseChunk> {
+  for await (const chunk of iterable) {
+    yield chunk;
+  }
 }
