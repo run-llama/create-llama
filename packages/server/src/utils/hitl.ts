@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  request,
   withSnapshot,
   workflowEvent,
   type Workflow,
@@ -29,7 +30,7 @@ export const loadSnapshot = async (
 };
 
 export type HumanInputEventData = {
-  event_type: string; // An identifier for the input component in UI
+  type: string; // An identifier for the input component in UI
   data: unknown; // The data to be sent to the input component in UI
 };
 
@@ -86,9 +87,12 @@ export const createWorkflowContextFromHumanResponse = async (
     throw new Error("No snapshot found for request id: " + requestId);
   }
 
+  console.log("humanResponse", humanResponse);
+  console.log("snapshot", snapshot);
+
   // resume the workflow from the snapshot with human response
   const context = (workflow as SnapshotWorkflow).resume(
-    humanResponse,
+    [humanResponse],
     snapshot,
   );
 
@@ -102,12 +106,18 @@ export const pauseForHumanInput = async (
   if (!("snapshot" in context)) {
     // check workflow is snapshotable
     throw new Error(
-      "Cannot get snapshot of the workflow. Please use withSnapshot() to make it snapshotable.",
+      "Cannot get snapshot of the workflow. Please use withSnapshot() to make workflow snapshotable.",
     );
   }
 
-  // save snapshot with the key is requestId
-  const snapshotContext = context as SnapshotWorkflowContext;
-  const snapshot = await snapshotContext.snapshot();
-  await saveSnapshot(requestId, snapshot);
+  const { snapshot, sendEvent } = context as SnapshotWorkflowContext;
+
+  // send a request event to save the missing step (`humanResponseEvent`) to the snapshot
+  sendEvent(request(humanResponseEvent));
+
+  // get and save snapshot
+  const [_, snapshotData] = await snapshot();
+  await saveSnapshot(requestId, snapshotData);
+
+  console.log("snapshot", snapshotData, requestId);
 };
