@@ -8,19 +8,14 @@ import {
 } from "@llamaindex/server";
 import { chatWithTools } from "@llamaindex/tools";
 import {
-  createStatefulMiddleware,
   createWorkflow,
+  getContext,
   startAgentEvent,
   stopAgentEvent,
   withSnapshot,
   workflowEvent,
 } from "@llamaindex/workflow";
-import {
-  ChatMemoryBuffer,
-  ChatMessage,
-  Settings,
-  ToolCallLLM,
-} from "llamaindex";
+import { ChatMessage, Settings, ToolCallLLM } from "llamaindex";
 import { z } from "zod";
 import { cliExecutor } from "./tools";
 
@@ -39,28 +34,19 @@ const summaryEvent = workflowEvent<string>(); // simple event to summarize the r
 
 export const workflowFactory = (body: unknown) => {
   const llm = Settings.llm as ToolCallLLM;
+
   if (!llm.supportToolCall) {
     throw new Error("LLM is not a ToolCallLLM");
   }
 
   const { messages } = body as { messages: ChatMessage[] };
 
-  const { withState, getContext } = createStatefulMiddleware(() => ({
-    memory: new ChatMemoryBuffer({ llm, chatHistory: messages }),
-  }));
-
-  const workflow = withSnapshot(withState(createWorkflow()));
+  const workflow = withSnapshot(createWorkflow());
 
   workflow.handle([startAgentEvent], async () => {
-    const { state } = getContext();
-    const chatHistory = await state.memory.getMessages();
-
+    // in this example, we use chatWithTools to decide should perform a tool call or not
     // if cli executor is called, emit HumanInputEvent to ask user for permission
-    const toolCallResponse = await chatWithTools(
-      llm,
-      [cliExecutor],
-      chatHistory,
-    );
+    const toolCallResponse = await chatWithTools(llm, [cliExecutor], messages);
     const cliExecutorToolCall = toolCallResponse.toolCalls.find(
       (toolCall) => toolCall.name === cliExecutor.metadata.name,
     );
@@ -73,9 +59,10 @@ export const workflowFactory = (body: unknown) => {
     }
 
     // if no tool call, just response as normal
-    return summaryEvent.with("No need to execute any command");
+    return summaryEvent.with("");
   });
 
+  // do actions after getting response from human
   workflow.handle([humanResponseEvent], async ({ data }) => {
     const { sendEvent } = getContext();
 
@@ -97,21 +84,30 @@ export const workflowFactory = (body: unknown) => {
         type: "text",
       }),
     );
+
     const result = (await cliExecutor.call({ command })) as string;
+
     return summaryEvent.with(
       `Execute the command ${command} and return the result: ${result}`,
     );
   });
 
   workflow.handle([summaryEvent], async ({ data: summaryResult }) => {
-    const { state, sendEvent } = getContext();
-    const chatHistory = await state.memory.getMessages();
+    const { sendEvent } = getContext();
+
+    const chatHistory = messages;
+    if (summaryResult) {
+      chatHistory.push({ role: "user", content: summaryResult });
+    }
+
     const stream = await llm.chat({
-      messages: chatHistory.concat([{ role: "user", content: summaryResult }]),
+      messages: chatHistory,
       stream: true,
     });
-    const response = await writeResponseToStream(stream, sendEvent);
-    return stopAgentEvent.with({ result: response });
+
+    const result = await writeResponseToStream(stream, sendEvent);
+
+    return stopAgentEvent.with({ result });
   });
 
   return workflow;

@@ -1,10 +1,11 @@
-import { type AgentInputData } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { type MessageType } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
 
 // import chat utils
 import {
+  getHumanResponsesFromMessage,
+  pauseForHumanInput,
   runWorkflow,
   sendSuggestedQuestionsEvent,
   toDataStream,
@@ -21,7 +22,10 @@ export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const suggestNextQuestions = process.env.SUGGEST_NEXT_QUESTIONS === "true";
 
-    const { messages } = reqBody as { messages: Message[] };
+    const { messages, id: requestId } = reqBody as {
+      messages: Message[];
+      id?: string;
+    };
     const chatHistory = messages.map((message) => ({
       role: message.role as MessageType,
       content: message.content,
@@ -36,25 +40,23 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    const workflowInput: AgentInputData = {
-      userInput: lastMessage.content,
-      chatHistory,
-    };
 
     const abortController = new AbortController();
     req.signal.addEventListener("abort", () =>
       abortController.abort("Connection closed"),
     );
 
-    const workflow = await workflowFactory(reqBody);
-    const workflowEventStream = await runWorkflow(
-      workflow,
-      workflowInput,
-      abortController.signal,
-    );
+    const { stream, context } = await runWorkflow({
+      workflow: await workflowFactory(reqBody),
+      input: { userInput: lastMessage.content, chatHistory },
+      humanResponses: getHumanResponsesFromMessage(lastMessage),
+      abortSignal: abortController.signal,
+      requestId,
+    });
 
-    const dataStream = toDataStream(workflowEventStream, {
+    const dataStream = toDataStream(stream, {
       callbacks: {
+        onPauseForHumanInput: () => pauseForHumanInput(context, requestId),
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,
@@ -66,7 +68,6 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-
     return new Response(dataStream, {
       status: 200,
       headers: {
