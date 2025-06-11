@@ -31,6 +31,7 @@ def chat_request() -> ChatRequest:
 def mock_workflow_handler() -> AsyncMock:
     handler = AsyncMock(spec=WorkflowHandler)
     handler.accumulate_text = MagicMock()
+    handler.wait_for_completion = AsyncMock()
     return handler
 
 

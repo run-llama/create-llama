@@ -195,6 +195,7 @@ async def _stream_content(
                 if not isinstance(event, (AgentInput, AgentSetup)):
                     yield VercelStreamResponse.convert_data(event.model_dump())
 
+        await handler.wait_for_completion()
     except asyncio.CancelledError:
         logger.warning("Client cancelled the request!")
         await handler.cancel_run()
