@@ -45,7 +45,7 @@ export const loadSnapshot = async (
   requestId: string,
 ): Promise<SnapshotData | undefined> => {
   try {
-    const filePath = path.join(CHECKPOINTS_DIR, `${requestId}.json`);
+    const filePath = path.join(SNAPSHOTS_DIR, `${requestId}.json`);
     const data = await fs.readFile(filePath, "utf8");
     return JSON.parse(data);
   } catch (error) {
