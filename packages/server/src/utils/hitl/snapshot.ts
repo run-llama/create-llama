@@ -15,12 +15,12 @@ export type SnapshotData = Awaited<
   ReturnType<SnapshotWorkflowContext["snapshot"]>
 >[1];
 
-const CHECKPOINTS_DIR = path.join("output", "checkpoints");
+const SNAPSHOTS_DIR = path.join("output", "snapshots");
 
 // Ensure the checkpoints directory exists
 const ensureCheckpointsDir = async () => {
   try {
-    await fs.mkdir(CHECKPOINTS_DIR, { recursive: true });
+    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
   } catch (error) {
     console.error("Failed to create checkpoints directory:", error);
   }
@@ -32,7 +32,7 @@ export const saveSnapshot = async (
 ) => {
   try {
     await ensureCheckpointsDir();
-    const filePath = path.join(CHECKPOINTS_DIR, `${requestId}.json`);
+    const filePath = path.join(SNAPSHOTS_DIR, `${requestId}.json`);
     await fs.writeFile(filePath, JSON.stringify(snapshot, null, 2), "utf8");
     console.log(`Snapshot saved to: ${filePath}`);
   } catch (error) {
