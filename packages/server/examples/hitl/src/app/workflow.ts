@@ -88,7 +88,7 @@ export const workflowFactory = (body: unknown) => {
     const result = (await cliExecutor.call({ command })) as string;
 
     return summaryEvent.with(
-      `Execute the command ${command} and return the result: ${result}`,
+      `Executed the command ${command} and got the result: ${result}`,
     );
   });
 
