@@ -30,10 +30,19 @@ export const workflowFactory = (body: unknown) => {
 
   const workflow = withSnapshot(createWorkflow());
 
-  workflow.handle([startAgentEvent], async () => {
+  workflow.handle([startAgentEvent], async ({ data }) => {
+    const { userInput, chatHistory = [] } = data;
+    if (!userInput) {
+      throw new Error("User input is required");
+    }
+
     // in this example, we use chatWithTools to decide should perform a tool call or not
     // if cli executor is called, emit HumanInputEvent to ask user for permission
-    const toolCallResponse = await chatWithTools(llm, [cliExecutor], messages);
+    const toolCallResponse = await chatWithTools(
+      llm,
+      [cliExecutor],
+      chatHistory.concat({ role: "user", content: userInput }),
+    );
     const cliExecutorToolCall = toolCallResponse.toolCalls.find(
       (toolCall) => toolCall.name === cliExecutor.metadata.name,
     );
