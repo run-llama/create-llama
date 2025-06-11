@@ -69,11 +69,12 @@ export function toDataStream(
             }
           }
         } else if (humanInputEvent.include(event)) {
+          dataStreamWriter.writeMessageAnnotation(event.data); // show human input in UI
+
           if (callbacks?.onPauseForHumanInput) {
             await callbacks.onPauseForHumanInput(event.data);
+            return; // stop the stream
           }
-          dataStreamWriter.writeMessageAnnotation(event.data); // show human input in UI
-          return; // stop the stream
         } else {
           dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
         }

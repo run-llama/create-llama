@@ -10,19 +10,15 @@ import {
 export const resumeWorkflowFromHumanResponses = async (
   workflow: Workflow, // the workflow to resume
   humanResponses: Array<HumanResponseEventData>, // human can send multiple responses
-  requestId?: string,
+  snapshotId: string,
 ): Promise<SnapshotWorkflowContext> => {
-  if (!requestId) {
-    throw new Error("Request id is required to resume the workflow");
-  }
-
   // check workflow is snapshotable
   const snapshotWorkflow = ensureSnapshotWorkflow(workflow);
 
-  const snapshot = await loadSnapshot(requestId);
+  const snapshot = await loadSnapshot(snapshotId);
   if (!snapshot) {
     // if there is no snapshot, we can't resume the workflow
-    throw new Error("No snapshot found for request id: " + requestId);
+    throw new Error("No snapshot found for request id: " + snapshotId);
   }
 
   // resume the workflow from the snapshot with human response

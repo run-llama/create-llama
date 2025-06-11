@@ -6,12 +6,14 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getHumanResponsesFromMessage,
   pauseForHumanInput,
+  processWorkflowStream,
   runWorkflow,
   sendSuggestedQuestionsEvent,
   toDataStream,
 } from "./utils";
 
 // import workflow factory and settings from local file
+import { stopAgentEvent } from "@llamaindex/workflow";
 import { initSettings } from "./app/settings";
 import { workflowFactory } from "./app/workflow";
 
@@ -46,17 +48,23 @@ export async function POST(req: NextRequest) {
       abortController.abort("Connection closed"),
     );
 
-    const { stream, context } = await runWorkflow({
+    const context = await runWorkflow({
       workflow: await workflowFactory(reqBody),
       input: { userInput: lastMessage.content, chatHistory },
-      humanResponses: getHumanResponsesFromMessage(lastMessage),
-      abortSignal: abortController.signal,
-      requestId,
+      human: {
+        snapshotId: requestId, // use requestId to restore snapshot
+        responses: getHumanResponsesFromMessage(lastMessage),
+      },
     });
+
+    const stream = processWorkflowStream(context.stream).until(
+      (event) =>
+        abortController.signal.aborted || stopAgentEvent.include(event),
+    );
 
     const dataStream = toDataStream(stream, {
       callbacks: {
-        onPauseForHumanInput: () => pauseForHumanInput(context, requestId),
+        onPauseForHumanInput: () => pauseForHumanInput(context, requestId), // use requestId to save snapshot
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,

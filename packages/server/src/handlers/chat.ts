@@ -1,3 +1,4 @@
+import { stopAgentEvent } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
 import type { MessageType } from "llamaindex";
@@ -13,7 +14,7 @@ import {
   sendJSONResponse,
 } from "../utils/request";
 import { toDataStream } from "../utils/stream";
-import { runWorkflow } from "../utils/workflow";
+import { processWorkflowStream, runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
   req: IncomingMessage,
@@ -43,17 +44,23 @@ export const handleChat = async (
       content: message.content,
     }));
 
-    const { stream, context } = await runWorkflow({
+    const context = await runWorkflow({
       workflow: await workflowFactory(body),
       input: { userInput: lastMessage.content, chatHistory },
-      humanResponses: getHumanResponsesFromMessage(lastMessage),
-      abortSignal: abortController.signal,
-      requestId, // TODO: requestId can be in humanResponses
+      human: {
+        snapshotId: requestId, // use requestId to restore snapshot
+        responses: getHumanResponsesFromMessage(lastMessage),
+      },
     });
+
+    const stream = processWorkflowStream(context.stream).until(
+      (event) =>
+        abortController.signal.aborted || stopAgentEvent.include(event),
+    );
 
     const dataStream = toDataStream(stream, {
       callbacks: {
-        onPauseForHumanInput: () => pauseForHumanInput(context, requestId),
+        onPauseForHumanInput: () => pauseForHumanInput(context, requestId), // use requestId to save snapshot
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,

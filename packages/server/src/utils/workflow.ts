@@ -2,7 +2,6 @@ import {
   agentToolCallEvent,
   agentToolCallResultEvent,
   startAgentEvent,
-  stopAgentEvent,
   WorkflowStream,
   type AgentInputData,
   type Workflow,
@@ -31,26 +30,23 @@ import { toInlineAnnotationEvent } from "./inline";
 export async function runWorkflow({
   workflow,
   input,
-  humanResponses,
-  requestId,
-  abortSignal,
+  human,
 }: {
   workflow: Workflow;
   input: AgentInputData;
-  humanResponses?: HumanResponseEventData[];
-  requestId?: string | undefined;
-  abortSignal?: AbortSignal;
-}): Promise<{
-  stream: WorkflowStream<WorkflowEventData<unknown>>;
-  context: WorkflowContext;
-}> {
+  human?: {
+    snapshotId?: string | undefined; // the snapshot id to restore workflow
+    responses?: HumanResponseEventData[]; // the data from human to trigger events after restoring
+  };
+}): Promise<WorkflowContext> {
   let context: WorkflowContext;
-  if (humanResponses?.length) {
+
+  if (human?.responses?.length && human?.snapshotId) {
     // resume the workflow if there is human response
     context = await resumeWorkflowFromHumanResponses(
       workflow,
-      humanResponses,
-      requestId,
+      human.responses,
+      human.snapshotId,
     );
   } else {
     // otherwise, create a new empty context and run the workflow with startAgentEvent
@@ -63,12 +59,7 @@ export async function runWorkflow({
     );
   }
 
-  // Transform the stream to handle annotations
-  const stream = processWorkflowStream(context.stream).until(
-    (event) => abortSignal?.aborted || stopAgentEvent.include(event),
-  );
-
-  return { stream, context };
+  return context;
 }
 
 export function processWorkflowStream(

@@ -1,16 +1,13 @@
 import { request, type WorkflowContext } from "@llamaindex/workflow";
+import { randomUUID } from "node:crypto";
 import { humanResponseEvent } from "./events";
 import { ensureSnapshotWorkflowContext, saveSnapshot } from "./snapshot";
 
 // pause the workflow and save the snapshot
 export const pauseForHumanInput = async (
   context: WorkflowContext,
-  requestId?: string,
+  requestId: string = randomUUID(), // automatically generate a request id if not provided
 ) => {
-  if (!requestId) {
-    throw new Error("Request id is required to pause the workflow");
-  }
-
   const snapshotWorkflowContext = ensureSnapshotWorkflowContext(context);
   const { snapshot, sendEvent } = snapshotWorkflowContext;
 
