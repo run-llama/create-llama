@@ -10,7 +10,7 @@ import {
 export const resumeWorkflowFromHumanResponses = async (
   workflow: Workflow, // the workflow to resume
   humanResponses: Array<HumanResponseEventData>, // human can send multiple responses
-  requestId?: string, // TODO: I think it's good if we have requestId inside humanResponses
+  requestId?: string,
 ): Promise<SnapshotWorkflowContext> => {
   if (!requestId) {
     throw new Error("Request id is required to resume the workflow");

@@ -5,8 +5,12 @@ import { ensureSnapshotWorkflowContext, saveSnapshot } from "./snapshot";
 // pause the workflow and save the snapshot
 export const pauseForHumanInput = async (
   context: WorkflowContext,
-  requestId: string,
+  requestId?: string,
 ) => {
+  if (!requestId) {
+    throw new Error("Request id is required to pause the workflow");
+  }
+
   const snapshotWorkflowContext = ensureSnapshotWorkflowContext(context);
   const { snapshot, sendEvent } = snapshotWorkflowContext;
 

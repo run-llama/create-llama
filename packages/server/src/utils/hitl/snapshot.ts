@@ -1,27 +1,60 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   withSnapshot,
   type Workflow,
   type WorkflowContext,
 } from "@llamaindex/workflow";
+import { promises as fs } from "fs";
+import path from "path";
 
 // @llama-flow doesn't export snapshot types, we need to infer them from the functions
 export type SnapshotWorkflow = ReturnType<typeof withSnapshot<Workflow>>;
 export type SnapshotWorkflowContext = ReturnType<
   SnapshotWorkflow["createContext"]
 >;
+export type SnapshotData = Awaited<
+  ReturnType<SnapshotWorkflowContext["snapshot"]>
+>[1];
 
-export const serializableMemoryMap = new Map<string, any>(); // TODO: save to file
+const CHECKPOINTS_DIR = path.join("output", "checkpoints");
 
-export const saveSnapshot = async (requestId: string, snapshot: any) => {
-  serializableMemoryMap.set(requestId, snapshot);
+// Ensure the checkpoints directory exists
+const ensureCheckpointsDir = async () => {
+  try {
+    await fs.mkdir(CHECKPOINTS_DIR, { recursive: true });
+  } catch (error) {
+    console.error("Failed to create checkpoints directory:", error);
+  }
+};
+
+export const saveSnapshot = async (
+  requestId: string,
+  snapshot: SnapshotData,
+) => {
+  try {
+    await ensureCheckpointsDir();
+    const filePath = path.join(CHECKPOINTS_DIR, `${requestId}.json`);
+    await fs.writeFile(filePath, JSON.stringify(snapshot, null, 2), "utf8");
+    console.log(`Snapshot saved to: ${filePath}`);
+  } catch (error) {
+    console.error("Failed to save snapshot:", error);
+    throw error;
+  }
 };
 
 export const loadSnapshot = async (
   requestId: string,
-): Promise<any | undefined> => {
-  return serializableMemoryMap.get(requestId);
+): Promise<SnapshotData | undefined> => {
+  try {
+    const filePath = path.join(CHECKPOINTS_DIR, `${requestId}.json`);
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return undefined; // File doesn't exist
+    }
+    console.error("Failed to load snapshot:", error);
+    throw error;
+  }
 };
 
 export function ensureSnapshotWorkflow(workflow: Workflow): SnapshotWorkflow {

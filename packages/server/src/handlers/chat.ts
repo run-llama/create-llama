@@ -25,10 +25,11 @@ export const handleChat = async (
   res.on("close", () => abortController.abort("Connection closed"));
 
   try {
-    const requestId = "test-request-id"; // FIXME: remove this
-
     const body = await parseRequestBody(req);
-    const { messages } = body as { messages: Message[] };
+    const { messages, id: requestId } = body as {
+      messages: Message[];
+      id?: string;
+    };
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role !== "user" || !lastMessage.content) {

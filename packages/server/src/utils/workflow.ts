@@ -38,7 +38,7 @@ export async function runWorkflow({
   workflow: Workflow;
   input: AgentInputData;
   humanResponses?: HumanResponseEventData[];
-  requestId?: string;
+  requestId?: string | undefined;
   abortSignal?: AbortSignal;
 }): Promise<{
   stream: WorkflowStream<WorkflowEventData<unknown>>;
