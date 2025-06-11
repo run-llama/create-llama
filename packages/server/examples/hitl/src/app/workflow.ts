@@ -1,11 +1,5 @@
 import { OpenAI } from "@llamaindex/openai";
-import {
-  humanInputEvent,
-  humanInputEventSchema,
-  humanResponseEvent,
-  toAgentRunEvent,
-  writeResponseToStream,
-} from "@llamaindex/server";
+import { toAgentRunEvent, writeResponseToStream } from "@llamaindex/server";
 import { chatWithTools } from "@llamaindex/tools";
 import {
   createWorkflow,
@@ -16,18 +10,11 @@ import {
   workflowEvent,
 } from "@llamaindex/workflow";
 import { ChatMessage, Settings, ToolCallLLM } from "llamaindex";
-import { z } from "zod";
+import { cliHumanInputEvent, cliHumanResponseEvent } from "./events";
 import { cliExecutor } from "./tools";
 
 Settings.llm = new OpenAI({
   model: "gpt-4o-mini",
-});
-
-const cliHumanInputEventSchema = humanInputEventSchema.extend({
-  data: z.object({
-    execute: z.boolean(),
-    command: z.string(),
-  }),
 });
 
 const summaryEvent = workflowEvent<string>(); // simple event to summarize the result
@@ -50,11 +37,11 @@ export const workflowFactory = (body: unknown) => {
     const cliExecutorToolCall = toolCallResponse.toolCalls.find(
       (toolCall) => toolCall.name === cliExecutor.metadata.name,
     );
-    const command = cliExecutorToolCall?.input?.command;
+    const command = cliExecutorToolCall?.input?.command as string;
     if (command) {
-      return humanInputEvent.with({
-        data: { command },
+      return cliHumanInputEvent.with({
         type: "cli_human_input",
+        data: { command },
       });
     }
 
@@ -63,14 +50,9 @@ export const workflowFactory = (body: unknown) => {
   });
 
   // do actions after getting response from human
-  workflow.handle([humanResponseEvent], async ({ data }) => {
+  workflow.handle([cliHumanResponseEvent], async ({ data }) => {
     const { sendEvent } = getContext();
-
-    const parsedData = cliHumanInputEventSchema.safeParse(data);
-    if (!parsedData.success) {
-      throw new Error("Invalid human input event data");
-    }
-    const { command, execute } = parsedData.data.data;
+    const { command, execute } = data.data;
 
     if (!execute) {
       // stop the workflow if user reject to execute the command
