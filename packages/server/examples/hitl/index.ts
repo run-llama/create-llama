@@ -11,8 +11,8 @@ new LlamaIndexServer({
   workflow: workflowFactory,
   uiConfig: {
     starterQuestions: [
+      "Check status of git in the current directory",
       "List all files in the current directory",
-      "Fetch changes from the remote repository",
     ],
     componentsDir: "components",
   },

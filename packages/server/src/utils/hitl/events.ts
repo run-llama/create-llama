@@ -1,78 +1,64 @@
-import { workflowEvent } from "@llamaindex/workflow";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import {
+  type WorkflowEvent,
+  type WorkflowEventData,
+  workflowEvent,
+} from "@llamaindex/workflow";
 import type { Message } from "ai";
-import { z, ZodSchema } from "zod";
+import z from "zod";
 
-export const humanInputEventSchema = z.object({
-  type: z.string(), // An identifier for the input component in UI
-  data: z.any(), // The data to be sent to the input component in UI
-});
+export type HumanInputEventData = {
+  type: string;
+  data?: any;
+};
 
-export type HumanInputEventData = z.infer<typeof humanInputEventSchema>;
+export const humanInputEvent = workflowBaseEvent<HumanInputEventData>();
 
-export class HumanInputEvent {
-  static event = workflowEvent<HumanInputEventData>();
+export type HumanResponseEventData = {
+  type: "human_response";
+  data?: any;
+};
 
-  static fromSchema = <T extends ZodSchema>(schema: T) => {
-    const originalWith = this.event.with;
-    return Object.assign(this.event, {
-      with: (data: z.infer<T>) => {
-        schema.parse(data);
-        return originalWith(data);
-      },
-    }) as Omit<typeof this.event, "with"> & {
-      with: (
-        data: z.infer<T>,
-      ) => Omit<ReturnType<typeof originalWith>, "data"> & { data: z.infer<T> };
-    };
-  };
-
-  private constructor() {}
-}
-
-// humanInputEvent should be triggered when workflow need to request input from user
-// when it is emitted, workflow snapshot will be saved and stream will be paused
-// then send HumanInputEventData as annotation to UI to render the input form
-export const humanInputEvent = HumanInputEvent.event;
-
-export const humanResponseEventSchema = z.object({
-  type: z.literal("human_response"), // literal type to extract human responses from chat request
-  data: z.any(),
-});
-
-export type HumanResponseEventData = z.infer<typeof humanResponseEventSchema>;
-
-export class HumanResponseEvent {
-  static event = workflowEvent<HumanResponseEventData>();
-
-  static fromSchema = <T extends ZodSchema>(schema: T) => {
-    const originalWith = this.event.with;
-    return Object.assign(this.event, {
-      with: (data: z.infer<T>) => {
-        schema.parse(data);
-        return originalWith(data);
-      },
-    }) as Omit<typeof this.event, "with"> & {
-      with: (
-        data: z.infer<T>,
-      ) => Omit<ReturnType<typeof originalWith>, "data"> & { data: z.infer<T> };
-    };
-  };
-
-  private constructor() {}
-}
-
-// When user make a response to the input request, workflow will be re-created from the last snapshot
-// and then trigger humanResponseEvent to resume the workflow
-export const humanResponseEvent = HumanResponseEvent.event;
+export const humanResponseEvent = workflowBaseEvent<HumanResponseEventData>();
 
 // helper function to extract human responses from message annotations
-export const getHumanResponsesFromMessage = (
-  message: Message,
-): Array<HumanResponseEventData> => {
+export const getHumanResponsesFromMessage = (message: Message) => {
+  const schema = z.object({ type: z.literal("human_response"), data: z.any() });
   return (
     message.annotations?.filter(
-      (annotation): annotation is HumanResponseEventData =>
-        humanResponseEventSchema.safeParse(annotation).success,
+      (annotation): annotation is z.infer<typeof schema> =>
+        schema.safeParse(annotation).success,
     ) ?? []
   );
 };
+// TODO: move to llama-flow package
+export type BaseEvent<K> = (<T extends K>() => WorkflowEvent<T>) &
+  WorkflowEvent<K>;
+
+export function workflowBaseEvent<K = any>(): BaseEvent<K> {
+  const baseEvent = workflowEvent<K>();
+  const derivedEvents = new Set<WorkflowEvent<any>>();
+
+  function eventFn<T>(): WorkflowEvent<T> {
+    const event = workflowEvent<T>();
+    derivedEvents.add(event);
+    return event;
+  }
+
+  const originalInclude = baseEvent.include;
+  const enhancedBaseEvent = Object.assign(baseEvent, {
+    include: (
+      instance: WorkflowEventData<any>,
+    ): instance is WorkflowEventData<void> => {
+      // Base event accepts its own instances OR instances from any derived events
+      return (
+        originalInclude(instance) ||
+        Array.from(derivedEvents).some((e) => e.include(instance))
+      );
+    },
+  });
+
+  return Object.assign(eventFn, enhancedBaseEvent) as typeof eventFn &
+    typeof baseEvent;
+}

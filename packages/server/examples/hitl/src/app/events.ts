@@ -1,21 +1,16 @@
-import { HumanInputEvent, HumanResponseEvent } from "@llamaindex/server";
-import z from "zod";
+import { humanInputEvent, humanResponseEvent } from "@llamaindex/server";
 
-export const cliHumanInputEvent = HumanInputEvent.fromSchema(
-  z.object({
-    type: z.literal("cli_human_input"),
-    data: z.object({
-      command: z.string(),
-    }),
-  }),
-);
+export const cliHumanInputEvent = humanInputEvent<{
+  type: "cli_human_input";
+  data: {
+    command: string;
+  };
+}>();
 
-export const cliHumanResponseEvent = HumanResponseEvent.fromSchema(
-  z.object({
-    type: z.literal("human_response"),
-    data: z.object({
-      execute: z.boolean(),
-      command: z.string(),
-    }),
-  }),
-);
+export const cliHumanResponseEvent = humanResponseEvent<{
+  type: "human_response";
+  data: {
+    execute: boolean;
+    command: string;
+  };
+}>();
