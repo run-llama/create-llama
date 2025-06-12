@@ -1,5 +1,13 @@
 # @create-llama/llama-index-server
 
+## 0.1.22
+
+### Patch Changes
+
+- 66b81e5: fix cannot catch the error raised from the workflow
+- Updated dependencies [e2486eb]
+  - @llamaindex/server@0.2.8
+
 ## 0.1.21
 
 ### Patch Changes

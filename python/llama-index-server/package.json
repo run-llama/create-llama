@@ -1,7 +1,7 @@
 {
   "name": "@create-llama/llama-index-server",
   "private": true,
-  "version": "0.1.21",
+  "version": "0.1.22",
   "type": "module",
   "scripts": {
     "prebuild": "uv run -- scripts/frontend.py --mode copy",
