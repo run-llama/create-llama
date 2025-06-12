@@ -10,5 +10,5 @@
     "outDir": "dist"
   },
   "include": ["**/*"],
-  "exclude": ["node_modules", "dist", "custom-layout/layout"]
+  "exclude": ["node_modules", "dist", "custom-layout/layout", "hitl/components"]
 }
