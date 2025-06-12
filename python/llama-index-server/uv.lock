@@ -1937,7 +1937,7 @@ wheels = [
 
 [[package]]
 name = "llama-index-server"
-version = "0.1.20"
+version = "0.1.21"
 source = { editable = "." }
 dependencies = [
     { name = "cachetools" },
