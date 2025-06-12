@@ -27,7 +27,7 @@ const templateUseCases = [
   "financial_report",
   "deep_research",
   "code_generator",
-  "hitl",
+  // "hitl",
 ];
 const ejectDir = "next";
 
@@ -103,10 +103,10 @@ for (const useCase of templateUseCases) {
       await page.click("form button[type=submit]");
 
       const response = await responsePromise;
+      console.log(`Response status: ${response.status()}`);
 
       if (useCase !== "hitl") {
-        // No need to log response body for HITL use case since it responds immediately without streaming
-        console.log(`Response status: ${response.status()}`);
+        // No need to wait for response body of HITL since it responds immediately without streaming
         const responseBody = await response
           .text()
           .catch((e) => `Error reading body: ${e}`);
