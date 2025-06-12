@@ -99,7 +99,11 @@ async function generateContextData(
         }
       } else {
         console.log(`Running ${runGenerate} to generate the context data.`);
-        if (useCase && !NO_DATA_USE_CASES.includes(useCase)) {
+
+        const shouldRunGenerate =
+          !useCase || !NO_DATA_USE_CASES.includes(useCase);
+
+        if (shouldRunGenerate) {
           await callPackageManager(packageManager, true, ["run", "generate"]);
         }
         return;
