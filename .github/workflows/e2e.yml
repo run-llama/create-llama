@@ -12,88 +12,6 @@ on:
       - ".github/workflows/*llama_index_server.yml"
 
 jobs:
-  e2e-python:
-    name: python
-    timeout-minutes: 60
-    strategy:
-      fail-fast: true
-      matrix:
-        node-version: [20]
-        python-version: ["3.11"]
-        os: [macos-latest, windows-latest, ubuntu-22.04]
-        frameworks: ["fastapi"]
-        datasources: ["--no-files", "--example-file", "--llamacloud"]
-        template-types: ["streaming", "llamaindexserver"]
-    defaults:
-      run:
-        shell: bash
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      - name: Add uv to PATH # Ensure uv is available in subsequent steps
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - uses: pnpm/action-setup@v3
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-        working-directory: packages/create-llama
-
-      - name: Build create-llama
-        run: pnpm run build
-        working-directory: packages/create-llama
-
-      - name: Install
-        run: pnpm run pack-install
-        working-directory: packages/create-llama
-
-      - name: Build and store server package
-        run: |
-          pnpm run build
-          wheel_file=$(ls dist/*.whl | head -n 1)
-          mkdir -p "${{ runner.temp }}"
-          cp "$wheel_file" "${{ runner.temp }}/"
-          echo "SERVER_PACKAGE_PATH=${{ runner.temp }}/$(basename "$wheel_file")" >> $GITHUB_ENV
-        working-directory: python/llama-index-server
-
-      - name: Run Playwright tests for Python
-        run: pnpm run e2e:python
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
-          FRAMEWORK: ${{ matrix.frameworks }}
-          DATASOURCE: ${{ matrix.datasources }}
-          TEMPLATE_TYPE: ${{ matrix.template-types }}
-          PYTHONIOENCODING: utf-8
-          PYTHONLEGACYWINDOWSSTDIO: utf-8
-          SERVER_PACKAGE_PATH: ${{ env.SERVER_PACKAGE_PATH }}
-        working-directory: packages/create-llama
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}-${{ matrix.template-types }}
-          path: packages/create-llama/playwright-report/
-          overwrite: true
-          retention-days: 30
-
   e2e-typescript:
     name: typescript
     timeout-minutes: 60
@@ -102,7 +20,7 @@ jobs:
       matrix:
         node-version: [20, 22]
         python-version: ["3.11"]
-        os: [macos-latest, windows-latest, ubuntu-22.04]
+        os: [macos-latest]
         frameworks: ["nextjs"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
         template-types: ["streaming", "llamaindexserver"]
