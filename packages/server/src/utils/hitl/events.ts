@@ -35,11 +35,7 @@ export const getHumanResponsesFromMessage = (message: Message) => {
 };
 // TODO: move to llama-flow package
 export type BaseEvent<K> = (<T extends K>() => WorkflowEvent<T>) &
-  WorkflowEvent<K> & { children: () => WorkflowEvent<K>[] };
-
-export type BaseEventGet<K> = (
-  instance: WorkflowEventData<any>,
-) => WorkflowEvent<K>;
+  WorkflowEvent<K>;
 
 export function workflowBaseEvent<K = any>(): BaseEvent<K> {
   const baseEvent = workflowEvent<K>();
@@ -62,9 +58,8 @@ export function workflowBaseEvent<K = any>(): BaseEvent<K> {
         Array.from(derivedEvents).some((e) => e.include(instance))
       );
     },
-    children: () => Array.from(derivedEvents),
   });
 
   return Object.assign(eventFn, enhancedBaseEvent) as typeof eventFn &
-    typeof baseEvent & { children: () => WorkflowEvent<K>[] };
+    typeof baseEvent;
 }
