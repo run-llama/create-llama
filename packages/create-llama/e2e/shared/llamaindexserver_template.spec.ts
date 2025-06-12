@@ -21,7 +21,7 @@ const llamaCloudIndexName = "e2e-test";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
-const userMessage = "Write a blog post about physical standards for letters";
+const userMessage = "List all the files in the current directory";
 const templateUseCases = [
   // "agentic_rag",
   // "financial_report",
