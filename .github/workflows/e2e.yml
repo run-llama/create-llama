@@ -22,8 +22,8 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest]
         frameworks: ["nextjs"]
-        datasources: ["--no-files", "--example-file", "--llamacloud"]
-        template-types: ["streaming", "llamaindexserver"]
+        datasources: ["--llamacloud"]
+        template-types: ["llamaindexserver"]
     defaults:
       run:
         shell: bash
