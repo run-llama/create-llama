@@ -31,7 +31,7 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4",
-    "tsx": "^4.19.3",
+    "tsx": "4.7.2",
     "tw-animate-css": "1.2.5",
     "typescript": "^5"
   },
