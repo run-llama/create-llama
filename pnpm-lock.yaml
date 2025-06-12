@@ -187,8 +187,8 @@ importers:
         specifier: ~0.1.30
         version: 0.1.30
       '@llamaindex/workflow':
-        specifier: ~1.1.3
-        version: 1.1.3(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
+        specifier: ~1.1.8
+        version: 1.1.8(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.3
         version: 1.2.8(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -342,7 +342,7 @@ importers:
         version: 7.20.7
       llamaindex:
         specifier: ~0.11.0
-        version: 0.11.1(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.24.3)
+        version: 0.11.1(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.24.3)
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
@@ -381,7 +381,7 @@ importers:
         version: 16.5.0
       llamaindex:
         specifier: ~0.11.0
-        version: 0.11.1(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.13)
+        version: 0.11.1(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.13)
       zod:
         specifier: ^3.24.2
         version: 3.25.13
@@ -1333,8 +1333,8 @@ packages:
   '@lezer/yaml@1.0.3':
     resolution: {integrity: sha512-GuBLekbw9jDBDhGur82nuwkxKQ+a3W5H0GfaAthDXcAu+XdpS43VlnxA9E9hllkpSP5ellRDKjLLj7Lu9Wr6xA==}
 
-  '@llama-flow/core@0.4.1':
-    resolution: {integrity: sha512-xHhJMRmY16C1pYPWIonmLWPkkjTGuj1iVQCTXOM6sXajQ3r0+mEVERQCjPqf48tvX0K+szbdgxjg6wx+KwVqcg==}
+  '@llama-flow/core@0.4.4':
+    resolution: {integrity: sha512-hwK1EQ+atUG/E7XcDV3KsTaA8op29pb8gbpVurpsqbLnGFkdTT4F/6V7Hy1cC2o/yOY+DKc/rxoIsH1uJS0cZg==}
     peerDependencies:
       '@modelcontextprotocol/sdk': ^1.7.0
       hono: ^4.7.4
@@ -1425,10 +1425,10 @@ packages:
       '@llamaindex/env': 0.1.29
       zod: ^3.23.8
 
-  '@llamaindex/workflow@1.1.3':
-    resolution: {integrity: sha512-B9wlN4xMtfbnIQW84wTC0GdyIaLGXYnZ4I0LENV2UM/0wqlXKI7YoBTO3cJvi6pO1sPA+K29Tqw822VsGF+GkA==}
+  '@llamaindex/workflow@1.1.8':
+    resolution: {integrity: sha512-40uy5dWnqqlojq/fjlrIw8ZQOcFmZ2kSrvTyH65vQtypoTP8JWgBSTt3SFTWBUndwijNsfl9VvLh5S9INb0XBQ==}
     peerDependencies:
-      '@llamaindex/core': 0.6.6
+      '@llamaindex/core': 0.6.9
       '@llamaindex/env': 0.1.30
       zod: ^3.23.8
 
@@ -8307,14 +8307,14 @@ snapshots:
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
 
-  '@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)':
+  '@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)':
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.12.1
       next: 15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       p-retry: 6.2.1
       zod: 3.24.3
 
-  '@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13)':
+  '@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13)':
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.12.1
       next: 15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -8373,17 +8373,17 @@ snapshots:
       - supports-color
       - yjs
 
-  '@llamaindex/cloud@4.0.9(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)':
+  '@llamaindex/cloud@4.0.9(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)':
     dependencies:
-      '@llama-flow/core': 0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
+      '@llama-flow/core': 0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
       '@llamaindex/core': 0.6.6
       '@llamaindex/env': 0.1.30
       p-retry: 6.2.1
       zod: 3.25.13
 
-  '@llamaindex/cloud@4.0.9(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)':
+  '@llamaindex/cloud@4.0.9(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)':
     dependencies:
-      '@llama-flow/core': 0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13)
+      '@llama-flow/core': 0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13)
       '@llamaindex/core': 0.6.6
       '@llamaindex/env': 0.1.30
       p-retry: 6.2.1
@@ -8483,9 +8483,9 @@ snapshots:
       '@llamaindex/env': 0.1.30
       zod: 3.25.13
 
-  '@llamaindex/workflow@1.1.3(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)':
+  '@llamaindex/workflow@1.1.8(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)':
     dependencies:
-      '@llama-flow/core': 0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
+      '@llama-flow/core': 0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3)
       '@llamaindex/core': 0.6.6
       '@llamaindex/env': 0.1.30
       zod: 3.24.3
@@ -12310,9 +12310,9 @@ snapshots:
       rfdc: 1.4.1
       wrap-ansi: 9.0.0
 
-  llamaindex@0.11.1(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.24.3):
+  llamaindex@0.11.1(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.24.3):
     dependencies:
-      '@llamaindex/cloud': 4.0.9(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)
+      '@llamaindex/cloud': 4.0.9(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.24.3))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)
       '@llamaindex/core': 0.6.6
       '@llamaindex/env': 0.1.30
       '@llamaindex/node-parser': 2.0.6(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)
@@ -12330,9 +12330,9 @@ snapshots:
       - web-tree-sitter
       - zod
 
-  llamaindex@0.11.1(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.13):
+  llamaindex@0.11.1(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.13):
     dependencies:
-      '@llamaindex/cloud': 4.0.9(@llama-flow/core@0.4.1(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)
+      '@llamaindex/cloud': 4.0.9(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.12.1)(next@15.3.1(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(p-retry@6.2.1)(zod@3.25.13))(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)
       '@llamaindex/core': 0.6.6
       '@llamaindex/env': 0.1.30
       '@llamaindex/node-parser': 2.0.6(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)

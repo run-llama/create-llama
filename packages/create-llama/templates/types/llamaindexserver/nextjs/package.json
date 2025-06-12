@@ -12,7 +12,7 @@
   "dependencies": {
     "@llamaindex/openai": "~0.4.0",
     "@llamaindex/server": "~0.2.1",
-    "@llamaindex/workflow": "~1.1.3",
+    "@llamaindex/workflow": "~1.1.8",
     "@llamaindex/tools": "~0.0.11",
     "llamaindex": "~0.11.0",
     "dotenv": "^16.4.7",
