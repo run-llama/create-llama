@@ -8,6 +8,7 @@ LlamaIndexServer is a Next.js-based application that allows you to quickly launc
 - Edit code and document artifacts in an OpenAI Canvas-style UI
 - Extendable UI components for events and headers
 - Built on Next.js for high performance and easy API development
+- Human-in-the-loop (HITL) support, check out the [Human-in-the-loop](https://github.com/run-llama/create-llama/blob/main/packages/server/examples/hitl/README.md) documentation for more details.
 
 ## Installation
 

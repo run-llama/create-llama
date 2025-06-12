@@ -4,6 +4,7 @@ import path from "path";
 import { bold, cyan, red, yellow } from "picocolors";
 import { assetRelocator, copy } from "../helpers/copy";
 import { callPackageManager } from "../helpers/install";
+import { NO_DATA_USE_CASES } from "./constant";
 import { templatesDir } from "./dir";
 import { PackageManager } from "./get-pkg-manager";
 import { InstallTemplateArgs, ModelProvider, TemplateVectorDB } from "./types";
@@ -83,7 +84,7 @@ const installLlamaIndexServerTemplate = async ({
   }
 
   // Simplify use case code
-  if (useCase === "code_generator" || useCase === "document_generator") {
+  if (useCase && NO_DATA_USE_CASES.includes(useCase)) {
     // Artifact use case doesn't use index.
     // We don't need data.ts, generate.ts
     await fs.rm(path.join(root, "src", "app", "data.ts"));

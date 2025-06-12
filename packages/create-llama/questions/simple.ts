@@ -1,4 +1,5 @@
 import prompts from "prompts";
+import { NO_DATA_USE_CASES } from "../helpers/constant";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
@@ -11,7 +12,8 @@ type AppType =
   | "financial_report"
   | "deep_research"
   | "code_generator"
-  | "document_generator";
+  | "document_generator"
+  | "hitl";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -57,6 +59,12 @@ export const askSimpleQuestions = async (
           value: "document_generator",
           description: "Build a OpenAI canvas-styled document generator.",
         },
+        {
+          title: "Human in the Loop",
+          value: "hitl",
+          description:
+            "Build a CLI command workflow that is reviewed by a human before execution",
+        },
       ],
     },
     questionHandlers,
@@ -81,7 +89,8 @@ export const askSimpleQuestions = async (
   );
   language = newLanguage;
 
-  if (appType !== "code_generator" && appType !== "document_generator") {
+  const shouldAskLlamaCloud = !NO_DATA_USE_CASES.includes(appType);
+  if (shouldAskLlamaCloud) {
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
         type: "toggle",
@@ -165,6 +174,12 @@ const convertAnswers = async (
       modelConfig: MODEL_GPT41,
     },
     document_generator: {
+      template: "llamaindexserver",
+      dataSources: [],
+      tools: [],
+      modelConfig: MODEL_GPT41,
+    },
+    hitl: {
       template: "llamaindexserver",
       dataSources: [],
       tools: [],

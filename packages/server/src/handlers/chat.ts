@@ -1,16 +1,20 @@
-import type { AgentInputData } from "@llamaindex/workflow";
+import { stopAgentEvent } from "@llamaindex/workflow";
 import { type Message } from "ai";
 import { IncomingMessage, ServerResponse } from "http";
 import type { MessageType } from "llamaindex";
 import { type WorkflowFactory } from "../types";
+import { sendSuggestedQuestionsEvent } from "../utils";
+import {
+  getHumanResponsesFromMessage,
+  pauseForHumanInput,
+} from "../utils/hitl";
 import {
   parseRequestBody,
   pipeStreamToResponse,
   sendJSONResponse,
 } from "../utils/request";
 import { toDataStream } from "../utils/stream";
-import { sendSuggestedQuestionsEvent } from "../utils/suggestion";
-import { runWorkflow } from "../utils/workflow";
+import { processWorkflowStream, runWorkflow } from "../utils/workflow";
 
 export const handleChat = async (
   req: IncomingMessage,
@@ -18,37 +22,47 @@ export const handleChat = async (
   workflowFactory: WorkflowFactory,
   suggestNextQuestions: boolean,
 ) => {
+  const abortController = new AbortController();
+  res.on("close", () => abortController.abort("Connection closed"));
+
   try {
     const body = await parseRequestBody(req);
-    const { messages } = body as { messages: Message[] };
+    const { messages, id: requestId } = body as {
+      messages: Message[];
+      id?: string;
+    };
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role !== "user" || !lastMessage.content) {
+      return sendJSONResponse(res, 400, {
+        error: "Messages cannot be empty and last message must be from user",
+      });
+    }
+
     const chatHistory = messages.map((message) => ({
       role: message.role as MessageType,
       content: message.content,
     }));
 
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role !== "user") {
-      return sendJSONResponse(res, 400, {
-        error: "Messages cannot be empty and last message must be from user",
-      });
-    }
-    const workflowInput: AgentInputData = {
-      userInput: lastMessage.content,
-      chatHistory,
-    };
+    const context = await runWorkflow({
+      workflow: await workflowFactory(body),
+      input: { userInput: lastMessage.content, chatHistory },
+      human: {
+        snapshotId: requestId, // use requestId to restore snapshot
+        responses: getHumanResponsesFromMessage(lastMessage),
+      },
+    });
 
-    const abortController = new AbortController();
-    res.on("close", () => abortController.abort("Connection closed"));
-
-    const workflow = await workflowFactory(body);
-    const workflowEventStream = await runWorkflow(
-      workflow,
-      workflowInput,
-      abortController.signal,
+    const stream = processWorkflowStream(context.stream).until(
+      (event) =>
+        abortController.signal.aborted || stopAgentEvent.include(event),
     );
 
-    const dataStream = toDataStream(workflowEventStream, {
+    const dataStream = toDataStream(stream, {
       callbacks: {
+        onPauseForHumanInput: async (responseEvent) => {
+          await pauseForHumanInput(context, responseEvent, requestId); // use requestId to save snapshot
+        },
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,

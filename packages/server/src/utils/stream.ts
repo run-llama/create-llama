@@ -1,10 +1,16 @@
-import { agentStreamEvent, type WorkflowEventData } from "@llamaindex/workflow";
+import {
+  agentStreamEvent,
+  type WorkflowEvent,
+  type WorkflowEventData,
+} from "@llamaindex/workflow";
 import {
   createDataStream,
   formatDataStreamPart,
   type DataStreamWriter,
   type JSONValue,
 } from "ai";
+import type { ChatResponseChunk } from "llamaindex";
+import { humanInputEvent, type HumanResponseEventData } from "./hitl";
 
 /**
  * Configuration options and helper callback methods for stream lifecycle events.
@@ -24,6 +30,11 @@ export interface StreamCallbacks {
     text: string,
     dataStreamWriter: DataStreamWriter,
   ) => Promise<void> | void;
+
+  /** `onPauseForHumanInput`: Called when human input event is emitted. */
+  onPauseForHumanInput?:
+    | ((event: WorkflowEvent<HumanResponseEventData>) => Promise<void> | void)
+    | undefined;
 }
 
 /**
@@ -61,6 +72,14 @@ export function toDataStream(
               await callbacks.onText(content, dataStreamWriter);
             }
           }
+        } else if (humanInputEvent.include(event)) {
+          const { response, ...rest } = event.data;
+          dataStreamWriter.writeMessageAnnotation(rest); // show human input in UI
+
+          if (callbacks?.onPauseForHumanInput) {
+            await callbacks.onPauseForHumanInput(response);
+            return; // stop the stream
+          }
         } else {
           dataStreamWriter.writeMessageAnnotation(event.data as JSONValue);
         }
@@ -77,4 +96,25 @@ export function toDataStream(
         : "An unknown error occurred during stream finalization";
     },
   });
+}
+
+export async function writeResponseToStream(
+  generator: AsyncIterable<ChatResponseChunk<object>>,
+  sendEvent: (event: WorkflowEventData<unknown>) => void,
+) {
+  let response = "";
+  if (generator) {
+    for await (const chunk of generator) {
+      response += chunk.delta;
+      sendEvent(
+        agentStreamEvent.with({
+          delta: chunk.delta,
+          response,
+          currentAgentName: "LLM",
+          raw: chunk.raw,
+        }),
+      );
+    }
+  }
+  return response;
 }

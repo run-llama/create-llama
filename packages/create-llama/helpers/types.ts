@@ -59,7 +59,8 @@ export type TemplateUseCase =
   | "contract_review"
   | "agentic_rag"
   | "code_generator"
-  | "document_generator";
+  | "document_generator"
+  | "hitl";
 // Config for both file and folder
 export type FileSourceConfig =
   | {

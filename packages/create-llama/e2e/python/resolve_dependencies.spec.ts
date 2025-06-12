@@ -20,6 +20,7 @@ const useCases: TemplateUseCase[] = [
   "financial_report",
   "code_generator",
   "document_generator",
+  "hitl",
 ];
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
