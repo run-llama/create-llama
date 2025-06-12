@@ -90,6 +90,7 @@ for (const useCase of templateUseCases) {
         templatePostInstallAction !== "runApp" ||
           useCase === "financial_report" ||
           useCase === "deep_research" ||
+          useCase === "hitl" ||
           templateFramework === "express",
         "Skip chat tests for financial report and deep research.",
       );
