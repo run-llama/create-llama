@@ -22,8 +22,8 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest]
         frameworks: ["fastapi"]
-        datasources: ["--example-file"]
-        template-types: ["llamaindexserver"]
+        datasources: ["--no-files", "--example-file", "--llamacloud"]
+        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -100,12 +100,12 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [20]
+        node-version: [22]
         python-version: ["3.11"]
         os: [macos-latest]
         frameworks: ["nextjs"]
-        datasources: ["--example-file"]
-        template-types: ["llamaindexserver"]
+        datasources: ["--no-files", "--example-file", "--llamacloud"]
+        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
