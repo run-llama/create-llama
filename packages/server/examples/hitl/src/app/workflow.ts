@@ -51,6 +51,7 @@ export const workflowFactory = (body: unknown) => {
       return cliHumanInputEvent.with({
         type: "cli_human_input",
         data: { command },
+        response: cliHumanResponseEvent,
       });
     }
 
@@ -64,10 +65,8 @@ export const workflowFactory = (body: unknown) => {
     const { command, execute } = data.data;
 
     if (!execute) {
-      // stop the workflow if user rejects to execute the command
-      return summaryEvent.with(
-        `User rejected to execute the command ${command}`,
-      );
+      // stop the workflow if user reject to execute the command
+      return summaryEvent.with(`User reject to execute the command ${command}`);
     }
 
     sendEvent(

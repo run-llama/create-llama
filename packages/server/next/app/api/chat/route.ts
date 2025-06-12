@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
 
     const dataStream = toDataStream(stream, {
       callbacks: {
-        onPauseForHumanInput: () => pauseForHumanInput(context, requestId), // use requestId to save snapshot
+        onPauseForHumanInput: async (responseEvent) => {
+          await pauseForHumanInput(context, responseEvent, requestId); // use requestId to save snapshot
+        },
         onFinal: async (completion, dataStreamWriter) => {
           chatHistory.push({
             role: "assistant" as MessageType,

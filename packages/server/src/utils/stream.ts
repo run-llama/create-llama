@@ -1,4 +1,8 @@
-import { agentStreamEvent, type WorkflowEventData } from "@llamaindex/workflow";
+import {
+  agentStreamEvent,
+  type WorkflowEvent,
+  type WorkflowEventData,
+} from "@llamaindex/workflow";
 import {
   createDataStream,
   formatDataStreamPart,
@@ -6,7 +10,7 @@ import {
   type JSONValue,
 } from "ai";
 import type { ChatResponseChunk } from "llamaindex";
-import { humanInputEvent, type HumanInputEventData } from "./hitl/index";
+import { humanInputEvent, type HumanResponseEventData } from "./hitl";
 
 /**
  * Configuration options and helper callback methods for stream lifecycle events.
@@ -29,7 +33,7 @@ export interface StreamCallbacks {
 
   /** `onPauseForHumanInput`: Called when human input event is emitted. */
   onPauseForHumanInput?:
-    | ((event: HumanInputEventData) => Promise<void> | void)
+    | ((event: WorkflowEvent<HumanResponseEventData>) => Promise<void> | void)
     | undefined;
 }
 
@@ -69,10 +73,11 @@ export function toDataStream(
             }
           }
         } else if (humanInputEvent.include(event)) {
-          dataStreamWriter.writeMessageAnnotation(event.data); // show human input in UI
+          const { response, ...rest } = event.data;
+          dataStreamWriter.writeMessageAnnotation(rest); // show human input in UI
 
           if (callbacks?.onPauseForHumanInput) {
-            await callbacks.onPauseForHumanInput(event.data);
+            await callbacks.onPauseForHumanInput(response);
             return; // stop the stream
           }
         } else {
