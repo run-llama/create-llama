@@ -85,7 +85,7 @@ test.describe("Test resolve TS dependencies", () => {
           });
         });
         // Skipping llamacloud for the use case doesn't use index.
-        if (!NO_DATA_USE_CASES.includes(useCase)) {
+        if (!useCase || !NO_DATA_USE_CASES.includes(useCase)) {
           test(`llamaParse - ${optionDescription}`, async () => {
             await runTest({
               templateType: templateType,
