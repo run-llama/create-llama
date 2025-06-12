@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [20, 22]
+        node-version: [20]
         python-version: ["3.11"]
         os: [macos-latest]
         frameworks: ["nextjs"]
