@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
+import { NO_DATA_USE_CASES } from "../../helpers/constant";
 import {
   TemplateFramework,
   TemplateType,
@@ -25,6 +26,7 @@ const useCases: TemplateUseCase[] = [
   "financial_report",
   "code_generator",
   "document_generator",
+  "hitl",
 ];
 const dataSource: string = process.env.DATASOURCE
   ? process.env.DATASOURCE
@@ -83,7 +85,7 @@ test.describe("Test resolve TS dependencies", () => {
           });
         });
         // Skipping llamacloud for the use case doesn't use index.
-        if (useCase !== "code_generator" && useCase !== "document_generator") {
+        if (!NO_DATA_USE_CASES.includes(useCase)) {
           test(`llamaParse - ${optionDescription}`, async () => {
             await runTest({
               templateType: templateType,

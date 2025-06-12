@@ -4,6 +4,7 @@ import path from "path";
 import picocolors, { cyan } from "picocolors";
 
 import fsExtra from "fs-extra";
+import { NO_DATA_USE_CASES } from "./constant";
 import { writeLoadersConfig } from "./datasources";
 import { createBackendEnvFile, createFrontendEnvFile } from "./env-variables";
 import { PackageManager } from "./get-pkg-manager";
@@ -98,10 +99,7 @@ async function generateContextData(
         }
       } else {
         console.log(`Running ${runGenerate} to generate the context data.`);
-        const shouldRunGenerate =
-          useCase !== "code_generator" && useCase !== "document_generator"; // Artifact use case doesn't use index.
-
-        if (shouldRunGenerate) {
+        if (useCase && !NO_DATA_USE_CASES.includes(useCase)) {
           await callPackageManager(packageManager, true, ["run", "generate"]);
         }
         return;

@@ -27,6 +27,7 @@ const templateUseCases = [
   "financial_report",
   "deep_research",
   "code_generator",
+  "hitl",
 ];
 const ejectDir = "next";
 
