@@ -2,5 +2,5 @@ This example demonstrates human in the loop workflow. Export OpenAI API key and 
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
-npx nodemon --exec tsx index.ts
+npx nodemon --exec tsx index.ts --ignore output/*
 ```
