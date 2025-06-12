@@ -1,5 +1,11 @@
 # @llamaindex/server
 
+## 0.2.8
+
+### Patch Changes
+
+- e2486eb: feat: support human in the loop for TS
+
 ## 0.2.7
 
 ### Patch Changes
