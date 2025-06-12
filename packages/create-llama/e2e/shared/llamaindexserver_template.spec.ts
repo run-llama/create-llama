@@ -21,12 +21,12 @@ const llamaCloudIndexName = "e2e-test";
 const templateUI: TemplateUI = "shadcn";
 const templatePostInstallAction: TemplatePostInstallAction = "runApp";
 const appType: AppType = "--frontend";
-const userMessage = "List all the files in the current directory";
+const userMessage = "Write a blog post about physical standards for letters";
 const templateUseCases = [
-  // "agentic_rag",
-  // "financial_report",
-  // "deep_research",
-  // "code_generator",
+  "agentic_rag",
+  "financial_report",
+  "deep_research",
+  "code_generator",
   "hitl",
 ];
 const ejectDir = "next";
@@ -103,11 +103,15 @@ for (const useCase of templateUseCases) {
       await page.click("form button[type=submit]");
 
       const response = await responsePromise;
-      console.log(`Response status: ${response.status()}`);
-      const responseBody = await response
-        .text()
-        .catch((e) => `Error reading body: ${e}`);
-      console.log(`Response body: ${responseBody}`);
+
+      if (useCase !== "hitl") {
+        // No need to log response body for HITL use case since it responds immediately without streaming
+        console.log(`Response status: ${response.status()}`);
+        const responseBody = await response
+          .text()
+          .catch((e) => `Error reading body: ${e}`);
+        console.log(`Response body: ${responseBody}`);
+      }
 
       expect(response.ok()).toBeTruthy();
     });
