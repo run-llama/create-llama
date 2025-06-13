@@ -162,7 +162,12 @@ jobs:
         working-directory: packages/server
 
       - name: Run Playwright tests for TypeScript
-        run: pnpm run e2e:typescript
+        run: |
+          if [ "${{ matrix.template-types }}" == "streaming" ]; then
+            pnpm run e2e:ts:streaming
+          else
+            pnpm run e2e:ts:server
+          fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
