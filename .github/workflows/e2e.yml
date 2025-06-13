@@ -23,7 +23,7 @@ jobs:
         os: [ubuntu-22.04]
         frameworks: ["nextjs"]
         datasources: ["--example-file"]
-        template-types: ["llamaindexserver"]
+        template-types: ["streaming", "llamaindexserver"]
     defaults:
       run:
         shell: bash
