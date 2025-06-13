@@ -1,5 +1,4 @@
 ---
-"create-llama": patch
 "@create-llama/llama-index-server": patch
 ---
 
