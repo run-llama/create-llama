@@ -1,5 +1,11 @@
 # @create-llama/llama-index-server
 
+## 0.1.23
+
+### Patch Changes
+
+- 6c0fb51: fix: stream not stop after sending HumanInputEvent
+
 ## 0.1.22
 
 ### Patch Changes
