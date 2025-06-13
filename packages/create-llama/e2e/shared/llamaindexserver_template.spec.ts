@@ -24,7 +24,7 @@ const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
 const templateUseCases = [
   "agentic_rag",
-  "financial_report",
+  // "financial_report",
   "deep_research",
   "code_generator",
   "hitl",
