@@ -183,8 +183,8 @@ async def _stream_content(
                     resume_event_type=event.response_event_type,
                 )
                 yield VercelStreamResponse.convert_data(event.to_response())
-                # Break to stop the stream
-                break
+                # return to stop the stream
+                return
             elif isinstance(event, dict):
                 yield VercelStreamResponse.convert_data(event)
             elif hasattr(event, "to_response"):
