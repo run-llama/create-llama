@@ -30,8 +30,8 @@
     "dev": "ncc build ./index.ts -w -o dist/",
     "e2e": "playwright test",
     "e2e:python": "playwright test e2e/shared e2e/python",
-    "e2e:ts:streaming": "playwright test e2e/shared/llamaindexserver_template.spec.ts e2e/typescript",
-    "e2e:ts:server": "playwright test e2e/shared/streaming_template.spec.ts e2e/typescript",
+    "e2e:ts:streaming": "playwright test e2e/shared/streaming_template.spec.ts e2e/typescript",
+    "e2e:ts:server": "playwright test e2e/shared/llamaindexserver_template.spec.ts e2e/typescript",
     "pack-install": "bash ./scripts/pack.sh"
   },
   "dependencies": {
