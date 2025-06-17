@@ -1,5 +1,5 @@
 import prompts from "prompts";
-import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
+import { ModelConfigParams } from ".";
 import { questionHandlers } from "../../questions/utils";
 
 const ALL_AZURE_OPENAI_CHAT_MODELS: Record<string, { openAIModel: string }> = {
@@ -51,12 +51,9 @@ const ALL_AZURE_OPENAI_EMBEDDING_MODELS: Record<
 const DEFAULT_MODEL = "gpt-4o";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
-export async function askAzureQuestions({
-  openAiKey,
-  askModels,
-}: ModelConfigQuestionsParams): Promise<ModelConfigParams> {
+export async function askAzureQuestions(): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
-    apiKey: openAiKey || process.env.AZURE_OPENAI_KEY,
+    apiKey: process.env.AZURE_OPENAI_KEY,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
@@ -66,32 +63,30 @@ export async function askAzureQuestions({
     },
   };
 
-  if (askModels) {
-    const { model } = await prompts(
-      {
-        type: "select",
-        name: "model",
-        message: "Which LLM model would you like to use?",
-        choices: getAvailableModelChoices(),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.model = model;
+  const { model } = await prompts(
+    {
+      type: "select",
+      name: "model",
+      message: "Which LLM model would you like to use?",
+      choices: getAvailableModelChoices(),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.model = model;
 
-    const { embeddingModel } = await prompts(
-      {
-        type: "select",
-        name: "embeddingModel",
-        message: "Which embedding model would you like to use?",
-        choices: getAvailableEmbeddingModelChoices(),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.embeddingModel = embeddingModel;
-    config.dimensions = getDimensions(embeddingModel);
-  }
+  const { embeddingModel } = await prompts(
+    {
+      type: "select",
+      name: "embeddingModel",
+      message: "Which embedding model would you like to use?",
+      choices: getAvailableEmbeddingModelChoices(),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.embeddingModel = embeddingModel;
+  config.dimensions = getDimensions(embeddingModel);
 
   return config;
 }

@@ -1,4 +1,4 @@
-import { askModelConfig } from "../helpers/providers";
+import { getGpt41ModelConfig } from "../helpers/models";
 import { QuestionArgs, QuestionResults } from "./types";
 
 const defaults: Omit<QuestionArgs, "modelConfig"> = {
@@ -21,10 +21,6 @@ export async function getCIQuestionResults(
   return {
     ...defaults,
     ...program,
-    modelConfig: await askModelConfig({
-      openAiKey: program.openAiKey,
-      askModels: false,
-      framework: program.framework,
-    }),
+    modelConfig: getGpt41ModelConfig(program.openAiKey),
   };
 }

@@ -237,8 +237,6 @@ export const askProQuestions = async (program: QuestionArgs) => {
 
   if (!program.modelConfig) {
     const modelConfig = await askModelConfig({
-      openAiKey: program.openAiKey,
-      askModels: program.askModels ?? false,
       framework: program.framework,
     });
     program.modelConfig = modelConfig;

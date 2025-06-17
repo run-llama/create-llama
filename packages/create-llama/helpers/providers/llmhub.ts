@@ -31,17 +31,9 @@ const LLMHUB_EMBEDDING_MODELS = [
   "text-embedding-bge-m3",
 ];
 
-type LLMHubQuestionsParams = {
-  apiKey?: string;
-  askModels: boolean;
-};
-
-export async function askLLMHubQuestions({
-  askModels,
-  apiKey,
-}: LLMHubQuestionsParams): Promise<ModelConfigParams> {
+export async function askLLMHubQuestions(): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
-    apiKey,
+    apiKey: process.env.T_SYSTEMS_LLMHUB_API_KEY,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
@@ -61,11 +53,10 @@ export async function askLLMHubQuestions({
       {
         type: "text",
         name: "key",
-        message: askModels
-          ? "Please provide your LLMHub API key (or leave blank to use T_SYSTEMS_LLMHUB_API_KEY env variable):"
-          : "Please provide your LLMHub API key (leave blank to skip):",
+        message:
+          "Please provide your LLMHub API key (or leave blank to use T_SYSTEMS_LLMHUB_API_KEY env variable):",
         validate: (value: string) => {
-          if (askModels && !value) {
+          if (!value) {
             if (process.env.T_SYSTEMS_LLMHUB_API_KEY) {
               return true;
             }
@@ -79,32 +70,30 @@ export async function askLLMHubQuestions({
     config.apiKey = key || process.env.T_SYSTEMS_LLMHUB_API_KEY;
   }
 
-  if (askModels) {
-    const { model } = await prompts(
-      {
-        type: "select",
-        name: "model",
-        message: "Which LLM model would you like to use?",
-        choices: await getAvailableModelChoices(false, config.apiKey),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.model = model;
+  const { model } = await prompts(
+    {
+      type: "select",
+      name: "model",
+      message: "Which LLM model would you like to use?",
+      choices: await getAvailableModelChoices(false, config.apiKey),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.model = model;
 
-    const { embeddingModel } = await prompts(
-      {
-        type: "select",
-        name: "embeddingModel",
-        message: "Which embedding model would you like to use?",
-        choices: await getAvailableModelChoices(true, config.apiKey),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.embeddingModel = embeddingModel;
-    config.dimensions = getDimensions(embeddingModel);
-  }
+  const { embeddingModel } = await prompts(
+    {
+      type: "select",
+      name: "embeddingModel",
+      message: "Which embedding model would you like to use?",
+      choices: await getAvailableModelChoices(true, config.apiKey),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.embeddingModel = embeddingModel;
+  config.dimensions = getDimensions(embeddingModel);
 
   return config;
 }

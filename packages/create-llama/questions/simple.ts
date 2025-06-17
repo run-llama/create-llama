@@ -1,6 +1,7 @@
 import prompts from "prompts";
 import { NO_DATA_USE_CASES } from "../helpers/constant";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
+import { getGpt41ModelConfig } from "../helpers/models";
 import { askModelConfig } from "../helpers/providers";
 import { getTools } from "../helpers/tools";
 import { ModelConfig, TemplateFramework } from "../helpers/types";
@@ -135,59 +136,59 @@ const convertAnswers = async (
   args: PureQuestionArgs,
   answers: SimpleAnswers,
 ): Promise<QuestionResults> => {
-  const MODEL_GPT41: ModelConfig = {
-    provider: "openai",
-    apiKey: args.openAiKey,
-    model: "gpt-4.1",
-    embeddingModel: "text-embedding-3-large",
-    dimensions: 1536,
-    isConfigured(): boolean {
-      return !!args.openAiKey;
-    },
-  };
+  const modelGpt41 = getGpt41ModelConfig(args.openAiKey);
   const lookup: Record<
     AppType,
     Pick<QuestionResults, "template" | "tools" | "dataSources" | "useCase"> & {
-      modelConfig?: ModelConfig;
+      modelConfig: ModelConfig;
     }
   > = {
     agentic_rag: {
       template: "llamaindexserver",
       dataSources: [EXAMPLE_FILE],
+      modelConfig: modelGpt41,
     },
     financial_report: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
       tools: getTools(["interpreter", "document_generator"]),
-      modelConfig: MODEL_GPT41,
+      modelConfig: modelGpt41,
     },
     deep_research: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
       tools: [],
-      modelConfig: MODEL_GPT41,
+      modelConfig: modelGpt41,
     },
     code_generator: {
       template: "llamaindexserver",
       dataSources: [],
       tools: [],
-      modelConfig: MODEL_GPT41,
+      modelConfig: modelGpt41,
     },
     document_generator: {
       template: "llamaindexserver",
       dataSources: [],
       tools: [],
-      modelConfig: MODEL_GPT41,
+      modelConfig: modelGpt41,
     },
     hitl: {
       template: "llamaindexserver",
       dataSources: [],
       tools: [],
-      modelConfig: MODEL_GPT41,
+      modelConfig: modelGpt41,
     },
   };
 
   const results = lookup[answers.appType];
+
+  let modelConfig = results.modelConfig;
+  if (args.askModels) {
+    modelConfig = await askModelConfig({
+      framework: answers.language,
+    });
+  }
+
   return {
     framework: answers.language,
     useCase: answers.appType,
@@ -196,13 +197,7 @@ const convertAnswers = async (
     useLlamaParse: answers.useLlamaCloud,
     vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
     ...results,
-    modelConfig:
-      results.modelConfig ??
-      (await askModelConfig({
-        openAiKey: args.openAiKey,
-        askModels: args.askModels ?? false,
-        framework: answers.language,
-      })),
+    modelConfig,
     frontend: true,
   };
 };
