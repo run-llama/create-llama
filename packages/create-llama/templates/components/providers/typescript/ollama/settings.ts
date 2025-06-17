@@ -1,7 +1,7 @@
 import { Ollama, OllamaEmbedding } from "@llamaindex/ollama";
 import { Settings } from "llamaindex";
 
-export function setupProvider() {
+export function initSettings() {
   const config = {
     host: process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434",
   };

@@ -13,7 +13,11 @@ const installLlamaIndexServerTemplate = async ({
   root,
   useCase,
   vectorDb,
-}: Pick<InstallTemplateArgs, "root" | "useCase" | "vectorDb">) => {
+  modelConfig,
+}: Pick<
+  InstallTemplateArgs,
+  "root" | "useCase" | "vectorDb" | "modelConfig"
+>) => {
   if (!useCase) {
     console.log(
       red(
@@ -31,6 +35,17 @@ const installLlamaIndexServerTemplate = async ({
     );
     process.exit(1);
   }
+
+  // copy model provider settings to app folder
+  await copy("**", path.join(root, "src", "app"), {
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "providers",
+      "typescript",
+      modelConfig.provider,
+    ),
+  });
 
   await copy("**", path.join(root), {
     cwd: path.join(
@@ -346,6 +361,7 @@ export const installTSTemplate = async ({
       root,
       useCase,
       vectorDb,
+      modelConfig,
     });
   } else {
     await installLegacyTSTemplate({

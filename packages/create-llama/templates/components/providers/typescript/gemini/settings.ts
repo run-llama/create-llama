@@ -6,7 +6,7 @@ import {
 } from "@llamaindex/google";
 import { Settings } from "llamaindex";
 
-export function setupProvider() {
+export function initSettings() {
   Settings.llm = new Gemini({
     model: process.env.MODEL as GEMINI_MODEL,
   });

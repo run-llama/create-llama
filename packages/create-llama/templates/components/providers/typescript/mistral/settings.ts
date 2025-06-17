@@ -6,7 +6,7 @@ import {
 } from "@llamaindex/mistral";
 import { Settings } from "llamaindex";
 
-export function setupProvider() {
+export function initSettings() {
   Settings.llm = new MistralAI({
     model: process.env.MODEL as keyof typeof ALL_AVAILABLE_MISTRAL_MODELS,
   });

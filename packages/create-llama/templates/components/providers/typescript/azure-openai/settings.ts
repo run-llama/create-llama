@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
 import { Settings } from "llamaindex";
 
-export function setupProvider() {
+export function initSettings() {
   // Map Azure OpenAI model names to OpenAI model names (only for TS)
   const AZURE_OPENAI_MODEL_MAP: Record<string, string> = {
     "gpt-35-turbo": "gpt-3.5-turbo",

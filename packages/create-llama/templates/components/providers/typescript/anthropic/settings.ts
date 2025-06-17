@@ -5,7 +5,7 @@ import {
 import { HuggingFaceEmbedding } from "@llamaindex/huggingface";
 import { Settings } from "llamaindex";
 
-export function setupProvider() {
+export function initSettings() {
   const embedModelMap: Record<string, string> = {
     "all-MiniLM-L6-v2": "Xenova/all-MiniLM-L6-v2",
     "all-mpnet-base-v2": "Xenova/all-mpnet-base-v2",
