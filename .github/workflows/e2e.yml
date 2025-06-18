@@ -79,7 +79,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
-          DATASOURCE: ${{ matrix.datasources }}
+          VECTORDB: ${{ matrix.vectordbs }}
           TEMPLATE_TYPE: ${{ matrix.template-types }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}-${{ matrix.template-types }}
+          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs }}-${{ matrix.template-types }}
           path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30
@@ -100,8 +100,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [20, 22]
-        python-version: ["3.11"]
+        node-version: [22]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs"]
         vectordbs: ["none", "llamacloud"]
@@ -112,16 +111,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      - name: Add uv to PATH # Ensure uv is available in subsequent steps
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - uses: pnpm/action-setup@v3
 
@@ -163,16 +152,12 @@ jobs:
 
       - name: Run Playwright tests for TypeScript
         run: |
-          if [ "${{ matrix.template-types }}" == "streaming" ]; then
-            pnpm run e2e:ts:streaming
-          else
-            pnpm run e2e:ts:server
-          fi
+          pnpm run e2e:ts:server
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
-          DATASOURCE: ${{ matrix.datasources }}
+          VECTORDB: ${{ matrix.vectordbs }}
           TEMPLATE_TYPE: ${{ matrix.template-types }}
           SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
         working-directory: packages/create-llama
@@ -180,7 +165,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.datasources }}-node${{ matrix.node-version }}-${{ matrix.template-types }}
+          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs}}-node${{ matrix.node-version }}-${{ matrix.template-types }}
           path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30
