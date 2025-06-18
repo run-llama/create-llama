@@ -23,7 +23,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
-        template-types: ["streaming", "llamaindexserver"]
+        template-types: ["llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -105,7 +105,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs"]
         datasources: ["--no-files", "--example-file", "--llamacloud"]
-        template-types: ["streaming", "llamaindexserver"]
+        template-types: ["llamaindexserver"]
     defaults:
       run:
         shell: bash
