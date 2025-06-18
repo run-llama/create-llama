@@ -71,13 +71,6 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--open-ai-key <key>",
-    `
-
-  Provide an OpenAI API key.
-`,
-  )
-  .option(
     "--port <port>",
     `
 

@@ -18,6 +18,6 @@ export async function getCIQuestionResults(
   return {
     ...defaults,
     ...program,
-    modelConfig: getGpt41ModelConfig(program.openAiKey),
+    modelConfig: getGpt41ModelConfig(),
   };
 }

@@ -143,7 +143,7 @@ const convertAnswers = async (
 ): Promise<
   Omit<QuestionResults, "postInstallAction" | "useLlamaParse" | "vectorDb">
 > => {
-  const modelGpt41 = getGpt41ModelConfig(args.openAiKey);
+  const modelGpt41 = getGpt41ModelConfig();
   const lookup: Record<
     AppType,
     Pick<QuestionResults, "template" | "dataSources"> & {

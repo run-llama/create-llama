@@ -7,7 +7,6 @@ export type QuestionResults = Omit<
 
 export type PureQuestionArgs = {
   askModels?: boolean;
-  openAiKey?: string;
   llamaCloudKey?: string;
 };
 
