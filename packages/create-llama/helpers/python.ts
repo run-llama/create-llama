@@ -5,7 +5,6 @@ import { parse, stringify } from "smol-toml";
 import terminalLink from "terminal-link";
 import { isUvAvailable, tryUvSync } from "./uv";
 
-import { isCI } from "ci-info";
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
 import {
@@ -245,7 +244,7 @@ const getAdditionalDependencies = (
 
   // If app template is llama-index-server and CI and SERVER_PACKAGE_PATH is set,
   // add @llamaindex/server to dependencies
-  if (isCI && process.env.SERVER_PACKAGE_PATH) {
+  if (process.env.SERVER_PACKAGE_PATH) {
     dependencies.push({
       name: "llama-index-server",
       version: `@file://${process.env.SERVER_PACKAGE_PATH}`,

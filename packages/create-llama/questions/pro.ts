@@ -12,7 +12,7 @@ const defaults: Omit<QuestionArgs, "modelConfig"> = {
   useCase: "agentic_rag",
 };
 
-export async function getCIQuestionResults(
+export async function getProQuestionResults(
   program: QuestionArgs,
 ): Promise<QuestionResults> {
   return {
