@@ -1,10 +1,12 @@
 import prompts from "prompts";
-import { NO_DATA_USE_CASES } from "../helpers/constant";
 import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { getGpt41ModelConfig } from "../helpers/models";
 import { askModelConfig } from "../helpers/providers";
-import { getTools } from "../helpers/tools";
-import { ModelConfig, TemplateFramework } from "../helpers/types";
+import {
+  ModelConfig,
+  TemplateFramework,
+  TemplateVectorDB,
+} from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
 import { askPostInstallAction, questionHandlers } from "./utils";
 
@@ -19,8 +21,6 @@ type AppType =
 type SimpleAnswers = {
   appType: AppType;
   language: TemplateFramework;
-  useLlamaCloud: boolean;
-  llamaCloudKey?: string;
 };
 
 export const askSimpleQuestions = async (
@@ -72,9 +72,6 @@ export const askSimpleQuestions = async (
   );
 
   let language: TemplateFramework = "fastapi";
-  let llamaCloudKey = args.llamaCloudKey;
-
-  let useLlamaCloud = false;
 
   const { language: newLanguage } = await prompts(
     {
@@ -90,8 +87,14 @@ export const askSimpleQuestions = async (
   );
   language = newLanguage;
 
-  const shouldAskLlamaCloud = !NO_DATA_USE_CASES.includes(appType);
-  if (shouldAskLlamaCloud) {
+  const results = await convertAnswers(args, {
+    appType,
+    language,
+  });
+
+  let llamaCloudKey = args.llamaCloudKey;
+  let useLlamaCloud = false;
+  if (results.dataSources.length > 0) {
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
         type: "toggle",
@@ -121,25 +124,29 @@ export const askSimpleQuestions = async (
     llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
   }
 
-  const results = await convertAnswers(args, {
-    appType,
-    language,
-    useLlamaCloud,
+  const resultsWithLlamaCloud = {
+    ...results,
     llamaCloudKey,
-  });
+    useLlamaParse: useLlamaCloud,
+    vectorDb: (useLlamaCloud ? "llamacloud" : "none") as TemplateVectorDB,
+  };
 
-  results.postInstallAction = await askPostInstallAction(results);
-  return results;
+  return {
+    ...resultsWithLlamaCloud,
+    postInstallAction: await askPostInstallAction(resultsWithLlamaCloud),
+  };
 };
 
 const convertAnswers = async (
   args: PureQuestionArgs,
   answers: SimpleAnswers,
-): Promise<QuestionResults> => {
+): Promise<
+  Omit<QuestionResults, "postInstallAction" | "useLlamaParse" | "vectorDb">
+> => {
   const modelGpt41 = getGpt41ModelConfig(args.openAiKey);
   const lookup: Record<
     AppType,
-    Pick<QuestionResults, "template" | "tools" | "dataSources" | "useCase"> & {
+    Pick<QuestionResults, "template" | "dataSources"> & {
       modelConfig: ModelConfig;
     }
   > = {
@@ -151,31 +158,26 @@ const convertAnswers = async (
     financial_report: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
-      tools: getTools(["interpreter", "document_generator"]),
       modelConfig: modelGpt41,
     },
     deep_research: {
       template: "llamaindexserver",
       dataSources: EXAMPLE_10K_SEC_FILES,
-      tools: [],
       modelConfig: modelGpt41,
     },
     code_generator: {
       template: "llamaindexserver",
       dataSources: [],
-      tools: [],
       modelConfig: modelGpt41,
     },
     document_generator: {
       template: "llamaindexserver",
       dataSources: [],
-      tools: [],
       modelConfig: modelGpt41,
     },
     hitl: {
       template: "llamaindexserver",
       dataSources: [],
-      tools: [],
       modelConfig: modelGpt41,
     },
   };
@@ -192,12 +194,7 @@ const convertAnswers = async (
   return {
     framework: answers.language,
     useCase: answers.appType,
-    ui: "shadcn",
-    llamaCloudKey: answers.llamaCloudKey,
-    useLlamaParse: answers.useLlamaCloud,
-    vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
     ...results,
     modelConfig,
-    frontend: true,
   };
 };

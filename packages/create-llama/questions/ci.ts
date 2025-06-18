@@ -2,17 +2,14 @@ import { getGpt41ModelConfig } from "../helpers/models";
 import { QuestionArgs, QuestionResults } from "./types";
 
 const defaults: Omit<QuestionArgs, "modelConfig"> = {
-  template: "streaming",
+  template: "llamaindexserver",
   framework: "nextjs",
-  ui: "shadcn",
-  frontend: false,
   llamaCloudKey: undefined,
   useLlamaParse: false,
-  communityProjectConfig: undefined,
-  llamapack: "",
   postInstallAction: "dependencies",
   dataSources: [],
-  tools: [],
+  vectorDb: "none",
+  useCase: "agentic_rag",
 };
 
 export async function getCIQuestionResults(

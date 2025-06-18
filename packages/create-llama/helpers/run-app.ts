@@ -26,31 +26,12 @@ const createProcess = (
   });
 };
 
-export function runReflexApp(appPath: string, port: number) {
-  const commandArgs = [
-    "run",
-    "reflex",
-    "run",
-    "--frontend-port",
-    port.toString(),
-  ];
-  return createProcess("uv", commandArgs, {
-    stdio: "inherit",
-    cwd: appPath,
-  });
-}
-
 export function runFastAPIApp(
   appPath: string,
   port: number,
   template: TemplateType,
 ) {
-  let commandArgs: string[];
-  if (template === "streaming") {
-    commandArgs = ["run", "dev"];
-  } else {
-    commandArgs = ["run", "fastapi", "dev", "--port", `${port}`];
-  }
+  const commandArgs = ["run", "fastapi", "dev", "--port", `${port}`];
   return createProcess("uv", commandArgs, {
     stdio: "inherit",
     cwd: appPath,
@@ -74,15 +55,9 @@ export async function runApp(
 ): Promise<void> {
   try {
     // Start the app
-    const defaultPort =
-      framework === "nextjs" || template === "reflex" ? 3000 : 8000;
+    const defaultPort = framework === "nextjs" ? 3000 : 8000;
 
-    const appRunner =
-      template === "reflex"
-        ? runReflexApp
-        : framework === "fastapi"
-          ? runFastAPIApp
-          : runTSApp;
+    const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
     await appRunner(appPath, port || defaultPort, template);
   } catch (error) {
     console.error("Failed to run app:", error);
