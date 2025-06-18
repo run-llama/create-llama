@@ -3,7 +3,6 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import { NO_DATA_USE_CASES } from "../../helpers/constant";
 import {
   TemplateFramework,
   TemplateType,
@@ -20,6 +19,10 @@ const templateFramework: TemplateFramework = process.env.FRAMEWORK
 const templateType: TemplateType = process.env.TEMPLATE_TYPE
   ? (process.env.TEMPLATE_TYPE as TemplateType)
   : "llamaindexserver";
+const vectorDb: TemplateVectorDB = process.env.VECTORDB
+  ? (process.env.VECTORDB as TemplateVectorDB)
+  : "none";
+
 const useCases: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
@@ -28,82 +31,30 @@ const useCases: TemplateUseCase[] = [
   "document_generator",
   "hitl",
 ];
-const dataSource: string = process.env.DATASOURCE
-  ? process.env.DATASOURCE
-  : "--example-file";
-
-// vectorDBs combinations to test
-const vectorDbs: TemplateVectorDB[] = [
-  "mongo",
-  "pg",
-  "qdrant",
-  "pinecone",
-  "milvus",
-  "astra",
-  "chroma",
-  "llamacloud",
-  "weaviate",
-];
 
 test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
-  // Test vector DBs without LlamaParse
-  for (const vectorDb of vectorDbs) {
-    const optionDescription = `templateType: ${templateType}, vectorDb: ${vectorDb}, dataSource: ${dataSource}`;
-
-    test(`Vector DB test - ${optionDescription}`, async () => {
-      // skip vectordb test for llamaindexserver
-      test.skip(
-        templateType === "llamaindexserver",
-        "skipping vectorDB test for llamaindexserver",
-      );
-
-      await runTest({
-        templateType: templateType,
-        useLlamaParse: false, // Disable LlamaParse for vectorDB test
-        vectorDb: vectorDb,
+  for (const useCase of useCases) {
+    const optionDescription = `templateType: ${templateType}, useCase: ${useCase}, vectorDb: ${vectorDb}, llamaParse: ${vectorDb === "llamacloud"}`;
+    test.describe(`${optionDescription}`, () => {
+      test(`${optionDescription}`, async () => {
+        await runTest({
+          templateType: templateType,
+          useLlamaParse: vectorDb === "llamacloud",
+          useCase: useCase,
+          vectorDb: vectorDb,
+        });
       });
     });
-  }
-
-  // No vectorDB, with LlamaParse and useCase
-  // Only need to test use case with example data source
-  if (dataSource === "--example-file") {
-    for (const useCase of useCases) {
-      const optionDescription = `templateType: ${templateType}, useCase: ${useCase}`;
-      test.describe(`useCase test - ${optionDescription}`, () => {
-        test.skip(
-          templateType === "streaming",
-          "Skipping use case test for streaming template.",
-        );
-        test(`no llamaParse - ${optionDescription}`, async () => {
-          await runTest({
-            templateType: templateType,
-            useLlamaParse: false,
-            useCase: useCase,
-          });
-        });
-        // Skipping llamacloud for the use case doesn't use index.
-        if (!useCase || !NO_DATA_USE_CASES.includes(useCase)) {
-          test(`llamaParse - ${optionDescription}`, async () => {
-            await runTest({
-              templateType: templateType,
-              useLlamaParse: true,
-              useCase: useCase,
-            });
-          });
-        }
-      });
-    }
   }
 });
 
 async function runTest(options: {
   templateType: TemplateType;
   useLlamaParse: boolean;
-  useCase?: TemplateUseCase;
-  vectorDb?: TemplateVectorDB;
+  useCase: TemplateUseCase;
+  vectorDb: TemplateVectorDB;
 }) {
   const cwd = await createTestDir();
 
@@ -111,15 +62,11 @@ async function runTest(options: {
     cwd: cwd,
     templateType: options.templateType,
     templateFramework: templateFramework,
-    dataSource: dataSource,
-    vectorDb: options.vectorDb ?? "none",
+    vectorDb: options.vectorDb,
     port: 3000,
     postInstallAction: "none",
-    templateUI: undefined,
-    appType: templateFramework === "nextjs" ? "" : "--no-frontend",
     llamaCloudProjectName: undefined,
     llamaCloudIndexName: undefined,
-    tools: undefined,
     useLlamaParse: options.useLlamaParse,
     useCase: options.useCase,
   });

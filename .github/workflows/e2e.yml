@@ -22,7 +22,7 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
-        datasources: ["--no-files", "--example-file", "--llamacloud"]
+        vectordbs: ["none", "llamacloud"]
         template-types: ["llamaindexserver"]
     defaults:
       run:
@@ -104,7 +104,7 @@ jobs:
         python-version: ["3.11"]
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs"]
-        datasources: ["--no-files", "--example-file", "--llamacloud"]
+        vectordbs: ["none", "llamacloud"]
         template-types: ["llamaindexserver"]
     defaults:
       run:

@@ -2,25 +2,18 @@ import { expect, test } from "@playwright/test";
 import { ChildProcess, execSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import type {
-  TemplateFramework,
-  TemplatePostInstallAction,
-  TemplateUI,
-} from "../../helpers";
-import { createTestDir, runCreateLlama, type AppType } from "../utils";
+import type { TemplateFramework, TemplateVectorDB } from "../../helpers";
+import { createTestDir, runCreateLlama } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
   ? (process.env.FRAMEWORK as TemplateFramework)
   : "fastapi";
-const dataSource: string = process.env.DATASOURCE
-  ? (process.env.DATASOURCE as string)
-  : "--example-file";
+const vectorDb: TemplateVectorDB = process.env.VECTORDB
+  ? (process.env.VECTORDB as TemplateVectorDB)
+  : "none";
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
 
-const templateUI: TemplateUI = "shadcn";
-const templatePostInstallAction: TemplatePostInstallAction = "runApp";
-const appType: AppType = "--frontend";
 const userMessage = "Write a blog post about physical standards for letters";
 const templateUseCases = [
   "agentic_rag",
@@ -32,18 +25,11 @@ const templateUseCases = [
 const ejectDir = "next";
 
 for (const useCase of templateUseCases) {
-  test.describe(`Test use case ${useCase} ${templateFramework} ${dataSource} ${templateUI} ${appType} ${templatePostInstallAction}`, async () => {
-    test.skip(
-      dataSource === "--no-files" || templateFramework === "express",
-      "The llamaindexserver template currently only works with nextjs, fastapi. We also only run on Linux to speed up tests.",
-    );
-    const useLlamaParse = dataSource === "--llamacloud";
+  test.describe(`Test use case ${useCase} ${templateFramework} ${vectorDb}`, async () => {
     let port: number;
     let cwd: string;
     let name: string;
     let appProcess: ChildProcess;
-    // Only test without using vector db for now
-    const vectorDb = "none";
 
     test.beforeAll(async () => {
       port = Math.floor(Math.random() * 10000) + 10000;
@@ -52,16 +38,13 @@ for (const useCase of templateUseCases) {
         cwd,
         templateType: "llamaindexserver",
         templateFramework,
-        dataSource,
         vectorDb,
         port,
-        postInstallAction: templatePostInstallAction,
-        templateUI,
-        appType,
+        postInstallAction: "runApp",
         useCase,
         llamaCloudProjectName,
         llamaCloudIndexName,
-        useLlamaParse,
+        useLlamaParse: vectorDb === "llamacloud",
       });
       name = result.projectName;
       appProcess = result.appProcess;
@@ -73,10 +56,6 @@ for (const useCase of templateUseCases) {
     });
 
     test("Frontend should have a title", async ({ page }) => {
-      test.skip(
-        templatePostInstallAction !== "runApp" ||
-          templateFramework === "express",
-      );
       await page.goto(`http://localhost:${port}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
         timeout: 5 * 60 * 1000,
@@ -87,10 +66,7 @@ for (const useCase of templateUseCases) {
       page,
     }) => {
       test.skip(
-        templatePostInstallAction !== "runApp" ||
-          useCase === "financial_report" ||
-          useCase === "deep_research" ||
-          templateFramework === "express",
+        useCase === "financial_report" || useCase === "deep_research",
         "Skip chat tests for financial report and deep research.",
       );
       await page.goto(`http://localhost:${port}`);
@@ -116,7 +92,7 @@ for (const useCase of templateUseCases) {
       test.skip(
         templateFramework !== "nextjs" ||
           useCase !== "code_generator" ||
-          dataSource === "--llamacloud",
+          vectorDb === "llamacloud",
         "Eject test only applies to Next.js framework, code generator use case, and non-llamacloud",
       );
 
