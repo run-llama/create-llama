@@ -47,6 +47,7 @@ def generate_ui_for_workflow():
     from llama_index.core.settings import Settings
     from main import COMPONENT_DIR
 
+    load_dotenv()
     init_settings()
 
     # To generate UI components for additional event types,
