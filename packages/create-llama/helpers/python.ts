@@ -209,12 +209,12 @@ const getAdditionalDependencies = (
       break;
     case "gemini":
       dependencies.push({
-        name: "llama-index-llms-gemini",
-        version: ">=0.4.0,<0.5.0",
+        name: "llama-index-llms-google-genai",
+        version: ">=0.2.0,<0.3.0",
       });
       dependencies.push({
-        name: "llama-index-embeddings-gemini",
-        version: ">=0.3.0,<0.4.0",
+        name: "llama-index-embeddings-google-genai",
+        version: ">=0.2.0,<0.3.0",
       });
       break;
     case "mistral":
@@ -571,7 +571,11 @@ const installLlamaIndexServerTemplate = async ({
   root,
   useCase,
   useLlamaParse,
-}: Pick<InstallTemplateArgs, "root" | "useCase" | "useLlamaParse">) => {
+  modelConfig,
+}: Pick<
+  InstallTemplateArgs,
+  "root" | "useCase" | "useLlamaParse" | "modelConfig"
+>) => {
   if (!useCase) {
     console.log(
       red(
@@ -584,6 +588,17 @@ const installLlamaIndexServerTemplate = async ({
   await copy("*.py", path.join(root, "app"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
+  });
+
+  // copy model provider settings to app folder
+  await copy("**", path.join(root, "app"), {
+    cwd: path.join(
+      templatesDir,
+      "components",
+      "providers",
+      "python",
+      modelConfig.provider,
+    ),
   });
 
   // Copy custom UI component code
@@ -677,6 +692,7 @@ export const installPythonTemplate = async ({
       root,
       useCase,
       useLlamaParse,
+      modelConfig,
     });
   } else {
     await installLegacyPythonTemplate({

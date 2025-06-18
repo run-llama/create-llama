@@ -255,11 +255,6 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       value: modelConfig.embeddingModel,
     },
     {
-      name: "EMBEDDING_DIM",
-      description: "Dimension of the embedding model to use.",
-      value: modelConfig.dimensions.toString(),
-    },
-    {
       name: "CONVERSATION_STARTERS",
       description: "The questions to help users get started (multi-line).",
     },
@@ -597,16 +592,9 @@ export const createBackendEnvFile = async (
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
     // Add environment variables of each component
     ...(opts.template === "llamaindexserver"
-      ? [
-          {
-            name: "OPENAI_API_KEY",
-            description: "The OpenAI API key to use.",
-            value: opts.modelConfig.apiKey,
-          },
-        ]
+      ? [...getModelEnvs(opts.modelConfig)]
       : [
           // don't use this stuff for llama-indexserver
-          ...getModelEnvs(opts.modelConfig),
           ...getEngineEnvs(),
           ...getTemplateEnvs(opts.template),
           ...getObservabilityEnvs(opts.observability),

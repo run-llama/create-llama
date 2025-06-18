@@ -2,7 +2,15 @@ import prompts from "prompts";
 import { ModelConfigParams } from ".";
 import { questionHandlers, toChoice } from "../../questions/utils";
 
-const MODELS = ["gemini-1.5-pro-latest", "gemini-pro", "gemini-pro-vision"];
+const MODELS = [
+  "gemini-2.5-pro",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-pro-latest",
+  "gemini-pro",
+  "gemini-pro-vision",
+];
 type ModelData = {
   dimensions: number;
 };
