@@ -1,22 +1,9 @@
 import prompts from "prompts";
-import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
-import { getGpt41ModelConfig } from "../helpers/models";
 import { askModelConfig } from "../helpers/providers";
-import {
-  ModelConfig,
-  TemplateFramework,
-  TemplateVectorDB,
-} from "../helpers/types";
+import { TemplateFramework, TemplateVectorDB } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
+import { AppType, useCaseConfiguration } from "./usecases";
 import { askPostInstallAction, questionHandlers } from "./utils";
-
-type AppType =
-  | "agentic_rag"
-  | "financial_report"
-  | "deep_research"
-  | "code_generator"
-  | "document_generator"
-  | "hitl";
 
 type SimpleAnswers = {
   appType: AppType;
@@ -143,46 +130,7 @@ const convertAnswers = async (
 ): Promise<
   Omit<QuestionResults, "postInstallAction" | "useLlamaParse" | "vectorDb">
 > => {
-  const modelGpt41 = getGpt41ModelConfig();
-  const lookup: Record<
-    AppType,
-    Pick<QuestionResults, "template" | "dataSources"> & {
-      modelConfig: ModelConfig;
-    }
-  > = {
-    agentic_rag: {
-      template: "llamaindexserver",
-      dataSources: [EXAMPLE_FILE],
-      modelConfig: modelGpt41,
-    },
-    financial_report: {
-      template: "llamaindexserver",
-      dataSources: EXAMPLE_10K_SEC_FILES,
-      modelConfig: modelGpt41,
-    },
-    deep_research: {
-      template: "llamaindexserver",
-      dataSources: EXAMPLE_10K_SEC_FILES,
-      modelConfig: modelGpt41,
-    },
-    code_generator: {
-      template: "llamaindexserver",
-      dataSources: [],
-      modelConfig: modelGpt41,
-    },
-    document_generator: {
-      template: "llamaindexserver",
-      dataSources: [],
-      modelConfig: modelGpt41,
-    },
-    hitl: {
-      template: "llamaindexserver",
-      dataSources: [],
-      modelConfig: modelGpt41,
-    },
-  };
-
-  const results = lookup[answers.appType];
+  const results = useCaseConfiguration[answers.appType];
 
   let modelConfig = results.modelConfig;
   if (args.askModels) {
@@ -193,7 +141,6 @@ const convertAnswers = async (
 
   return {
     framework: answers.language,
-    useCase: answers.appType,
     ...results,
     modelConfig,
   };

@@ -1,23 +1,26 @@
-import { getGpt41ModelConfig } from "../helpers/models";
 import { QuestionArgs, QuestionResults } from "./types";
+import { useCaseConfiguration } from "./usecases";
 
-const defaults: Omit<QuestionArgs, "modelConfig"> = {
-  template: "llamaindexserver",
+const defaults: Omit<
+  QuestionArgs,
+  "modelConfig" | "dataSources" | "useCase" | "template"
+> = {
   framework: "nextjs",
   llamaCloudKey: undefined,
   useLlamaParse: false,
   postInstallAction: "dependencies",
-  dataSources: [],
   vectorDb: "none",
-  useCase: "agentic_rag",
 };
 
 export async function getProQuestionResults(
   program: QuestionArgs,
 ): Promise<QuestionResults> {
+  const { useCase } = program;
+  const config = useCase ? useCaseConfiguration[useCase] : undefined;
+
   return {
     ...defaults,
+    ...config,
     ...program,
-    modelConfig: getGpt41ModelConfig(),
   };
 }
