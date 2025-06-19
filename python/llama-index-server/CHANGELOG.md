@@ -1,5 +1,11 @@
 # @create-llama/llama-index-server
 
+## 0.1.24
+
+### Patch Changes
+
+- 8fa8c3b: Fix serialization issue while streaming with Anthropic
+
 ## 0.1.23
 
 ### Patch Changes
