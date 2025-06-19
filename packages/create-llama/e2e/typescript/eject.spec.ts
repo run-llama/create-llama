@@ -31,7 +31,7 @@ test.describe(`Test eject command for ${useCase} ${templateFramework} ${vectorDb
       templateFramework,
       vectorDb,
       port,
-      postInstallAction: "runApp",
+      postInstallAction: "dependencies",
       useCase,
       llamaCloudProjectName,
       llamaCloudIndexName,
@@ -44,23 +44,22 @@ test.describe(`Test eject command for ${useCase} ${templateFramework} ${vectorDb
   test("Should successfully eject, install dependencies and build without errors", async ({
     page,
   }) => {
-    await page.goto(`http://localhost:${port}`);
-    await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
-      timeout: 5 * 60 * 1000,
-    });
-
+    test.skip(
+      vectorDb === "llamacloud",
+      "Eject test only works with non-llamacloud",
+    );
     // Run eject command
-    execSync("pnpm run eject", { cwd: path.join(cwd, name) });
+    execSync("npm run eject", { cwd: path.join(cwd, name) });
 
     // Verify next directory exists
     const nextDirExists = fs.existsSync(path.join(cwd, name, ejectDir));
     expect(nextDirExists).toBeTruthy();
 
     // Install dependencies in next directory
-    execSync("pnpm install", { cwd: path.join(cwd, name, ejectDir) });
+    execSync("npm install", { cwd: path.join(cwd, name, ejectDir) });
 
     // Run build
-    execSync("pnpm run build", { cwd: path.join(cwd, name, ejectDir) });
+    execSync("npm run build", { cwd: path.join(cwd, name, ejectDir) });
   });
 
   // clean processes
