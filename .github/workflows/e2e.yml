@@ -152,7 +152,7 @@ jobs:
 
       - name: Run Playwright tests for TypeScript
         run: |
-          pnpm run e2e:ts:server
+          pnpm run e2e:ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}

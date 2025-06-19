@@ -30,7 +30,7 @@
     "dev": "ncc build ./index.ts -w -o dist/",
     "e2e": "playwright test",
     "e2e:python": "playwright test e2e/shared e2e/python",
-    "e2e:ts:server": "playwright test e2e/typescript/eject.spec.ts",
+    "e2e:ts": "playwright test e2e/shared e2e/typescript",
     "pack-install": "bash ./scripts/pack.sh"
   },
   "dependencies": {
