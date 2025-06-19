@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
+  ALL_USE_CASES,
   TemplateFramework,
   TemplateType,
   TemplateUseCase,
@@ -13,9 +14,7 @@ import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
 
-const templateFramework: TemplateFramework = process.env.FRAMEWORK
-  ? (process.env.FRAMEWORK as TemplateFramework)
-  : "nextjs";
+const templateFramework: TemplateFramework = "nextjs";
 const templateType: TemplateType = process.env.TEMPLATE_TYPE
   ? (process.env.TEMPLATE_TYPE as TemplateType)
   : "llamaindexserver";
@@ -23,19 +22,10 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
   ? (process.env.VECTORDB as TemplateVectorDB)
   : "none";
 
-const useCases: TemplateUseCase[] = [
-  "agentic_rag",
-  "deep_research",
-  "financial_report",
-  "code_generator",
-  "document_generator",
-  "hitl",
-];
-
 test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
-  for (const useCase of useCases) {
+  for (const useCase of ALL_USE_CASES) {
     const optionDescription = `templateType: ${templateType}, useCase: ${useCase}, vectorDb: ${vectorDb}, llamaParse: ${vectorDb === "llamacloud"}`;
     test.describe(`${optionDescription}`, () => {
       test(`${optionDescription}`, async () => {
