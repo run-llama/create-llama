@@ -7,11 +7,8 @@ import {
   TemplateFramework,
   TemplatePostInstallAction,
   TemplateType,
-  TemplateUI,
   TemplateVectorDB,
 } from "../helpers";
-
-export type AppType = "--frontend" | "--no-frontend" | "";
 
 export type CreateLlamaResult = {
   projectName: string;
@@ -22,17 +19,12 @@ export type RunCreateLlamaOptions = {
   cwd: string;
   templateType: TemplateType;
   templateFramework: TemplateFramework;
-  dataSource: string;
   vectorDb: TemplateVectorDB;
   port: number;
   postInstallAction: TemplatePostInstallAction;
-  templateUI?: TemplateUI;
-  appType?: AppType;
   llamaCloudProjectName?: string;
   llamaCloudIndexName?: string;
-  tools?: string;
   useLlamaParse?: boolean;
-  observability?: string;
   useCase?: string;
 };
 
@@ -40,17 +32,12 @@ export async function runCreateLlama({
   cwd,
   templateType,
   templateFramework,
-  dataSource,
   vectorDb,
   port,
   postInstallAction,
-  templateUI,
-  appType,
   llamaCloudProjectName,
   llamaCloudIndexName,
-  tools,
   useLlamaParse,
-  observability,
   useCase,
 }: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
@@ -58,25 +45,9 @@ export async function runCreateLlama({
       "Setting the OPENAI_API_KEY and LLAMA_CLOUD_API_KEY is mandatory to run tests",
     );
   }
-  const name = [
-    templateType,
-    templateFramework,
-    dataSource.split(" ")[0],
-    templateUI,
-    appType,
-  ].join("-");
+  const name = [templateType, templateFramework].join("-");
 
   // Handle different data source types
-  const dataSourceArgs = [];
-  if (dataSource.includes("--web-source")) {
-    const webSource = dataSource.split(" ")[1];
-    dataSourceArgs.push("--web-source", webSource);
-  } else if (dataSource.includes("--db-source")) {
-    const dbSource = dataSource.split(" ")[1];
-    dataSourceArgs.push("--db-source", dbSource);
-  } else {
-    dataSourceArgs.push(dataSource);
-  }
 
   const commandArgs = [
     "create-llama",
@@ -85,7 +56,6 @@ export async function runCreateLlama({
     templateType,
     "--framework",
     templateFramework,
-    ...dataSourceArgs,
     "--vector-db",
     vectorDb,
     "--use-npm",
@@ -93,32 +63,15 @@ export async function runCreateLlama({
     port,
     "--post-install-action",
     postInstallAction,
-    "--tools",
-    tools ?? "none",
-    "--observability",
-    "none",
   ];
 
-  if (templateUI) {
-    commandArgs.push("--ui", templateUI);
-  }
-  if (appType) {
-    commandArgs.push(appType);
-  }
   if (useLlamaParse) {
     commandArgs.push("--use-llama-parse");
   } else {
     commandArgs.push("--no-llama-parse");
   }
-  if (observability) {
-    commandArgs.push("--observability", observability);
-  }
-  if (
-    (templateType === "multiagent" ||
-      templateType === "reflex" ||
-      templateType === "llamaindexserver") &&
-    useCase
-  ) {
+
+  if (useCase) {
     commandArgs.push("--use-case", useCase);
   }
 

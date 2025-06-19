@@ -30,7 +30,6 @@
     "dev": "ncc build ./index.ts -w -o dist/",
     "e2e": "playwright test",
     "e2e:python": "playwright test e2e/shared e2e/python",
-    "e2e:ts:streaming": "playwright test e2e/shared/streaming_template.spec.ts e2e/typescript",
     "e2e:ts:server": "playwright test e2e/shared/llamaindexserver_template.spec.ts e2e/typescript",
     "pack-install": "bash ./scripts/pack.sh"
   },
@@ -45,7 +44,6 @@
     "@types/validate-npm-package-name": "3.0.0",
     "async-retry": "1.3.1",
     "async-sema": "3.0.1",
-    "ci-info": "github:watson/ci-info#f43f6a1cefff47fb361c88cf4b943fdbcaafe540",
     "commander": "12.1.0",
     "cross-spawn": "7.0.3",
     "fast-glob": "3.3.1",

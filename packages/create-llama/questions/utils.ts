@@ -4,7 +4,6 @@ import path from "path";
 import { red } from "picocolors";
 import prompts from "prompts";
 import { TemplateDataSourceType, TemplatePostInstallAction } from "../helpers";
-import { toolsRequireConfig } from "../helpers/tools";
 import { QuestionResults } from "./types";
 
 export const supportedContextFileTypes = [
@@ -127,7 +126,7 @@ export const questionHandlers = {
 
 // Ask for next action after installation
 export async function askPostInstallAction(
-  args: QuestionResults,
+  args: Omit<QuestionResults, "postInstallAction">,
 ): Promise<TemplatePostInstallAction> {
   const actionChoices = [
     {
@@ -144,19 +143,14 @@ export async function askPostInstallAction(
     },
   ];
 
-  const modelConfigured = !args.llamapack && args.modelConfig.isConfigured();
+  const modelConfigured = args.modelConfig.isConfigured();
   // If using LlamaParse, require LlamaCloud API key
   const llamaCloudKeyConfigured = args.useLlamaParse
     ? args.llamaCloudKey || process.env["LLAMA_CLOUD_API_KEY"]
     : true;
   const hasVectorDb = args.vectorDb && args.vectorDb !== "none";
   // Can run the app if all tools do not require configuration
-  if (
-    !hasVectorDb &&
-    modelConfigured &&
-    llamaCloudKeyConfigured &&
-    !toolsRequireConfig(args.tools)
-  ) {
+  if (!hasVectorDb && modelConfigured && llamaCloudKeyConfigured) {
     actionChoices.push({
       title: "Generate code, install dependencies, and run the app (~2 min)",
       value: "runApp",

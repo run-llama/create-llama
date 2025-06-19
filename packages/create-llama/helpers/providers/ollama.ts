@@ -17,13 +17,7 @@ const EMBEDDING_MODELS: Record<string, ModelData> = {
 };
 const DEFAULT_EMBEDDING_MODEL: string = Object.keys(EMBEDDING_MODELS)[0];
 
-type OllamaQuestionsParams = {
-  askModels: boolean;
-};
-
-export async function askOllamaQuestions({
-  askModels,
-}: OllamaQuestionsParams): Promise<ModelConfigParams> {
+export async function askOllamaQuestions(): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
@@ -33,34 +27,32 @@ export async function askOllamaQuestions({
     },
   };
 
-  if (askModels) {
-    const { model } = await prompts(
-      {
-        type: "select",
-        name: "model",
-        message: "Which LLM model would you like to use?",
-        choices: MODELS.map(toChoice),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    await ensureModel(model);
-    config.model = model;
+  const { model } = await prompts(
+    {
+      type: "select",
+      name: "model",
+      message: "Which LLM model would you like to use?",
+      choices: MODELS.map(toChoice),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  await ensureModel(model);
+  config.model = model;
 
-    const { embeddingModel } = await prompts(
-      {
-        type: "select",
-        name: "embeddingModel",
-        message: "Which embedding model would you like to use?",
-        choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    await ensureModel(embeddingModel);
-    config.embeddingModel = embeddingModel;
-    config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
-  }
+  const { embeddingModel } = await prompts(
+    {
+      type: "select",
+      name: "embeddingModel",
+      message: "Which embedding model would you like to use?",
+      choices: Object.keys(EMBEDDING_MODELS).map(toChoice),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  await ensureModel(embeddingModel);
+  config.embeddingModel = embeddingModel;
+  config.dimensions = EMBEDDING_MODELS[embeddingModel].dimensions;
 
   return config;
 }

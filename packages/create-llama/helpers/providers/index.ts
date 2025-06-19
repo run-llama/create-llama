@@ -1,6 +1,6 @@
 import prompts from "prompts";
 import { questionHandlers } from "../../questions/utils";
-import { ModelConfig, ModelProvider, TemplateFramework } from "../types";
+import { ModelConfig, TemplateFramework } from "../types";
 import { askAnthropicQuestions } from "./anthropic";
 import { askAzureQuestions } from "./azure";
 import { askGeminiQuestions } from "./gemini";
@@ -11,81 +11,68 @@ import { askMistralQuestions } from "./mistral";
 import { askOllamaQuestions } from "./ollama";
 import { askOpenAIQuestions } from "./openai";
 
-const DEFAULT_MODEL_PROVIDER = "openai";
-
 export type ModelConfigQuestionsParams = {
-  openAiKey?: string;
-  askModels: boolean;
   framework?: TemplateFramework;
 };
 
 export type ModelConfigParams = Omit<ModelConfig, "provider">;
 
 export async function askModelConfig({
-  askModels,
-  openAiKey,
   framework,
 }: ModelConfigQuestionsParams): Promise<ModelConfig> {
-  let modelProvider: ModelProvider = DEFAULT_MODEL_PROVIDER;
-  if (askModels) {
-    const choices = [
-      { title: "OpenAI", value: "openai" },
-      { title: "Groq", value: "groq" },
-      { title: "Ollama", value: "ollama" },
-      { title: "Anthropic", value: "anthropic" },
-      { title: "Gemini", value: "gemini" },
-      { title: "Mistral", value: "mistral" },
-      { title: "AzureOpenAI", value: "azure-openai" },
-    ];
+  const choices = [
+    { title: "OpenAI", value: "openai" },
+    { title: "Groq", value: "groq" },
+    { title: "Ollama", value: "ollama" },
+    { title: "Anthropic", value: "anthropic" },
+    { title: "Gemini", value: "gemini" },
+    { title: "Mistral", value: "mistral" },
+    { title: "AzureOpenAI", value: "azure-openai" },
+  ];
 
-    if (framework === "fastapi") {
-      choices.push({ title: "T-Systems", value: "t-systems" });
-      choices.push({ title: "Huggingface", value: "huggingface" });
-    }
-    const { provider } = await prompts(
-      {
-        type: "select",
-        name: "provider",
-        message: "Which model provider would you like to use",
-        choices: choices,
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    modelProvider = provider;
+  if (framework === "fastapi") {
+    choices.push({ title: "T-Systems", value: "t-systems" });
+    choices.push({ title: "Huggingface", value: "huggingface" });
   }
+  const { provider: modelProvider } = await prompts(
+    {
+      type: "select",
+      name: "provider",
+      message: "Which model provider would you like to use",
+      choices: choices,
+      initial: 0,
+    },
+    questionHandlers,
+  );
 
   let modelConfig: ModelConfigParams;
   switch (modelProvider) {
     case "ollama":
-      modelConfig = await askOllamaQuestions({ askModels });
+      modelConfig = await askOllamaQuestions();
       break;
     case "groq":
-      modelConfig = await askGroqQuestions({ askModels });
+      modelConfig = await askGroqQuestions();
       break;
     case "anthropic":
-      modelConfig = await askAnthropicQuestions({ askModels });
+      modelConfig = await askAnthropicQuestions();
       break;
     case "gemini":
-      modelConfig = await askGeminiQuestions({ askModels });
+      modelConfig = await askGeminiQuestions();
       break;
     case "mistral":
-      modelConfig = await askMistralQuestions({ askModels });
+      modelConfig = await askMistralQuestions();
       break;
     case "azure-openai":
-      modelConfig = await askAzureQuestions({ askModels });
+      modelConfig = await askAzureQuestions();
       break;
     case "t-systems":
-      modelConfig = await askLLMHubQuestions({ askModels });
+      modelConfig = await askLLMHubQuestions();
       break;
     case "huggingface":
-      modelConfig = await askHuggingfaceQuestions({ askModels });
+      modelConfig = await askHuggingfaceQuestions();
       break;
     default:
-      modelConfig = await askOpenAIQuestions({
-        openAiKey,
-        askModels,
-      });
+      modelConfig = await askOpenAIQuestions();
   }
   return {
     ...modelConfig,

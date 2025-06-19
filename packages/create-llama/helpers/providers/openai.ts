@@ -2,8 +2,7 @@ import got from "got";
 import ora from "ora";
 import { red } from "picocolors";
 import prompts from "prompts";
-import { ModelConfigParams, ModelConfigQuestionsParams } from ".";
-import { isCI } from "../../questions";
+import { ModelConfigParams } from ".";
 import { questionHandlers } from "../../questions/utils";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
@@ -11,12 +10,9 @@ const OPENAI_API_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-4o-mini";
 const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
-export async function askOpenAIQuestions({
-  openAiKey,
-  askModels,
-}: ModelConfigQuestionsParams): Promise<ModelConfigParams> {
+export async function askOpenAIQuestions(): Promise<ModelConfigParams> {
   const config: ModelConfigParams = {
-    apiKey: openAiKey,
+    apiKey: process.env.OPENAI_API_KEY,
     model: DEFAULT_MODEL,
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
     dimensions: getDimensions(DEFAULT_EMBEDDING_MODEL),
@@ -31,16 +27,15 @@ export async function askOpenAIQuestions({
     },
   };
 
-  if (!config.apiKey && !isCI) {
+  if (!config.apiKey) {
     const { key } = await prompts(
       {
         type: "text",
         name: "key",
-        message: askModels
-          ? "Please provide your OpenAI API key (or leave blank to use OPENAI_API_KEY env variable):"
-          : "Please provide your OpenAI API key (leave blank to skip):",
+        message:
+          "Please provide your OpenAI API key (or leave blank to use OPENAI_API_KEY env variable):",
         validate: (value: string) => {
-          if (askModels && !value) {
+          if (!value) {
             if (process.env.OPENAI_API_KEY) {
               return true;
             }
@@ -54,32 +49,30 @@ export async function askOpenAIQuestions({
     config.apiKey = key || process.env.OPENAI_API_KEY;
   }
 
-  if (askModels) {
-    const { model } = await prompts(
-      {
-        type: "select",
-        name: "model",
-        message: "Which LLM model would you like to use?",
-        choices: await getAvailableModelChoices(false, config.apiKey),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.model = model;
+  const { model } = await prompts(
+    {
+      type: "select",
+      name: "model",
+      message: "Which LLM model would you like to use?",
+      choices: await getAvailableModelChoices(false, config.apiKey),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.model = model;
 
-    const { embeddingModel } = await prompts(
-      {
-        type: "select",
-        name: "embeddingModel",
-        message: "Which embedding model would you like to use?",
-        choices: await getAvailableModelChoices(true, config.apiKey),
-        initial: 0,
-      },
-      questionHandlers,
-    );
-    config.embeddingModel = embeddingModel;
-    config.dimensions = getDimensions(embeddingModel);
-  }
+  const { embeddingModel } = await prompts(
+    {
+      type: "select",
+      name: "embeddingModel",
+      message: "Which embedding model would you like to use?",
+      choices: await getAvailableModelChoices(true, config.apiKey),
+      initial: 0,
+    },
+    questionHandlers,
+  );
+  config.embeddingModel = embeddingModel;
+  config.dimensions = getDimensions(embeddingModel);
 
   return config;
 }

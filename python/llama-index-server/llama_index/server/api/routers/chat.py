@@ -6,7 +6,6 @@ from typing import AsyncGenerator, Callable, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
-
 from llama_index.core.agent.workflow.workflow_events import (
     AgentInput,
     AgentSetup,
@@ -36,6 +35,7 @@ from llama_index.server.models.hitl import HumanInputEvent
 from llama_index.server.services.file import FileService
 from llama_index.server.services.llamacloud import LlamaCloudFileService
 from llama_index.server.services.workflow import HITLWorkflowService
+from pydantic_core import PydanticSerializationError
 
 
 def chat_router(
@@ -193,7 +193,12 @@ async def _stream_content(
             else:
                 # Ignore unnecessary agent workflow events
                 if not isinstance(event, (AgentInput, AgentSetup)):
-                    yield VercelStreamResponse.convert_data(event.model_dump())
+                    try:
+                        yield VercelStreamResponse.convert_data(event.model_dump())
+                    except PydanticSerializationError:
+                        logger.warning(f"Error serializing event: {event}")
+                        # Skip events that can't be serialized
+                        pass
 
         await handler.wait_for_completion()
     except asyncio.CancelledError:

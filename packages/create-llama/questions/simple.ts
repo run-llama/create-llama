@@ -1,25 +1,13 @@
 import prompts from "prompts";
-import { NO_DATA_USE_CASES } from "../helpers/constant";
-import { EXAMPLE_10K_SEC_FILES, EXAMPLE_FILE } from "../helpers/datasources";
 import { askModelConfig } from "../helpers/providers";
-import { getTools } from "../helpers/tools";
-import { ModelConfig, TemplateFramework } from "../helpers/types";
+import { TemplateFramework, TemplateVectorDB } from "../helpers/types";
 import { PureQuestionArgs, QuestionResults } from "./types";
+import { AppType, useCaseConfiguration } from "./usecases";
 import { askPostInstallAction, questionHandlers } from "./utils";
-
-type AppType =
-  | "agentic_rag"
-  | "financial_report"
-  | "deep_research"
-  | "code_generator"
-  | "document_generator"
-  | "hitl";
 
 type SimpleAnswers = {
   appType: AppType;
   language: TemplateFramework;
-  useLlamaCloud: boolean;
-  llamaCloudKey?: string;
 };
 
 export const askSimpleQuestions = async (
@@ -71,9 +59,6 @@ export const askSimpleQuestions = async (
   );
 
   let language: TemplateFramework = "fastapi";
-  let llamaCloudKey = args.llamaCloudKey;
-
-  let useLlamaCloud = false;
 
   const { language: newLanguage } = await prompts(
     {
@@ -89,8 +74,14 @@ export const askSimpleQuestions = async (
   );
   language = newLanguage;
 
-  const shouldAskLlamaCloud = !NO_DATA_USE_CASES.includes(appType);
-  if (shouldAskLlamaCloud) {
+  const results = await convertAnswers(args, {
+    appType,
+    language,
+  });
+
+  let llamaCloudKey = args.llamaCloudKey;
+  let useLlamaCloud = false;
+  if (results.dataSources.length > 0) {
     const { useLlamaCloud: newUseLlamaCloud } = await prompts(
       {
         type: "toggle",
@@ -120,89 +111,37 @@ export const askSimpleQuestions = async (
     llamaCloudKey = newLlamaCloudKey || process.env.LLAMA_CLOUD_API_KEY;
   }
 
-  const results = await convertAnswers(args, {
-    appType,
-    language,
-    useLlamaCloud,
+  const resultsWithLlamaCloud = {
+    ...results,
     llamaCloudKey,
-  });
+    useLlamaParse: useLlamaCloud,
+    vectorDb: (useLlamaCloud ? "llamacloud" : "none") as TemplateVectorDB,
+  };
 
-  results.postInstallAction = await askPostInstallAction(results);
-  return results;
+  return {
+    ...resultsWithLlamaCloud,
+    postInstallAction: await askPostInstallAction(resultsWithLlamaCloud),
+  };
 };
 
 const convertAnswers = async (
   args: PureQuestionArgs,
   answers: SimpleAnswers,
-): Promise<QuestionResults> => {
-  const MODEL_GPT41: ModelConfig = {
-    provider: "openai",
-    apiKey: args.openAiKey,
-    model: "gpt-4.1",
-    embeddingModel: "text-embedding-3-large",
-    dimensions: 1536,
-    isConfigured(): boolean {
-      return !!args.openAiKey;
-    },
-  };
-  const lookup: Record<
-    AppType,
-    Pick<QuestionResults, "template" | "tools" | "dataSources" | "useCase"> & {
-      modelConfig?: ModelConfig;
-    }
-  > = {
-    agentic_rag: {
-      template: "llamaindexserver",
-      dataSources: [EXAMPLE_FILE],
-    },
-    financial_report: {
-      template: "llamaindexserver",
-      dataSources: EXAMPLE_10K_SEC_FILES,
-      tools: getTools(["interpreter", "document_generator"]),
-      modelConfig: MODEL_GPT41,
-    },
-    deep_research: {
-      template: "llamaindexserver",
-      dataSources: EXAMPLE_10K_SEC_FILES,
-      tools: [],
-      modelConfig: MODEL_GPT41,
-    },
-    code_generator: {
-      template: "llamaindexserver",
-      dataSources: [],
-      tools: [],
-      modelConfig: MODEL_GPT41,
-    },
-    document_generator: {
-      template: "llamaindexserver",
-      dataSources: [],
-      tools: [],
-      modelConfig: MODEL_GPT41,
-    },
-    hitl: {
-      template: "llamaindexserver",
-      dataSources: [],
-      tools: [],
-      modelConfig: MODEL_GPT41,
-    },
-  };
+): Promise<
+  Omit<QuestionResults, "postInstallAction" | "useLlamaParse" | "vectorDb">
+> => {
+  const results = useCaseConfiguration[answers.appType];
 
-  const results = lookup[answers.appType];
+  let modelConfig = results.modelConfig;
+  if (args.askModels) {
+    modelConfig = await askModelConfig({
+      framework: answers.language,
+    });
+  }
+
   return {
     framework: answers.language,
-    useCase: answers.appType,
-    ui: "shadcn",
-    llamaCloudKey: answers.llamaCloudKey,
-    useLlamaParse: answers.useLlamaCloud,
-    vectorDb: answers.useLlamaCloud ? "llamacloud" : "none",
     ...results,
-    modelConfig:
-      results.modelConfig ??
-      (await askModelConfig({
-        openAiKey: args.openAiKey,
-        askModels: args.askModels ?? false,
-        framework: answers.language,
-      })),
-    frontend: true,
+    modelConfig,
   };
 };
