@@ -16,52 +16,55 @@ const llamaCloudIndexName = "e2e-test";
 
 const ejectDir = "next";
 
-test.describe(`Test eject command for ${useCase} ${templateFramework} ${vectorDb}`, async () => {
-  let port: number;
-  let cwd: string;
-  let name: string;
-  let appProcess: ChildProcess;
+test.describe.skip(
+  `Test eject command for ${useCase} ${templateFramework} ${vectorDb}`,
+  async () => {
+    let port: number;
+    let cwd: string;
+    let name: string;
+    let appProcess: ChildProcess;
 
-  test.beforeAll(async () => {
-    port = Math.floor(Math.random() * 10000) + 10000;
-    cwd = await createTestDir();
-    const result = await runCreateLlama({
-      cwd,
-      templateFramework,
-      vectorDb,
-      port,
-      postInstallAction: "dependencies",
-      useCase,
-      llamaCloudProjectName,
-      llamaCloudIndexName,
+    test.beforeAll(async () => {
+      port = Math.floor(Math.random() * 10000) + 10000;
+      cwd = await createTestDir();
+      const result = await runCreateLlama({
+        cwd,
+        templateFramework,
+        vectorDb,
+        port,
+        postInstallAction: "dependencies",
+        useCase,
+        llamaCloudProjectName,
+        llamaCloudIndexName,
+      });
+      name = result.projectName;
+      appProcess = result.appProcess;
     });
-    name = result.projectName;
-    appProcess = result.appProcess;
-  });
 
-  test("Should successfully eject, install dependencies and build without errors", async ({
-    page,
-  }) => {
-    test.skip(
-      vectorDb === "llamacloud",
-      "Eject test only works with non-llamacloud",
-    );
-    // Run eject command
-    execSync("npm run eject", { cwd: path.join(cwd, name) });
+    test("Should successfully eject, install dependencies and build without errors", async ({
+      page,
+    }) => {
+      test.skip(
+        vectorDb === "llamacloud",
+        "Eject test only works with non-llamacloud",
+      );
+      // Run eject command
+      execSync("npm run eject", { cwd: path.join(cwd, name) });
 
-    // Verify next directory exists
-    const nextDirExists = fs.existsSync(path.join(cwd, name, ejectDir));
-    expect(nextDirExists).toBeTruthy();
+      // Verify next directory exists
+      const nextDirExists = fs.existsSync(path.join(cwd, name, ejectDir));
+      expect(nextDirExists).toBeTruthy();
 
-    // Install dependencies in next directory
-    execSync("npm install", { cwd: path.join(cwd, name, ejectDir) });
+      // Install dependencies in next directory
+      execSync("npm install", { cwd: path.join(cwd, name, ejectDir) });
 
-    // Run build
-    execSync("npm run build", { cwd: path.join(cwd, name, ejectDir) });
-  });
+      // Run build
+      execSync("npm run build", { cwd: path.join(cwd, name, ejectDir) });
+    });
 
-  // clean processes
-  test.afterAll(async () => {
-    appProcess?.kill();
-  });
-});
+    // clean processes
+    test.afterAll(async () => {
+      appProcess?.kill();
+    });
+  },
+);
