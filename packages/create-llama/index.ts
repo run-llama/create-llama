@@ -57,13 +57,6 @@ const program = new Command(packageJson.name)
 `,
   )
   .option(
-    "--template <template>",
-    `
-
-  Select a template to bootstrap the application with.
-`,
-  )
-  .option(
     "--framework <framework>",
     `
 
@@ -89,13 +82,6 @@ const program = new Command(packageJson.name)
     `
 
   Select which vector database you would like to use, such as 'none', 'pg' or 'mongo'. The default option is not to use a vector database and use the local filesystem instead ('none').
-`,
-  )
-  .option(
-    "--use-llama-parse",
-    `
-
-  Enable LlamaParse.
 `,
   )
   .option(
@@ -126,10 +112,6 @@ const program = new Command(packageJson.name)
 
 const options = program.opts();
 
-if (process.argv.includes("--no-llama-parse")) {
-  options.useLlamaParse = false;
-}
-
 const packageManager = !!options.useNpm
   ? "npm"
   : !!options.usePnpm
@@ -137,6 +119,9 @@ const packageManager = !!options.useNpm
     : !!options.useYarn
       ? "yarn"
       : getPkgManager();
+
+// options above must use all the properties of QuestionArgs
+const cliArgs = options as unknown as QuestionArgs;
 
 async function run(): Promise<void> {
   if (typeof projectPath === "string") {
@@ -201,7 +186,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  const answers = await askQuestions(options as unknown as QuestionArgs);
+  const answers = await askQuestions(cliArgs);
 
   await createApp({
     ...answers,

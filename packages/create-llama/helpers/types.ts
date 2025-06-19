@@ -48,6 +48,15 @@ export type TemplateUseCase =
   | "code_generator"
   | "document_generator"
   | "hitl";
+
+export const ALL_USE_CASES: TemplateUseCase[] = [
+  "agentic_rag",
+  "deep_research",
+  "financial_report",
+  "code_generator",
+  "document_generator",
+  "hitl",
+];
 // Config for both file and folder
 export type FileSourceConfig =
   | {

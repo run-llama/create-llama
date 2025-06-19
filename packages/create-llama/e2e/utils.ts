@@ -6,7 +6,6 @@ import waitPort from "wait-port";
 import {
   TemplateFramework,
   TemplatePostInstallAction,
-  TemplateType,
   TemplateVectorDB,
 } from "../helpers";
 
@@ -17,43 +16,34 @@ export type CreateLlamaResult = {
 
 export type RunCreateLlamaOptions = {
   cwd: string;
-  templateType: TemplateType;
   templateFramework: TemplateFramework;
   vectorDb: TemplateVectorDB;
   port: number;
   postInstallAction: TemplatePostInstallAction;
+  useCase: string;
   llamaCloudProjectName?: string;
   llamaCloudIndexName?: string;
-  useLlamaParse?: boolean;
-  useCase?: string;
 };
 
 export async function runCreateLlama({
   cwd,
-  templateType,
   templateFramework,
   vectorDb,
   port,
   postInstallAction,
+  useCase,
   llamaCloudProjectName,
   llamaCloudIndexName,
-  useLlamaParse,
-  useCase,
 }: RunCreateLlamaOptions): Promise<CreateLlamaResult> {
   if (!process.env.OPENAI_API_KEY || !process.env.LLAMA_CLOUD_API_KEY) {
     throw new Error(
       "Setting the OPENAI_API_KEY and LLAMA_CLOUD_API_KEY is mandatory to run tests",
     );
   }
-  const name = [templateType, templateFramework].join("-");
-
-  // Handle different data source types
-
+  const name = [templateFramework, useCase, vectorDb].join("-");
   const commandArgs = [
     "create-llama",
     name,
-    "--template",
-    templateType,
     "--framework",
     templateFramework,
     "--vector-db",
@@ -63,17 +53,9 @@ export async function runCreateLlama({
     port,
     "--post-install-action",
     postInstallAction,
+    "--use-case",
+    useCase,
   ];
-
-  if (useLlamaParse) {
-    commandArgs.push("--use-llama-parse");
-  } else {
-    commandArgs.push("--no-llama-parse");
-  }
-
-  if (useCase) {
-    commandArgs.push("--use-case", useCase);
-  }
 
   const command = commandArgs.join(" ");
   console.log(`running command '${command}' in ${cwd}`);

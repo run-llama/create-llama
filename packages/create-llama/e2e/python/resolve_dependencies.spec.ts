@@ -4,45 +4,29 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
+  ALL_USE_CASES,
   TemplateFramework,
-  TemplateType,
-  TemplateUseCase,
   TemplateVectorDB,
 } from "../../helpers/types";
 import { RunCreateLlamaOptions, createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
 
-const templateFramework: TemplateFramework = process.env.FRAMEWORK
-  ? (process.env.FRAMEWORK as TemplateFramework)
-  : "fastapi";
-const templateType: TemplateType = process.env.TEMPLATE_TYPE
-  ? (process.env.TEMPLATE_TYPE as TemplateType)
-  : "llamaindexserver";
+const templateFramework: TemplateFramework = "fastapi";
 const vectorDb: TemplateVectorDB = process.env.VECTORDB
   ? (process.env.VECTORDB as TemplateVectorDB)
   : "none";
-
-const useCases: TemplateUseCase[] = [
-  "agentic_rag",
-  "deep_research",
-  "financial_report",
-  "code_generator",
-  "document_generator",
-  "hitl",
-];
 
 test.describe("Mypy check", () => {
   test.describe.configure({ retries: 0 });
 
   test.describe("LlamaIndexServer", async () => {
-    for (const useCase of useCases) {
+    for (const useCase of ALL_USE_CASES) {
       test(`should pass mypy for use case: ${useCase}`, async () => {
         const cwd = await createTestDir();
         await createAndCheckLlamaProject({
           options: {
             cwd,
-            templateType,
             templateFramework,
             vectorDb,
             port: 3000,

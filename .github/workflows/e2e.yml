@@ -23,7 +23,6 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
         vectordbs: ["none", "llamacloud"]
-        template-types: ["llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -80,7 +79,6 @@ jobs:
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           VECTORDB: ${{ matrix.vectordbs }}
-          TEMPLATE_TYPE: ${{ matrix.template-types }}
           PYTHONIOENCODING: utf-8
           PYTHONLEGACYWINDOWSSTDIO: utf-8
           SERVER_PACKAGE_PATH: ${{ env.SERVER_PACKAGE_PATH }}
@@ -89,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs }}-${{ matrix.template-types }}
+          name: playwright-report-python-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs }}
           path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30
@@ -104,7 +102,6 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["nextjs"]
         vectordbs: ["none", "llamacloud"]
-        template-types: ["llamaindexserver"]
     defaults:
       run:
         shell: bash
@@ -152,20 +149,19 @@ jobs:
 
       - name: Run Playwright tests for TypeScript
         run: |
-          pnpm run e2e:ts:server
+          pnpm run e2e:ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
           FRAMEWORK: ${{ matrix.frameworks }}
           VECTORDB: ${{ matrix.vectordbs }}
-          TEMPLATE_TYPE: ${{ matrix.template-types }}
           SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
         working-directory: packages/create-llama
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs}}-node${{ matrix.node-version }}-${{ matrix.template-types }}
+          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs}}-node${{ matrix.node-version }}
           path: packages/create-llama/playwright-report/
           overwrite: true
           retention-days: 30
