@@ -32,7 +32,6 @@ for (const useCase of ALL_USE_CASES) {
       cwd = await createTestDir();
       const result = await runCreateLlama({
         cwd,
-        templateType: "llamaindexserver",
         templateFramework,
         vectorDb,
         port,
@@ -40,7 +39,6 @@ for (const useCase of ALL_USE_CASES) {
         useCase,
         llamaCloudProjectName,
         llamaCloudIndexName,
-        useLlamaParse: vectorDb === "llamacloud",
       });
       name = result.projectName;
       appProcess = result.appProcess;

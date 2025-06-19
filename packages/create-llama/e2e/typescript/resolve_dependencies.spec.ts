@@ -6,7 +6,6 @@ import util from "util";
 import {
   ALL_USE_CASES,
   TemplateFramework,
-  TemplateType,
   TemplateUseCase,
   TemplateVectorDB,
 } from "../../helpers/types";
@@ -15,9 +14,6 @@ import { createTestDir, runCreateLlama } from "../utils";
 const execAsync = util.promisify(exec);
 
 const templateFramework: TemplateFramework = "nextjs";
-const templateType: TemplateType = process.env.TEMPLATE_TYPE
-  ? (process.env.TEMPLATE_TYPE as TemplateType)
-  : "llamaindexserver";
 const vectorDb: TemplateVectorDB = process.env.VECTORDB
   ? (process.env.VECTORDB as TemplateVectorDB)
   : "none";
@@ -26,12 +22,10 @@ test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
   for (const useCase of ALL_USE_CASES) {
-    const optionDescription = `templateType: ${templateType}, useCase: ${useCase}, vectorDb: ${vectorDb}, llamaParse: ${vectorDb === "llamacloud"}`;
+    const optionDescription = `useCase: ${useCase}, vectorDb: ${vectorDb}`;
     test.describe(`${optionDescription}`, () => {
       test(`${optionDescription}`, async () => {
         await runTest({
-          templateType: templateType,
-          useLlamaParse: vectorDb === "llamacloud",
           useCase: useCase,
           vectorDb: vectorDb,
         });
@@ -41,8 +35,6 @@ test.describe("Test resolve TS dependencies", () => {
 });
 
 async function runTest(options: {
-  templateType: TemplateType;
-  useLlamaParse: boolean;
   useCase: TemplateUseCase;
   vectorDb: TemplateVectorDB;
 }) {
@@ -50,14 +42,12 @@ async function runTest(options: {
 
   const result = await runCreateLlama({
     cwd: cwd,
-    templateType: options.templateType,
     templateFramework: templateFramework,
     vectorDb: options.vectorDb,
     port: 3000,
     postInstallAction: "none",
     llamaCloudProjectName: undefined,
     llamaCloudIndexName: undefined,
-    useLlamaParse: options.useLlamaParse,
     useCase: options.useCase,
   });
   const name = result.projectName;

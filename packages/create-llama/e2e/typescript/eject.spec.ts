@@ -27,7 +27,6 @@ test.describe(`Test eject command for ${useCase} ${templateFramework} ${vectorDb
     cwd = await createTestDir();
     const result = await runCreateLlama({
       cwd,
-      templateType: "llamaindexserver",
       templateFramework,
       vectorDb,
       port,
@@ -35,7 +34,6 @@ test.describe(`Test eject command for ${useCase} ${templateFramework} ${vectorDb
       useCase,
       llamaCloudProjectName,
       llamaCloudIndexName,
-      useLlamaParse: false,
     });
     name = result.projectName;
     appProcess = result.appProcess;
