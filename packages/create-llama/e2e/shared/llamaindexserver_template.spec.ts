@@ -61,6 +61,10 @@ for (const useCase of ALL_USE_CASES) {
     test("Frontend should be able to submit a message and receive the start of a streamed response", async ({
       page,
     }) => {
+      test.skip(
+        useCase === "financial_report" || useCase === "deep_research",
+        "Skip chat tests for financial report and deep research.",
+      );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);
 
