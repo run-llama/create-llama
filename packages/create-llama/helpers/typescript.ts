@@ -72,7 +72,7 @@ const installLlamaIndexServerTemplate = async ({
 
   // Override generate.ts if workflow use case doesn't use custom UI
   if (vectorDb === "llamacloud") {
-    await copy("generate.ts", path.join(root, "src"), {
+    await copy("**", path.join(root, "src"), {
       parents: true,
       cwd: path.join(
         templatesDir,
@@ -82,28 +82,16 @@ const installLlamaIndexServerTemplate = async ({
         "llamacloud",
         "typescript",
       ),
-    });
-
-    await copy("index.ts", path.join(root, "src", "app"), {
-      parents: true,
-      cwd: path.join(
-        templatesDir,
-        "components",
-        "vectordbs",
-        "llamaindexserver",
-        "llamacloud",
-        "typescript",
-      ),
-      rename: () => "data.ts",
     });
   }
 
   // Simplify use case code
-  if (useCase && dataSources.length === 0) {
+  if (vectorDb === "none" && dataSources.length === 0) {
     // use case without data sources doesn't use index.
     // We don't need data.ts, generate.ts
     await fs.rm(path.join(root, "src", "app", "data.ts"));
-    // TODO: Remove generate index in generate.ts and package.json if possible
+    // TODO: split generate.ts into generate for index and generate for ui and remove generate for index here too
+    // then we can also remove it for llamacloud
   }
 };
 
