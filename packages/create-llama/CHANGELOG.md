@@ -1,5 +1,15 @@
 # create-llama
 
+## 0.6.0
+
+### Minor Changes
+
+- 8fa8c3b: Removed deprecated templates and simplified code
+
+### Patch Changes
+
+- 8fa8c3b: Feat: re-add --ask-models
+
 ## 0.5.22
 
 ### Patch Changes
