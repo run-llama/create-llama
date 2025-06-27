@@ -20,7 +20,7 @@ export default function ChatSection() {
   const deployment = getConfig("CHAT_DEPLOYMENT") || "";
   const workflow = getConfig("CHAT_WORKFLOW") || "";
 
-  const handleError = (error: unknown) => {
+  const onError = (error: unknown) => {
     if (!(error instanceof Error)) throw error;
     let errorMessage: string;
     try {
@@ -33,14 +33,14 @@ export default function ChatSection() {
 
   const useChatHandler = useChat({
     api: getConfig("CHAT_API") || "/api/chat",
-    onError: handleError,
+    onError,
     experimental_throttle: 100,
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
     deployment,
     workflow,
-    onError: handleError,
+    onError,
   });
 
   const handler = shouldUseChatWorkflow
