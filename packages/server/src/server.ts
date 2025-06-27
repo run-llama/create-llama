@@ -20,15 +20,22 @@ export class LlamaIndexServer {
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
+  llamaDeployProxy: boolean;
 
   constructor(options: LlamaIndexServerOptions) {
-    const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
+    const {
+      workflow,
+      suggestNextQuestions,
+      llamaDeployProxy,
+      ...nextAppOptions
+    } = options;
     this.app = next({ dev, dir: nextDir, ...nextAppOptions });
     this.port = nextAppOptions.port ?? parseInt(process.env.PORT || "3000", 10);
     this.workflowFactory = workflow;
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
+    this.llamaDeployProxy = llamaDeployProxy ?? false;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -75,6 +82,11 @@ export class LlamaIndexServer {
     await this.app.prepare();
 
     const server = createServer((req, res) => {
+      // if using as frontend for llama deploy via proxy, skip all api handling
+      if (this.llamaDeployProxy) {
+        return this.app.getRequestHandler()(req, res);
+      }
+
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;

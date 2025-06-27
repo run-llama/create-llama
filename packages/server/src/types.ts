@@ -25,4 +25,5 @@ export type LlamaIndexServerOptions = NextAppOptions & {
   workflow: WorkflowFactory;
   uiConfig?: UIConfig;
   suggestNextQuestions?: boolean;
+  llamaDeployProxy?: boolean; // to mark server is using as frontend for llama deploy via proxy
 };
