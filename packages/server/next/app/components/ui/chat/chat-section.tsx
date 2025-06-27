@@ -20,27 +20,27 @@ export default function ChatSection() {
   const deployment = getConfig("CHAT_DEPLOYMENT") || "";
   const workflow = getConfig("CHAT_WORKFLOW") || "";
 
+  const handleError = (error: unknown) => {
+    if (!(error instanceof Error)) throw error;
+    let errorMessage: string;
+    try {
+      errorMessage = JSON.parse(error.message).detail;
+    } catch (e) {
+      errorMessage = error.message;
+    }
+    alert(errorMessage);
+  };
+
   const useChatHandler = useChat({
     api: getConfig("CHAT_API") || "/api/chat",
-    onError: (error: unknown) => {
-      if (!(error instanceof Error)) throw error;
-      let errorMessage: string;
-      try {
-        errorMessage = JSON.parse(error.message).detail;
-      } catch (e) {
-        errorMessage = error.message;
-      }
-      alert(errorMessage);
-    },
+    onError: handleError,
     experimental_throttle: 100,
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
     deployment,
     workflow,
-    onError: (error) => {
-      console.error(error);
-    },
+    onError: handleError,
   });
 
   const handler = shouldUseChatWorkflow
