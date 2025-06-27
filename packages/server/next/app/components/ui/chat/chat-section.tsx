@@ -16,6 +16,10 @@ import { DevModePanel } from "./dev-mode-panel";
 import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
+  const shouldUseChatWorkflow = getConfig("USE_CHAT_WORKFLOW") === "true";
+  const deployment = getConfig("CHAT_DEPLOYMENT") || "";
+  const workflow = getConfig("CHAT_WORKFLOW") || "";
+
   const useChatHandler = useChat({
     api: getConfig("CHAT_API") || "/api/chat",
     onError: (error: unknown) => {
@@ -32,17 +36,27 @@ export default function ChatSection() {
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
-    deployment: "chat",
-    workflow: "chat_workflow",
+    deployment,
+    workflow,
     onError: (error) => {
       console.error(error);
     },
   });
 
-  const shouldUseChatWorkflow = getConfig("USE_CHAT_WORKFLOW") === "true";
   const handler = shouldUseChatWorkflow
     ? useChatWorkflowHandler
     : useChatHandler;
+
+  if (shouldUseChatWorkflow && (!deployment || !workflow)) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
+        <p>
+          CHAT_DEPLOYMENT and CHAT_WORKFLOW are required when using
+          useChatWorkflow. Please set them in frontend config file.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
