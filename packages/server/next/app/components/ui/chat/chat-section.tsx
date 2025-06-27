@@ -1,6 +1,6 @@
 "use client";
 
-import { ChatSection as ChatUI } from "@llamaindex/chat-ui";
+import { ChatSection as ChatUI, useChatWorkflow } from "@llamaindex/chat-ui";
 import { useChat } from "ai/react";
 import { useEffect, useMemo, useState } from "react";
 import { getConfig } from "../lib/utils";
@@ -16,7 +16,7 @@ import { DevModePanel } from "./dev-mode-panel";
 import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
-  const handler = useChat({
+  const useChatHandler = useChat({
     api: getConfig("CHAT_API") || "/api/chat",
     onError: (error: unknown) => {
       if (!(error instanceof Error)) throw error;
@@ -30,6 +30,20 @@ export default function ChatSection() {
     },
     experimental_throttle: 100,
   });
+
+  const useChatWorkflowHandler = useChatWorkflow({
+    deployment: "chat",
+    workflow: "chat_workflow",
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const shouldUseChatWorkflow = getConfig("USE_CHAT_WORKFLOW") === "true";
+  const handler = shouldUseChatWorkflow
+    ? useChatWorkflowHandler
+    : useChatHandler;
+
   return (
     <>
       <ChatLayout>
