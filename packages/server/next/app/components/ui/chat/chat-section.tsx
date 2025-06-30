@@ -16,38 +16,40 @@ import { DevModePanel } from "./dev-mode-panel";
 import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
-  const shouldUseChatWorkflow = getConfig("USE_CHAT_WORKFLOW") === "true";
-  const deployment = getConfig("DEPLOYMENT_NAME") || "";
-  const workflow = getConfig("WORKFLOW_NAME") || "";
+  const llamaDeployConfig = getConfig("LLAMA_DEPLOY");
+  const { deployment, workflow } = llamaDeployConfig
+    ? JSON.parse(llamaDeployConfig)
+    : { deployment: "", workflow: "" };
+  const shouldUseChatWorkflow = deployment && workflow;
+
+  const handleError = (error: unknown) => {
+    if (!(error instanceof Error)) throw error;
+    let errorMessage: string;
+    try {
+      errorMessage = JSON.parse(error.message).detail;
+    } catch (e) {
+      errorMessage = error.message;
+    }
+    alert(errorMessage);
+  };
 
   const useChatHandler = useChat({
     api: getConfig("CHAT_API") || "/api/chat",
-    onError: (error: unknown) => {
-      if (!(error instanceof Error)) throw error;
-      let errorMessage: string;
-      try {
-        errorMessage = JSON.parse(error.message).detail;
-      } catch (e) {
-        errorMessage = error.message;
-      }
-      alert(errorMessage);
-    },
+    onError: handleError,
     experimental_throttle: 100,
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
     deployment,
     workflow,
-    onError: (error) => {
-      console.error(error);
-    },
+    onError: handleError,
   });
 
   const handler = shouldUseChatWorkflow
     ? useChatWorkflowHandler
     : useChatHandler;
 
-  if (shouldUseChatWorkflow && (!deployment || !workflow)) {
+  if (shouldUseChatWorkflow) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
         <p>

@@ -52,8 +52,13 @@ export class LlamaIndexServer {
     const layoutApi = this.layoutDir ? "/api/layout" : undefined;
     const devMode = uiConfig?.devMode ?? false;
     const enableFileUpload = uiConfig?.enableFileUpload ?? false;
-    const deploymentName = this.llamaDeploy?.deploymentName ?? undefined;
-    const workflowName = this.llamaDeploy?.workflowName ?? undefined;
+
+    const llamaDeploy = this.llamaDeploy
+      ? {
+          deployment: this.llamaDeploy.deployment,
+          workflow: this.llamaDeploy.workflow,
+        }
+      : undefined;
 
     // content in javascript format
     const content = `
@@ -66,8 +71,7 @@ export class LlamaIndexServer {
         DEV_MODE: ${JSON.stringify(devMode)},
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
         UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)},
-        DEPLOYMENT_NAME: ${JSON.stringify(deploymentName)},
-        WORKFLOW_NAME: ${JSON.stringify(workflowName)}
+        LLAMA_DEPLOY: ${JSON.stringify(llamaDeploy)}
       }
     `;
     fs.writeFileSync(configFile, content);
@@ -90,11 +94,20 @@ export class LlamaIndexServer {
 
       if (this.llamaDeploy) {
         // if llamaDeploy is enabled, rewrite all /deployments/{deployment_name}/ui/* request to /*
-        const basePath = `/deployments/${this.llamaDeploy.deploymentName}/ui`;
+        const basePath = `/deployments/${this.llamaDeploy.deployment}/ui`;
         if (pathname?.startsWith(basePath)) {
           return this.app.getRequestHandler()(req, res, {
             ...parsedUrl,
             pathname: pathname.replace(basePath, "/"),
+          });
+        }
+
+        // proxy for config.js in public folder
+        const configFilePath = `/deployments/${this.llamaDeploy.deployment}/config.js`;
+        if (pathname?.startsWith(configFilePath)) {
+          return this.app.getRequestHandler()(req, res, {
+            ...parsedUrl,
+            pathname: pathname.replace(configFilePath, "/config.js"),
           });
         }
       }

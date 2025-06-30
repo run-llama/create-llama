@@ -13,8 +13,8 @@ export type WorkflowFactory = (
 export type NextAppOptions = Parameters<typeof next>[0];
 
 export type LlamaDeployConfig = {
-  deploymentName: string;
-  workflowName: string;
+  deployment: string;
+  workflow: string;
 };
 
 export type UIConfig = {
