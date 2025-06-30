@@ -32,13 +32,20 @@ export class LlamaIndexServer {
     this.suggestNextQuestions = suggestNextQuestions ?? true;
     this.llamaDeploy = options.uiConfig?.llamaDeploy;
 
-    // TODO: verify llamaDeploy setup
-
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
     }
 
     this.modifyConfig(options);
+
+    if (this.llamaDeploy) {
+      const nextConfigContent = `
+        export default {
+          basePath: '/deployments/${this.llamaDeploy.deployment}/ui',
+        }
+      `;
+      fs.writeFileSync(path.join(nextDir, "next.config.ts"), nextConfigContent);
+    }
   }
 
   private modifyConfig(options: LlamaIndexServerOptions) {
@@ -92,26 +99,6 @@ export class LlamaIndexServer {
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
-
-      if (this.llamaDeploy) {
-        // if llamaDeploy is enabled, rewrite all /deployments/{deployment_name}/ui/* request to /*
-        const basePath = `/deployments/${this.llamaDeploy.deployment}/ui`;
-        if (pathname?.startsWith(basePath)) {
-          return this.app.getRequestHandler()(req, res, {
-            ...parsedUrl,
-            pathname: pathname.replace(basePath, "/"),
-          });
-        }
-
-        // proxy for config.js in public folder
-        const configFilePath = `/deployments/${this.llamaDeploy.deployment}/config.js`;
-        if (pathname?.startsWith(configFilePath)) {
-          return this.app.getRequestHandler()(req, res, {
-            ...parsedUrl,
-            pathname: pathname.replace(configFilePath, "/config.js"),
-          });
-        }
-      }
 
       if (
         pathname === "/api/chat" &&
