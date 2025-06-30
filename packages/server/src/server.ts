@@ -16,7 +16,7 @@ const dev = process.env.NODE_ENV !== "production";
 export class LlamaIndexServer {
   port: number;
   app: ReturnType<typeof next>;
-  workflowFactory: () => Promise<Workflow> | Workflow;
+  workflowFactory?: (() => Promise<Workflow> | Workflow) | undefined;
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
@@ -83,7 +83,11 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
 
-      if (pathname === "/api/chat" && req.method === "POST") {
+      if (
+        pathname === "/api/chat" &&
+        req.method === "POST" &&
+        this.workflowFactory
+      ) {
         // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
         // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
         // make sure to keep its semantic in sync with handleChat

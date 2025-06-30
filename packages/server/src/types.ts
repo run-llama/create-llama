@@ -24,7 +24,7 @@ export type UIConfig = {
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {
-  workflow: WorkflowFactory;
+  workflow?: WorkflowFactory;
   uiConfig?: UIConfig;
   suggestNextQuestions?: boolean;
 };
