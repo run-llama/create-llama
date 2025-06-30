@@ -11,6 +11,8 @@ import type { LlamaDeployConfig, LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
+const nextConfigFile = path.join(nextDir, "next.config.ts");
+const layoutFile = path.join(nextDir, "app", "layout.tsx");
 const dev = process.env.NODE_ENV !== "production";
 
 export class LlamaIndexServer {
@@ -37,35 +39,50 @@ export class LlamaIndexServer {
     }
 
     this.modifyConfig(options);
+    this.modifySourcesForLlamaDeploy();
+  }
 
-    if (this.llamaDeploy) {
-      const nextConfigContent = `
-        export default {
-          basePath: '/deployments/${this.llamaDeploy.deployment}/ui',
-        }
-      `;
-      fs.writeFileSync(path.join(nextDir, "next.config.ts"), nextConfigContent);
-    }
+  private modifySourcesForLlamaDeploy() {
+    if (!this.llamaDeploy) return;
+    const deployment = this.llamaDeploy.deployment;
+    const basePath = `/deployments/${deployment}/ui`;
+
+    // create next.config.ts with basePath
+    const nextConfigContent = `
+export default {
+  basePath: '${basePath}',
+}
+`;
+    fs.writeFileSync(nextConfigFile, nextConfigContent);
+
+    // update script src with basePath
+    const layoutContent = fs.readFileSync(layoutFile, "utf8");
+    const newLayoutContent = layoutContent.replace(
+      '<script async src="./config.js"></script>',
+      `<script async src="${basePath}/config.js"></script>`,
+    );
+    fs.writeFileSync(layoutFile, newLayoutContent, "utf8");
   }
 
   private modifyConfig(options: LlamaIndexServerOptions) {
     const { uiConfig } = options;
+
+    const basePath = this.llamaDeploy
+      ? `/deployments/${this.llamaDeploy.deployment}/ui`
+      : "";
+
     const starterQuestions = uiConfig?.starterQuestions ?? [];
     const llamaCloudApi =
       uiConfig?.llamaCloudIndexSelector && getEnv("LLAMA_CLOUD_API_KEY")
-        ? "/api/chat/config/llamacloud"
+        ? `${basePath}/api/chat/config/llamacloud`
         : undefined;
-    const componentsApi = this.componentsDir ? "/api/components" : undefined;
-    const layoutApi = this.layoutDir ? "/api/layout" : undefined;
+    const componentsApi = this.componentsDir
+      ? `${basePath}/api/components`
+      : undefined;
+    const layoutApi = this.layoutDir ? `${basePath}/api/layout` : undefined;
     const devMode = uiConfig?.devMode ?? false;
     const enableFileUpload = uiConfig?.enableFileUpload ?? false;
-
-    const llamaDeploy = this.llamaDeploy
-      ? {
-          deployment: this.llamaDeploy.deployment,
-          workflow: this.llamaDeploy.workflow,
-        }
-      : undefined;
+    const uploadApi = enableFileUpload ? `${basePath}/api/files` : undefined;
 
     // content in javascript format
     const content = `
@@ -77,9 +94,9 @@ export class LlamaIndexServer {
         LAYOUT_API: ${JSON.stringify(layoutApi)},
         DEV_MODE: ${JSON.stringify(devMode)},
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
-        UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)},
-        DEPLOYMENT: ${JSON.stringify(llamaDeploy?.deployment)},
-        WORKFLOW: ${JSON.stringify(llamaDeploy?.workflow)}
+        UPLOAD_API: ${JSON.stringify(uploadApi)},
+        DEPLOYMENT: ${JSON.stringify(this.llamaDeploy?.deployment)},
+        WORKFLOW: ${JSON.stringify(this.llamaDeploy?.workflow)}
       }
     `;
     fs.writeFileSync(configFile, content);
