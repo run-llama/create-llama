@@ -7,7 +7,7 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import type { LlamaIndexServerOptions } from "./types";
+import type { LlamaDeployConfig, LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
@@ -20,6 +20,7 @@ export class LlamaIndexServer {
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
+  llamaDeploy?: LlamaDeployConfig | undefined;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
@@ -29,6 +30,9 @@ export class LlamaIndexServer {
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
+    this.llamaDeploy = options.uiConfig?.llamaDeploy;
+
+    // TODO: verify llamaDeploy setup
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
@@ -48,8 +52,9 @@ export class LlamaIndexServer {
     const layoutApi = this.layoutDir ? "/api/layout" : undefined;
     const devMode = uiConfig?.devMode ?? false;
     const enableFileUpload = uiConfig?.enableFileUpload ?? false;
-    const deploymentName = uiConfig?.deploymentName ?? undefined;
-    const workflowName = uiConfig?.workflowName ?? undefined;
+    const deploymentName = this.llamaDeploy?.deploymentName ?? undefined;
+    const workflowName = this.llamaDeploy?.workflowName ?? undefined;
+
     // content in javascript format
     const content = `
       window.LLAMAINDEX = {
@@ -82,6 +87,17 @@ export class LlamaIndexServer {
       const parsedUrl = parse(req.url!, true);
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
+
+      if (this.llamaDeploy) {
+        // if llamaDeploy is enabled, rewrite all /deployments/{deployment_name}/ui/* request to /*
+        const basePath = `/deployments/${this.llamaDeploy.deploymentName}/ui`;
+        if (pathname?.startsWith(basePath)) {
+          return this.app.getRequestHandler()(req, res, {
+            ...parsedUrl,
+            pathname: pathname.replace(basePath, "/"),
+          });
+        }
+      }
 
       if (
         pathname === "/api/chat" &&
