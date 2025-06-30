@@ -178,8 +178,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(react-hook-form@7.56.1(react@19.1.0))
       '@llamaindex/chat-ui':
-        specifier: 0.5.6
-        version: 0.5.6(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.1)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.37.1)(@lezer/highlight@1.2.1)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)
+        specifier: 0.5.11
+        version: 0.5.11(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.1)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.37.1)(@lezer/highlight@1.2.1)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)
       '@llamaindex/env':
         specifier: ~0.1.30
         version: 0.1.30
@@ -1491,8 +1491,8 @@ packages:
       zod:
         optional: true
 
-  '@llamaindex/chat-ui@0.5.6':
-    resolution: {integrity: sha512-52JZiDjHOeJpHo8MB5cOR4433R7OWdaDHAZbgEX4K1TROpgUSLfCHsmiqygTXBdmM0D969k9n8PVFhsWeNX6CQ==}
+  '@llamaindex/chat-ui@0.5.11':
+    resolution: {integrity: sha512-jZr5CmX4Stho6ya8xwjk71f/kS5G94Yq+jR/Wsz1zyIj3HDutBdnncJxYkhCb01Xak+t3xZXRhJzZJoq39upAw==}
     peerDependencies:
       react: ^18.2.0 || ^19.0.0 || ^19.0.0-rc
 
@@ -1516,6 +1516,9 @@ packages:
         optional: true
       gpt-tokenizer:
         optional: true
+
+  '@llamaindex/llama-deploy@0.0.2':
+    resolution: {integrity: sha512-Vh41PKVtgaNtiyXKwQEDteS4S7Bt0mS8a44OmqRE8bIGeBwQ3GRZExMXTeERuJH4va6UO/2KzHU6u6m6kSeAvg==}
 
   '@llamaindex/node-parser@2.0.6':
     resolution: {integrity: sha512-8vJ7hsh1FKfAfO90nNe/G+/E2hM31dT/+1+0cPpZp02Ez98Jhwj+vTcCRlvyZznCn6DzHNBuw+uP1wKCqylSnQ==}
@@ -8531,12 +8534,13 @@ snapshots:
       p-retry: 6.2.1
       zod: 3.25.13
 
-  '@llamaindex/chat-ui@0.5.6(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.1)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.37.1)(@lezer/highlight@1.2.1)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)':
+  '@llamaindex/chat-ui@0.5.11(@babel/runtime@7.27.0)(@codemirror/autocomplete@6.18.6)(@codemirror/language@6.11.1)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/theme-one-dark@6.1.2)(@codemirror/view@6.37.1)(@lezer/highlight@1.2.1)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(codemirror@6.0.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)':
     dependencies:
       '@codemirror/lang-css': 6.3.1
       '@codemirror/lang-html': 6.4.9
       '@codemirror/lang-javascript': 6.2.4
       '@codemirror/lang-python': 6.2.1
+      '@llamaindex/llama-deploy': 0.0.2
       '@llamaindex/pdf-viewer': 1.3.0(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@mdxeditor/editor': 3.35.0(@codemirror/language@6.11.1)(@lezer/highlight@1.2.1)(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)
       '@radix-ui/react-accordion': 1.2.8(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -8615,6 +8619,8 @@ snapshots:
       '@aws-crypto/sha256-js': 5.2.0
       js-tiktoken: 1.0.20
       pathe: 1.1.2
+
+  '@llamaindex/llama-deploy@0.0.2': {}
 
   '@llamaindex/node-parser@2.0.6(@llamaindex/core@0.6.6)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)':
     dependencies:
@@ -10967,10 +10973,6 @@ snapshots:
   date-fns@4.1.0: {}
 
   debug@3.2.7:
-    dependencies:
-      ms: 2.1.3
-
-  debug@4.4.0:
     dependencies:
       ms: 2.1.3
 
@@ -15288,7 +15290,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       commander: 9.5.0
-      debug: 4.4.0
+      debug: 4.4.0(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 

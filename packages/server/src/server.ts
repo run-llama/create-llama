@@ -7,7 +7,7 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import type { LlamaIndexServerOptions } from "./types";
+import type { LlamaDeployConfig, LlamaIndexServerOptions } from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
@@ -16,10 +16,11 @@ const dev = process.env.NODE_ENV !== "production";
 export class LlamaIndexServer {
   port: number;
   app: ReturnType<typeof next>;
-  workflowFactory: () => Promise<Workflow> | Workflow;
+  workflowFactory?: (() => Promise<Workflow> | Workflow) | undefined;
   componentsDir?: string | undefined;
   layoutDir: string;
   suggestNextQuestions: boolean;
+  llamaDeploy?: LlamaDeployConfig | undefined;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
@@ -29,12 +30,22 @@ export class LlamaIndexServer {
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
+    this.llamaDeploy = options.uiConfig?.llamaDeploy;
 
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
     }
 
     this.modifyConfig(options);
+
+    if (this.llamaDeploy) {
+      const nextConfigContent = `
+        export default {
+          basePath: '/deployments/${this.llamaDeploy.deployment}/ui',
+        }
+      `;
+      fs.writeFileSync(path.join(nextDir, "next.config.ts"), nextConfigContent);
+    }
   }
 
   private modifyConfig(options: LlamaIndexServerOptions) {
@@ -48,6 +59,14 @@ export class LlamaIndexServer {
     const layoutApi = this.layoutDir ? "/api/layout" : undefined;
     const devMode = uiConfig?.devMode ?? false;
     const enableFileUpload = uiConfig?.enableFileUpload ?? false;
+
+    const llamaDeploy = this.llamaDeploy
+      ? {
+          deployment: this.llamaDeploy.deployment,
+          workflow: this.llamaDeploy.workflow,
+        }
+      : undefined;
+
     // content in javascript format
     const content = `
       window.LLAMAINDEX = {
@@ -58,7 +77,9 @@ export class LlamaIndexServer {
         LAYOUT_API: ${JSON.stringify(layoutApi)},
         DEV_MODE: ${JSON.stringify(devMode)},
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
-        UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)}
+        UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)},
+        DEPLOYMENT: ${JSON.stringify(llamaDeploy?.deployment)},
+        WORKFLOW: ${JSON.stringify(llamaDeploy?.workflow)}
       }
     `;
     fs.writeFileSync(configFile, content);
@@ -79,7 +100,11 @@ export class LlamaIndexServer {
       const pathname = parsedUrl.pathname;
       const query = parsedUrl.query;
 
-      if (pathname === "/api/chat" && req.method === "POST") {
+      if (
+        pathname === "/api/chat" &&
+        req.method === "POST" &&
+        this.workflowFactory
+      ) {
         // because of https://github.com/vercel/next.js/discussions/79402 we can't use route.ts here, so we need to call this custom route
         // when calling `pnpm eject`, the user will get an equivalent route at [path to chat route.ts]
         // make sure to keep its semantic in sync with handleChat
