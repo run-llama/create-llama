@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.6.1
+
+### Patch Changes
+
+- e8004fd: Fix: broken devcontainer due to deleted repo
+
 ## 0.6.0
 
 ### Minor Changes
