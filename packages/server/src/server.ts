@@ -71,7 +71,8 @@ export class LlamaIndexServer {
         DEV_MODE: ${JSON.stringify(devMode)},
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
         UPLOAD_API: ${JSON.stringify(enableFileUpload ? "/api/files" : undefined)},
-        LLAMA_DEPLOY: ${JSON.stringify(llamaDeploy)}
+        DEPLOYMENT: ${JSON.stringify(llamaDeploy?.deployment)},
+        WORKFLOW: ${JSON.stringify(llamaDeploy?.workflow)}
       }
     `;
     fs.writeFileSync(configFile, content);

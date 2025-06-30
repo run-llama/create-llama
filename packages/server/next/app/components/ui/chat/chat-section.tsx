@@ -16,10 +16,8 @@ import { DevModePanel } from "./dev-mode-panel";
 import { ChatLayout } from "./layout";
 
 export default function ChatSection() {
-  const llamaDeployConfig = getConfig("LLAMA_DEPLOY");
-  const { deployment, workflow } = llamaDeployConfig
-    ? JSON.parse(llamaDeployConfig)
-    : { deployment: "", workflow: "" };
+  const deployment = getConfig("DEPLOYMENT") || "";
+  const workflow = getConfig("WORKFLOW") || "";
   const shouldUseChatWorkflow = deployment && workflow;
 
   const handleError = (error: unknown) => {
@@ -48,17 +46,6 @@ export default function ChatSection() {
   const handler = shouldUseChatWorkflow
     ? useChatWorkflowHandler
     : useChatHandler;
-
-  if (shouldUseChatWorkflow) {
-    return (
-      <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-        <p>
-          DEPLOYMENT_NAME and WORKFLOW_NAME are required when using
-          useChatWorkflow. Please set them in frontend config file.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <>
