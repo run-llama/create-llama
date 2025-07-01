@@ -1,7 +1,7 @@
 {
   "name": "@llamaindex/server",
   "description": "LlamaIndex Server",
-  "version": "0.3.0",
+  "version": "0.2.8",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -36,7 +36,7 @@
     "clean": "rm -rf ./dist ./server ./project next/.next next/out ./temp",
     "prebuild": "pnpm clean",
     "build": "bunchee",
-    "postbuild": "pnpm prepare:nextjs && pnpm prepare:ts-server",
+    "postbuild": "pnpm prepare:nextjs && pnpm prepare:ts-server && pnpm prepare:py-static",
     "prepare:nextjs": "cp -r ./next ./project && cp -r ./src/utils ./project/app/api/chat && cp -r ./project-config/* ./project/",
     "prepare:ts-server": "pnpm copy:next-src && pnpm build:css && pnpm build:api",
     "prepare:py-static": "pnpm prepare:static && pnpm build:static && pnpm copy:static",
