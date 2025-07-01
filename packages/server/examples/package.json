@@ -10,7 +10,7 @@
     "@llamaindex/openai": "~0.4.0",
     "@llamaindex/readers": "~3.1.4",
     "@llamaindex/server": "workspace:*",
-    "@llamaindex/tools": "~0.0.11",
+    "@llamaindex/tools": "~0.1.2",
     "dotenv": "^16.4.7",
     "llamaindex": "~0.11.0",
     "zod": "^3.24.2"
