@@ -12,6 +12,11 @@ export type WorkflowFactory = (
 
 export type NextAppOptions = Parameters<typeof next>[0];
 
+export type LlamaDeployConfig = {
+  deployment: string;
+  workflow: string;
+};
+
 export type UIConfig = {
   starterQuestions?: string[];
   componentsDir?: string;
@@ -19,10 +24,11 @@ export type UIConfig = {
   llamaCloudIndexSelector?: boolean;
   devMode?: boolean;
   enableFileUpload?: boolean;
+  llamaDeploy?: LlamaDeployConfig;
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {
-  workflow: WorkflowFactory;
+  workflow?: WorkflowFactory;
   uiConfig?: UIConfig;
   suggestNextQuestions?: boolean;
 };
