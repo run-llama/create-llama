@@ -13,6 +13,7 @@ const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const nextConfigFile = path.join(nextDir, "next.config.ts");
 const layoutFile = path.join(nextDir, "app", "layout.tsx");
+const constantsFile = path.join(nextDir, "app", "constants.ts");
 const dev = process.env.NODE_ENV !== "production";
 
 export class LlamaIndexServer {
@@ -67,13 +68,13 @@ export default {
 `;
     fs.writeFileSync(nextConfigFile, nextConfigContent);
 
-    // update script src with basePath
-    const layoutContent = fs.readFileSync(layoutFile, "utf8");
-    const newLayoutContent = layoutContent.replace(
-      '<script async src="./config.js"></script>',
-      `<script async src="${basePath}/config.js"></script>`,
+    // update basePath in constants.ts
+    const constantsContent = fs.readFileSync(constantsFile, "utf8");
+    const newConstantsContent = constantsContent.replace(
+      'export const BASE_PATH = ""',
+      `export const BASE_PATH = "${basePath}"`,
     );
-    fs.writeFileSync(layoutFile, newLayoutContent, "utf8");
+    fs.writeFileSync(constantsFile, newConstantsContent, "utf8");
   }
 
   private modifyConfig(options: LlamaIndexServerOptions) {

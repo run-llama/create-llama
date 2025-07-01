@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles, Star } from "lucide-react";
+import { LLAMA_LOGO_URL } from "../../../../constants";
 
 export function DefaultHeader() {
   return (
@@ -21,7 +22,7 @@ export function DefaultHeader() {
           </a>
           <img
             className="h-[24px] w-[24px] rounded-sm"
-            src="/llama.png"
+            src={LLAMA_LOGO_URL}
             alt="Llama Logo"
           />
         </div>
