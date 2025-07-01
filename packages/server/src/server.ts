@@ -45,6 +45,11 @@ export class LlamaIndexServer {
         // workflow file is in llama-deploy src, so we should disable devmode
         throw new Error("Devmode is not supported when enabling LlamaDeploy");
       }
+    } else {
+      // if llamaDeploy is not set but workflowFactory is not defined, we should throw an error
+      if (!this.workflowFactory) {
+        throw new Error("workflowFactory is required for chat api to work");
+      }
     }
 
     if (this.componentsDir) {
