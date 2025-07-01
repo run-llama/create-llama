@@ -1,5 +1,12 @@
 # @llamaindex/server
 
+## 0.2.9
+
+### Patch Changes
+
+- 52cc37f: feat: flag to enable useChatWorkflow
+- 952b5b4: fix: peer deps and sourcemap issues made ts server start fail
+
 ## 0.2.8
 
 ### Patch Changes

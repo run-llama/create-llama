@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.6.1
+
+### Patch Changes
+
+- 952b5b4: fix: peer deps and sourcemap issues made ts server start fail
+- e8004fd: Fix: broken devcontainer due to deleted repo
+
 ## 0.6.0
 
 ### Minor Changes
