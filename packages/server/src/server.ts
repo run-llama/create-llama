@@ -34,6 +34,18 @@ export class LlamaIndexServer {
     this.suggestNextQuestions = suggestNextQuestions ?? true;
     this.llamaDeploy = options.uiConfig?.llamaDeploy;
 
+    if (this.llamaDeploy) {
+      if (!this.llamaDeploy.deployment || !this.llamaDeploy.workflow) {
+        throw new Error(
+          "LlamaDeploy requires deployment and workflow to be set",
+        );
+      }
+      if (options.uiConfig?.devMode) {
+        // workflow file is in llama-deploy src, so we should disable devmode
+        throw new Error("Devmode is not supported when enabling LlamaDeploy");
+      }
+    }
+
     if (this.componentsDir) {
       this.createComponentsDir(this.componentsDir);
     }
