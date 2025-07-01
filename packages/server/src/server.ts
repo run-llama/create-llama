@@ -68,7 +68,8 @@ export default {
 `;
     fs.writeFileSync(nextConfigFile, nextConfigContent);
 
-    // update basePath in constants.ts
+    // some UI code use absolute paths, such as /llama.png, /config.js, etc.
+    // so that we need to update basePath for them
     const constantsContent = fs.readFileSync(constantsFile, "utf8");
     const newConstantsContent = constantsContent.replace(
       'export const BASE_PATH = ""',
