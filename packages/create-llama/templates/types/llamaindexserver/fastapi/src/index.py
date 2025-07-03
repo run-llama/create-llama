@@ -6,7 +6,7 @@ from llama_index.core.storage import StorageContext
 
 logger = logging.getLogger("uvicorn")
 
-STORAGE_DIR = "storage"
+STORAGE_DIR = "src/storage"
 
 
 def get_index():
