@@ -53,3 +53,6 @@ allow-direct-references = true
 [build-system]
 requires = [ "hatchling>=1.24" ]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
