@@ -16,7 +16,7 @@ If you don't have uv installed, you can follow the instructions [here](https://d
 
 ## Configure LLM and Embedding Model
 
-You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](app/settings.py).
+You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](src/settings.py).
 
 Remember to setup their respective API keys in the `src/.env` file.
 
