@@ -228,7 +228,14 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
   }
 };
 
-const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
+const getModelEnvs = (
+  modelConfig: ModelConfig,
+  framework: TemplateFramework,
+  template: TemplateType,
+): EnvVar[] => {
+  const isPythonUseCase =
+    framework === "fastapi" && template === "llamaindexserver";
+
   return [
     {
       name: "MODEL",
@@ -240,10 +247,15 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
-    {
-      name: "CONVERSATION_STARTERS",
-      description: "The questions to help users get started (multi-line).",
-    },
+    ...(isPythonUseCase
+      ? []
+      : [
+          {
+            name: "CONVERSATION_STARTERS",
+            description:
+              "The questions to help users get started (multi-line).",
+          },
+        ]),
     ...(modelConfig.provider === "openai"
       ? [
           {
@@ -251,14 +263,18 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
-          {
-            name: "LLM_TEMPERATURE",
-            description: "Temperature for sampling from the model.",
-          },
-          {
-            name: "LLM_MAX_TOKENS",
-            description: "Maximum number of tokens to generate.",
-          },
+          ...(isPythonUseCase
+            ? []
+            : [
+                {
+                  name: "LLM_TEMPERATURE",
+                  description: "Temperature for sampling from the model.",
+                },
+                {
+                  name: "LLM_MAX_TOKENS",
+                  description: "Maximum number of tokens to generate.",
+                },
+              ]),
         ]
       : []),
     ...(modelConfig.provider === "anthropic"
@@ -367,11 +383,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
 
 const getFrameworkEnvs = (
   framework: TemplateFramework,
+  template?: TemplateType,
   port?: number,
 ): EnvVar[] => {
   const sPort = port?.toString() || "8000";
   const result: EnvVar[] = [];
-  if (framework === "fastapi") {
+  if (framework === "fastapi" && template !== "llamaindexserver") {
     result.push(
       ...[
         {
@@ -418,8 +435,8 @@ export const createBackendEnvFile = async (
         ]
       : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
-    ...getFrameworkEnvs(opts.framework, opts.port),
-    ...getModelEnvs(opts.modelConfig),
+    ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
+    ...getModelEnvs(opts.modelConfig, opts.framework, opts.template),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);

@@ -412,13 +412,35 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("*.py", path.join(root, "app"), {
+  /**
+   * Python use-cases structure:
+   * src/
+   * ├── workflow.py
+   * ├── settings.py
+   * ├── index.py
+   * ├── generate.py
+   * ├── ... (other utility files)
+   * ui/
+   * ├── index.ts
+   * └── package.json
+   * ├── components/*.tsx
+   * ├── layout/*.tsx
+   * llama_deploy.yaml
+   * pyproject.toml
+   * README.md
+   */
+
+  const srcDir = path.join(root, "src");
+  const uiDir = path.join(root, "ui");
+
+  // copy workflow code to src folder
+  await copy("*.py", srcDir, {
     parents: true,
     cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
   });
 
-  // copy model provider settings to app folder
-  await copy("**", path.join(root, "app"), {
+  // copy model provider settings to src folder
+  await copy("**", srcDir, {
     cwd: path.join(
       templatesDir,
       "components",
@@ -428,20 +450,26 @@ const installLlamaIndexServerTemplate = async ({
     ),
   });
 
-  // Copy custom UI component code
-  await copy(`*`, path.join(root, "components"), {
+  // copy ts server to ui folder
+  await copy("**", uiDir, {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ts-proxy"),
+  });
+
+  // Copy custom UI components to ui/components folder
+  await copy(`*`, path.join(uiDir, "components"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
   });
 
-  // Copy layout components to layout folder in root
-  await copy("*", path.join(root, "layout"), {
+  // Copy layout components to ui/layout folder
+  await copy("*", path.join(uiDir, "layout"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "layout"),
   });
 
   if (useLlamaParse) {
-    await copy("index.py", path.join(root, "app"), {
+    await copy("index.py", srcDir, {
       parents: true,
       cwd: path.join(
         templatesDir,
@@ -453,7 +481,7 @@ const installLlamaIndexServerTemplate = async ({
       ),
     });
     // TODO: Consider moving generate.py to app folder.
-    await copy("generate.py", path.join(root), {
+    await copy("generate.py", srcDir, {
       parents: true,
       cwd: path.join(
         templatesDir,

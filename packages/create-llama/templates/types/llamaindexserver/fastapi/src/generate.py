@@ -59,6 +59,7 @@ def generate_ui_for_workflow():
     except ImportError:
         raise ImportError("Couldn't generate UI component for the current workflow.")
     from llama_index.server.gen_ui import generate_event_component
+    # TODO: remove llama_index.server
 
     # works well with OpenAI gpt-4.1, Claude 3.7 Sonnet or Gemini Pro 2.5
     code = asyncio.run(
