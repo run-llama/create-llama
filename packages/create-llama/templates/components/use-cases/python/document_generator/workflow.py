@@ -17,7 +17,7 @@ from llama_index.core.workflow import (
 from llama_index.core.chat_ui.models.artifact import (
     Artifact,
     ArtifactType,
-    CodeArtifactData,
+    DocumentArtifactData,
 )
 from llama_index.core.chat_ui.events import (
     UIEvent,
@@ -114,9 +114,9 @@ class DocumentArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(self.last_artifact.model_dump_json())
-            if self.last_artifact
-            else "",
+            context=(
+                str(self.last_artifact.model_dump_json()) if self.last_artifact else ""
+            ),
         )
 
     @step
@@ -134,7 +134,8 @@ class DocumentArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
          You are a documentation analyst responsible for analyzing the user's request and providing requirements for document generation or update.
          Follow these instructions:
          1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
@@ -175,10 +176,13 @@ class DocumentArtifactWorkflow(Workflow):
 
          Now, please plan for the user's request:
          {user_msg}
-        """).format(
-            context=""
-            if event.context is None
-            else f"## The context is: \n{event.context}\n",
+        """
+        ).format(
+            context=(
+                ""
+                if event.context is None
+                else f"## The context is: \n{event.context}\n"
+            ),
             user_msg=event.user_msg,
         )
         response = await self.llm.acomplete(
@@ -231,7 +235,8 @@ class DocumentArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
          You are a skilled technical writer who can help users with documentation.
          You are given a task to generate or update a document for a given requirement.
 
@@ -264,10 +269,11 @@ class DocumentArtifactWorkflow(Workflow):
 
          Now, please generate the document for the following requirement:
          {requirement}
-         """).format(
-            previous_artifact=self.last_artifact.model_dump_json()
-            if self.last_artifact
-            else "",
+         """
+        ).format(
+            previous_artifact=(
+                self.last_artifact.model_dump_json() if self.last_artifact else ""
+            ),
             requirement=event.requirement,
         )
         response = await self.llm.acomplete(
@@ -344,6 +350,7 @@ class DocumentArtifactWorkflow(Workflow):
             )
         )
         return StopEvent(result=response_stream)
+
 
 load_dotenv()
 init_settings()
