@@ -14,6 +14,12 @@ uv sync
 
 If you don't have uv installed, you can follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
 
+## Configure LLM and Embedding Model
+
+You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](app/settings.py).
+
+Remember to setup their respective API keys in the `src/.env` file.
+
 ## Running the Deployment
 
 At this point we have all we need to run this deployment. Ideally, we would have the API server already running
@@ -67,11 +73,6 @@ Note that the task_id and session_id are returned when creating a new task.
 
 AI-powered code generator that can help you generate app with a chat interface, code editor and app preview.
 To update the workflow, you can modify the code in [`workflow.py`](app/workflow.py).
-
-## Configure LLM and Embedding Model
-
-You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](app/settings.py).
-
 
 ## Customize the UI
 
