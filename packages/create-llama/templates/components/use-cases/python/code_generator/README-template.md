@@ -12,6 +12,8 @@ Both the SDK and the CLI are part of the LlamaDeploy Python package. To install,
 uv sync
 ```
 
+If you don't have uv installed, you can follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
+
 ## Running the Deployment
 
 At this point we have all we need to run this deployment. Ideally, we would have the API server already running
