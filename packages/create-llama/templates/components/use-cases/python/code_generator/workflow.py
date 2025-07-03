@@ -26,7 +26,9 @@ from llama_index.core.chat_ui.events import (
 
 from src.utils import get_last_artifact
 from src.settings import init_settings
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+
 
 class Requirement(BaseModel):
     next_step: Literal["answering", "coding"]
@@ -114,9 +116,9 @@ class CodeArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(self.last_artifact.model_dump_json())
-            if self.last_artifact
-            else "",
+            context=(
+                str(self.last_artifact.model_dump_json()) if self.last_artifact else ""
+            ),
         )
 
     @step
@@ -136,7 +138,8 @@ class CodeArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
         You are a product analyst responsible for analyzing the user's request and providing the next step for code or document generation.
         You are helping user with their code artifact. To update the code, you need to plan a coding step.
     
@@ -190,10 +193,13 @@ class CodeArtifactWorkflow(Workflow):
 
         Now, plan the user's next step for this request:
         {user_msg}
-        """).format(
-            context=""
-            if event.context is None
-            else f"## The context is: \n{event.context}\n",
+        """
+        ).format(
+            context=(
+                ""
+                if event.context is None
+                else f"## The context is: \n{event.context}\n"
+            ),
             user_msg=event.user_msg,
         )
         response = await self.llm.acomplete(
@@ -251,7 +257,8 @@ class CodeArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
          You are a skilled developer who can help user with coding.
          You are given a task to generate or update a code for a given requirement.
 
@@ -298,10 +305,11 @@ class CodeArtifactWorkflow(Workflow):
          Now, i have to generate the code for the following requirement:
          {requirement}
          ```
-        """).format(
-            previous_artifact=self.last_artifact.model_dump_json()
-            if self.last_artifact
-            else "",
+        """
+        ).format(
+            previous_artifact=(
+                self.last_artifact.model_dump_json() if self.last_artifact else ""
+            ),
             requirement=event.requirement,
         )
         response = await self.llm.acomplete(
@@ -371,5 +379,7 @@ class CodeArtifactWorkflow(Workflow):
         )
         return StopEvent(result=response_stream)
 
+
+load_dotenv()
 init_settings()
 workflow = CodeArtifactWorkflow()

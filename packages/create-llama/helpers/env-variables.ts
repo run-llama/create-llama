@@ -233,7 +233,7 @@ const getModelEnvs = (
   framework: TemplateFramework,
   template: TemplateType,
 ): EnvVar[] => {
-  const isPythonUseCase =
+  const isPythonLlamaDeploy =
     framework === "fastapi" && template === "llamaindexserver";
 
   return [
@@ -247,7 +247,7 @@ const getModelEnvs = (
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
-    ...(isPythonUseCase
+    ...(isPythonLlamaDeploy
       ? []
       : [
           {
@@ -263,7 +263,7 @@ const getModelEnvs = (
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
-          ...(isPythonUseCase
+          ...(isPythonLlamaDeploy
             ? []
             : [
                 {
@@ -440,6 +440,16 @@ export const createBackendEnvFile = async (
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);
-  await fs.writeFile(path.join(root, envFileName), content);
+
+  const isPythonLlamaDeploy =
+    opts.framework === "fastapi" && opts.template === "llamaindexserver";
+
+  // llama-deploy will copy the whole src folder contains workflow file so that
+  // we need to put the .env file inside it for loading the env variables correctly
+  const envPath = isPythonLlamaDeploy
+    ? path.join(root, "src", envFileName)
+    : path.join(root, envFileName);
+
+  await fs.writeFile(envPath, content);
   console.log(`Created '${envFileName}' file. Please check the settings.`);
 };

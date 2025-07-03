@@ -156,10 +156,8 @@ export const installTemplate = async (props: InstallTemplateArgs) => {
     await installTSTemplate(props);
   }
 
-  const isPythonUseCase =
-    props.framework === "fastapi" &&
-    props.template === "llamaindexserver" &&
-    !!props.useCase;
+  const isPythonLlamaDeploy =
+    props.framework === "fastapi" && props.template === "llamaindexserver";
 
   // This is a backend, so we need to copy the test data and create the env file.
 
@@ -188,8 +186,8 @@ export const installTemplate = async (props: InstallTemplateArgs) => {
     );
   }
 
-  if (!isPythonUseCase) {
-    // Create outputs directory (python use-cases are using llama-deploy so don't need this)
+  if (!isPythonLlamaDeploy) {
+    // Create outputs directory (llama-deploy doesn't need this)
     await makeDir(path.join(props.root, "output/tools"));
     await makeDir(path.join(props.root, "output/uploaded"));
     await makeDir(path.join(props.root, "output/llamacloud"));
