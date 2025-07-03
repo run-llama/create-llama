@@ -53,17 +53,3 @@ allow-direct-references = true
 [build-system]
 requires = [ "hatchling>=1.24" ]
 build-backend = "hatchling.build"
-
-[[tool.mypy.overrides]]
-module = "src.*"
-ignore_missing_imports = false
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[build-system]
-requires = [ "hatchling>=1.24" ]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/generate.py"]
