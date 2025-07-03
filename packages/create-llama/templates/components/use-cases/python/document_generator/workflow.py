@@ -29,6 +29,10 @@ from src.settings import init_settings
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    return DocumentArtifactWorkflow(timeout=120.0)
 
 class DocumentRequirement(BaseModel):
     type: Literal["markdown", "html"]
@@ -352,6 +356,4 @@ class DocumentArtifactWorkflow(Workflow):
         return StopEvent(result=response_stream)
 
 
-load_dotenv()
-init_settings()
-workflow = DocumentArtifactWorkflow()
+workflow = create_workflow()

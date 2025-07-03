@@ -29,6 +29,11 @@ from src.settings import init_settings
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    return CodeArtifactWorkflow(timeout=120.0)
+
 
 class Requirement(BaseModel):
     next_step: Literal["answering", "coding"]
@@ -374,6 +379,4 @@ class CodeArtifactWorkflow(Workflow):
         return StopEvent(result=response_stream)
 
 
-load_dotenv()
-init_settings()
-workflow = CodeArtifactWorkflow()
+workflow = create_workflow()
