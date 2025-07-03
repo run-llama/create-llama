@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "python-dotenv>=1.0.0,<2.0.0",
-    "pydantic<2.10",
+    "pydantic>=2.11.5",
     "aiostream>=0.5.2,<0.6.0",
     "llama-index-core>=0.12.28,<0.13.0",
     "llama-deploy",
@@ -44,14 +44,3 @@ follow_imports = "silent"
 implicit_optional = true
 strict_optional = false
 disable_error_code = [ "return-value", "assignment" ]
-
-[[tool.mypy.overrides]]
-module = "app.*"
-ignore_missing_imports = false
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[build-system]
-requires = [ "hatchling>=1.24" ]
-build-backend = "hatchling.build"
