@@ -16,7 +16,7 @@ If you don't have uv installed, you can follow the instructions [here](https://d
 
 ## Configure LLM and Embedding Model
 
-You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [settings.py](src/settings.py).
+You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [src/settings.py](src/settings.py).
 
 Remember to setup their respective API keys in the `src/.env` file.
 
@@ -72,11 +72,21 @@ Note that the task_id and session_id are returned when creating a new task.
 ## Use Case
 
 AI-powered document generator that can help you generate documents with a chat interface and simple markdown editor.
-To update the workflow, you can modify the code in [`workflow.py`](src/workflow.py).
+To update the workflow, you can modify the code in [`src/workflow.py`](src/workflow.py).
 
 ## Customize the UI
 
-To customize the UI, you can start by modifying the [./components/ui_event.jsx](./components/ui_event.jsx) file.
+The UI is served by LLamaIndexServer package, you can configure the UI by modifying the `uiConfig` in the [ui/index.ts](ui/index.ts) file.
+
+The following are the available options:
+
+- `starterQuestions`: Predefined questions for chat interface
+- `componentsDir`: Directory for custom event components
+- `layoutDir`: Directory for custom layout components
+- `llamaCloudIndexSelector`: Enable LlamaCloud integration
+- `llamaDeploy`: The LlamaDeploy configration (deployment name and workflow name that defined in the [llama_deploy.yml](llama_deploy.yml) file)
+
+To customize the UI, you can start by modifying the [./ui/components/ui_event.jsx](./ui/components/ui_event.jsx) file.
 
 You can also generate a new code for the workflow using LLM by running the following command:
 
