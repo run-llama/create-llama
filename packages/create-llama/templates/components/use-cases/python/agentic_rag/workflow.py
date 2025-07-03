@@ -4,8 +4,13 @@ from llama_index.core.settings import Settings
 from src.query import get_query_engine_tool
 from src.citation import CITATION_SYSTEM_PROMPT, enable_citation
 
+from dotenv import load_dotenv
+from src.settings import init_settings
+
 
 def create_workflow() -> AgentWorkflow:
+    load_dotenv()
+    init_settings()
     index = get_index()
     if index is None:
         raise RuntimeError(
