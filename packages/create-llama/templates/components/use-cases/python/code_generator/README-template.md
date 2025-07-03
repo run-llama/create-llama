@@ -72,7 +72,7 @@ Note that the task_id and session_id are returned when creating a new task.
 ## Use Case
 
 AI-powered code generator that can help you generate app with a chat interface, code editor and app preview.
-To update the workflow, you can modify the code in [`workflow.py`](app/workflow.py).
+To update the workflow, you can modify the code in [`workflow.py`](src/workflow.py).
 
 ## Customize the UI
 
