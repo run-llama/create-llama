@@ -444,8 +444,9 @@ export const createBackendEnvFile = async (
   const isPythonLlamaDeploy =
     opts.framework === "fastapi" && opts.template === "llamaindexserver";
 
-  // llama-deploy only copies the src folder without copying files in root,
-  // so we need to put the .env file inside src/ to use env variables in the workflow file
+  // each llama-deploy service will need a .env inside its directory
+  // this .env will be copied along with workflow code when service is deployed
+  // so that we need to put the .env file inside src/ instead of root
   const envPath = isPythonLlamaDeploy
     ? path.join(root, "src", envFileName)
     : path.join(root, envFileName);
