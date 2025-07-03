@@ -4,6 +4,14 @@ This is a [LlamaIndex](https://www.llamaindex.ai/) project that using [Workflows
 
 LlamaDeploy is a system for deploying and managing LlamaIndex workflows, while LlamaIndexServer provides a pre-built TypeScript server with an integrated chat UI that can connect directly to LlamaDeploy deployments. This example shows how you can quickly set up a complete chat application by combining these two technologies/
 
+## Prerequisites
+
+If you haven't installed uv, you can follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation/) to install it.
+
+You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [src/settings.py](src/settings.py).
+
+Please setup their  API keys in the `src/.env` file.
+
 ## Installation
 
 Both the SDK and the CLI are part of the LlamaDeploy Python package. To install, just run:
@@ -13,12 +21,6 @@ uv sync
 ```
 
 If you don't have uv installed, you can follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
-
-## Configure LLM and Embedding Model
-
-You can configure [LLM model](https://docs.llamaindex.ai/en/stable/module_guides/models/llms) and [embedding model](https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings) in [src/settings.py](src/settings.py).
-
-Remember to setup their respective API keys in the `src/.env` file.
 
 ## Running the Deployment
 
