@@ -42,8 +42,8 @@ logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 
 
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
-    index = get_index(chat_request=chat_request)
+def create_workflow() -> Workflow:
+    index = get_index()
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."
@@ -575,3 +575,5 @@ def _get_text_node_content_for_citation(node: NodeWithScore) -> str:
     node_id = node.node.node_id
     content = f"<Citation id='{node_id}'>\n{node.get_content(metadata_mode=MetadataMode.LLM)}</Citation id='{node_id}'>"
     return content
+
+workflow = create_workflow()
