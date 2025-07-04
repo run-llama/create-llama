@@ -11,8 +11,8 @@ def generate_index():
     """
     Index the documents in the data directory.
     """
-    from index import STORAGE_DIR
-    from settings import init_settings
+    from src.index import STORAGE_DIR
+    from src.settings import init_settings
     from llama_index.core.indices import (
         VectorStoreIndex,
     )
