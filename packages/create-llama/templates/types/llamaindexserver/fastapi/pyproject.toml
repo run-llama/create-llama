@@ -12,6 +12,8 @@ dependencies = [
     "pydantic>=2.11.5",
     "aiostream>=0.5.2,<0.6.0",
     "llama-index-core>=0.12.28,<0.13.0",
+    "llama-index-readers-file>=0.4.6,<1.0.0",
+    "llama-index-indices-managed-llama-cloud>=0.6.3,<1.0.0",
     "llama-deploy",
 ]
 
