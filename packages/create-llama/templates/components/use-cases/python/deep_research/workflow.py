@@ -1,9 +1,11 @@
 import logging
 import os
 import uuid
+import time
 from typing import List, Literal, Optional
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
-from src.index import get_index
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -34,15 +36,19 @@ from llama_index.core.chat_ui.events import (
     ArtifactEvent,
     SourceNodesEvent,
 )
-import time
+
+from src.index import get_index
+from src.settings import init_settings
 from src.utils import write_response_to_stream
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 
 
 def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    # TODO: load index in StartEvent
     index = get_index()
     if index is None:
         raise ValueError(
@@ -575,5 +581,6 @@ def _get_text_node_content_for_citation(node: NodeWithScore) -> str:
     node_id = node.node.node_id
     content = f"<Citation id='{node_id}'>\n{node.get_content(metadata_mode=MetadataMode.LLM)}</Citation id='{node_id}'>"
     return content
+
 
 workflow = create_workflow()
