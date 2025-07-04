@@ -10,6 +10,7 @@ const CLIInputEventSchema = z.object({
 });
 type CLIInputEvent = z.infer<typeof CLIInputEventSchema>;
 
+// TODO: this component is working well for TS server. But not for HITL in Python llama-deploy.
 const CLIHumanInput: FC<{
   events: JSONValue[];
 }> = ({ events }) => {
