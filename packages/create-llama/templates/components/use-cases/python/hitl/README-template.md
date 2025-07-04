@@ -22,14 +22,6 @@ uv sync
 
 If you don't have uv installed, you can follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
 
-## Generate Index
-
-Generate the embeddings of the documents in the `./data` directory:
-
-```shell
-uv run generate
-```
-
 ## Running the Deployment
 
 At this point we have all we need to run this deployment. Ideally, we would have the API server already running
