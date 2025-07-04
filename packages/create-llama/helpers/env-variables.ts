@@ -228,7 +228,14 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
   }
 };
 
-const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
+const getModelEnvs = (
+  modelConfig: ModelConfig,
+  framework: TemplateFramework,
+  template: TemplateType,
+): EnvVar[] => {
+  const isPythonLlamaDeploy =
+    framework === "fastapi" && template === "llamaindexserver";
+
   return [
     {
       name: "MODEL",
@@ -240,10 +247,15 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
       description: "Name of the embedding model to use.",
       value: modelConfig.embeddingModel,
     },
-    {
-      name: "CONVERSATION_STARTERS",
-      description: "The questions to help users get started (multi-line).",
-    },
+    ...(isPythonLlamaDeploy
+      ? []
+      : [
+          {
+            name: "CONVERSATION_STARTERS",
+            description:
+              "The questions to help users get started (multi-line).",
+          },
+        ]),
     ...(modelConfig.provider === "openai"
       ? [
           {
@@ -251,14 +263,18 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
             description: "The OpenAI API key to use.",
             value: modelConfig.apiKey,
           },
-          {
-            name: "LLM_TEMPERATURE",
-            description: "Temperature for sampling from the model.",
-          },
-          {
-            name: "LLM_MAX_TOKENS",
-            description: "Maximum number of tokens to generate.",
-          },
+          ...(isPythonLlamaDeploy
+            ? []
+            : [
+                {
+                  name: "LLM_TEMPERATURE",
+                  description: "Temperature for sampling from the model.",
+                },
+                {
+                  name: "LLM_MAX_TOKENS",
+                  description: "Maximum number of tokens to generate.",
+                },
+              ]),
         ]
       : []),
     ...(modelConfig.provider === "anthropic"
@@ -367,11 +383,12 @@ const getModelEnvs = (modelConfig: ModelConfig): EnvVar[] => {
 
 const getFrameworkEnvs = (
   framework: TemplateFramework,
+  template?: TemplateType,
   port?: number,
 ): EnvVar[] => {
   const sPort = port?.toString() || "8000";
   const result: EnvVar[] = [];
-  if (framework === "fastapi") {
+  if (framework === "fastapi" && template !== "llamaindexserver") {
     result.push(
       ...[
         {
@@ -418,11 +435,22 @@ export const createBackendEnvFile = async (
         ]
       : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
-    ...getFrameworkEnvs(opts.framework, opts.port),
-    ...getModelEnvs(opts.modelConfig),
+    ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
+    ...getModelEnvs(opts.modelConfig, opts.framework, opts.template),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);
-  await fs.writeFile(path.join(root, envFileName), content);
+
+  const isPythonLlamaDeploy =
+    opts.framework === "fastapi" && opts.template === "llamaindexserver";
+
+  // each llama-deploy service will need a .env inside its directory
+  // this .env will be copied along with workflow code when service is deployed
+  // so that we need to put the .env file inside src/ instead of root
+  const envPath = isPythonLlamaDeploy
+    ? path.join(root, "src", envFileName)
+    : path.join(root, envFileName);
+
+  await fs.writeFile(envPath, content);
   console.log(`Created '${envFileName}' file. Please check the settings.`);
 };

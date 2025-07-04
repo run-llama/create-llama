@@ -1,10 +1,9 @@
 import re
 import time
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
-from llama_index.core.chat_engine.types import ChatMessage
-from llama_index.core.llms import LLM
-from llama_index.llms.openai import OpenAI
+from llama_index.core import Settings
+from llama_index.core.llms import LLM, ChatMessage
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.workflow import (
@@ -15,26 +14,25 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import (
+from llama_index.core.chat_ui.models.artifact import (
     Artifact,
-    ArtifactEvent,
     ArtifactType,
-    ChatRequest,
     DocumentArtifactData,
-    UIEvent,
 )
-from llama_index.server.api.utils import get_last_artifact
+from llama_index.core.chat_ui.events import (
+    UIEvent,
+    ArtifactEvent,
+)
+
+from src.utils import get_last_artifact
+from src.settings import init_settings
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
-
-def create_workflow(chat_request: ChatRequest) -> Workflow:
-    workflow = DocumentArtifactWorkflow(
-        llm=OpenAI(model="gpt-4.1"),
-        chat_request=chat_request,
-        timeout=120.0,
-    )
-    return workflow
-
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    return DocumentArtifactWorkflow(timeout=120.0)
 
 class DocumentRequirement(BaseModel):
     type: Literal["markdown", "html"]
@@ -81,8 +79,6 @@ class DocumentArtifactWorkflow(Workflow):
 
     def __init__(
         self,
-        llm: LLM,
-        chat_request: ChatRequest,
         **kwargs: Any,
     ):
         """
@@ -91,9 +87,8 @@ class DocumentArtifactWorkflow(Workflow):
             chat_request: The chat request from the chat app to use.
         """
         super().__init__(**kwargs)
-        self.llm = llm
-        self.chat_request = chat_request
-        self.last_artifact = get_last_artifact(chat_request)
+        self.llm: LLM = Settings.llm
+        self.last_artifact: Optional[Artifact] = None
 
     @step
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> PlanEvent:
@@ -101,13 +96,21 @@ class DocumentArtifactWorkflow(Workflow):
         if user_msg is None:
             raise ValueError("user_msg is required to run the workflow")
         await ctx.set("user_msg", user_msg)
-        chat_history = ev.chat_history or []
-        chat_history.append(
+
+        # prepare chat history from StartEvent
+        messages = [
             ChatMessage(
-                role="user",
-                content=user_msg,
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
             )
-        )
+            for msg in ev.get("chat_history", [])
+        ]
+        chat_history = [*messages, ChatMessage(role="user", content=user_msg)]
+
+        # extract inline artifact from chat history
+        last_artifact = get_last_artifact(messages)
+        self.last_artifact = last_artifact
+
         memory = ChatMemoryBuffer.from_defaults(
             chat_history=chat_history,
             llm=self.llm,
@@ -115,9 +118,9 @@ class DocumentArtifactWorkflow(Workflow):
         await ctx.set("memory", memory)
         return PlanEvent(
             user_msg=user_msg,
-            context=str(self.last_artifact.model_dump_json())
-            if self.last_artifact
-            else "",
+            context=(
+                str(self.last_artifact.model_dump_json()) if self.last_artifact else ""
+            ),
         )
 
     @step
@@ -135,7 +138,8 @@ class DocumentArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
          You are a documentation analyst responsible for analyzing the user's request and providing requirements for document generation or update.
          Follow these instructions:
          1. Carefully analyze the conversation history and the user's request to determine what has been done and what the next step should be.
@@ -176,10 +180,13 @@ class DocumentArtifactWorkflow(Workflow):
 
          Now, please plan for the user's request:
          {user_msg}
-        """).format(
-            context=""
-            if event.context is None
-            else f"## The context is: \n{event.context}\n",
+        """
+        ).format(
+            context=(
+                ""
+                if event.context is None
+                else f"## The context is: \n{event.context}\n"
+            ),
             user_msg=event.user_msg,
         )
         response = await self.llm.acomplete(
@@ -232,7 +239,8 @@ class DocumentArtifactWorkflow(Workflow):
                 ),
             )
         )
-        prompt = PromptTemplate("""
+        prompt = PromptTemplate(
+            """
          You are a skilled technical writer who can help users with documentation.
          You are given a task to generate or update a document for a given requirement.
 
@@ -265,10 +273,11 @@ class DocumentArtifactWorkflow(Workflow):
 
          Now, please generate the document for the following requirement:
          {requirement}
-         """).format(
-            previous_artifact=self.last_artifact.model_dump_json()
-            if self.last_artifact
-            else "",
+         """
+        ).format(
+            previous_artifact=(
+                self.last_artifact.model_dump_json() if self.last_artifact else ""
+            ),
             requirement=event.requirement,
         )
         response = await self.llm.acomplete(
@@ -345,3 +354,6 @@ class DocumentArtifactWorkflow(Workflow):
             )
         )
         return StopEvent(result=response_stream)
+
+
+workflow = create_workflow()

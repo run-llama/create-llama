@@ -156,6 +156,9 @@ export const installTemplate = async (props: InstallTemplateArgs) => {
     await installTSTemplate(props);
   }
 
+  const isPythonLlamaDeploy =
+    props.framework === "fastapi" && props.template === "llamaindexserver";
+
   // This is a backend, so we need to copy the test data and create the env file.
 
   // Copy the environment file to the target directory.
@@ -183,10 +186,12 @@ export const installTemplate = async (props: InstallTemplateArgs) => {
     );
   }
 
-  // Create outputs directory
-  await makeDir(path.join(props.root, "output/tools"));
-  await makeDir(path.join(props.root, "output/uploaded"));
-  await makeDir(path.join(props.root, "output/llamacloud"));
+  if (!isPythonLlamaDeploy) {
+    // Create outputs directory (llama-deploy doesn't need this)
+    await makeDir(path.join(props.root, "output/tools"));
+    await makeDir(path.join(props.root, "output/uploaded"));
+    await makeDir(path.join(props.root, "output/llamacloud"));
+  }
 };
 
 export * from "./types";

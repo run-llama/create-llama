@@ -21,7 +21,7 @@ export default function Header() {
           </a>
           <img
             className="h-[24px] w-[24px] rounded-sm"
-            src="/llama.png"
+            src="https://ui.llamaindex.ai/llama.png"
             alt="Llama Logo"
           />
         </div>
