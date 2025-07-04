@@ -90,12 +90,6 @@ The following are the available options:
 
 To customize the UI, you can start by modifying the [./ui/components/ui_event.jsx](./ui/components/ui_event.jsx) file.
 
-You can also generate a new code for the workflow using LLM by running the following command:
-
-```
-uv run generate_ui
-```
-
 ## Learn More
 
 - [LlamaIndex Documentation](https://docs.llamaindex.ai) - learn about LlamaIndex.
