@@ -15,10 +15,6 @@ from llama_index.core.workflow import (
 )
 
 
-def create_workflow() -> Workflow:
-    return CLIWorkflow()
-
-
 class CLIWorkflow(Workflow):
     """
     A workflow has ability to execute command line tool with human in the loop for confirmation.
@@ -85,3 +81,6 @@ class CLIWorkflow(Workflow):
             return StopEvent(result=res.stdout or res.stderr)
         else:
             return StopEvent(result=None)
+
+
+workflow = CLIWorkflow()

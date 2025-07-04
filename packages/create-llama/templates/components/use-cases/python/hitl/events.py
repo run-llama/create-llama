@@ -1,9 +1,6 @@
-from typing import Type
-
 from pydantic import BaseModel, Field
 
-from llama_index.server.models import HumanInputEvent, HumanResponseEvent
-
+from llama_index.core.workflow.events import HumanResponseEvent, InputRequiredEvent
 
 class CLIHumanResponseEvent(HumanResponseEvent):
     execute: bool = Field(
@@ -17,7 +14,7 @@ class CLICommand(BaseModel):
 
 
 # We need an event that extends from HumanInputEvent for HITL feature
-class CLIHumanInputEvent(HumanInputEvent):
+class CLIHumanInputEvent(InputRequiredEvent):
     """
     CLIInputRequiredEvent is sent when the agent needs permission from the user to execute the CLI command or not.
     Render this event by showing the command and a boolean button to execute the command or not.
@@ -25,9 +22,6 @@ class CLIHumanInputEvent(HumanInputEvent):
 
     event_type: str = (
         "cli_human_input"  # used by UI to render with appropriate component
-    )
-    response_event_type: Type = (
-        CLIHumanResponseEvent  # used by workflow to resume with the correct event
     )
     data: CLICommand = Field(  # the data that sent to the UI for rendering
         description="The command to execute.",
