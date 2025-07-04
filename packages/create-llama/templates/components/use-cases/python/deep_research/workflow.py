@@ -3,7 +3,7 @@ import os
 import uuid
 from typing import List, Literal, Optional
 
-from app.index import get_index
+from src.index import get_index
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -23,18 +23,19 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import (
-    ArtifactEvent,
-    ArtifactType,
-    ChatRequest,
-    SourceNodesEvent,
-    UIEvent,
+from llama_index.core.chat_ui.models.artifact import (
     Artifact,
+    ArtifactType,
     DocumentArtifactData,
     DocumentArtifactSource,
 )
+from llama_index.core.chat_ui.events import (
+    UIEvent,
+    ArtifactEvent,
+    SourceNodesEvent,
+)
 import time
-from llama_index.server.utils.stream import write_response_to_stream
+from src.utils import write_response_to_stream
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("uvicorn")
