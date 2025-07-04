@@ -1,10 +1,11 @@
-from src.index import get_index
+from dotenv import load_dotenv
+
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.settings import Settings
+
+from src.index import get_index
 from src.query import get_query_engine_tool
 from src.citation import CITATION_SYSTEM_PROMPT, enable_citation
-
-from dotenv import load_dotenv
 from src.settings import init_settings
 
 
