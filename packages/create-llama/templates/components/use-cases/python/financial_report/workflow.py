@@ -1,7 +1,8 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Enum
+from dotenv import load_dotenv
 
-from app.index import get_index
+
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -15,19 +16,18 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import AgentRunEvent, ChatRequest
-from llama_index.server.settings import server_settings
-from llama_index.server.tools.document_generator import DocumentGenerator
-from llama_index.server.tools.index import get_query_engine_tool
-from llama_index.server.tools.interpreter import E2BCodeInterpreter
-from llama_index.server.utils.agent_tool import (
-    call_tools,
-    chat_with_tools,
-)
 
+from src.index import get_index
+from src.settings import init_settings
+from src.query import get_query_engine_tool
+from src.document_generator import DocumentGenerator
+from src.interpreter import E2BCodeInterpreter
+from src.agent_tool import AgentRunEvent, AgentRunEventType
 
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
-    index = get_index(chat_request=chat_request)
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    index = get_index()
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."
@@ -49,6 +49,17 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
         document_generator_tool=document_generator_tool,
         timeout=180,
     )
+
+class AgentRunEventType(Enum):
+    TEXT = "text"
+    PROGRESS = "progress"
+
+
+class AgentRunEvent(Event):
+    name: str
+    msg: str
+    event_type: AgentRunEventType = AgentRunEventType.TEXT
+    data: Optional[dict] = None
 
 
 class InputEvent(Event):
