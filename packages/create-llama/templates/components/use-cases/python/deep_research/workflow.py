@@ -147,21 +147,23 @@ class DeepResearchWorkflow(Workflow):
         """
         self.stream = ev.get("stream", True)
         self.user_request = ev.get("user_msg")
-        chat_history = ev.get("chat_history")
-        if chat_history is not None:
-            self.memory.put_messages(chat_history)
+
+        messages = [
+            ChatMessage(
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
+            )
+            for msg in ev.get("chat_history", [])
+        ]
+        user_message = ChatMessage(role="user", content=self.user_request)
+        chat_history = [*messages, user_message]
+        self.memory.put_messages(chat_history)
 
         await ctx.set("total_questions", 0)
 
         # Add user message to memory
-        self.memory.put_messages(
-            messages=[
-                ChatMessage(
-                    role=MessageRole.USER,
-                    content=self.user_request,
-                )
-            ]
-        )
+        self.memory.put_messages(messages=[user_message])
+
         ctx.write_event_to_stream(
             UIEvent(
                 type="ui_event",
