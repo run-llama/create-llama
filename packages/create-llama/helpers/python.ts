@@ -496,19 +496,7 @@ const installLlamaIndexServerTemplate = async ({
   });
 
   if (useLlamaParse) {
-    await copy("index.py", srcDir, {
-      parents: true,
-      cwd: path.join(
-        templatesDir,
-        "components",
-        "vectordbs",
-        "llamaindexserver",
-        "llamacloud",
-        "python",
-      ),
-    });
-    // TODO: Consider moving generate.py to app folder.
-    await copy("generate.py", srcDir, {
+    await copy("**", srcDir, {
       parents: true,
       cwd: path.join(
         templatesDir,
