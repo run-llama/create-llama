@@ -56,32 +56,37 @@ async function saveFile(filepath: string, content: string | Buffer) {
 function sanitizeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
-
 export async function downloadFile(
   urlToDownload: string,
   downloadedPath: string,
-) {
-  try {
-    // Check if file already exists
-    if (fs.existsSync(downloadedPath)) return;
-
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const dir = path.dirname(downloadedPath);
+    fs.mkdirSync(dir, { recursive: true });
     const file = fs.createWriteStream(downloadedPath);
+
     https
       .get(urlToDownload, (response) => {
+        if (response.statusCode !== 200) {
+          reject(
+            new Error(`Failed to download file: Status ${response.statusCode}`),
+          );
+          return;
+        }
+
         response.pipe(file);
+
         file.on("finish", () => {
-          file.close(() => {
-            console.log("File downloaded successfully");
-          });
+          file.close();
+          resolve();
+        });
+
+        file.on("error", (err) => {
+          fs.unlink(downloadedPath, () => reject(err));
         });
       })
       .on("error", (err) => {
-        fs.unlink(downloadedPath, () => {
-          console.error("Error downloading file:", err);
-          throw err;
-        });
+        fs.unlink(downloadedPath, () => reject(err));
       });
-  } catch (error) {
-    throw new Error(`Error downloading file: ${error}`);
-  }
+  });
 }
