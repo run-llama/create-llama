@@ -7,12 +7,7 @@ import { isUvAvailable, tryUvSync } from "./uv";
 
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
-import {
-  InstallTemplateArgs,
-  ModelConfig,
-  TemplateDataSource,
-  TemplateVectorDB,
-} from "./types";
+import { InstallTemplateArgs } from "./types";
 
 interface Dependency {
   name: string;
@@ -22,11 +17,43 @@ interface Dependency {
 }
 
 const getAdditionalDependencies = (
-  modelConfig: ModelConfig,
-  vectorDb?: TemplateVectorDB,
-  dataSources?: TemplateDataSource[],
+  opts: Pick<
+    InstallTemplateArgs,
+    | "framework"
+    | "template"
+    | "useCase"
+    | "modelConfig"
+    | "vectorDb"
+    | "dataSources"
+  >,
 ) => {
+  const { framework, template, useCase, modelConfig, vectorDb, dataSources } =
+    opts;
+  const isPythonLlamaDeploy =
+    framework === "fastapi" && template === "llamaindexserver";
+  const isPythonFinancialReport =
+    isPythonLlamaDeploy && useCase === "financial_report";
+
   const dependencies: Dependency[] = [];
+
+  if (isPythonFinancialReport) {
+    dependencies.push(
+      ...[
+        {
+          name: "e2b-code-interpreter",
+          version: ">=1.1.1,<2.0.0",
+        },
+        {
+          name: "markdown",
+          version: ">=3.7,<4.0",
+        },
+        {
+          name: "xhtml2pdf",
+          version: ">=0.2.17,<1.0.0",
+        },
+      ],
+    );
+  }
 
   // Add vector db dependencies
   switch (vectorDb) {
@@ -545,11 +572,14 @@ export const installPythonTemplate = async ({
   }
 
   console.log("Adding additional dependencies");
-  const addOnDependencies = getAdditionalDependencies(
+  const addOnDependencies = getAdditionalDependencies({
+    framework,
+    template,
+    useCase,
     modelConfig,
     vectorDb,
     dataSources,
-  );
+  });
 
   await addDependencies(root, addOnDependencies);
 

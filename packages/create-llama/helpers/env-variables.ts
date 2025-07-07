@@ -237,7 +237,7 @@ const getModelEnvs = (
 ): EnvVar[] => {
   const isPythonLlamaDeploy =
     framework === "fastapi" && template === "llamaindexserver";
-  const needE2B = useCase === "financial_report";
+  const isFinancialReport = useCase === "financial_report";
 
   return [
     {
@@ -259,7 +259,7 @@ const getModelEnvs = (
               "The questions to help users get started (multi-line).",
           },
         ]),
-    ...(needE2B
+    ...(isFinancialReport
       ? [
           {
             name: "E2B_API_KEY",
