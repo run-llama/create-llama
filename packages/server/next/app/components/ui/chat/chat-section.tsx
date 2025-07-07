@@ -3,6 +3,7 @@
 import { ChatSection as ChatUI, useChatWorkflow } from "@llamaindex/chat-ui";
 import { useChat } from "ai/react";
 import { useEffect, useMemo, useState } from "react";
+import { FILE_SERVER_URL } from "../../../constants";
 import { getConfig } from "../lib/utils";
 import { ResizablePanel, ResizablePanelGroup } from "../resizable";
 import { ChatCanvasPanel } from "./canvas/panel";
@@ -38,6 +39,7 @@ export default function ChatSection() {
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
+    fileServerUrl: FILE_SERVER_URL,
     deployment,
     workflow,
     onError: handleError,
