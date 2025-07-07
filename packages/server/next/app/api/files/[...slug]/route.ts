@@ -1,6 +1,7 @@
 import fs from "fs";
 import { LLamaCloudFileService } from "llamaindex";
 import { NextRequest, NextResponse } from "next/server";
+import path from "node:path";
 import { promisify } from "util";
 import { downloadFile } from "../helpers";
 
@@ -18,10 +19,12 @@ export async function GET(
   if (filePath.startsWith("output/llamacloud")) {
     const fileExists = await promisify(fs.exists)(filePath);
     if (!fileExists) {
-      // download the file
-
       // get file name and pipeline id from the file path: output/llamacloud/pipeline_id$file_name
-      const [pipeline_id, file_name] = filePath.split("/").slice(-2) ?? [];
+      const startIndex =
+        filePath.indexOf("output/llamacloud/") + "output/llamacloud/".length;
+      const fileName = filePath.slice(startIndex); // pipeline_id$file_name
+      const [pipeline_id, file_name] = fileName.split("$") ?? [];
+      console.log({ pipeline_id, file_name, filePath });
 
       if (!pipeline_id || !file_name) {
         return NextResponse.json(
@@ -46,6 +49,10 @@ export async function GET(
         );
       }
       await downloadFile(downloadUrl, filePath);
+
+      console.log("Current working directory: ", process.cwd());
+      console.log("File downloaded successfully to: ", filePath);
+      console.log("Absolute path: ", path.join(process.cwd(), filePath));
     }
   }
 
