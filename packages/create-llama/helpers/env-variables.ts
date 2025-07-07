@@ -5,6 +5,7 @@ import {
   ModelConfig,
   TemplateFramework,
   TemplateType,
+  TemplateUseCase,
   TemplateVectorDB,
 } from "./types";
 
@@ -232,9 +233,11 @@ const getModelEnvs = (
   modelConfig: ModelConfig,
   framework: TemplateFramework,
   template: TemplateType,
+  useCase: TemplateUseCase,
 ): EnvVar[] => {
   const isPythonLlamaDeploy =
     framework === "fastapi" && template === "llamaindexserver";
+  const needE2B = useCase === "financial_report";
 
   return [
     {
@@ -256,6 +259,14 @@ const getModelEnvs = (
               "The questions to help users get started (multi-line).",
           },
         ]),
+    ...(needE2B
+      ? [
+          {
+            name: "E2B_API_KEY",
+            description: "The E2B API key to use to use code interpreter tool",
+          },
+        ]
+      : []),
     ...(modelConfig.provider === "openai"
       ? [
           {
@@ -420,6 +431,7 @@ export const createBackendEnvFile = async (
     | "template"
     | "port"
     | "useLlamaParse"
+    | "useCase"
   >,
 ) => {
   // Init env values
@@ -436,7 +448,12 @@ export const createBackendEnvFile = async (
       : []),
     ...getVectorDBEnvs(opts.vectorDb, opts.framework, opts.template),
     ...getFrameworkEnvs(opts.framework, opts.template, opts.port),
-    ...getModelEnvs(opts.modelConfig, opts.framework, opts.template),
+    ...getModelEnvs(
+      opts.modelConfig,
+      opts.framework,
+      opts.template,
+      opts.useCase,
+    ),
   ];
   // Render and write env file
   const content = renderEnvVar(envVars);

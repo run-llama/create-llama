@@ -24,3 +24,9 @@ class InputEvent(Event):
 
 class ResearchEvent(Event):
     input: list[ToolSelection]
+
+class AnalyzeEvent(Event):
+    input: list[ToolSelection] | ChatMessage
+
+class ReportEvent(Event):
+    input: list[ToolSelection]
