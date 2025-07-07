@@ -1,5 +1,6 @@
 import os
-from typing import List, Optional, Enum
+from typing import List, Optional
+from enum import Enum
 from dotenv import load_dotenv
 
 
@@ -22,7 +23,15 @@ from src.settings import init_settings
 from src.query import get_query_engine_tool
 from src.document_generator import DocumentGenerator
 from src.interpreter import E2BCodeInterpreter
-from src.agent_tool import AgentRunEvent, AgentRunEventType
+from src.events import (
+    InputEvent,
+    ResearchEvent,
+    AnalyzeEvent,
+    ReportEvent,
+    AgentRunEvent,
+)
+from src.agent_tool import call_tools, chat_with_tools
+
 
 def create_workflow() -> Workflow:
     load_dotenv()
@@ -49,34 +58,6 @@ def create_workflow() -> Workflow:
         document_generator_tool=document_generator_tool,
         timeout=180,
     )
-
-class AgentRunEventType(Enum):
-    TEXT = "text"
-    PROGRESS = "progress"
-
-
-class AgentRunEvent(Event):
-    name: str
-    msg: str
-    event_type: AgentRunEventType = AgentRunEventType.TEXT
-    data: Optional[dict] = None
-
-
-class InputEvent(Event):
-    input: List[ChatMessage]
-    response: bool = False
-
-
-class ResearchEvent(Event):
-    input: list[ToolSelection]
-
-
-class AnalyzeEvent(Event):
-    input: list[ToolSelection] | ChatMessage
-
-
-class ReportEvent(Event):
-    input: list[ToolSelection]
 
 
 class FinancialReportWorkflow(Workflow):
@@ -342,3 +323,6 @@ class FinancialReportWorkflow(Workflow):
             )
         # After the tool calls, fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
+
+
+workflow = create_workflow()

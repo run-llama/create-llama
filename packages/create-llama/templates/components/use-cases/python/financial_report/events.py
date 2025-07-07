@@ -1,4 +1,5 @@
-from typing import List, Optional, Enum
+from typing import List, Optional
+from enum import Enum
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.tools import ToolSelection
 from llama_index.core.workflow import Event

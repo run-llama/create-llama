@@ -1,16 +1,26 @@
 import base64
 import logging
 import os
+import re
 import uuid
+from pathlib import Path
 from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
 from llama_index.core.tools import FunctionTool
-from llama_index.server.models.file import ServerFile
-from llama_index.server.services.file import FileService
 
 logger = logging.getLogger("uvicorn")
+
+
+class FileMetadata(BaseModel):
+    """Simple file metadata model"""
+
+    id: str
+    type: str
+    size: int
+    url: str
+    path: str
 
 
 class InterpreterExtraResult(BaseModel):
@@ -89,15 +99,67 @@ class E2BCodeInterpreter:
                         self.interpreter.files.write(file_path, content)
             logger.info(f"Uploaded {len(sandbox_files)} files to sandbox")
 
-    def _save_to_disk(self, base64_data: str, ext: str) -> ServerFile:
+    def _process_file_name(self, file_name: str) -> tuple[str, str]:
+        """
+        Process original file name to generate a unique file id and extension.
+        """
+        _id = str(uuid.uuid4())
+        name, extension = os.path.splitext(file_name)
+        extension = extension.lstrip(".")
+        if extension == "":
+            raise ValueError("File name is not valid! It must have an extension.")
+        # sanitize the name
+        name = re.sub(r"[^a-zA-Z0-9.]", "_", name)
+        file_id = f"{name}_{_id}.{extension}"
+        return file_id, extension
+
+    def _get_file_url(self, file_id: str, save_dir: str) -> str:
+        """
+        Get the URL of a file.
+        """
+        # Ensure the path uses forward slashes for URLs
+        url_path = f"{save_dir}/{file_id}".replace("\\", "/")
+        return f"/api/files/{url_path}"
+
+    def _save_file(self, content: bytes, file_name: str, save_dir: str) -> FileMetadata:
+        file_id, extension = self._process_file_name(file_name)
+        file_path = os.path.join(save_dir, file_id)
+
+        # Write the file directly
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(content)
+        except PermissionError as e:
+            logger.error(f"Permission denied when writing to file {file_path}: {e!s}")
+            raise
+        except OSError as e:
+            logger.error(f"IO error occurred when writing to file {file_path}: {e!s}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error when writing to file {file_path}: {e!s}")
+            raise
+
+        logger.info(f"Saved file to {file_path}")
+
+        file_size = os.path.getsize(file_path)
+        file_url = self._get_file_url(file_id, save_dir)
+
+        return FileMetadata(
+            id=file_id,
+            type=extension,
+            size=file_size,
+            url=file_url,
+            path=file_path,
+        )
+
+    def _save_to_disk(self, base64_data: str, ext: str) -> FileMetadata:
         buffer = base64.b64decode(base64_data)
 
         # Output from e2b doesn't have a name. Create a random name for it.
         filename = f"e2b_file_{uuid.uuid4()}.{ext}"
 
-        return FileService.save_file(
-            buffer, file_name=filename, save_dir=self.output_dir
-        )
+        return self._save_file(buffer, file_name=filename, save_dir=self.output_dir)
 
     def _parse_result(self, result: Any) -> List[InterpreterExtraResult]:
         """
