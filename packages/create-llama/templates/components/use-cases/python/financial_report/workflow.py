@@ -49,7 +49,7 @@ def create_workflow() -> Workflow:
         )
     code_interpreter_tool = E2BCodeInterpreter(api_key=e2b_api_key).to_tool()
     document_generator_tool = DocumentGenerator(
-        file_server_url_prefix=server_settings.file_server_url_prefix,
+        file_server_url_prefix="/",
     ).to_tool()
 
     return FinancialReportWorkflow(
