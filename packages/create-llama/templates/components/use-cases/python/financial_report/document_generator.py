@@ -6,6 +6,8 @@ from io import BytesIO
 
 from llama_index.core.tools.function_tool import FunctionTool
 
+# use nextjs for file server
+FILE_SERVER_URL_PREFIX = "http://localhost:3000/deployments/chat/ui/api/files"
 OUTPUT_DIR = "output/tools"
 
 
@@ -99,7 +101,7 @@ HTML_TEMPLATE = """
 
 
 class DocumentGenerator:
-    def __init__(self, file_server_url_prefix: str):
+    def __init__(self, file_server_url_prefix: str | None = FILE_SERVER_URL_PREFIX):
         if not file_server_url_prefix:
             raise ValueError("file_server_url_prefix is required")
         self.file_server_url_prefix = file_server_url_prefix
@@ -192,7 +194,7 @@ class DocumentGenerator:
             raise ValueError(f"Unexpected document type: {document_type}")
 
         file_name = self._validate_file_name(file_name)
-        file_path = os.path.join(OUTPUT_DIR, f"{file_name}.{file_extension}")
+        file_path = os.path.join("ui", OUTPUT_DIR, f"{file_name}.{file_extension}")
 
         self._write_to_file(content, file_path)
 
