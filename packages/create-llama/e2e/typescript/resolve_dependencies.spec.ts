@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
-  ALL_USE_CASES,
+  ALL_NEXTJS_USE_CASES,
   TemplateFramework,
   TemplateUseCase,
   TemplateVectorDB,
@@ -21,7 +21,7 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
 test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
-  for (const useCase of ALL_USE_CASES) {
+  for (const useCase of ALL_NEXTJS_USE_CASES) {
     const optionDescription = `useCase: ${useCase}, vectorDb: ${vectorDb}`;
     test.describe(`${optionDescription}`, () => {
       test(`${optionDescription}`, async () => {

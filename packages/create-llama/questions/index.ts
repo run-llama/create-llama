@@ -21,7 +21,7 @@ export const askQuestions = async (
     askModels: askModelsFromArgs,
   } = args;
 
-  const { useCase, framework } = await prompts(
+  const { useCase } = await prompts(
     [
       {
         type: useCaseFromArgs ? null : "select",
@@ -65,17 +65,25 @@ export const askQuestions = async (
         ],
         initial: 0,
       },
-      {
-        type: frameworkFromArgs ? null : "select",
-        name: "framework",
-        message: "What language do you want to use?",
-        choices: [
-          { title: "Python (FastAPI)", value: "fastapi" },
-          { title: "Typescript (NextJS)", value: "nextjs" },
-        ],
-        initial: 0,
-      },
     ],
+    questionHandlers,
+  );
+
+  const { framework } = await prompts(
+    {
+      type: frameworkFromArgs ? null : "select",
+      name: "framework",
+      message: "What language do you want to use?",
+      choices: [
+        // For Python Human in the Loop use case, please refer to this chat-ui example:
+        // https://github.com/run-llama/chat-ui/blob/main/examples/llamadeploy/chat/src/cli_workflow.py
+        ...(useCase !== "hitl"
+          ? [{ title: "Python (FastAPI)", value: "fastapi" }]
+          : []),
+        { title: "Typescript (NextJS)", value: "nextjs" },
+      ],
+      initial: 0,
+    },
     questionHandlers,
   );
 

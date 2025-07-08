@@ -49,7 +49,7 @@ export type TemplateUseCase =
   | "document_generator"
   | "hitl";
 
-export const ALL_USE_CASES: TemplateUseCase[] = [
+export const ALL_NEXTJS_USE_CASES: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
   "financial_report",
@@ -57,6 +57,15 @@ export const ALL_USE_CASES: TemplateUseCase[] = [
   "document_generator",
   "hitl",
 ];
+
+export const ALL_PYTHON_USE_CASES: TemplateUseCase[] = [
+  "agentic_rag",
+  "deep_research",
+  "financial_report",
+  "code_generator",
+  "document_generator",
+];
+
 // Config for both file and folder
 export type FileSourceConfig =
   | {

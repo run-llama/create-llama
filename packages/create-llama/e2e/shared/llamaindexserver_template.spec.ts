@@ -3,7 +3,8 @@ import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
 import {
-  ALL_USE_CASES,
+  ALL_NEXTJS_USE_CASES,
+  ALL_PYTHON_USE_CASES,
   type TemplateFramework,
   type TemplateVectorDB,
 } from "../../helpers";
@@ -17,10 +18,12 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
   : "none";
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
+const allUseCases =
+  templateFramework === "nextjs" ? ALL_NEXTJS_USE_CASES : ALL_PYTHON_USE_CASES;
 
 const userMessage = "Write a blog post about physical standards for letters";
 
-for (const useCase of ALL_USE_CASES) {
+for (const useCase of allUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${vectorDb}`, async () => {
     let port: number;
     let cwd: string;

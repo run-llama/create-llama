@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
-  ALL_USE_CASES,
+  ALL_PYTHON_USE_CASES,
   TemplateFramework,
   TemplateVectorDB,
 } from "../../helpers/types";
@@ -21,7 +21,7 @@ test.describe("Mypy check", () => {
   test.describe.configure({ retries: 0 });
 
   test.describe("LlamaIndexServer", async () => {
-    for (const useCase of ALL_USE_CASES) {
+    for (const useCase of ALL_PYTHON_USE_CASES) {
       test(`should pass mypy for use case: ${useCase}`, async () => {
         const cwd = await createTestDir();
         await createAndCheckLlamaProject({
