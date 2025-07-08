@@ -36,7 +36,7 @@ export class LlamaIndexServer {
     this.suggestNextQuestions = suggestNextQuestions ?? true;
 
     this.llamaDeploy = options.uiConfig?.llamaDeploy;
-    this.serverUrl = options.uiConfig?.serverUrl || "http://localhost:3000";
+    this.serverUrl = options.uiConfig?.serverUrl || ""; // use current host if not set
 
     const isUsingLlamaCloud = !!getEnv("LLAMA_CLOUD_API_KEY");
     const defaultFileServer = isUsingLlamaCloud ? "output/llamacloud" : "data";
