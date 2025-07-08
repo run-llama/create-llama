@@ -122,10 +122,14 @@ class FinancialReportWorkflow(Workflow):
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
         self.stream = ev.get("stream", True)
         user_msg = ev.get("user_msg")
-        chat_history = ev.get("chat_history")
-
-        if chat_history is not None:
-            self.memory.put_messages(chat_history)
+        messages = [
+            ChatMessage(
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
+            )
+            for msg in ev.get("chat_history", [])
+        ]
+        self.memory.put_messages(messages)
 
         # Add user message to memory
         self.memory.put(ChatMessage(role=MessageRole.USER, content=user_msg))
