@@ -31,6 +31,7 @@ from src.events import (
     AgentRunEvent,
 )
 from src.agent_tool import call_tools, chat_with_tools
+from src.utils import write_response_to_stream
 
 
 def create_workflow() -> Workflow:
@@ -156,7 +157,8 @@ class FinancialReportWorkflow(Workflow):
         )
         if not response.has_tool_calls():
             if self.stream:
-                return StopEvent(result=response.generator)
+                final_response = await write_response_to_stream(response.generator, ctx)
+                return StopEvent(result=final_response)
             else:
                 return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
