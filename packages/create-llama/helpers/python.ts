@@ -448,10 +448,12 @@ const installLlamaIndexServerTemplate = async ({
    * ├── generate.py
    * ├── ... (other utility files)
    * ui/
-   * ├── index.ts
-   * └── package.json
+   * ├── data/*.pdf
+   * ├── output/*.pdf
    * ├── components/*.tsx
    * ├── layout/*.tsx
+   * ├── index.ts
+   * └── package.json
    * llama_deploy.yaml
    * pyproject.toml
    * README.md

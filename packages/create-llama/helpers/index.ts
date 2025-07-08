@@ -117,8 +117,13 @@ const downloadFile = async (url: string, destPath: string) => {
 const prepareContextData = async (
   root: string,
   dataSources: TemplateDataSource[],
+  isPythonLlamaDeploy: boolean,
 ) => {
-  await makeDir(path.join(root, "data"));
+  const dataDir = isPythonLlamaDeploy
+    ? path.join(root, "ui", "data")
+    : path.join(root, "data");
+
+  await makeDir(dataDir);
   for (const dataSource of dataSources) {
     const dataSourceConfig = dataSource?.config as FileSourceConfig;
     // If the path is URLs, download the data and save it to the data directory
@@ -128,8 +133,7 @@ const prepareContextData = async (
         dataSourceConfig.url.toString(),
       );
       const destPath = path.join(
-        root,
-        "data",
+        dataDir,
         dataSourceConfig.filename ??
           path.basename(dataSourceConfig.url.toString()),
       );
@@ -137,11 +141,7 @@ const prepareContextData = async (
     } else {
       // Copy local data
       console.log("Copying data from path:", dataSourceConfig.path);
-      const destPath = path.join(
-        root,
-        "data",
-        path.basename(dataSourceConfig.path),
-      );
+      const destPath = path.join(dataDir, path.basename(dataSourceConfig.path));
       await fsExtra.copy(dataSourceConfig.path, destPath);
     }
   }
@@ -167,6 +167,7 @@ export const installTemplate = async (props: InstallTemplateArgs) => {
   await prepareContextData(
     props.root,
     props.dataSources.filter((ds) => ds.type === "file"),
+    isPythonLlamaDeploy,
   );
 
   if (
