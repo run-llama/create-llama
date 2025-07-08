@@ -42,7 +42,7 @@ You can start by sending an request on the [chat UI](http://localhost:8000) or y
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Show me the files in the current directory" }] }'
+--data '{ "id": "unique-chat-id", "messages": [{ "role": "user", "content": "Show me the files in the current directory" }] }'
 ```
 
 ## How does HITL work?

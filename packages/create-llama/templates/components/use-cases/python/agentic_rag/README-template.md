@@ -46,7 +46,7 @@ You can start by sending an request on the [chat UI](http://localhost:8000) or y
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "What standards for a letter exist?" }] }'
+--data '{ "id": "unique-chat-id", "messages": [{ "role": "user", "content": "What standards for a letter exist?" }] }'
 ```
 
 ## Learn More

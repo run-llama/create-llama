@@ -42,7 +42,7 @@ You can test the endpoint with the following curl request:
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
+--data '{ "id": "unique-chat-id", "messages": [{ "role": "user", "content": "Write a blog post about physical standards for letters" }] }'
 ```
 
 You can start editing the API by modifying `app/api/routers/chat.py` or `app/examples/workflow.py`. The API auto-updates as you save the files.

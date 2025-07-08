@@ -42,7 +42,7 @@ You can start by sending an request on the [chat UI](http://localhost:8000) or y
 ```
 curl --location 'localhost:8000/api/chat' \
 --header 'Content-Type: application/json' \
---data '{ "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
+--data '{ "id": "unique-chat-id", "messages": [{ "role": "user", "content": "Create a report comparing the finances of Apple and Tesla" }] }'
 ```
 
 ## Customize the UI
