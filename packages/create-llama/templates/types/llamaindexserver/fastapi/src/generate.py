@@ -24,7 +24,7 @@ def generate_index():
     logger.info("Creating new index")
     # load the documents and create the index
     reader = SimpleDirectoryReader(
-        os.environ.get("DATA_DIR", "data"),
+        os.environ.get("DATA_DIR", "ui/data"),
         recursive=True,
     )
     documents = reader.load_data()
