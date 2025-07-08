@@ -27,7 +27,7 @@ def generate_index():
 
     # use SimpleDirectoryReader to retrieve the files to process
     reader = SimpleDirectoryReader(
-        "data",
+        "ui/data",
         recursive=True,
     )
     files_to_process = reader.input_files
