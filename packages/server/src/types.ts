@@ -25,10 +25,12 @@ export type UIConfig = {
   devMode?: boolean;
   enableFileUpload?: boolean;
   llamaDeploy?: LlamaDeployConfig;
+  serverUrl?: string;
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {
   workflow?: WorkflowFactory;
   uiConfig?: UIConfig;
+  fileServer?: string;
   suggestNextQuestions?: boolean;
 };
