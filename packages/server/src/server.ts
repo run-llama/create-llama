@@ -117,7 +117,7 @@ export default {
     // construct file server url for LlamaDeploy
     // eg. for Non-LlamaCloud: localhost:3000/deployments/chat/ui/api/files/data
     // eg. for LlamaCloud: localhost:3000/deployments/chat/ui/api/files/output/llamacloud
-    const fileServerUrl = `${this.serverUrl}/${basePath}/api/files/${this.fileServer}`;
+    const fileServerUrl = `${this.serverUrl}${basePath}/api/files/${this.fileServer}`;
 
     // content in javascript format
     const content = `
