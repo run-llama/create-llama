@@ -49,9 +49,7 @@ def create_workflow() -> Workflow:
             "E2B_API_KEY is required to use the code interpreter tool. Please check README.md to know how to get the key."
         )
     code_interpreter_tool = E2BCodeInterpreter(api_key=e2b_api_key).to_tool()
-    document_generator_tool = DocumentGenerator(
-        file_server_url_prefix="/",
-    ).to_tool()
+    document_generator_tool = DocumentGenerator().to_tool()
 
     return FinancialReportWorkflow(
         query_engine_tool=query_engine_tool,
