@@ -233,7 +233,7 @@ const useCaseStarterQuestions: Record<TemplateUseCase, string[]> = {
   agentic_rag: ["Letter standard in the document", "Summarize the document"],
   financial_report: [
     "Compare Apple and Tesla financial performance",
-    "Generate a report for Tesla financial",
+    "Generate a PDF report for Tesla financial",
   ],
   deep_research: [
     "Research about Apple and Tesla",

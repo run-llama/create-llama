@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 import re
 from enum import Enum
 from io import BytesIO
@@ -7,9 +8,16 @@ from io import BytesIO
 from llama_index.core.tools.function_tool import FunctionTool
 
 # use nextjs for file server
-FILE_SERVER_URL_PREFIX = "http://localhost:3000/deployments/chat/ui/api/files"
-OUTPUT_DIR = "output/tools"
+WORKFLOW="chat"
 
+# define nextjs file server url prefix
+FILE_SERVER_URL_PREFIX = f"/deployments/{WORKFLOW}/ui/api/files/output/tools"
+
+# When deploying to llama_deploy, ui folder will be copied to deployments folder in the temp directory
+# We need to save generated documents to that exact ui directory to make it accessible to the file server
+# eg: /tmp/llama_deploy/deployments/chat/ui/output/tools/generated_report.pdf
+LLAMA_DEPLOY_DIR = os.path.join(tempfile.gettempdir(), "llama_deploy", "deployments")
+OUTPUT_DIR = os.path.join(LLAMA_DEPLOY_DIR, WORKFLOW, "ui", "output", "tools")
 
 class DocumentType(Enum):
     PDF = "pdf"
@@ -194,12 +202,12 @@ class DocumentGenerator:
             raise ValueError(f"Unexpected document type: {document_type}")
 
         file_name = self._validate_file_name(file_name)
-        file_path = os.path.join("ui", OUTPUT_DIR, f"{file_name}.{file_extension}")
+        file_path = os.path.join(OUTPUT_DIR, f"{file_name}.{file_extension}")
 
         self._write_to_file(content, file_path)
 
         return (
-            f"{self.file_server_url_prefix}/{OUTPUT_DIR}/{file_name}.{file_extension}"
+            f"{self.file_server_url_prefix}/{file_name}.{file_extension}"
         )
 
     @staticmethod
