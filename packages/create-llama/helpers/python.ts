@@ -439,26 +439,6 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  /**
-   * Python use-cases structure:
-   * src/
-   * ├── workflow.py
-   * ├── settings.py
-   * ├── index.py
-   * ├── generate.py
-   * ├── ... (other utility files)
-   * ui/
-   * ├── data/*.pdf
-   * ├── output/*.pdf
-   * ├── components/*.tsx
-   * ├── layout/*.tsx
-   * ├── index.ts
-   * └── package.json
-   * llama_deploy.yaml
-   * pyproject.toml
-   * README.md
-   */
-
   const srcDir = path.join(root, "src");
   const uiDir = path.join(root, "ui");
 
