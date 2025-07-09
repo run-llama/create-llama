@@ -47,6 +47,28 @@ export function runTSApp(appPath: string, port: number) {
   });
 }
 
+// TODO: how to run different port (default is 4501)
+async function runPythonLlamaDeployServer(
+  appPath: string,
+  port: number = 4501,
+) {
+  // Start the llama_deploy server
+  createProcess("uv", ["run", "-m", "llama_deploy.apiserver"], {
+    stdio: "inherit",
+    cwd: appPath,
+    env: { ...process.env, APP_PORT: `${port}` },
+  });
+
+  // create the deployment
+  setTimeout(() => {
+    createProcess("uv", ["run", "llamactl", "deploy", "llama_deploy.yml"], {
+      stdio: "inherit",
+      cwd: appPath,
+      env: { ...process.env, APP_PORT: `${port}` },
+    });
+  }, 1000);
+}
+
 export async function runApp(
   appPath: string,
   template: TemplateType,
@@ -56,6 +78,10 @@ export async function runApp(
   try {
     // Start the app
     const defaultPort = framework === "nextjs" ? 3000 : 8000;
+
+    if (template === "llamaindexserver") {
+      return runPythonLlamaDeployServer(appPath, port);
+    }
 
     const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
     await appRunner(appPath, port || defaultPort, template);
