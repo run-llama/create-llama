@@ -496,6 +496,12 @@ const installLlamaIndexServerTemplate = async ({
     cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
     rename: assetRelocator,
   });
+
+  // Clean up, remove generate.py and index.py for non-data use cases
+  if (["code_generator", "document_generator", "hitl"].includes(useCase)) {
+    await fs.unlink(path.join(srcDir, "generate.py"));
+    await fs.unlink(path.join(srcDir, "index.py"));
+  }
 };
 
 export const installPythonTemplate = async ({

@@ -110,7 +110,12 @@ export const askQuestions = async (
   // Ask for LlamaCloud
   let llamaCloudKey = llamaCloudKeyFromArgs ?? process.env.LLAMA_CLOUD_API_KEY;
   let vectorDb: TemplateVectorDB = vectorDbFromArgs ?? "none";
-  if (!vectorDbFromArgs && useCaseConfig.dataSources) {
+
+  if (
+    !vectorDbFromArgs &&
+    useCaseConfig.dataSources &&
+    !["code_generator", "document_generator", "hitl"].includes(finalUseCase) // these use cases don't use data so no need to ask for LlamaCloud
+  ) {
     const { useLlamaCloud } = await prompts(
       {
         type: "toggle",
