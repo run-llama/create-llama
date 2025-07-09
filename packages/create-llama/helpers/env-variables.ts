@@ -229,6 +229,27 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
   }
 };
 
+const useCaseStarterQuestions: Record<TemplateUseCase, string[]> = {
+  agentic_rag: ["Letter standard in the document", "Summarize the document"],
+  financial_report: [
+    "Compare Apple and Tesla financial performance",
+    "Generate a report for Tesla financial",
+  ],
+  deep_research: [
+    "Research about Apple and Tesla",
+    "Financial performance of Tesla",
+  ],
+  code_generator: [
+    "Generate a code for a simple calculator",
+    "Generate a code for a todo list app",
+  ],
+  document_generator: [
+    "Generate a document about LlamaIndex",
+    "Generate a document about LLM",
+  ],
+  hitl: ["List all the files in the current directory", "Check git status"],
+};
+
 const getModelEnvs = (
   modelConfig: ModelConfig,
   framework: TemplateFramework,
@@ -251,7 +272,14 @@ const getModelEnvs = (
       value: modelConfig.embeddingModel,
     },
     ...(isPythonLlamaDeploy
-      ? []
+      ? [
+          {
+            name: "NEXT_PUBLIC_STARTER_QUESTIONS",
+            description:
+              "Initial questions to display in the chat (`starterQuestions`)",
+            value: JSON.stringify(useCaseStarterQuestions[useCase] ?? []),
+          },
+        ]
       : [
           {
             name: "CONVERSATION_STARTERS",
