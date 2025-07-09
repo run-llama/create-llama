@@ -2,13 +2,14 @@ from typing import AsyncGenerator, Union
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
+    ChatResponse,
 )
 from llama_index.core.workflow import Context
 from llama_index.core.agent.workflow.workflow_events import AgentStream
 
 
 async def write_response_to_stream(
-    res: Union[CompletionResponse, CompletionResponseAsyncGen],
+    res: Union[CompletionResponse, CompletionResponseAsyncGen, AsyncGenerator[ChatResponse, None]],
     ctx: Context,
     current_agent_name: str = "assistant",
 ) -> str:
@@ -25,10 +26,8 @@ async def write_response_to_stream(
     """
     final_response = ""
 
-    # {"__is_pydantic": true, "value": {"delta": "", "response": "", "current_agent_name": "assistant", "tool_calls": []}, "qualified_name": "llama_index.core.agent.workflow.workflow_events.AgentStream"}
-
     if isinstance(res, AsyncGenerator):
-        # Handle streaming response (CompletionResponseAsyncGen)
+        # Handle streaming response (CompletionResponseAsyncGen or ChatResponse AsyncGenerator)
         async for chunk in res:
             ctx.write_event_to_stream(
                 AgentStream(
@@ -36,7 +35,7 @@ async def write_response_to_stream(
                     response=final_response,
                     current_agent_name=current_agent_name,
                     tool_calls=[],
-                    raw=chunk.raw or "",
+                    raw=getattr(chunk, 'raw', None) or "",
                 )
             )
             final_response += chunk.delta or ""
