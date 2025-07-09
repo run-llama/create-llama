@@ -47,7 +47,6 @@ export function runTSApp(appPath: string, port: number) {
   });
 }
 
-// TODO: how to run different port (default is 4501)
 async function runPythonLlamaDeployServer(
   appPath: string,
   port: number = 4501,
@@ -56,7 +55,7 @@ async function runPythonLlamaDeployServer(
   createProcess("uv", ["run", "-m", "llama_deploy.apiserver"], {
     stdio: "inherit",
     cwd: appPath,
-    env: { ...process.env, APP_PORT: `${port}` },
+    env: { ...process.env, LLAMA_DEPLOY_APISERVER_PORT: `${port}` },
   });
 
   // create the deployment
@@ -64,7 +63,6 @@ async function runPythonLlamaDeployServer(
     createProcess("uv", ["run", "llamactl", "deploy", "llama_deploy.yml"], {
       stdio: "inherit",
       cwd: appPath,
-      env: { ...process.env, APP_PORT: `${port}` },
     });
   }, 1000);
 }
