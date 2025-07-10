@@ -6,5 +6,4 @@ new LlamaIndexServer({
     layoutDir: "layout",
     llamaDeploy: { deployment: "chat", workflow: "workflow" },
   },
-  port: 3000,
 }).start();
