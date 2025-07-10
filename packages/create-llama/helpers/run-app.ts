@@ -110,7 +110,7 @@ export async function runApp(
     // Start the app
     const defaultPort = framework === "nextjs" ? 3000 : 8000;
 
-    if (template === "llamaindexserver") {
+    if (template === "llamaindexserver" && framework === "fastapi") {
       await runPythonLlamaDeployServer(appPath, port);
       return;
     }
