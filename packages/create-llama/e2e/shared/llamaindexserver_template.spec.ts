@@ -3,8 +3,8 @@ import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
 import {
-  ALL_NEXTJS_USE_CASES,
   ALL_PYTHON_USE_CASES,
+  ALL_TYPESCRIPT_USE_CASES,
   type TemplateFramework,
   type TemplateVectorDB,
 } from "../../helpers";
@@ -19,8 +19,9 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
 const allUseCases =
-  templateFramework === "nextjs" ? ALL_NEXTJS_USE_CASES : ALL_PYTHON_USE_CASES;
-
+  templateFramework === "nextjs"
+    ? ALL_TYPESCRIPT_USE_CASES
+    : ALL_PYTHON_USE_CASES;
 const isPythonLlamaDeploy = templateFramework === "fastapi";
 
 const userMessage = "Write a blog post about physical standards for letters";

@@ -49,7 +49,7 @@ export type TemplateUseCase =
   | "document_generator"
   | "hitl";
 
-export const ALL_NEXTJS_USE_CASES: TemplateUseCase[] = [
+export const ALL_TYPESCRIPT_USE_CASES: TemplateUseCase[] = [
   "agentic_rag",
   "deep_research",
   "financial_report",
