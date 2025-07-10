@@ -38,6 +38,7 @@ export default function ChatSection() {
   });
 
   const useChatWorkflowHandler = useChatWorkflow({
+    fileServerUrl: getConfig("FILE_SERVER_URL"),
     deployment,
     workflow,
     onError: handleError,

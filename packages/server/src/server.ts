@@ -12,7 +12,6 @@ import type { LlamaDeployConfig, LlamaIndexServerOptions } from "./types";
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
 const nextConfigFile = path.join(nextDir, "next.config.ts");
-const layoutFile = path.join(nextDir, "app", "layout.tsx");
 const constantsFile = path.join(nextDir, "app", "constants.ts");
 const dev = process.env.NODE_ENV !== "production";
 
@@ -24,6 +23,8 @@ export class LlamaIndexServer {
   layoutDir: string;
   suggestNextQuestions: boolean;
   llamaDeploy?: LlamaDeployConfig | undefined;
+  serverUrl: string;
+  fileServer: string;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
@@ -33,7 +34,13 @@ export class LlamaIndexServer {
     this.componentsDir = options.uiConfig?.componentsDir;
     this.layoutDir = options.uiConfig?.layoutDir ?? "layout";
     this.suggestNextQuestions = suggestNextQuestions ?? true;
+
     this.llamaDeploy = options.uiConfig?.llamaDeploy;
+    this.serverUrl = options.uiConfig?.serverUrl || ""; // use current host if not set
+
+    const isUsingLlamaCloud = !!getEnv("LLAMA_CLOUD_API_KEY");
+    const defaultFileServer = isUsingLlamaCloud ? "output/llamacloud" : "data";
+    this.fileServer = options.fileServer ?? defaultFileServer;
 
     if (this.llamaDeploy) {
       if (!this.llamaDeploy.deployment || !this.llamaDeploy.workflow) {
@@ -41,9 +48,13 @@ export class LlamaIndexServer {
           "LlamaDeploy requires deployment and workflow to be set",
         );
       }
-      if (options.uiConfig?.devMode) {
-        // workflow file is in llama-deploy src, so we should disable devmode
-        throw new Error("Devmode is not supported when enabling LlamaDeploy");
+      const { devMode, llamaCloudIndexSelector, enableFileUpload } =
+        options.uiConfig ?? {};
+
+      if (devMode || llamaCloudIndexSelector || enableFileUpload) {
+        throw new Error(
+          "`devMode`, `llamaCloudIndexSelector`, and `enableFileUpload` are not supported when enabling LlamaDeploy",
+        );
       }
     } else {
       // if llamaDeploy is not set but workflowFactory is not defined, we should throw an error
@@ -103,6 +114,11 @@ export default {
     const enableFileUpload = uiConfig?.enableFileUpload ?? false;
     const uploadApi = enableFileUpload ? `${basePath}/api/files` : undefined;
 
+    // construct file server url for LlamaDeploy
+    // eg. for Non-LlamaCloud: localhost:3000/deployments/chat/ui/api/files/data
+    // eg. for LlamaCloud: localhost:3000/deployments/chat/ui/api/files/output/llamacloud
+    const fileServerUrl = `${this.serverUrl}${basePath}/api/files/${this.fileServer}`;
+
     // content in javascript format
     const content = `
       window.LLAMAINDEX = {
@@ -115,7 +131,8 @@ export default {
         SUGGEST_NEXT_QUESTIONS: ${JSON.stringify(this.suggestNextQuestions)},
         UPLOAD_API: ${JSON.stringify(uploadApi)},
         DEPLOYMENT: ${JSON.stringify(this.llamaDeploy?.deployment)},
-        WORKFLOW: ${JSON.stringify(this.llamaDeploy?.workflow)}
+        WORKFLOW: ${JSON.stringify(this.llamaDeploy?.workflow)},
+        FILE_SERVER_URL: ${JSON.stringify(fileServerUrl)}
       }
     `;
     fs.writeFileSync(configFile, content);
