@@ -20,8 +20,7 @@ jobs:
       matrix:
         node-version: [20]
         python-version: ["3.11"]
-        # os: [macos-latest, windows-latest, ubuntu-22.04]
-        os: [macos-latest]
+        os: [macos-latest, windows-latest, ubuntu-22.04]
         frameworks: ["fastapi"]
         vectordbs: ["none", "llamacloud"]
     defaults:
@@ -64,15 +63,6 @@ jobs:
         run: pnpm run pack-install
         working-directory: packages/create-llama
 
-      # - name: Build and store server package
-      #   run: |
-      #     pnpm run build
-      #     wheel_file=$(ls dist/*.whl | head -n 1)
-      #     mkdir -p "${{ runner.temp }}"
-      #     cp "$wheel_file" "${{ runner.temp }}/"
-      #     echo "SERVER_PACKAGE_PATH=${{ runner.temp }}/$(basename "$wheel_file")" >> $GITHUB_ENV
-      #   working-directory: python/llama-index-server
-
       - name: Run Playwright tests for Python
         run: pnpm run e2e:python
         env:
@@ -93,76 +83,76 @@ jobs:
           overwrite: true
           retention-days: 30
 
-  # e2e-typescript:
-  #   name: typescript
-  #   timeout-minutes: 60
-  #   strategy:
-  #     fail-fast: true
-  #     matrix:
-  #       node-version: [22]
-  #       os: [macos-latest, windows-latest, ubuntu-22.04]
-  #       frameworks: ["nextjs"]
-  #       vectordbs: ["none", "llamacloud"]
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v4
+  e2e-typescript:
+    name: typescript
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        node-version: [22]
+        os: [macos-latest, windows-latest, ubuntu-22.04]
+        frameworks: ["nextjs"]
+        vectordbs: ["none", "llamacloud"]
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v3
 
-  #     - name: Setup Node.js ${{ matrix.node-version }}
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #         cache: "pnpm"
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
 
-  #     - name: Install dependencies
-  #       run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
 
-  #     - name: Install Playwright Browsers
-  #       run: pnpm exec playwright install --with-deps
-  #       working-directory: packages/create-llama
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+        working-directory: packages/create-llama
 
-  #     - name: Build create-llama
-  #       run: pnpm run build
-  #       working-directory: packages/create-llama
+      - name: Build create-llama
+        run: pnpm run build
+        working-directory: packages/create-llama
 
-  #     - name: Install
-  #       run: pnpm run pack-install
-  #       working-directory: packages/create-llama
+      - name: Install
+        run: pnpm run pack-install
+        working-directory: packages/create-llama
 
-  #     - name: Build server
-  #       run: pnpm run build
-  #       working-directory: packages/server
+      - name: Build server
+        run: pnpm run build
+        working-directory: packages/server
 
-  #     - name: Pack @llamaindex/server package
-  #       run: |
-  #         pnpm pack --pack-destination "${{ runner.temp }}"
-  #         if [ "${{ runner.os }}" == "Windows" ]; then
-  #           file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1)
-  #           mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
-  #         else
-  #           mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
-  #         fi
-  #       working-directory: packages/server
+      - name: Pack @llamaindex/server package
+        run: |
+          pnpm pack --pack-destination "${{ runner.temp }}"
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            file=$(find "${{ runner.temp }}" -name "llamaindex-server-*.tgz" | head -n 1)
+            mv "$file" "${{ runner.temp }}/llamaindex-server.tgz"
+          else
+            mv ${{ runner.temp }}/llamaindex-server-*.tgz ${{ runner.temp }}/llamaindex-server.tgz
+          fi
+        working-directory: packages/server
 
-  #     - name: Run Playwright tests for TypeScript
-  #       run: |
-  #         pnpm run e2e:ts
-  #       env:
-  #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  #         LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
-  #         FRAMEWORK: ${{ matrix.frameworks }}
-  #         VECTORDB: ${{ matrix.vectordbs }}
-  #         SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
-  #       working-directory: packages/create-llama
+      - name: Run Playwright tests for TypeScript
+        run: |
+          pnpm run e2e:ts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLAMA_CLOUD_API_KEY: ${{ secrets.LLAMA_CLOUD_API_KEY }}
+          FRAMEWORK: ${{ matrix.frameworks }}
+          VECTORDB: ${{ matrix.vectordbs }}
+          SERVER_PACKAGE_PATH: ${{ runner.temp }}/llamaindex-server.tgz
+        working-directory: packages/create-llama
 
-  #     - uses: actions/upload-artifact@v4
-  #       if: always()
-  #       with:
-  #         name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs}}-node${{ matrix.node-version }}
-  #         path: packages/create-llama/playwright-report/
-  #         overwrite: true
-  #         retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-typescript-${{ matrix.os }}-${{ matrix.frameworks }}-${{ matrix.vectordbs}}-node${{ matrix.node-version }}
+          path: packages/create-llama/playwright-report/
+          overwrite: true
+          retention-days: 30
