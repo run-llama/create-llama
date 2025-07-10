@@ -1,4 +1,5 @@
-import { SpawnOptions, spawn } from "child_process";
+import { SpawnOptions, exec, spawn } from "child_process";
+import waitPort from "wait-port";
 import { TemplateFramework, TemplateType } from "./types";
 
 const createProcess = (
@@ -51,20 +52,51 @@ async function runPythonLlamaDeployServer(
   appPath: string,
   port: number = 4501,
 ) {
-  // Start the llama_deploy server
-  createProcess("uv", ["run", "-m", "llama_deploy.apiserver"], {
-    stdio: "inherit",
+  console.log("Starting llama_deploy server...", port);
+  const serverProcess = exec("uv run -m llama_deploy.apiserver", {
     cwd: appPath,
-    env: { ...process.env, LLAMA_DEPLOY_APISERVER_PORT: `${port}` },
+    env: {
+      ...process.env,
+      LLAMA_DEPLOY_APISERVER_PORT: `${port}`,
+    },
   });
 
-  // create the deployment
-  setTimeout(() => {
-    createProcess("uv", ["run", "llamactl", "deploy", "llama_deploy.yml"], {
+  // Pipe output to console
+  serverProcess.stdout?.pipe(process.stdout);
+  serverProcess.stderr?.pipe(process.stderr);
+
+  // Wait for the server to be ready
+  console.log("Waiting for server to be ready...");
+  await waitPort({ port, host: "localhost", timeout: 30000 });
+
+  // create the deployment with explicit host configuration
+  console.log("llama_deploy server started, creating deployment...", port);
+  await createProcess(
+    "uv",
+    [
+      "run",
+      "llamactl",
+      "-s",
+      `http://localhost:${port}`,
+      "deploy",
+      "llama_deploy.yml",
+    ],
+    {
       stdio: "inherit",
       cwd: appPath,
+      shell: true,
+    },
+  );
+  console.log(`Deployment created successfully!`);
+
+  // Keep the main process alive and handle cleanup
+  return new Promise(() => {
+    process.on("SIGINT", () => {
+      console.log("\nShutting down...");
+      serverProcess.kill();
+      process.exit(0);
     });
-  }, 1000);
+  });
 }
 
 export async function runApp(
@@ -78,7 +110,8 @@ export async function runApp(
     const defaultPort = framework === "nextjs" ? 3000 : 8000;
 
     if (template === "llamaindexserver") {
-      return runPythonLlamaDeployServer(appPath, port);
+      await runPythonLlamaDeployServer(appPath, port);
+      return;
     }
 
     const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
