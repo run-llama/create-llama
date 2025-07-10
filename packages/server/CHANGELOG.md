@@ -1,5 +1,11 @@
 # @llamaindex/server
 
+## 0.2.10
+
+### Patch Changes
+
+- 91ce4e1: feat: support file server for python llamadeploy
+
 ## 0.2.9
 
 ### Patch Changes
