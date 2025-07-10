@@ -106,3 +106,16 @@ export interface InstallTemplateArgs {
   postInstallAction: TemplatePostInstallAction;
   useCase: TemplateUseCase;
 }
+
+export type EnvVar = {
+  name?: string;
+  description?: string;
+  value?: string;
+};
+
+export interface Dependency {
+  name: string;
+  version?: string;
+  extras?: string[];
+  constraints?: Record<string, string>;
+}

@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import {
+  EnvVar,
   InstallTemplateArgs,
   ModelConfig,
   TemplateFramework,
@@ -10,68 +11,7 @@ import {
 } from "./types";
 
 import { TSYSTEMS_LLMHUB_API_URL } from "./providers/llmhub";
-
-export type EnvVar = {
-  name?: string;
-  description?: string;
-  value?: string;
-};
-
-const USE_CASE_CONFIGS: Record<
-  TemplateUseCase,
-  {
-    starterQuestions: string[];
-    additionalEnvVars: EnvVar[];
-  }
-> = {
-  agentic_rag: {
-    starterQuestions: [
-      "Letter standard in the document",
-      "Summarize the document",
-    ],
-    additionalEnvVars: [
-      {
-        name: "E2B_API_KEY",
-        description: "The E2B API key to use to use code interpreter tool",
-      },
-    ],
-  },
-  financial_report: {
-    starterQuestions: [
-      "Compare Apple and Tesla financial performance",
-      "Generate a PDF report for Tesla financial",
-    ],
-    additionalEnvVars: [],
-  },
-  deep_research: {
-    starterQuestions: [
-      "Research about Apple and Tesla",
-      "Financial performance of Tesla",
-    ],
-    additionalEnvVars: [],
-  },
-  code_generator: {
-    starterQuestions: [
-      "Generate a code for a simple calculator",
-      "Generate a code for a todo list app",
-    ],
-    additionalEnvVars: [],
-  },
-  document_generator: {
-    starterQuestions: [
-      "Generate a document about LlamaIndex",
-      "Generate a document about LLM",
-    ],
-    additionalEnvVars: [],
-  },
-  hitl: {
-    starterQuestions: [
-      "List all the files in the current directory",
-      "Check git status",
-    ],
-    additionalEnvVars: [],
-  },
-};
+import { USE_CASE_CONFIGS } from "./use-case";
 
 const renderEnvVar = (envVars: EnvVar[]): string => {
   return envVars.reduce(

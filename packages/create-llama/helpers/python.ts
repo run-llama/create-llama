@@ -7,14 +7,8 @@ import { isUvAvailable, tryUvSync } from "./uv";
 
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
-import { InstallTemplateArgs } from "./types";
-
-interface Dependency {
-  name: string;
-  version?: string;
-  extras?: string[];
-  constraints?: Record<string, string>;
-}
+import { Dependency, InstallTemplateArgs } from "./types";
+import { USE_CASE_CONFIGS } from "./use-case";
 
 const getAdditionalDependencies = (
   opts: Pick<
@@ -29,30 +23,15 @@ const getAdditionalDependencies = (
 ) => {
   const { framework, template, useCase, modelConfig, vectorDb, dataSources } =
     opts;
-  const isPythonLlamaDeploy =
-    framework === "fastapi" && template === "llamaindexserver";
-  const isPythonFinancialReport =
-    isPythonLlamaDeploy && useCase === "financial_report";
 
   const dependencies: Dependency[] = [];
 
-  if (isPythonFinancialReport) {
-    dependencies.push(
-      ...[
-        {
-          name: "e2b-code-interpreter",
-          version: ">=1.1.1,<2.0.0",
-        },
-        {
-          name: "markdown",
-          version: ">=3.7,<4.0",
-        },
-        {
-          name: "xhtml2pdf",
-          version: ">=0.2.17,<1.0.0",
-        },
-      ],
-    );
+  const isPythonLlamaDeploy =
+    framework === "fastapi" && template === "llamaindexserver";
+  const useCaseDependencies =
+    USE_CASE_CONFIGS[useCase]?.additionalDependencies ?? [];
+  if (isPythonLlamaDeploy && useCaseDependencies.length > 0) {
+    dependencies.push(...useCaseDependencies);
   }
 
   // Add vector db dependencies
