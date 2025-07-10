@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import https from "node:https";
 import path from "node:path";
 
 import { type ServerFile } from "@llamaindex/server";
@@ -54,4 +55,38 @@ async function saveFile(filepath: string, content: string | Buffer) {
 
 function sanitizeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+export async function downloadFile(
+  urlToDownload: string,
+  downloadedPath: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const dir = path.dirname(downloadedPath);
+    fs.mkdirSync(dir, { recursive: true });
+    const file = fs.createWriteStream(downloadedPath);
+
+    https
+      .get(urlToDownload, (response) => {
+        if (response.statusCode !== 200) {
+          reject(
+            new Error(`Failed to download file: Status ${response.statusCode}`),
+          );
+          return;
+        }
+
+        response.pipe(file);
+
+        file.on("finish", () => {
+          file.close();
+          resolve();
+        });
+
+        file.on("error", (err) => {
+          fs.unlink(downloadedPath, () => reject(err));
+        });
+      })
+      .on("error", (err) => {
+        fs.unlink(downloadedPath, () => reject(err));
+      });
+  });
 }
