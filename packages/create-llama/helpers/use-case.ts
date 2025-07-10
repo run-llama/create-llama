@@ -1,5 +1,22 @@
 import { Dependency, EnvVar, TemplateUseCase } from "./types";
 
+export const ALL_TYPESCRIPT_USE_CASES: TemplateUseCase[] = [
+  "agentic_rag",
+  "deep_research",
+  "financial_report",
+  "code_generator",
+  "document_generator",
+  "hitl",
+];
+
+export const ALL_PYTHON_USE_CASES: TemplateUseCase[] = [
+  "agentic_rag",
+  "deep_research",
+  "financial_report",
+  "code_generator",
+  "document_generator",
+];
+
 export const USE_CASE_CONFIGS: Record<
   TemplateUseCase,
   {

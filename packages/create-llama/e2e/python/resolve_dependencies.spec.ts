@@ -3,11 +3,8 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import {
-  ALL_PYTHON_USE_CASES,
-  TemplateFramework,
-  TemplateVectorDB,
-} from "../../helpers/types";
+import { TemplateFramework, TemplateVectorDB } from "../../helpers";
+import { ALL_PYTHON_USE_CASES } from "../../helpers/use-case";
 import { RunCreateLlamaOptions, createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);

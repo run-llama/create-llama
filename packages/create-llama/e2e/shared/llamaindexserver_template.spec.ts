@@ -2,12 +2,11 @@ import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
+import { type TemplateFramework, type TemplateVectorDB } from "../../helpers";
 import {
   ALL_PYTHON_USE_CASES,
   ALL_TYPESCRIPT_USE_CASES,
-  type TemplateFramework,
-  type TemplateVectorDB,
-} from "../../helpers";
+} from "../../helpers/use-case";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK

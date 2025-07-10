@@ -48,6 +48,7 @@ export function runTSApp(appPath: string, port: number) {
   });
 }
 
+// TODO: support run multiple LlamaDeploy server in the same machine
 async function runPythonLlamaDeployServer(
   appPath: string,
   port: number = 4501,

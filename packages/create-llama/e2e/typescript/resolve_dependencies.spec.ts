@@ -4,11 +4,11 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
-  ALL_TYPESCRIPT_USE_CASES,
   TemplateFramework,
   TemplateUseCase,
   TemplateVectorDB,
 } from "../../helpers/types";
+import { ALL_TYPESCRIPT_USE_CASES } from "../../helpers/use-case";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
