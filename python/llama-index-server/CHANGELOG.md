@@ -1,5 +1,12 @@
 # @create-llama/llama-index-server
 
+## 0.1.26
+
+### Patch Changes
+
+- Updated dependencies [91ce4e1]
+  - @llamaindex/server@0.2.10
+
 ## 0.1.25
 
 ### Patch Changes
