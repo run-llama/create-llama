@@ -17,6 +17,62 @@ export type EnvVar = {
   value?: string;
 };
 
+const USE_CASE_CONFIGS: Record<
+  TemplateUseCase,
+  {
+    starterQuestions: string[];
+    additionalEnvVars: EnvVar[];
+  }
+> = {
+  agentic_rag: {
+    starterQuestions: [
+      "Letter standard in the document",
+      "Summarize the document",
+    ],
+    additionalEnvVars: [
+      {
+        name: "E2B_API_KEY",
+        description: "The E2B API key to use to use code interpreter tool",
+      },
+    ],
+  },
+  financial_report: {
+    starterQuestions: [
+      "Compare Apple and Tesla financial performance",
+      "Generate a PDF report for Tesla financial",
+    ],
+    additionalEnvVars: [],
+  },
+  deep_research: {
+    starterQuestions: [
+      "Research about Apple and Tesla",
+      "Financial performance of Tesla",
+    ],
+    additionalEnvVars: [],
+  },
+  code_generator: {
+    starterQuestions: [
+      "Generate a code for a simple calculator",
+      "Generate a code for a todo list app",
+    ],
+    additionalEnvVars: [],
+  },
+  document_generator: {
+    starterQuestions: [
+      "Generate a document about LlamaIndex",
+      "Generate a document about LLM",
+    ],
+    additionalEnvVars: [],
+  },
+  hitl: {
+    starterQuestions: [
+      "List all the files in the current directory",
+      "Check git status",
+    ],
+    additionalEnvVars: [],
+  },
+};
+
 const renderEnvVar = (envVars: EnvVar[]): string => {
   return envVars.reduce(
     (prev, env) =>
@@ -229,27 +285,6 @@ Otherwise, use CHROMA_HOST and CHROMA_PORT config above`,
   }
 };
 
-const useCaseStarterQuestions: Record<TemplateUseCase, string[]> = {
-  agentic_rag: ["Letter standard in the document", "Summarize the document"],
-  financial_report: [
-    "Compare Apple and Tesla financial performance",
-    "Generate a PDF report for Tesla financial",
-  ],
-  deep_research: [
-    "Research about Apple and Tesla",
-    "Financial performance of Tesla",
-  ],
-  code_generator: [
-    "Generate a code for a simple calculator",
-    "Generate a code for a todo list app",
-  ],
-  document_generator: [
-    "Generate a document about LlamaIndex",
-    "Generate a document about LLM",
-  ],
-  hitl: ["List all the files in the current directory", "Check git status"],
-};
-
 const getModelEnvs = (
   modelConfig: ModelConfig,
   framework: TemplateFramework,
@@ -258,7 +293,6 @@ const getModelEnvs = (
 ): EnvVar[] => {
   const isPythonLlamaDeploy =
     framework === "fastapi" && template === "llamaindexserver";
-  const isFinancialReport = useCase === "financial_report";
 
   return [
     {
@@ -277,7 +311,9 @@ const getModelEnvs = (
             name: "NEXT_PUBLIC_STARTER_QUESTIONS",
             description:
               "Initial questions to display in the chat (`starterQuestions`)",
-            value: JSON.stringify(useCaseStarterQuestions[useCase] ?? []),
+            value: JSON.stringify(
+              USE_CASE_CONFIGS[useCase]?.starterQuestions ?? [],
+            ),
           },
         ]
       : [
@@ -287,14 +323,7 @@ const getModelEnvs = (
               "The questions to help users get started (multi-line).",
           },
         ]),
-    ...(isFinancialReport
-      ? [
-          {
-            name: "E2B_API_KEY",
-            description: "The E2B API key to use to use code interpreter tool",
-          },
-        ]
-      : []),
+    ...(USE_CASE_CONFIGS[useCase]?.additionalEnvVars ?? []),
     ...(modelConfig.provider === "openai"
       ? [
           {
