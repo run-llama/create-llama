@@ -1,5 +1,12 @@
 # create-llama
 
+## 0.6.2
+
+### Patch Changes
+
+- 28b46be: chore: replace Python examples with llama-deploy
+- 93e2abe: fix: unused imports and format
+
 ## 0.6.1
 
 ### Patch Changes
