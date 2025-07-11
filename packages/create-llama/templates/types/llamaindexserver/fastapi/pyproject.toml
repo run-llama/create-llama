@@ -9,11 +9,16 @@ readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "python-dotenv>=1.0.0,<2.0.0",
-    "pydantic<2.10",
+    "pydantic>=2.11.5",
     "aiostream>=0.5.2,<0.6.0",
     "llama-index-core>=0.12.28,<0.13.0",
-    "llama-index-server>=0.1.17,<0.2.0",
+    "llama-index-readers-file>=0.4.6,<1.0.0",
+    "llama-index-indices-managed-llama-cloud>=0.6.3,<1.0.0",
+    "llama-deploy",
 ]
+
+[tool.uv.sources]
+llama-deploy = { git = "https://github.com/run-llama/llama_deploy" }
 
 [project.optional-dependencies]
 dev = [
@@ -23,9 +28,7 @@ dev = [
 ]
 
 [project.scripts]
-generate = "generate:generate_index"
-generate_index = "generate:generate_index"
-generate_ui = "generate:generate_ui_for_workflow"
+generate = "src.generate:generate_index"
 
 
 [tool.mypy]
@@ -43,7 +46,7 @@ strict_optional = false
 disable_error_code = [ "return-value", "assignment" ]
 
 [[tool.mypy.overrides]]
-module = "app.*"
+module = "src.*"
 ignore_missing_imports = false
 
 [tool.hatch.metadata]
@@ -52,3 +55,6 @@ allow-direct-references = true
 [build-system]
 requires = [ "hatchling>=1.24" ]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

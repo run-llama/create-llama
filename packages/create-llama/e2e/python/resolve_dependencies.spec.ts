@@ -3,11 +3,8 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import util from "util";
-import {
-  ALL_USE_CASES,
-  TemplateFramework,
-  TemplateVectorDB,
-} from "../../helpers/types";
+import { TemplateFramework, TemplateUseCase, TemplateVectorDB } from "../../helpers";
+import { ALL_PYTHON_USE_CASES } from "../../helpers/use-case";
 import { RunCreateLlamaOptions, createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
@@ -17,11 +14,15 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
   ? (process.env.VECTORDB as TemplateVectorDB)
   : "none";
 
+const useCases: TemplateUseCase[] = vectorDb === "llamacloud" ? [
+  "agentic_rag", "deep_research", "financial_report"
+] : ALL_PYTHON_USE_CASES
+
 test.describe("Mypy check", () => {
   test.describe.configure({ retries: 0 });
 
   test.describe("LlamaIndexServer", async () => {
-    for (const useCase of ALL_USE_CASES) {
+    for (const useCase of useCases) {
       test(`should pass mypy for use case: ${useCase}`, async () => {
         const cwd = await createTestDir();
         await createAndCheckLlamaProject({

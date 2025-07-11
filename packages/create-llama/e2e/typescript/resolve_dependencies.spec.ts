@@ -4,11 +4,11 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 import {
-  ALL_USE_CASES,
   TemplateFramework,
   TemplateUseCase,
   TemplateVectorDB,
 } from "../../helpers/types";
+import { ALL_TYPESCRIPT_USE_CASES } from "../../helpers/use-case";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const execAsync = util.promisify(exec);
@@ -21,7 +21,7 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
 test.describe("Test resolve TS dependencies", () => {
   test.describe.configure({ retries: 0 });
 
-  for (const useCase of ALL_USE_CASES) {
+  for (const useCase of ALL_TYPESCRIPT_USE_CASES) {
     const optionDescription = `useCase: ${useCase}, vectorDb: ${vectorDb}`;
     test.describe(`${optionDescription}`, () => {
       test(`${optionDescription}`, async () => {

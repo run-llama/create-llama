@@ -1,9 +1,11 @@
 import logging
 import os
 import uuid
+import time
 from typing import List, Literal, Optional
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
-from app.index import get_index
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -23,26 +25,31 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import (
-    ArtifactEvent,
-    ArtifactType,
-    ChatRequest,
-    SourceNodesEvent,
-    UIEvent,
+from llama_index.core.chat_ui.models.artifact import (
     Artifact,
+    ArtifactType,
     DocumentArtifactData,
     DocumentArtifactSource,
 )
-import time
-from llama_index.server.utils.stream import write_response_to_stream
-from pydantic import BaseModel, Field
+from llama_index.core.chat_ui.events import (
+    UIEvent,
+    ArtifactEvent,
+    SourceNodesEvent,
+)
+
+from src.index import get_index
+from src.settings import init_settings
+from src.utils import write_response_to_stream
 
 logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 
 
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
-    index = get_index(chat_request=chat_request)
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    # TODO: load index in StartEvent
+    index = get_index()
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."
@@ -140,21 +147,23 @@ class DeepResearchWorkflow(Workflow):
         """
         self.stream = ev.get("stream", True)
         self.user_request = ev.get("user_msg")
-        chat_history = ev.get("chat_history")
-        if chat_history is not None:
-            self.memory.put_messages(chat_history)
+
+        messages = [
+            ChatMessage(
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
+            )
+            for msg in ev.get("chat_history", [])
+        ]
+        user_message = ChatMessage(role="user", content=self.user_request)
+        chat_history = [*messages, user_message]
+        self.memory.put_messages(chat_history)
 
         await ctx.set("total_questions", 0)
 
         # Add user message to memory
-        self.memory.put_messages(
-            messages=[
-                ChatMessage(
-                    role=MessageRole.USER,
-                    content=self.user_request,
-                )
-            ]
-        )
+        self.memory.put_messages(messages=[user_message])
+
         ctx.write_event_to_stream(
             UIEvent(
                 type="ui_event",
@@ -574,3 +583,6 @@ def _get_text_node_content_for_citation(node: NodeWithScore) -> str:
     node_id = node.node.node_id
     content = f"<Citation id='{node_id}'>\n{node.get_content(metadata_mode=MetadataMode.LLM)}</Citation id='{node_id}'>"
     return content
+
+
+workflow = create_workflow()

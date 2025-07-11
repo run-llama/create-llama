@@ -1,4 +1,5 @@
-import { SpawnOptions, spawn } from "child_process";
+import { SpawnOptions, exec, spawn } from "child_process";
+import waitPort from "wait-port";
 import { TemplateFramework, TemplateType } from "./types";
 
 const createProcess = (
@@ -47,6 +48,58 @@ export function runTSApp(appPath: string, port: number) {
   });
 }
 
+// TODO: support run multiple LlamaDeploy server in the same machine
+async function runPythonLlamaDeployServer(
+  appPath: string,
+  port: number = 4501,
+) {
+  console.log("Starting llama_deploy server...", port);
+  const serverProcess = exec("uv run -m llama_deploy.apiserver", {
+    cwd: appPath,
+    env: {
+      ...process.env,
+      LLAMA_DEPLOY_APISERVER_PORT: `${port}`,
+    },
+  });
+
+  // Pipe output to console
+  serverProcess.stdout?.pipe(process.stdout);
+  serverProcess.stderr?.pipe(process.stderr);
+
+  // Wait for the server to be ready
+  console.log("Waiting for server to be ready...");
+  await waitPort({ port, host: "localhost", timeout: 30000 });
+
+  // create the deployment with explicit host configuration
+  console.log("llama_deploy server started, creating deployment...", port);
+  await createProcess(
+    "uv",
+    [
+      "run",
+      "llamactl",
+      "-s",
+      `http://localhost:${port}`,
+      "deploy",
+      "llama_deploy.yml",
+    ],
+    {
+      stdio: "inherit",
+      cwd: appPath,
+      shell: true,
+    },
+  );
+  console.log(`Deployment created successfully!`);
+
+  // Keep the main process alive and handle cleanup
+  return new Promise(() => {
+    process.on("SIGINT", () => {
+      console.log("\nShutting down...");
+      serverProcess.kill();
+      process.exit(0);
+    });
+  });
+}
+
 export async function runApp(
   appPath: string,
   template: TemplateType,
@@ -56,6 +109,11 @@ export async function runApp(
   try {
     // Start the app
     const defaultPort = framework === "nextjs" ? 3000 : 8000;
+
+    if (template === "llamaindexserver" && framework === "fastapi") {
+      await runPythonLlamaDeployServer(appPath, port);
+      return;
+    }
 
     const appRunner = framework === "fastapi" ? runFastAPIApp : runTSApp;
     await appRunner(appPath, port || defaultPort, template);

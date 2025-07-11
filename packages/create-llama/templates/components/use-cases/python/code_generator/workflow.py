@@ -2,11 +2,10 @@ import re
 import time
 from typing import Any, Literal, Optional, Union
 
-from llama_index.core.chat_engine.types import ChatMessage
-from llama_index.core.llms import LLM
+from llama_index.core import Settings
+from llama_index.core.llms import LLM, ChatMessage
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.prompts import PromptTemplate
-from llama_index.llms.openai import OpenAI
 from llama_index.core.workflow import (
     Context,
     Event,
@@ -15,25 +14,25 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import (
+from llama_index.core.chat_ui.models.artifact import (
     Artifact,
-    ArtifactEvent,
     ArtifactType,
-    ChatRequest,
     CodeArtifactData,
-    UIEvent,
 )
-from llama_index.server.api.utils import get_last_artifact
+from llama_index.core.chat_ui.events import (
+    UIEvent,
+    ArtifactEvent,
+)
+
+from src.utils import get_last_artifact
+from src.settings import init_settings
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
-
-def create_workflow(chat_request: ChatRequest) -> Workflow:
-    workflow = CodeArtifactWorkflow(
-        llm=OpenAI(model="gpt-4.1"),
-        chat_request=chat_request,
-        timeout=120.0,
-    )
-    return workflow
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    return CodeArtifactWorkflow(timeout=120.0)
 
 
 class Requirement(BaseModel):
@@ -83,8 +82,6 @@ class CodeArtifactWorkflow(Workflow):
 
     def __init__(
         self,
-        llm: LLM,
-        chat_request: ChatRequest,
         **kwargs: Any,
     ):
         """
@@ -93,9 +90,8 @@ class CodeArtifactWorkflow(Workflow):
             chat_request: The chat request from the chat app to use.
         """
         super().__init__(**kwargs)
-        self.llm = llm
-        self.chat_request = chat_request
-        self.last_artifact = get_last_artifact(chat_request)
+        self.llm: LLM = Settings.llm
+        self.last_artifact: Optional[Artifact] = None
 
     @step
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> PlanEvent:
@@ -103,13 +99,21 @@ class CodeArtifactWorkflow(Workflow):
         if user_msg is None:
             raise ValueError("user_msg is required to run the workflow")
         await ctx.set("user_msg", user_msg)
-        chat_history = ev.chat_history or []
-        chat_history.append(
+
+        # prepare chat history from StartEvent
+        messages = [
             ChatMessage(
-                role="user",
-                content=user_msg,
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
             )
-        )
+            for msg in ev.get("chat_history", [])
+        ]
+        chat_history = [*messages, ChatMessage(role="user", content=user_msg)]
+
+        # extract inline artifact from chat history
+        last_artifact = get_last_artifact(messages)
+        self.last_artifact = last_artifact
+
         memory = ChatMemoryBuffer.from_defaults(
             chat_history=chat_history,
             llm=self.llm,
@@ -373,3 +377,6 @@ class CodeArtifactWorkflow(Workflow):
             )
         )
         return StopEvent(result=response_stream)
+
+
+workflow = create_workflow()

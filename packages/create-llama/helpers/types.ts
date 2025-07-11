@@ -49,14 +49,6 @@ export type TemplateUseCase =
   | "document_generator"
   | "hitl";
 
-export const ALL_USE_CASES: TemplateUseCase[] = [
-  "agentic_rag",
-  "deep_research",
-  "financial_report",
-  "code_generator",
-  "document_generator",
-  "hitl",
-];
 // Config for both file and folder
 export type FileSourceConfig =
   | {
@@ -96,4 +88,17 @@ export interface InstallTemplateArgs {
   port?: number;
   postInstallAction: TemplatePostInstallAction;
   useCase: TemplateUseCase;
+}
+
+export type EnvVar = {
+  name?: string;
+  description?: string;
+  value?: string;
+};
+
+export interface Dependency {
+  name: string;
+  version?: string;
+  extras?: string[];
+  constraints?: Record<string, string>;
 }

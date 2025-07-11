@@ -1,7 +1,9 @@
 import os
 from typing import List, Optional
+from enum import Enum
+from dotenv import load_dotenv
 
-from app.index import get_index
+
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -15,19 +17,27 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
-from llama_index.server.api.models import AgentRunEvent, ChatRequest
-from llama_index.server.settings import server_settings
-from llama_index.server.tools.document_generator import DocumentGenerator
-from llama_index.server.tools.index import get_query_engine_tool
-from llama_index.server.tools.interpreter import E2BCodeInterpreter
-from llama_index.server.utils.agent_tool import (
-    call_tools,
-    chat_with_tools,
+
+from src.index import get_index
+from src.settings import init_settings
+from src.query import get_query_engine_tool
+from src.document_generator import DocumentGenerator
+from src.interpreter import E2BCodeInterpreter
+from src.events import (
+    InputEvent,
+    ResearchEvent,
+    AnalyzeEvent,
+    ReportEvent,
+    AgentRunEvent,
 )
+from src.agent_tool import call_tools, chat_with_tools
+from src.utils import write_response_to_stream
 
 
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
-    index = get_index(chat_request=chat_request)
+def create_workflow() -> Workflow:
+    load_dotenv()
+    init_settings()
+    index = get_index()
     if index is None:
         raise ValueError(
             "Index is not found. Try run generation script to create the index first."
@@ -39,9 +49,7 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
             "E2B_API_KEY is required to use the code interpreter tool. Please check README.md to know how to get the key."
         )
     code_interpreter_tool = E2BCodeInterpreter(api_key=e2b_api_key).to_tool()
-    document_generator_tool = DocumentGenerator(
-        file_server_url_prefix=server_settings.file_server_url_prefix,
-    ).to_tool()
+    document_generator_tool = DocumentGenerator().to_tool()
 
     return FinancialReportWorkflow(
         query_engine_tool=query_engine_tool,
@@ -49,23 +57,6 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> Workflow:
         document_generator_tool=document_generator_tool,
         timeout=180,
     )
-
-
-class InputEvent(Event):
-    input: List[ChatMessage]
-    response: bool = False
-
-
-class ResearchEvent(Event):
-    input: list[ToolSelection]
-
-
-class AnalyzeEvent(Event):
-    input: list[ToolSelection] | ChatMessage
-
-
-class ReportEvent(Event):
-    input: list[ToolSelection]
 
 
 class FinancialReportWorkflow(Workflow):
@@ -129,10 +120,14 @@ class FinancialReportWorkflow(Workflow):
     async def prepare_chat_history(self, ctx: Context, ev: StartEvent) -> InputEvent:
         self.stream = ev.get("stream", True)
         user_msg = ev.get("user_msg")
-        chat_history = ev.get("chat_history")
-
-        if chat_history is not None:
-            self.memory.put_messages(chat_history)
+        messages = [
+            ChatMessage(
+                role=msg.get("role", "user"),
+                content=msg.get("content", ""),
+            )
+            for msg in ev.get("chat_history", [])
+        ]
+        self.memory.put_messages(messages)
 
         # Add user message to memory
         self.memory.put(ChatMessage(role=MessageRole.USER, content=user_msg))
@@ -164,7 +159,8 @@ class FinancialReportWorkflow(Workflow):
         )
         if not response.has_tool_calls():
             if self.stream:
-                return StopEvent(result=response.generator)
+                final_response = await write_response_to_stream(response.generator, ctx)
+                return StopEvent(result=final_response)
             else:
                 return StopEvent(result=await response.full_response())
         # calling different tools at the same time is not supported at the moment
@@ -331,3 +327,6 @@ class FinancialReportWorkflow(Workflow):
             )
         # After the tool calls, fallback to the input with the latest chat history
         return InputEvent(input=self.memory.get())
+
+
+workflow = create_workflow()

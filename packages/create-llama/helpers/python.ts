@@ -7,26 +7,32 @@ import { isUvAvailable, tryUvSync } from "./uv";
 
 import { assetRelocator, copy } from "./copy";
 import { templatesDir } from "./dir";
-import {
-  InstallTemplateArgs,
-  ModelConfig,
-  TemplateDataSource,
-  TemplateVectorDB,
-} from "./types";
-
-interface Dependency {
-  name: string;
-  version?: string;
-  extras?: string[];
-  constraints?: Record<string, string>;
-}
+import { Dependency, InstallTemplateArgs } from "./types";
+import { USE_CASE_CONFIGS } from "./use-case";
 
 const getAdditionalDependencies = (
-  modelConfig: ModelConfig,
-  vectorDb?: TemplateVectorDB,
-  dataSources?: TemplateDataSource[],
+  opts: Pick<
+    InstallTemplateArgs,
+    | "framework"
+    | "template"
+    | "useCase"
+    | "modelConfig"
+    | "vectorDb"
+    | "dataSources"
+  >,
 ) => {
+  const { framework, template, useCase, modelConfig, vectorDb, dataSources } =
+    opts;
+
   const dependencies: Dependency[] = [];
+
+  const isPythonLlamaDeploy =
+    framework === "fastapi" && template === "llamaindexserver";
+  const useCaseDependencies =
+    USE_CASE_CONFIGS[useCase]?.additionalDependencies ?? [];
+  if (isPythonLlamaDeploy && useCaseDependencies.length > 0) {
+    dependencies.push(...useCaseDependencies);
+  }
 
   // Add vector db dependencies
   switch (vectorDb) {
@@ -412,13 +418,17 @@ const installLlamaIndexServerTemplate = async ({
     process.exit(1);
   }
 
-  await copy("*.py", path.join(root, "app"), {
+  const srcDir = path.join(root, "src");
+  const uiDir = path.join(root, "ui");
+
+  // copy workflow code to src folder
+  await copy("*.py", srcDir, {
     parents: true,
     cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
   });
 
-  // copy model provider settings to app folder
-  await copy("**", path.join(root, "app"), {
+  // copy model provider settings to src folder
+  await copy("**", srcDir, {
     cwd: path.join(
       templatesDir,
       "components",
@@ -428,32 +438,26 @@ const installLlamaIndexServerTemplate = async ({
     ),
   });
 
-  // Copy custom UI component code
-  await copy(`*`, path.join(root, "components"), {
+  // copy ts server to ui folder
+  await copy("**", uiDir, {
+    parents: true,
+    cwd: path.join(templatesDir, "components", "ts-proxy"),
+  });
+
+  // Copy custom UI components to ui/components folder
+  await copy(`*`, path.join(uiDir, "components"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "use-cases", useCase),
   });
 
-  // Copy layout components to layout folder in root
-  await copy("*", path.join(root, "layout"), {
+  // Copy layout components to ui/layout folder
+  await copy("*", path.join(uiDir, "layout"), {
     parents: true,
     cwd: path.join(templatesDir, "components", "ui", "layout"),
   });
 
   if (useLlamaParse) {
-    await copy("index.py", path.join(root, "app"), {
-      parents: true,
-      cwd: path.join(
-        templatesDir,
-        "components",
-        "vectordbs",
-        "llamaindexserver",
-        "llamacloud",
-        "python",
-      ),
-    });
-    // TODO: Consider moving generate.py to app folder.
-    await copy("generate.py", path.join(root), {
+    await copy("**", srcDir, {
       parents: true,
       cwd: path.join(
         templatesDir,
@@ -471,6 +475,12 @@ const installLlamaIndexServerTemplate = async ({
     cwd: path.join(templatesDir, "components", "use-cases", "python", useCase),
     rename: assetRelocator,
   });
+
+  // Clean up, remove generate.py and index.py for non-data use cases
+  if (["code_generator", "document_generator", "hitl"].includes(useCase)) {
+    await fs.unlink(path.join(srcDir, "generate.py"));
+    await fs.unlink(path.join(srcDir, "index.py"));
+  }
 };
 
 export const installPythonTemplate = async ({
@@ -517,11 +527,14 @@ export const installPythonTemplate = async ({
   }
 
   console.log("Adding additional dependencies");
-  const addOnDependencies = getAdditionalDependencies(
+  const addOnDependencies = getAdditionalDependencies({
+    framework,
+    template,
+    useCase,
     modelConfig,
     vectorDb,
     dataSources,
-  );
+  });
 
   await addDependencies(root, addOnDependencies);
 

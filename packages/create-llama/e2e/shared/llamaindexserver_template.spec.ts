@@ -2,11 +2,11 @@ import { expect, test } from "@playwright/test";
 import { ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
+import { type TemplateFramework, type TemplateVectorDB } from "../../helpers";
 import {
-  ALL_USE_CASES,
-  type TemplateFramework,
-  type TemplateVectorDB,
-} from "../../helpers";
+  ALL_PYTHON_USE_CASES,
+  ALL_TYPESCRIPT_USE_CASES,
+} from "../../helpers/use-case";
 import { createTestDir, runCreateLlama } from "../utils";
 
 const templateFramework: TemplateFramework = process.env.FRAMEWORK
@@ -17,10 +17,15 @@ const vectorDb: TemplateVectorDB = process.env.VECTORDB
   : "none";
 const llamaCloudProjectName = "create-llama";
 const llamaCloudIndexName = "e2e-test";
+const allUseCases =
+  templateFramework === "nextjs"
+    ? ALL_TYPESCRIPT_USE_CASES
+    : ALL_PYTHON_USE_CASES;
+const isPythonLlamaDeploy = templateFramework === "fastapi";
 
 const userMessage = "Write a blog post about physical standards for letters";
 
-for (const useCase of ALL_USE_CASES) {
+for (const useCase of allUseCases) {
   test.describe(`Test use case ${useCase} ${templateFramework} ${vectorDb}`, async () => {
     let port: number;
     let cwd: string;
@@ -35,7 +40,7 @@ for (const useCase of ALL_USE_CASES) {
         templateFramework,
         vectorDb,
         port,
-        postInstallAction: "runApp",
+        postInstallAction: isPythonLlamaDeploy ? "dependencies" : "runApp",
         useCase,
         llamaCloudProjectName,
         llamaCloudIndexName,
@@ -50,6 +55,11 @@ for (const useCase of ALL_USE_CASES) {
     });
 
     test("Frontend should have a title", async ({ page }) => {
+      test.skip(
+        isPythonLlamaDeploy,
+        "Skip frontend tests for Python LllamaDeploy",
+      );
+
       await page.goto(`http://localhost:${port}`);
       await expect(page.getByText("Built by LlamaIndex")).toBeVisible({
         timeout: 5 * 60 * 1000,
@@ -60,8 +70,10 @@ for (const useCase of ALL_USE_CASES) {
       page,
     }) => {
       test.skip(
-        useCase === "financial_report" || useCase === "deep_research",
-        "Skip chat tests for financial report and deep research.",
+        useCase === "financial_report" ||
+          useCase === "deep_research" ||
+          isPythonLlamaDeploy,
+        "Skip chat tests for financial report and deep research. Also skip for Python LlamaDeploy",
       );
       await page.goto(`http://localhost:${port}`);
       await page.fill("form textarea", userMessage);

@@ -63,15 +63,6 @@ jobs:
         run: pnpm run pack-install
         working-directory: packages/create-llama
 
-      - name: Build and store server package
-        run: |
-          pnpm run build
-          wheel_file=$(ls dist/*.whl | head -n 1)
-          mkdir -p "${{ runner.temp }}"
-          cp "$wheel_file" "${{ runner.temp }}/"
-          echo "SERVER_PACKAGE_PATH=${{ runner.temp }}/$(basename "$wheel_file")" >> $GITHUB_ENV
-        working-directory: python/llama-index-server
-
       - name: Run Playwright tests for Python
         run: pnpm run e2e:python
         env:

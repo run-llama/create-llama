@@ -1,18 +1,18 @@
-from typing import Optional
+from dotenv import load_dotenv
 
-from app.index import get_index
 from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.settings import Settings
-from llama_index.server.api.models import ChatRequest
-from llama_index.server.tools.index import get_query_engine_tool
-from llama_index.server.tools.index.citation import (
-    CITATION_SYSTEM_PROMPT,
-    enable_citation,
-)
+
+from src.index import get_index
+from src.query import get_query_engine_tool
+from src.citation import CITATION_SYSTEM_PROMPT, enable_citation
+from src.settings import init_settings
 
 
-def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow:
-    index = get_index(chat_request=chat_request)
+def create_workflow() -> AgentWorkflow:
+    load_dotenv()
+    init_settings()
+    index = get_index()
     if index is None:
         raise RuntimeError(
             "Index not found! Please run `uv run generate` to index the data first."
@@ -30,3 +30,6 @@ def create_workflow(chat_request: Optional[ChatRequest] = None) -> AgentWorkflow
         llm=Settings.llm,
         system_prompt=system_prompt,
     )
+
+
+workflow = create_workflow()
