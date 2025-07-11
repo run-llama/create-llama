@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional
 
 from llama_index.core import Settings
 from llama_index.core.llms import LLM, ChatMessage
@@ -29,10 +29,12 @@ from src.settings import init_settings
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+
 def create_workflow() -> Workflow:
     load_dotenv()
     init_settings()
     return DocumentArtifactWorkflow(timeout=120.0)
+
 
 class DocumentRequirement(BaseModel):
     type: Literal["markdown", "html"]

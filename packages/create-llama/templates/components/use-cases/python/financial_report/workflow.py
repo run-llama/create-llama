@@ -1,6 +1,5 @@
 import os
-from typing import List, Optional
-from enum import Enum
+from typing import Optional
 from dotenv import load_dotenv
 
 
@@ -8,10 +7,9 @@ from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolSelection
+from llama_index.core.tools import FunctionTool, QueryEngineTool
 from llama_index.core.workflow import (
     Context,
-    Event,
     StartEvent,
     StopEvent,
     Workflow,
