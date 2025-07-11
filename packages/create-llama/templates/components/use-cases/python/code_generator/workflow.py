@@ -29,6 +29,7 @@ from src.settings import init_settings
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+
 def create_workflow() -> Workflow:
     load_dotenv()
     init_settings()

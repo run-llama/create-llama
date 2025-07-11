@@ -5,6 +5,7 @@ from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.indices.base import BaseIndex
 from llama_index.core.tools.query_engine import QueryEngineTool
 
+
 def create_query_engine(index: BaseIndex, **kwargs: Any) -> BaseQueryEngine:
     """
     Create a query engine for the given index.

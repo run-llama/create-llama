@@ -9,7 +9,11 @@ from llama_index.core.agent.workflow.workflow_events import AgentStream
 
 
 async def write_response_to_stream(
-    res: Union[CompletionResponse, CompletionResponseAsyncGen, AsyncGenerator[ChatResponse, None]],
+    res: Union[
+        CompletionResponse,
+        CompletionResponseAsyncGen,
+        AsyncGenerator[ChatResponse, None],
+    ],
     ctx: Context,
     current_agent_name: str = "assistant",
 ) -> str:
@@ -35,7 +39,7 @@ async def write_response_to_stream(
                     response=final_response,
                     current_agent_name=current_agent_name,
                     tool_calls=[],
-                    raw=getattr(chunk, 'raw', None) or "",
+                    raw=getattr(chunk, "raw", None) or "",
                 )
             )
             final_response += chunk.delta or ""
