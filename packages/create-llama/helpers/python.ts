@@ -439,9 +439,17 @@ const installLlamaIndexServerTemplate = async ({
   });
 
   // copy ts server to ui folder
-  await copy("**", uiDir, {
+  const tsProxyDir = path.join(templatesDir, "components", "ts-proxy");
+  await copy("package.json", uiDir, {
     parents: true,
-    cwd: path.join(templatesDir, "components", "ts-proxy"),
+    cwd: tsProxyDir,
+  });
+  const serverFileLocation = useLlamaParse
+    ? path.join(tsProxyDir, "llamacloud")
+    : path.join(tsProxyDir);
+  await copy("index.ts", uiDir, {
+    parents: true,
+    cwd: serverFileLocation,
   });
 
   // Copy custom UI components to ui/components folder
