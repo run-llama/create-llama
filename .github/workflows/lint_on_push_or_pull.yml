@@ -44,10 +44,6 @@ jobs:
       - name: Run build
         run: pnpm run build
 
-      - name: Run Typecheck for examples
-        run: pnpm run typecheck
-        working-directory: packages/server/examples
-
       - name: Run Python format check
         uses: chartboost/ruff-action@v1
         with:

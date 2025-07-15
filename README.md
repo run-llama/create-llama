@@ -111,7 +111,7 @@ non-interactively. For a list of the latest options, call `create-llama --help`.
 
 The generated code is using the LlamaIndex Server, which serves LlamaIndex Workflows and Agent Workflows via an API server. See the following docs for more information:
 
-- [LlamaIndex Server For TypeScript](./packages/server/README.md)
+- [LlamaIndex Server For TypeScript](https://github.com/run-llama/chat-ui/tree/main/packages/server)
 - [LlamaIndex Server For Python](./python/llama-index-server/README.md)
 
 Inspired by and adapted from [create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)

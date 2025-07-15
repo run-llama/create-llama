@@ -11,7 +11,6 @@ Create-llama is a monorepo containing CLI tools and server frameworks for buildi
 ### Monorepo Structure
 
 - **`packages/create-llama/`**: Main CLI tool for scaffolding LlamaIndex applications
-- **`packages/server/`**: TypeScript/Next.js server framework (`@llamaindex/server`)
 - **`python/llama-index-server/`**: Python/FastAPI server framework
 - **Root**: Workspace configuration and shared development tools
 
@@ -42,15 +41,6 @@ npm run build     # Build CLI using bash script and ncc
 npm run dev       # Watch mode development
 npm run e2e       # Playwright tests for generated projects
 npm run clean     # Clean build artifacts and template caches
-```
-
-### TypeScript Server Package
-
-```bash
-cd packages/server
-pnpm dev          # Watch mode with bunchee
-pnpm build        # Multi-step build: ESM/CJS + Next.js + static assets
-pnpm clean        # Clean all build outputs
 ```
 
 ### Python Server Package

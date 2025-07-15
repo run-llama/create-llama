@@ -32,19 +32,6 @@ export default tseslint.config(
     },
   },
   {
-    files: ["packages/server/**"],
-    rules: {
-      "no-irregular-whitespace": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": [
-        "error",
-        {
-          ignoreRestArgs: true,
-        },
-      ],
-    },
-  },
-  {
     ignores: [
       "python/**",
       "**/*.mypy_cache/**",
@@ -57,9 +44,6 @@ export default tseslint.config(
       "**/out/**",
       "**/node_modules/**",
       "**/build/**",
-      "packages/server/server/**",
-      "packages/server/project/**",
-      "packages/server/bin/**",
     ],
   },
 );
