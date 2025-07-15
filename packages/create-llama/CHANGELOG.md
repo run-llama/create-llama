@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.6.3
+
+### Patch Changes
+
+- fec752e: refactor: llamacloud configs
+
 ## 0.6.2
 
 ### Patch Changes
