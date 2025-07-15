@@ -1,5 +1,12 @@
 # @create-llama/llama-index-server
 
+## 0.1.27
+
+### Patch Changes
+
+- Updated dependencies [fec752e]
+  - @llamaindex/server@0.3.0
+
 ## 0.1.26
 
 ### Patch Changes

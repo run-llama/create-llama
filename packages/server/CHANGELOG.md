@@ -1,5 +1,11 @@
 # @llamaindex/server
 
+## 0.3.0
+
+### Minor Changes
+
+- fec752e: refactor: llamacloud configs
+
 ## 0.2.10
 
 ### Patch Changes
