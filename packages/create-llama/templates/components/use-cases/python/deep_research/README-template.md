@@ -93,8 +93,15 @@ The following are the available options:
 - `starterQuestions`: Predefined questions for chat interface
 - `componentsDir`: Directory for custom event components
 - `layoutDir`: Directory for custom layout components
-- `llamaCloudIndexSelector`: Enable LlamaCloud integration
 - `llamaDeploy`: The LlamaDeploy configration (deployment name and workflow name that defined in the [llama_deploy.yml](llama_deploy.yml) file)
+
+## LlamaCloud Integration
+
+You can enable LlamaCloud integration by setting the `llamaCloud` option in the [ui/index.ts](ui/index.ts) file.
+
+The following are the available options:
+
+- `outputDir`: The directory for LlamaCloud output
 
 ## Learn More
 
