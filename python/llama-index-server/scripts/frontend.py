@@ -61,10 +61,12 @@ def get_paths() -> tuple[str, str, str]:
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Go up one level to get to python/llama-index-server directory
     server_dir = os.path.dirname(script_dir)
-    
+
     # Look for assets in the local node_modules directory
-    fe_assets_dir = os.path.join(server_dir, "node_modules", "@llamaindex", "server", "dist", "static")
-    
+    fe_assets_dir = os.path.join(
+        server_dir, "node_modules", "@llamaindex", "server", "dist", "static"
+    )
+
     # Link path within the same server directory
     link_path = os.path.join(
         server_dir,
