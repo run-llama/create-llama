@@ -74,13 +74,6 @@ The CLI uses a sophisticated template system in `packages/create-llama/templates
 
 ## Server Framework Architecture
 
-### TypeScript Server (`@llamaindex/server`)
-
-- **Core**: `LlamaIndexServer` class wrapping Next.js with workflow support
-- **Frontend**: React-based chat UI with shadcn/ui components
-- **API**: `/api/chat` endpoint with streaming responses
-- **Build Process**: Complex multi-step build including static assets for Python integration
-
 ### Python Server (`llama-index-server`)
 
 - **Core**: `LlamaIndexServer` class extending FastAPI
