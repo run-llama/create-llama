@@ -196,7 +196,7 @@ export default {
       }
 
       if (
-        pathname === "/api/files" &&
+        pathname?.includes("/api/files") &&
         req.method === "GET" &&
         this.llamaCloud
       ) {
