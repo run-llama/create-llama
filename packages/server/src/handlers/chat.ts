@@ -21,6 +21,7 @@ export const handleChat = async (
   res: ServerResponse,
   workflowFactory: WorkflowFactory,
   suggestNextQuestions: boolean,
+  llamaCloudOutputDir?: string,
 ) => {
   const abortController = new AbortController();
   res.on("close", () => abortController.abort("Connection closed"));
@@ -53,7 +54,10 @@ export const handleChat = async (
       },
     });
 
-    const stream = processWorkflowStream(context.stream).until(
+    const stream = processWorkflowStream(
+      context.stream,
+      llamaCloudOutputDir,
+    ).until(
       (event) =>
         abortController.signal.aborted || stopAgentEvent.include(event),
     );

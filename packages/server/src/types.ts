@@ -21,11 +21,15 @@ export type UIConfig = {
   starterQuestions?: string[];
   componentsDir?: string;
   layoutDir?: string;
-  llamaCloudIndexSelector?: boolean;
   devMode?: boolean;
   enableFileUpload?: boolean;
   llamaDeploy?: LlamaDeployConfig;
   serverUrl?: string;
+};
+
+export type LlamaCloudConfig = {
+  outputDir: string;
+  indexSelector?: boolean;
 };
 
 export type LlamaIndexServerOptions = NextAppOptions & {
@@ -33,4 +37,5 @@ export type LlamaIndexServerOptions = NextAppOptions & {
   uiConfig?: UIConfig;
   fileServer?: string;
   suggestNextQuestions?: boolean;
+  llamaCloud?: LlamaCloudConfig;
 };

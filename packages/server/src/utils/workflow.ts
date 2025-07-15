@@ -64,6 +64,7 @@ export async function runWorkflow({
 
 export function processWorkflowStream(
   stream: WorkflowStream<WorkflowEventData<unknown>>,
+  llamaCloudOutputDir?: string,
 ) {
   return stream.pipeThrough(
     new TransformStream<WorkflowEventData<unknown>, WorkflowEventData<unknown>>(
@@ -90,7 +91,10 @@ export function processWorkflowStream(
             ) {
               const sourceNodes =
                 rawOutput.sourceNodes as unknown as NodeWithScore<Metadata>[];
-              transformedEvent = toSourceEvent(sourceNodes);
+              transformedEvent = toSourceEvent(
+                sourceNodes,
+                llamaCloudOutputDir,
+              );
             }
           }
           // Handle artifact events, transform to agentStreamEvent

@@ -41,11 +41,14 @@ export type AgentRunEventData = {
 };
 export const agentRunEvent = workflowEvent<AgentRunEventData>();
 
-export function toSourceEventNode(node: NodeWithScore<Metadata>) {
+export function toSourceEventNode(
+  node: NodeWithScore<Metadata>,
+  llamaCloudOutputDir: string = "output/llamacloud",
+) {
   const { file_name, pipeline_id } = node.node.metadata;
 
   const filePath = pipeline_id
-    ? `output/llamacloud/${pipeline_id}$${file_name}`
+    ? `${llamaCloudOutputDir}/${pipeline_id}$${file_name}`
     : `data/${file_name}`;
 
   return {
@@ -59,9 +62,12 @@ export function toSourceEventNode(node: NodeWithScore<Metadata>) {
   };
 }
 
-export function toSourceEvent(sourceNodes: NodeWithScore<Metadata>[] = []) {
+export function toSourceEvent(
+  sourceNodes: NodeWithScore<Metadata>[] = [],
+  llamaCloudOutputDir: string = "output/llamacloud",
+) {
   const nodes: SourceEventNode[] = sourceNodes.map((node) =>
-    toSourceEventNode(node),
+    toSourceEventNode(node, llamaCloudOutputDir),
   );
   return sourceEvent.with({
     data: { nodes },

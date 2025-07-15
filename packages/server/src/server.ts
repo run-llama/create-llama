@@ -7,7 +7,11 @@ import path from "path";
 import { parse } from "url";
 import { promisify } from "util";
 import { handleChat } from "./handlers/chat";
-import type { LlamaDeployConfig, LlamaIndexServerOptions } from "./types";
+import type {
+  LlamaCloudConfig,
+  LlamaDeployConfig,
+  LlamaIndexServerOptions,
+} from "./types";
 
 const nextDir = path.join(__dirname, "..", "server");
 const configFile = path.join(__dirname, "..", "server", "public", "config.js");
@@ -25,6 +29,7 @@ export class LlamaIndexServer {
   llamaDeploy?: LlamaDeployConfig | undefined;
   serverUrl: string;
   fileServer: string;
+  llamaCloud?: LlamaCloudConfig | undefined;
 
   constructor(options: LlamaIndexServerOptions) {
     const { workflow, suggestNextQuestions, ...nextAppOptions } = options;
@@ -38,8 +43,16 @@ export class LlamaIndexServer {
     this.llamaDeploy = options.uiConfig?.llamaDeploy;
     this.serverUrl = options.uiConfig?.serverUrl || ""; // use current host if not set
 
-    const isUsingLlamaCloud = !!getEnv("LLAMA_CLOUD_API_KEY");
-    const defaultFileServer = isUsingLlamaCloud ? "output/llamacloud" : "data";
+    this.llamaCloud = options.llamaCloud;
+    if (this.llamaCloud?.indexSelector && !getEnv("LLAMA_CLOUD_API_KEY")) {
+      throw new Error(
+        "LlamaCloud API key is required. Please set `LLAMA_CLOUD_API_KEY` in environment variables",
+      );
+    }
+
+    const defaultFileServer = this.llamaCloud
+      ? this.llamaCloud.outputDir
+      : "data";
     this.fileServer = options.fileServer ?? defaultFileServer;
 
     if (this.llamaDeploy) {
@@ -48,8 +61,8 @@ export class LlamaIndexServer {
           "LlamaDeploy requires deployment and workflow to be set",
         );
       }
-      const { devMode, llamaCloudIndexSelector, enableFileUpload } =
-        options.uiConfig ?? {};
+      const { devMode, enableFileUpload } = options.uiConfig ?? {};
+      const llamaCloudIndexSelector = this.llamaCloud?.indexSelector;
 
       if (devMode || llamaCloudIndexSelector || enableFileUpload) {
         throw new Error(
@@ -103,7 +116,7 @@ export default {
 
     const starterQuestions = uiConfig?.starterQuestions ?? [];
     const llamaCloudApi =
-      uiConfig?.llamaCloudIndexSelector && getEnv("LLAMA_CLOUD_API_KEY")
+      this.llamaCloud?.indexSelector && getEnv("LLAMA_CLOUD_API_KEY")
         ? `${basePath}/api/chat/config/llamacloud`
         : undefined;
     const componentsApi = this.componentsDir
@@ -166,6 +179,7 @@ export default {
           res,
           this.workflowFactory,
           this.suggestNextQuestions,
+          this.llamaCloud?.outputDir,
         );
       }
 
@@ -179,6 +193,14 @@ export default {
 
       if (pathname === "/api/layout" && req.method === "GET") {
         query.layoutDir = this.layoutDir;
+      }
+
+      if (
+        pathname?.includes("/api/files") &&
+        req.method === "GET" &&
+        this.llamaCloud
+      ) {
+        query.useLlamaCloud = "true";
       }
 
       const handle = this.app.getRequestHandler();

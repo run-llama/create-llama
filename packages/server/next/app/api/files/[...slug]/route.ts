@@ -8,7 +8,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  const isUsingLlamaCloud = !!process.env.LLAMA_CLOUD_API_KEY;
+  const { searchParams } = request.nextUrl;
+  const isUsingLlamaCloud = searchParams.get("useLlamaCloud") === "true";
   const filePath = (await params).slug.join("/");
 
   if (!filePath.startsWith("output") && !filePath.startsWith("data")) {

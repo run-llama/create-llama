@@ -128,9 +128,11 @@ Server configuration through `LlamaIndexServerOptions`:
 - `uiConfig.starterQuestions`: Predefined questions for chat interface
 - `uiConfig.componentsDir`: Directory for custom event components
 - `uiConfig.layoutDir`: Directory for custom layout components
-- `uiConfig.llamaCloudIndexSelector`: Enable LlamaCloud integration
 - `uiConfig.devMode`: Enable live code editing
 - `suggestNextQuestions`: Auto-suggest follow-up questions
+- `llamaCloud`: An object to configure the LlamaCloud integration containing the following properties:
+  - `outputDir`: The directory for LlamaCloud output
+  - `indexSelector`: Whether to show the LlamaCloud index selector in the chat UI
 
 ## Dependencies
 

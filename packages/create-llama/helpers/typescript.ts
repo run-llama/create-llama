@@ -133,6 +133,18 @@ export const installTSTemplate = async ({
       modelConfig,
       dataSources,
     });
+
+    if (vectorDb === "llamacloud") {
+      // replace index.ts with llamacloud/index.ts
+      await fs.rm(path.join(root, "src", "index.ts"));
+      await copy("index.ts", path.join(root, "src"), {
+        parents: true,
+        cwd: path.join(root, "src", "llamacloud"),
+      });
+    }
+
+    // remove llamacloud folder
+    await fs.rm(path.join(root, "src", "llamacloud"), { recursive: true });
   } else {
     throw new Error(`Template ${template} not supported`);
   }
