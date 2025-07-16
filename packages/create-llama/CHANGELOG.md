@@ -1,5 +1,11 @@
 # create-llama
 
+## 0.6.4
+
+### Patch Changes
+
+- 97a7d9b: chore: bump @llamaindex/server 0.3.0 in templates
+
 ## 0.6.3
 
 ### Patch Changes
