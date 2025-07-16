@@ -258,16 +258,6 @@ async function updatePackageJson({
     };
   }
 
-  // if having custom server package tgz file, use it for testing @llamaindex/server
-  const serverPackagePath = process.env.SERVER_PACKAGE_PATH;
-  if (serverPackagePath) {
-    const relativePath = path.relative(process.cwd(), serverPackagePath);
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      "@llamaindex/server": `file:${relativePath}`,
-    };
-  }
-
   await fs.writeFile(
     packageJsonFile,
     JSON.stringify(packageJson, null, 2) + os.EOL,
